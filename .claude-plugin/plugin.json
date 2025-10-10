@@ -1,0 +1,15 @@
+{
+  "name": "session",
+  "version": "0.1.0",
+  "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions",
+  "author": "ankushdixit",
+  "commands": [
+    "session-start",
+    "session-end",
+    "session-status",
+    "work-item",
+    "learning"
+  ],
+  "hooks": [],
+  "minimum_claude_code_version": "1.0.0"
+}
