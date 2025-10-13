@@ -32,10 +32,27 @@ def load_learnings():
 def get_next_work_item(work_items_data):
     """
     Find next available work item where dependencies are satisfied.
+    Prioritizes resuming in-progress items over starting new work.
     Returns item with highest priority among available.
     """
     work_items = work_items_data.get("work_items", {})
+    priority_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
 
+    # PRIORITY 1: Resume in-progress work
+    in_progress_items = []
+    for item_id, item in work_items.items():
+        if item["status"] == "in_progress":
+            in_progress_items.append((item_id, item))
+
+    if in_progress_items:
+        # Sort by priority and return highest
+        in_progress_items.sort(
+            key=lambda x: priority_order.get(x[1].get("priority", "medium"), 2),
+            reverse=True,
+        )
+        return in_progress_items[0]
+
+    # PRIORITY 2: Start new work
     available = []
     for item_id, item in work_items.items():
         if item["status"] != "not_started":
@@ -54,7 +71,6 @@ def get_next_work_item(work_items_data):
         return None, None
 
     # Sort by priority
-    priority_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
     available.sort(
         key=lambda x: priority_order.get(x[1].get("priority", "medium"), 2),
         reverse=True,

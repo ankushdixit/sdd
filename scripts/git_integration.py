@@ -69,8 +69,12 @@ class GitWorkflow:
 
         return None
 
-    def create_branch(self, work_item_id: str, session_num: int) -> Tuple[bool, str]:
-        """Create a new branch for work item."""
+    def create_branch(
+        self, work_item_id: str, session_num: int
+    ) -> Tuple[bool, str, Optional[str]]:
+        """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
+        # Capture parent branch BEFORE creating new branch
+        parent_branch = self.get_current_branch()
         branch_name = f"session-{session_num:03d}-{work_item_id}"
 
         try:
@@ -84,9 +88,9 @@ class GitWorkflow:
             )
 
             if result.returncode == 0:
-                return True, branch_name
+                return True, branch_name, parent_branch
             else:
-                return False, f"Failed to create branch: {result.stderr}"
+                return False, f"Failed to create branch: {result.stderr}", None
 
         except Exception as e:
             return False, f"Error creating branch: {e}"
@@ -169,12 +173,14 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error pushing: {e}"
 
-    def merge_to_main(self, branch_name: str) -> Tuple[bool, str]:
-        """Merge branch to main and delete branch."""
+    def merge_to_parent(
+        self, branch_name: str, parent_branch: str = "main"
+    ) -> Tuple[bool, str]:
+        """Merge branch to parent branch and delete branch."""
         try:
-            # Checkout main
+            # Checkout parent branch (not hardcoded main)
             subprocess.run(
-                ["git", "checkout", "main"],
+                ["git", "checkout", parent_branch],
                 capture_output=True,
                 cwd=self.project_root,
                 timeout=5,
@@ -197,7 +203,7 @@ class GitWorkflow:
                     cwd=self.project_root,
                     timeout=5,
                 )
-                return True, "Merged to main and branch deleted"
+                return True, f"Merged to {parent_branch} and branch deleted"
             else:
                 return False, f"Merge failed: {result.stderr}"
 
@@ -226,12 +232,15 @@ class GitWorkflow:
             }
         else:
             # Create new branch
-            success, branch_name = self.create_branch(work_item_id, session_num)
+            success, branch_name, parent_branch = self.create_branch(
+                work_item_id, session_num
+            )
 
             if success:
-                # Update work item with git info
+                # Update work item with git info (including parent branch)
                 work_item["git"] = {
                     "branch": branch_name,
+                    "parent_branch": parent_branch,  # Store parent for merging
                     "created_at": datetime.now().isoformat(),
                     "status": "in_progress",
                     "commits": [],
@@ -281,7 +290,8 @@ class GitWorkflow:
 
         # Merge if requested and work complete
         if merge:
-            merge_success, merge_msg = self.merge_to_main(branch_name)
+            parent_branch = work_item["git"].get("parent_branch", "main")
+            merge_success, merge_msg = self.merge_to_parent(branch_name, parent_branch)
             if merge_success:
                 work_item["git"]["status"] = "merged"
             else:
