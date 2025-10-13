@@ -1,4 +1,4 @@
-"""Profile model - Session 1."""
+"""Profile model - Session 2: Adding CRUD operations."""
 
 
 class Profile:
@@ -8,6 +8,21 @@ class Profile:
         self.user_id = user_id
         self.name = name
         self.email = email
+        self.bio = ""
 
     def __repr__(self):
         return f"Profile(id={self.user_id}, name={self.name})"
+
+    def update_bio(self, bio):
+        """Update profile bio."""
+        self.bio = bio
+        return True
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "user_id": self.user_id,
+            "name": self.name,
+            "email": self.email,
+            "bio": self.bio,
+        }
