@@ -1,4 +1,4 @@
-"""User profile model - Session 1 partial work."""
+"""User profile model - Session 2: Adding CRUD operations."""
 
 
 class UserProfile:
@@ -13,3 +13,23 @@ class UserProfile:
 
     def __repr__(self):
         return f"UserProfile(id={self.user_id}, name={self.name})"
+
+    def update_bio(self, bio):
+        """Update user bio."""
+        self.bio = bio
+        return True
+
+    def set_avatar(self, url):
+        """Set avatar URL."""
+        self.avatar_url = url
+        return True
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "user_id": self.user_id,
+            "name": self.name,
+            "email": self.email,
+            "bio": self.bio,
+            "avatar_url": self.avatar_url,
+        }
