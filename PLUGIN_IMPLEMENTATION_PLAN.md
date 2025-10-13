@@ -413,7 +413,7 @@ if __name__ == "__main__":
 
 **Purpose:** Auto-detect and track technology stack with reasoning for changes
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `scripts/generate_stack.py` (NEW)
@@ -770,13 +770,13 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Detects Python projects (requirements.txt)
-- [ ] Detects JavaScript projects (package.json)
-- [ ] Detects frameworks (FastAPI, React, etc.)
-- [ ] Detects MCP servers (Context7)
-- [ ] Prompts for reasoning on changes
-- [ ] Updates stack_updates.json correctly
-- [ ] No false positives from excluded directories
+- [x] Detects Python projects (requirements.txt) ✓
+- [x] Detects JavaScript projects (package.json) ✓
+- [x] Detects frameworks (FastAPI, React, etc.) ✓
+- [x] Detects MCP servers (Context7) ✓
+- [x] Prompts for reasoning on changes ✓
+- [x] Updates stack_updates.json correctly ✓
+- [x] No false positives from excluded directories ✓
 
 ---
 
@@ -784,7 +784,7 @@ if __name__ == "__main__":
 
 **Purpose:** Track project structure evolution with reasoning for changes
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `scripts/generate_tree.py` (NEW)
@@ -1040,14 +1040,14 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Generates tree with tree command (if available)
-- [ ] Falls back to Python implementation if tree not available
-- [ ] Ignores common directories (.git, node_modules, etc.)
-- [ ] Detects directory additions/removals
-- [ ] Detects significant file changes
-- [ ] Filters out minor changes (ordering)
-- [ ] Prompts for reasoning on structural changes
-- [ ] Updates tree_updates.json correctly
+- [x] Generates tree with tree command (if available) ✓
+- [x] Falls back to Python implementation if tree not available ✓
+- [x] Ignores common directories (.git, node_modules, etc.) ✓
+- [x] Detects directory additions/removals ✓
+- [x] Detects significant file changes ✓
+- [x] Filters out minor changes (ordering) ✓
+- [x] Prompts for reasoning on structural changes ✓
+- [x] Updates tree_updates.json correctly ✓
 
 ---
 
@@ -1055,7 +1055,7 @@ if __name__ == "__main__":
 
 **Purpose:** Automate git operations to prevent mistakes and maintain clean history
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `scripts/git_integration.py` (NEW)
@@ -1394,14 +1394,14 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Check git status (clean vs dirty)
-- [ ] Create new branch for work item
-- [ ] Resume existing branch for multi-session work
-- [ ] Commit changes with message
-- [ ] Push to remote (handle no remote gracefully)
-- [ ] Merge to main when work complete
-- [ ] Update work_items.json git field
-- [ ] Handle git errors gracefully
+- [x] Check git status (clean vs dirty) ✓
+- [x] Create new branch for work item ✓
+- [x] Resume existing branch for multi-session work ✓
+- [x] Commit changes with message ✓
+- [x] Push to remote (handle no remote gracefully) ✓
+- [x] Merge to parent branch when work complete ✓
+- [x] Update work_items.json git field ✓
+- [x] Handle git errors gracefully ✓
 
 ---
 
@@ -1409,7 +1409,7 @@ if __name__ == "__main__":
 
 **Purpose:** Load complete project context for comprehensive briefing
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - Enhance `scripts/briefing_generator.py`
@@ -1542,15 +1542,15 @@ Update `commands/session-start.md` to document the enhanced behavior.
 
 #### Testing Checklist
 
-- [ ] Reads project docs (vision, PRD, architecture)
-- [ ] Loads current stack
-- [ ] Loads current tree
-- [ ] Validates environment
-- [ ] Checks git status
-- [ ] Creates new branch for new work item
-- [ ] Resumes existing branch for continuing work
-- [ ] Generates comprehensive briefing
-- [ ] All context included in briefing
+- [x] Reads project docs (vision, PRD, architecture) ✓
+- [x] Loads current stack ✓
+- [x] Loads current tree ✓
+- [x] Validates environment ✓
+- [x] Checks git status ✓
+- [x] Creates new branch for new work item ✓
+- [x] Resumes existing branch for continuing work ✓
+- [x] Generates comprehensive briefing ✓
+- [x] All context included in briefing ✓
 
 ---
 
@@ -1558,7 +1558,7 @@ Update `commands/session-start.md` to document the enhanced behavior.
 
 **Purpose:** Update all tracking systems and perform comprehensive session completion
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - Enhance `scripts/session_complete.py`
@@ -1700,16 +1700,16 @@ def main():
 
 #### Testing Checklist
 
-- [ ] All quality gates run
-- [ ] Stack updated if changes detected
-- [ ] Tree updated if structure changed
-- [ ] Learnings captured
-- [ ] Work item status updated
-- [ ] Git commit created
-- [ ] Branch pushed to remote
-- [ ] Branch merged if work complete
-- [ ] Comprehensive report generated
-- [ ] Next session identified
+- [x] All quality gates run ✓
+- [x] Stack updated if changes detected ✓
+- [x] Tree updated if structure changed ✓
+- [x] Learnings captured ✓
+- [x] Work item status updated ✓
+- [x] Git commit created ✓
+- [x] Branch pushed to remote ✓
+- [x] Branch merged to parent if work complete ✓
+- [x] Comprehensive report generated ✓
+- [x] Next session identified ✓
 
 ---
 
@@ -1717,7 +1717,7 @@ def main():
 
 **Purpose:** Pre-flight check before session completion
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/session-validate.md` (NEW)
@@ -2143,16 +2143,16 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Detects uncommitted changes in git
-- [ ] Detects linting failures with specific issues
-- [ ] Detects formatting problems
-- [ ] Detects test failures
-- [ ] Shows work item criteria status
-- [ ] Previews tracking updates
-- [ ] Shows clear, actionable error messages
-- [ ] No side effects (read-only operation)
-- [ ] Works when quality gates would pass
-- [ ] Works when quality gates would fail
+- [x] Detects uncommitted changes in git ✓
+- [x] Detects linting failures with specific issues ✓
+- [x] Detects formatting problems ✓
+- [x] Detects test failures ✓
+- [x] Shows work item criteria status ✓
+- [x] Previews tracking updates ✓
+- [x] Shows clear, actionable error messages ✓
+- [x] No side effects (read-only operation) ✓
+- [x] Works when quality gates would pass ✓
+- [x] Works when quality gates would fail ✓
 
 ---
 
@@ -2160,7 +2160,7 @@ if __name__ == "__main__":
 
 **Purpose:** Support integration testing and deployment work items
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - Update `templates/work_items.json` to add new types
@@ -2277,11 +2277,11 @@ List API contracts being validated.
 
 #### Testing Checklist
 
-- [ ] Integration test work items can be created
-- [ ] Deployment work items can be created
-- [ ] Special validation enforced
-- [ ] Dependencies checked
-- [ ] Templates work correctly
+- [x] Integration test work items can be created ✓
+- [x] Deployment work items can be created ✓
+- [x] Special validation enforced ✓
+- [x] Dependencies checked ✓
+- [x] Templates work correctly ✓
 
 ---
 
@@ -2289,7 +2289,7 @@ List API contracts being validated.
 
 **Purpose:** Comprehensive testing of Phase 1 implementation
 
-**Status:** 📋 To Do After Implementation
+**Status:** ✅ Complete
 
 #### Complete Workflow Test
 
@@ -2343,36 +2343,36 @@ Test work item spanning multiple sessions:
 
 #### Edge Cases Test
 
-- [ ] Initialize project with no documentation
-- [ ] Initialize project with existing .session/ (should error)
-- [ ] Session-start with dirty git (should error)
-- [ ] Session-end with failing tests (should block or warn)
-- [ ] Session-end with no changes (nothing to commit)
-- [ ] Small work item (no branch needed)
-- [ ] Work item with no dependencies
-- [ ] Work item with unmet dependencies (should block)
+- [x] Initialize project with no documentation ✓
+- [x] Initialize project with existing .session/ (should error) ✓
+- [x] Session-start with dirty git (should error) ✓
+- [x] Session-end with failing tests (should block or warn) ✓
+- [x] Session-end with no changes (nothing to commit) ✓
+- [x] Small work item (no branch needed) ✓
+- [x] Work item with no dependencies ✓
+- [x] Work item with unmet dependencies (should block) ✓
 
 #### Integration Test
 
-- [ ] Stack tracking detects new library
-- [ ] Stack tracking prompts for reasoning
-- [ ] Tree tracking detects new directory
-- [ ] Tree tracking prompts for reasoning
-- [ ] Git creates branch correctly
-- [ ] Git resumes branch correctly
-- [ ] Git commits with standard message
-- [ ] Git pushes to remote (or handles no remote)
-- [ ] Git merges when work complete
+- [x] Stack tracking detects new library ✓
+- [x] Stack tracking prompts for reasoning ✓
+- [x] Tree tracking detects new directory ✓
+- [x] Tree tracking prompts for reasoning ✓
+- [x] Git creates branch correctly ✓
+- [x] Git resumes branch correctly ✓
+- [x] Git commits with standard message ✓
+- [x] Git pushes to remote (or handles no remote) ✓
+- [x] Git merges to parent when work complete ✓
 
 #### Documentation Test
 
-- [ ] Briefing includes project docs
-- [ ] Briefing includes current stack
-- [ ] Briefing includes structure preview
-- [ ] Briefing includes dependencies
-- [ ] Briefing includes learnings
-- [ ] Session report comprehensive
-- [ ] All tracking files formatted correctly
+- [x] Briefing includes project docs ✓
+- [x] Briefing includes current stack ✓
+- [x] Briefing includes structure preview ✓
+- [x] Briefing includes dependencies ✓
+- [x] Briefing includes learnings ✓
+- [x] Session report comprehensive ✓
+- [x] All tracking files formatted correctly ✓
 
 ### Phase 1 Completion Checklist
 
@@ -2413,26 +2413,28 @@ Test work item spanning multiple sessions:
 
 **Goal:** Full work item management with dependency resolution
 
-**Status:** 📋 Ready to Implement
+**Status:** ✅ Complete
+
+**Completed:** 13th October 2025
 
 **Priority:** HIGH
-
-**Target:** 1-2 weeks
 
 **Depends On:** Phase 1 (✅ Complete)
 
 ### Overview
 
-Phase 2 adds comprehensive work item management through `/work-item` command group. Users can create, list, view, and update work items interactively. Dependency resolution ensures work items are completed in logical order.
+Phase 2 successfully implemented comprehensive work item management through `/work-item-*` command group. Users can create, list, view, and update work items using conversational Claude Code interface. Dependency resolution ensures work items are completed in logical order.
 
-Phase 2 builds on Phase 1's solid foundation by adding:
+Phase 2 built on Phase 1's solid foundation by adding:
 - Complete work item type templates (6 types)
-- Interactive work item creation with validation
+- Conversational work item creation (fixed for Claude Code non-TTY environment)
 - Multiple views for work items (list, show, next)
 - Work item updates with history tracking
 - Milestone-based organization
 - Enhanced briefings with milestone context
 - Quick session status command
+
+**Key Achievement:** Successfully adapted all commands to work in Claude Code's non-interactive environment using conversational pattern instead of `input()` prompts.
 
 ---
 
@@ -2440,7 +2442,7 @@ Phase 2 builds on Phase 1's solid foundation by adding:
 
 **Purpose:** Provide consistent templates for all 6 work item types
 
-**Status:** 📋 To Implement (Quick Setup)
+**Status:** ✅ Complete
 
 **Files:**
 - Rename `templates/security_task.md` to `templates/security_spec.md`
@@ -2634,19 +2636,19 @@ Just rename the existing file for consistency - content is already good.
 
 #### Testing Checklist
 
-- [ ] All template files exist with correct names
-- [ ] Templates follow consistent format
-- [ ] All required sections included
-- [ ] Examples are clear and helpful
-- [ ] WORK_ITEM_TYPES.md references correct filenames
+- [x] All template files exist with correct names ✓
+- [x] Templates follow consistent format ✓
+- [x] All required sections included ✓
+- [x] Examples are clear and helpful ✓
+- [x] WORK_ITEM_TYPES.md references correct filenames ✓
 
 ---
 
-### 2.2 Implement `/work-item create` Command
+### 2.2 Implement `/work-item-create` Command
 
-**Purpose:** Interactive work item creation with validation
+**Purpose:** Conversational work item creation with validation (adapted for Claude Code)
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/work-item-create.md` (NEW)
@@ -3017,25 +3019,25 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Create feature work item
-- [ ] Create bug work item
-- [ ] Create refactor work item
-- [ ] Create security work item
-- [ ] Create integration_test (requires dependencies)
-- [ ] Create deployment (requires dependencies)
-- [ ] Duplicate ID detection works
-- [ ] Invalid type rejected
-- [ ] Invalid priority defaults to 'high'
-- [ ] Specification file created correctly
-- [ ] work_items.json updated atomically
+- [x] Create feature work item ✓
+- [x] Create bug work item ✓
+- [x] Create refactor work item ✓
+- [x] Create security work item ✓
+- [x] Create integration_test (requires dependencies) ✓
+- [x] Create deployment (requires dependencies) ✓
+- [x] Duplicate ID detection works ✓
+- [x] Invalid type rejected ✓
+- [x] Invalid priority defaults to 'high' ✓
+- [x] Specification file created correctly ✓
+- [x] work_items.json updated atomically ✓
 
 ---
 
-### 2.3 Implement `/work-item list` Command
+### 2.3 Implement `/work-item-list` Command
 
 **Purpose:** List work items with filtering and visual indicators
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/work-item-list.md` (NEW)
@@ -3313,24 +3315,24 @@ def _get_status_icon(self, item: Dict) -> str:
 
 #### Testing Checklist
 
-- [ ] List all work items (no filters)
-- [ ] Filter by status (not_started, in_progress, completed)
-- [ ] Filter by type (feature, bug, etc.)
-- [ ] Filter by milestone
-- [ ] Multiple filters combined
-- [ ] Empty list handled gracefully
-- [ ] Blocked items identified correctly
-- [ ] Sorting is correct (priority > dependencies > date)
-- [ ] Color coding displays correctly
-- [ ] Summary statistics accurate
+- [x] List all work items (no filters) ✓
+- [x] Filter by status (not_started, in_progress, completed) ✓
+- [x] Filter by type (feature, bug, etc.) ✓
+- [x] Filter by milestone ✓
+- [x] Multiple filters combined ✓
+- [x] Empty list handled gracefully ✓
+- [x] Blocked items identified correctly ✓
+- [x] Sorting is correct (priority > dependencies > date) ✓
+- [x] Color coding displays correctly ✓
+- [x] Summary statistics accurate ✓
 
 ---
 
-### 2.4 Implement `/work-item show` Command
+### 2.4 Implement `/work-item-show` Command
 
 **Purpose:** Display detailed information about a specific work item
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/work-item-show.md` (NEW)
@@ -3511,21 +3513,21 @@ def show_work_item(self, work_id: str) -> Optional[Dict]:
 
 #### Testing Checklist
 
-- [ ] Show existing work item
-- [ ] Show non-existent work item (error handling)
-- [ ] Display dependencies correctly
-- [ ] Display session history
-- [ ] Display git information
-- [ ] Display specification preview
-- [ ] Show appropriate next steps based on status
+- [x] Show existing work item ✓
+- [x] Show non-existent work item (error handling) ✓
+- [x] Display dependencies correctly ✓
+- [x] Display session history ✓
+- [x] Display git information ✓
+- [x] Display specification preview ✓
+- [x] Show appropriate next steps based on status ✓
 
 ---
 
-### 2.5 Implement `/work-item update` Command
+### 2.5 Implement `/work-item-update` Command
 
-**Purpose:** Update work item fields interactively
+**Purpose:** Update work item fields via CLI arguments
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/work-item-update.md` (NEW)
@@ -3727,23 +3729,23 @@ def update_work_item_interactive(self, work_id: str) -> bool:
 
 #### Testing Checklist
 
-- [ ] Update status with flag
-- [ ] Update priority with flag
-- [ ] Update milestone with flag
-- [ ] Add dependency
-- [ ] Remove dependency
-- [ ] Interactive mode
-- [ ] Invalid values rejected
-- [ ] Update history recorded
-- [ ] Atomic save works
+- [x] Update status with flag ✓
+- [x] Update priority with flag ✓
+- [x] Update milestone with flag ✓
+- [x] Add dependency ✓
+- [x] Remove dependency ✓
+- [x] CLI argument mode works ✓
+- [x] Invalid values rejected ✓
+- [x] Update history recorded in git ✓
+- [x] Atomic save works ✓
 
 ---
 
-### 2.6 Implement `/work-item next` Command
+### 2.6 Implement `/work-item-next` Command
 
 **Purpose:** Find the next work item to start based on dependencies and priority
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/work-item-next.md` (NEW)
@@ -3902,13 +3904,13 @@ def get_next_work_item(self) -> Optional[Dict]:
 
 #### Testing Checklist
 
-- [ ] Find next item when available
-- [ ] Handle no items available
-- [ ] Handle all items blocked
-- [ ] Priority sorting works
-- [ ] Dependency checking accurate
-- [ ] Display blocked items
-- [ ] Show other waiting items
+- [x] Find next item when available ✓
+- [x] Handle no items available ✓
+- [x] Handle all items blocked ✓
+- [x] Priority sorting works ✓
+- [x] Dependency checking accurate ✓
+- [x] Display blocked items ✓
+- [x] Show other waiting items ✓
 
 ---
 
@@ -3916,7 +3918,7 @@ def get_next_work_item(self) -> Optional[Dict]:
 
 **Purpose:** Group work items into milestones for better organization
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - Enhance `work_items.json` schema with milestone field
@@ -4058,12 +4060,12 @@ def list_milestones(self) -> None:
 
 #### Testing Checklist
 
-- [ ] Create milestone
-- [ ] Assign work item to milestone
-- [ ] Calculate milestone progress
-- [ ] List milestones with progress
-- [ ] Filter work items by milestone
-- [ ] Display progress bars correctly
+- [x] Create milestone ✓
+- [x] Assign work item to milestone ✓
+- [x] Calculate milestone progress ✓
+- [x] List milestones with progress ✓
+- [x] Filter work items by milestone ✓
+- [x] Display progress bars correctly ✓
 
 ---
 
@@ -4071,7 +4073,7 @@ def list_milestones(self) -> None:
 
 **Purpose:** Add milestone context to session briefings
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - Enhance `scripts/briefing_generator.py`
@@ -4155,10 +4157,10 @@ Related work items in this milestone:
 
 #### Testing Checklist
 
-- [ ] Milestone context included in briefing
-- [ ] Related work items shown
-- [ ] Progress accurate
-- [ ] Works when no milestone assigned
+- [x] Milestone context included in briefing ✓
+- [x] Related work items shown ✓
+- [x] Progress accurate ✓
+- [x] Works when no milestone assigned ✓
 
 ---
 
@@ -4166,7 +4168,7 @@ Related work items in this milestone:
 
 **Purpose:** Quick view of current session state without re-reading full briefing
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/session-status.md` (NEW)
@@ -4388,43 +4390,47 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Display current work item
-- [ ] Show time elapsed
-- [ ] List files changed
-- [ ] Show git status
-- [ ] Display milestone progress
-- [ ] Show next items
-- [ ] Handle no active session
+- [x] Display current work item ✓
+- [x] Show time elapsed ✓
+- [x] List files changed ✓
+- [x] Show git status ✓
+- [x] Display milestone progress ✓
+- [x] Show next items ✓
+- [x] Handle no active session ✓
 
 ---
 
 ### Phase 2 Completion Checklist
 
 **Implementation:**
-- [ ] All work item type templates created (2.1)
-- [ ] `/work-item create` command implemented (2.2)
-- [ ] `/work-item list` command implemented (2.3)
-- [ ] `/work-item show` command implemented (2.4)
-- [ ] `/work-item update` command implemented (2.5)
-- [ ] `/work-item next` command implemented (2.6)
-- [ ] Milestone tracking added (2.7)
-- [ ] Briefings enhanced with milestones (2.8)
-- [ ] `/session-status` command implemented (2.9)
+- [x] All work item type templates created (2.1) ✓
+- [x] `/work-item-create` command implemented (2.2) ✓
+- [x] `/work-item-list` command implemented (2.3) ✓
+- [x] `/work-item-show` command implemented (2.4) ✓
+- [x] `/work-item-update` command implemented (2.5) ✓
+- [x] `/work-item-next` command implemented (2.6) ✓
+- [x] Milestone tracking added (2.7) ✓
+- [x] Briefings enhanced with milestones (2.8) ✓
+- [x] `/session-status` command implemented (2.9) ✓
 
 **Testing:**
-- [ ] Create work item interactively
-- [ ] Create work item with dependencies
-- [ ] List filtered by status
-- [ ] Show work item details
-- [ ] Update work item fields
-- [ ] Get next work item respects dependencies
-- [ ] Milestone tracking works
-- [ ] Session status command accurate
+- [x] Create work item conversationally ✓
+- [x] Create work item with dependencies ✓
+- [x] List filtered by status, type, milestone ✓
+- [x] Show work item details ✓
+- [x] Update work item fields ✓
+- [x] Get next work item respects dependencies ✓
+- [x] Milestone tracking works ✓
+- [x] Session status command accurate ✓
+- [x] All 10 commands tested and working ✓
 
 **Documentation:**
-- [ ] All commands documented
-- [ ] Examples provided
-- [ ] Phase 2 complete in ROADMAP.md
+- [x] All commands documented ✓
+- [x] Examples provided ✓
+- [x] Phase 2 complete in ROADMAP.md ✓
+
+**Critical Fix:**
+- [x] Adapted `/work-item-create` for Claude Code non-TTY environment using conversational pattern ✓
 
 ---
 
@@ -4432,26 +4438,616 @@ if __name__ == "__main__":
 
 **Goal:** Dependency graphs with critical path analysis
 
-**Status:** 📅 Not Started
+**Status:** 📋 Ready to Implement
 
 **Priority:** HIGH
 
-**Target:** 1 week after Phase 2
+**Target:** 1 week
 
-**Depends On:** Phase 2
+**Depends On:** Phase 2 (✅ Complete)
 
 ### Overview
 
-Phase 3 integrates the already-complete `dependency_graph.py` script with `/work-item graph` command. Users can visualize project structure and identify bottlenecks.
+Phase 3 integrates the already-complete `dependency_graph.py` script with `/work-item-graph` command. Users can visualize project structure, identify bottlenecks, and understand critical paths through their work items.
 
-**Note:** Core visualization algorithms already implemented in `scripts/dependency_graph.py` - just needs command integration and UI polish.
+**Key Advantage:** Core visualization algorithms already implemented in `scripts/dependency_graph.py` - just needs command integration, filtering, and output formatting.
 
-### Implementation Approach
+Phase 3 adds:
+- Visual dependency graph generation (ASCII, DOT, SVG formats)
+- Critical path identification and highlighting
+- Flexible filtering options (status, milestone, type, focus)
+- Bottleneck analysis
+- Graph statistics and analysis
+- Integration with existing work item commands
 
-- Create `/work-item graph` command
-- Integrate with existing `dependency_graph.py`
-- Add filtering options (status, milestone)
-- Document usage
+---
+
+### 3.1 Work Item Graph Command
+
+**Purpose:** Create `/work-item-graph` command to generate dependency visualizations
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `.claude/commands/work-item-graph.md` (NEW)
+- `scripts/dependency_graph.py` (enhance existing)
+
+**Reference:** Existing `dependency_graph.py` has core algorithms ready
+
+#### Implementation
+
+**File:** `.claude/commands/work-item-graph.md`
+
+Content:
+```
+---
+description: Generate dependency graph visualization for work items
+---
+
+# Work Item Graph
+
+Generate visual dependency graphs showing relationships between work items, with critical path highlighting and bottleneck analysis.
+
+## Usage
+
+Ask the user what type of graph they want to generate:
+
+1. **Format** - Ask: "What output format would you like?"
+   - Options: ascii (default, terminal display), dot (Graphviz), svg (requires Graphviz)
+   - Default to ascii if not specified
+
+2. **Filters** - Ask: "Any filters to apply? (or 'none' for all work items)"
+   - Status: only show items with specific status (not_started, in_progress, completed)
+   - Milestone: only show items in specific milestone
+   - Type: only show specific work item types
+   - Include completed: whether to show completed items (default: no)
+
+3. **Special views** - Ask: "Need any special analysis?"
+   - critical-path: Show only critical path items
+   - bottlenecks: Highlight bottleneck analysis
+   - stats: Show graph statistics
+   - focus <work_item_id>: Show neighborhood of specific item
+
+## After Collecting Information
+
+Run the appropriate command (examples):
+- Basic: python3 scripts/dependency_graph.py
+- With format: python3 scripts/dependency_graph.py --format dot
+- With filters: python3 scripts/dependency_graph.py --status not_started --milestone "Phase 3"
+- Include completed: python3 scripts/dependency_graph.py --include-completed
+- Critical path only: python3 scripts/dependency_graph.py --critical-path
+- Bottleneck analysis: python3 scripts/dependency_graph.py --bottlenecks
+- Focus on item: python3 scripts/dependency_graph.py --focus feature_add_authentication
+- Statistics: python3 scripts/dependency_graph.py --stats
+- Save to file: python3 scripts/dependency_graph.py --format svg --output dependency_graph.svg
+
+## Output
+
+The command will generate a visual graph showing:
+- Work items as nodes (with ID, title, status)
+- Dependencies as edges (arrows from dependency to dependent)
+- Critical path highlighted in red
+- Color coding by status and priority
+- Bottlenecks identified
+
+Display the output to the user and explain key insights:
+- Which items are on critical path
+- Which items are bottlenecks
+- Completion percentage
+- Next recommended items to work on
+```
+
+**File:** Enhance `scripts/dependency_graph.py`
+
+Add CLI argument parsing and filtering:
+
+```python
+#!/usr/bin/env python3
+"""
+Dependency graph visualization for work items
+
+Generates visual dependency graphs with critical path analysis and work item timeline projection.
+Supports DOT format, SVG, and ASCII art output.
+"""
+
+import argparse
+import json
+import subprocess
+from pathlib import Path
+from typing import Optional, List, Set
+
+
+class DependencyGraphVisualizer:
+    """Visualizes work item dependency graphs"""
+
+    def __init__(self, work_items_file: Path = None):
+        """Initialize visualizer with work items file path."""
+        if work_items_file is None:
+            work_items_file = Path(".session/tracking/work_items.json")
+        self.work_items_file = work_items_file
+
+    def load_work_items(self,
+                       status_filter: Optional[str] = None,
+                       milestone_filter: Optional[str] = None,
+                       type_filter: Optional[str] = None,
+                       include_completed: bool = False) -> List[dict]:
+        """Load and filter work items from JSON file."""
+        if not self.work_items_file.exists():
+            return []
+
+        with open(self.work_items_file) as f:
+            data = json.load(f)
+
+        work_items = list(data.get("work_items", {}).values())
+
+        # Apply filters
+        if not include_completed:
+            work_items = [wi for wi in work_items if wi.get("status") != "completed"]
+
+        if status_filter:
+            work_items = [wi for wi in work_items if wi.get("status") == status_filter]
+
+        if milestone_filter:
+            work_items = [wi for wi in work_items if wi.get("milestone") == milestone_filter]
+
+        if type_filter:
+            work_items = [wi for wi in work_items if wi.get("type") == type_filter]
+
+        return work_items
+
+    def get_critical_path(self, work_items: List[dict]) -> Set[str]:
+        """Calculate critical path through dependency graph."""
+        # Implementation already exists in current dependency_graph.py
+        # This is the _calculate_critical_path method
+        pass
+
+    def get_bottlenecks(self, work_items: List[dict]) -> List[dict]:
+        """Identify bottleneck work items (items that block many others)."""
+        # Count how many items each work item blocks
+        blocking_count = {}
+        for wi in work_items:
+            blocking_count[wi["id"]] = 0
+
+        for wi in work_items:
+            for dep_id in wi.get("dependencies", []):
+                if dep_id in blocking_count:
+                    blocking_count[dep_id] += 1
+
+        # Return items that block 2+ other items
+        bottlenecks = [
+            {"id": wid, "blocks": count, "item": next(wi for wi in work_items if wi["id"] == wid)}
+            for wid, count in blocking_count.items()
+            if count >= 2
+        ]
+
+        return sorted(bottlenecks, key=lambda x: x["blocks"], reverse=True)
+
+    def get_neighborhood(self, work_items: List[dict], focus_id: str) -> List[dict]:
+        """Get work items in neighborhood of focus item (dependencies and dependents)."""
+        # Find focus item
+        focus_item = next((wi for wi in work_items if wi["id"] == focus_id), None)
+        if not focus_item:
+            return []
+
+        # Get all dependencies (recursive)
+        neighborhood_ids = {focus_id}
+        to_check = set(focus_item.get("dependencies", []))
+
+        while to_check:
+            dep_id = to_check.pop()
+            if dep_id not in neighborhood_ids:
+                neighborhood_ids.add(dep_id)
+                dep_item = next((wi for wi in work_items if wi["id"] == dep_id), None)
+                if dep_item:
+                    to_check.update(dep_item.get("dependencies", []))
+
+        # Get all dependents (items that depend on any item in neighborhood)
+        for wi in work_items:
+            if any(dep_id in neighborhood_ids for dep_id in wi.get("dependencies", [])):
+                neighborhood_ids.add(wi["id"])
+
+        return [wi for wi in work_items if wi["id"] in neighborhood_ids]
+
+    def generate_stats(self, work_items: List[dict], critical_path: Set[str]) -> dict:
+        """Generate graph statistics."""
+        total = len(work_items)
+        completed = len([wi for wi in work_items if wi.get("status") == "completed"])
+        in_progress = len([wi for wi in work_items if wi.get("status") == "in_progress"])
+        not_started = len([wi for wi in work_items if wi.get("status") == "not_started"])
+
+        return {
+            "total_items": total,
+            "completed": completed,
+            "in_progress": in_progress,
+            "not_started": not_started,
+            "completion_pct": round(completed / total * 100, 1) if total > 0 else 0,
+            "critical_path_length": len(critical_path),
+            "critical_items": list(critical_path)
+        }
+
+    def generate_ascii(self, work_items: List[dict], highlight_critical: bool = True) -> str:
+        """Generate ASCII art graph (implementation exists in current file)."""
+        pass
+
+    def generate_dot(self, work_items: List[dict], highlight_critical: bool = True) -> str:
+        """Generate DOT format graph (implementation exists in current file)."""
+        pass
+
+    def generate_svg(self, dot_content: str, output_file: Path) -> bool:
+        """Generate SVG from DOT using Graphviz."""
+        try:
+            result = subprocess.run(
+                ["dot", "-Tsvg", "-o", str(output_file)],
+                input=dot_content,
+                text=True,
+                capture_output=True,
+                timeout=30
+            )
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+
+
+def main():
+    """CLI entry point."""
+    parser = argparse.ArgumentParser(description='Generate work item dependency graphs')
+
+    # Output format
+    parser.add_argument('--format', choices=['ascii', 'dot', 'svg'], default='ascii',
+                       help='Output format (default: ascii)')
+    parser.add_argument('--output', help='Output file (for dot/svg formats)')
+
+    # Filters
+    parser.add_argument('--status', choices=['not_started', 'in_progress', 'completed'],
+                       help='Filter by status')
+    parser.add_argument('--milestone', help='Filter by milestone')
+    parser.add_argument('--type', help='Filter by work item type')
+    parser.add_argument('--include-completed', action='store_true',
+                       help='Include completed items (default: hide)')
+
+    # Special views
+    parser.add_argument('--critical-path', action='store_true',
+                       help='Show only critical path')
+    parser.add_argument('--bottlenecks', action='store_true',
+                       help='Show bottleneck analysis')
+    parser.add_argument('--stats', action='store_true',
+                       help='Show graph statistics')
+    parser.add_argument('--focus', help='Focus on neighborhood of specific work item')
+
+    args = parser.parse_args()
+
+    # Initialize visualizer
+    viz = DependencyGraphVisualizer()
+
+    # Load work items with filters
+    work_items = viz.load_work_items(
+        status_filter=args.status,
+        milestone_filter=args.milestone,
+        type_filter=args.type,
+        include_completed=args.include_completed
+    )
+
+    if not work_items:
+        print("No work items found matching criteria.")
+        return 1
+
+    # Apply special filters
+    if args.focus:
+        work_items = viz.get_neighborhood(work_items, args.focus)
+        if not work_items:
+            print(f"Work item '{args.focus}' not found.")
+            return 1
+
+    critical_path = viz.get_critical_path(work_items)
+
+    if args.critical_path:
+        work_items = [wi for wi in work_items if wi["id"] in critical_path]
+
+    # Handle special views
+    if args.stats:
+        stats = viz.generate_stats(work_items, critical_path)
+        print("Graph Statistics:")
+        print("=" * 50)
+        print(f"Total work items: {stats['total_items']}")
+        print(f"Completed: {stats['completed']} ({stats['completion_pct']}%)")
+        print(f"In progress: {stats['in_progress']}")
+        print(f"Not started: {stats['not_started']}")
+        print(f"Critical path length: {stats['critical_path_length']}")
+        print(f"Critical items: {', '.join(stats['critical_items'])}")
+        return 0
+
+    if args.bottlenecks:
+        bottlenecks = viz.get_bottlenecks(work_items)
+        print("Bottleneck Analysis:")
+        print("=" * 50)
+        if bottlenecks:
+            for bn in bottlenecks:
+                print(f"{bn['id']} blocks {bn['blocks']} items")
+        else:
+            print("No bottlenecks found.")
+        return 0
+
+    # Generate graph
+    if args.format == 'ascii':
+        output = viz.generate_ascii(work_items, highlight_critical=True)
+        print(output)
+
+    elif args.format == 'dot':
+        output = viz.generate_dot(work_items, highlight_critical=True)
+        if args.output:
+            Path(args.output).write_text(output)
+            print(f"DOT graph saved to {args.output}")
+        else:
+            print(output)
+
+    elif args.format == 'svg':
+        dot_output = viz.generate_dot(work_items, highlight_critical=True)
+        output_file = Path(args.output) if args.output else Path("dependency_graph.svg")
+        if viz.generate_svg(dot_output, output_file):
+            print(f"SVG graph saved to {output_file}")
+        else:
+            print("Error: Graphviz not installed or DOT conversion failed")
+            return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())
+```
+
+#### Integration
+
+- Command asks questions conversationally
+- Collects format, filters, special views
+- Runs `dependency_graph.py` with appropriate arguments
+- Displays output and explains key insights
+
+#### Testing Checklist
+
+- [ ] Generate ASCII graph (default)
+- [ ] Generate DOT graph
+- [ ] Generate SVG graph (if Graphviz available)
+- [ ] Filter by status, milestone, type
+- [ ] Show critical path only
+- [ ] Show bottleneck analysis
+- [ ] Show statistics
+- [ ] Focus on specific work item neighborhood
+- [ ] Save to file
+- [ ] Test with no work items
+- [ ] Test with completed items hidden/shown
+
+---
+
+### 3.2 Critical Path Analysis
+
+**Purpose:** Ensure critical path calculation works correctly and is visually highlighted
+
+**Status:** ⭐ ALGORITHM READY (existing implementation)
+
+**Files:**
+- `scripts/dependency_graph.py` (existing `_calculate_critical_path` method)
+
+**Reference:** Current implementation uses DFS to find longest dependency chain
+
+#### Implementation
+
+The critical path algorithm is already implemented in `dependency_graph.py`. It uses:
+
+1. **Topological sort** of dependency graph
+2. **DFS traversal** to calculate longest path from each node
+3. **Critical path identification** as longest chain from start to any leaf node
+
+**Algorithm (pseudo-code):**
+```
+def calculate_critical_path(work_items):
+    # Build dependency graph
+    graph = build_adjacency_list(work_items)
+
+    # Calculate longest path from each node
+    longest_paths = {}
+    for node in topological_sort(graph):
+        if has_no_dependencies(node):
+            longest_paths[node] = 1
+        else:
+            longest_paths[node] = 1 + max(longest_paths[dep] for dep in dependencies(node))
+
+    # Find critical path (nodes with longest path)
+    max_length = max(longest_paths.values())
+    critical_nodes = {node for node, length in longest_paths.items() if length == max_length}
+
+    # Trace back full critical path
+    critical_path = trace_path(critical_nodes, graph)
+
+    return critical_path
+```
+
+#### Testing Checklist
+
+- [ ] Verify critical path correct for linear dependency chain
+- [ ] Verify critical path correct for branching dependencies
+- [ ] Verify critical path correct for diamond dependencies
+- [ ] Verify critical path updates when work items change
+- [ ] Verify highlighting in all formats (ASCII, DOT, SVG)
+
+---
+
+### 3.3 Graph Filtering Options
+
+**Purpose:** Add flexible filtering to show subsets of work items
+
+**Status:** 📋 To Implement
+
+**Implementation:** Add to `dependency_graph.py` main() function (shown in section 3.1)
+
+#### Filters
+
+1. **Status filter:** `--status {not_started,in_progress,completed}`
+   - Show only items with specific status
+   - Useful for focusing on current work
+
+2. **Milestone filter:** `--milestone "Milestone Name"`
+   - Show only items in specific milestone
+   - Useful for milestone planning
+
+3. **Type filter:** `--type {feature,bug,refactor,security,integration_test,deployment}`
+   - Show only specific work item types
+   - Useful for focusing on specific kinds of work
+
+4. **Include completed:** `--include-completed`
+   - Show completed items (default: hide)
+   - Useful for seeing full project history
+
+5. **Focus filter:** `--focus work_item_id`
+   - Show neighborhood of specific item
+   - Includes all dependencies (recursive) and dependents
+   - Useful for understanding impact of specific item
+
+#### Testing Checklist
+
+- [ ] Status filter works correctly
+- [ ] Milestone filter works correctly
+- [ ] Type filter works correctly
+- [ ] Include-completed flag works correctly
+- [ ] Focus filter shows correct neighborhood
+- [ ] Multiple filters can be combined
+- [ ] Empty results handled gracefully
+
+---
+
+### 3.4 Multiple Output Formats
+
+**Purpose:** Support ASCII, DOT, and SVG output formats
+
+**Status:** ⭐ ALGORITHMS READY (ASCII and DOT exist)
+
+**Files:**
+- `scripts/dependency_graph.py` (enhance existing methods)
+
+#### Formats
+
+1. **ASCII art (default)**
+   - Terminal-friendly
+   - Uses box drawing characters
+   - Color coding with ANSI codes
+   - Critical path in red/bold
+   - Already implemented
+
+2. **DOT format**
+   - Graphviz input format
+   - Structured graph definition
+   - Node and edge styling
+   - Critical path highlighting
+   - Already implemented
+
+3. **SVG**
+   - Visual graph image
+   - Generated from DOT using Graphviz
+   - Can be embedded in documentation
+   - Requires Graphviz installed
+   - NEW (add in section 3.1)
+
+#### Testing Checklist
+
+- [ ] ASCII output renders correctly in terminal
+- [ ] DOT output is valid Graphviz syntax
+- [ ] SVG generation works when Graphviz installed
+- [ ] SVG generation fails gracefully without Graphviz
+- [ ] Output saved to file when --output specified
+- [ ] Critical path highlighted in all formats
+
+---
+
+### 3.5 Graph Analysis Commands
+
+**Purpose:** Provide specialized analysis views
+
+**Status:** 📋 To Implement
+
+**Implementation:** Add special mode handlers to `dependency_graph.py` (shown in section 3.1)
+
+#### Analysis Views
+
+1. **Critical path only:** `--critical-path`
+   - Show only items on critical path
+   - Useful for understanding minimum project timeline
+
+2. **Bottleneck analysis:** `--bottlenecks`
+   - List items that block multiple other items
+   - Show how many items each bottleneck blocks
+   - Sorted by impact
+
+3. **Statistics:** `--stats`
+   - Total items, completion percentage
+   - Items by status
+   - Critical path length
+   - List of critical items
+
+#### Testing Checklist
+
+- [ ] Critical path view shows correct subset
+- [ ] Bottleneck analysis identifies blocking items correctly
+- [ ] Statistics calculated correctly
+- [ ] Statistics update when work items change
+
+---
+
+### 3.6 Documentation and Examples
+
+**Purpose:** Document graph usage and interpretation
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `.claude/commands/work-item-graph.md` (examples section)
+- Update `README.md` with graph examples
+- Potentially create `docs/dependency-graphs.md`
+
+#### Documentation Sections
+
+1. **Command usage examples**
+   - Basic graph generation
+   - Filtering examples
+   - Special view examples
+   - Saving to files
+
+2. **Graph interpretation guide**
+   - How to read dependency arrows
+   - Understanding critical path (red highlighting)
+   - Identifying bottlenecks
+   - Status color coding
+
+3. **Critical path concepts**
+   - What is critical path
+   - Why it matters
+   - How to optimize it
+
+4. **Example workflows**
+   - Planning new milestone
+   - Identifying next work items
+   - Finding blockers
+   - Tracking progress
+
+#### Testing Checklist
+
+- [ ] All examples in documentation work correctly
+- [ ] Documentation matches actual command behavior
+- [ ] Screenshots/examples included for each format
+
+---
+
+### Phase 3 Success Criteria
+
+✅ `/work-item-graph` command integrated and working
+✅ Graphs generated in all formats (ASCII, DOT, SVG)
+✅ Critical path correctly identified and highlighted
+✅ Filtering and exploration work smoothly
+✅ Bottleneck analysis provides actionable insights
+✅ Statistics accurate and helpful
+✅ Command integrates seamlessly with existing work item commands
+✅ Terminal output is readable and informative
+✅ Graph updates automatically when work items change
+✅ Documentation complete with examples
 
 ---
 
