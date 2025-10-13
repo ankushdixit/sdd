@@ -321,6 +321,13 @@ Central state file tracking all work items:
       "sessions": [3, 5],
       "milestone": "mvp_auth",
 
+      "git": {
+        "branch": "session-003-feature-oauth",
+        "created_at": "2025-10-05T10:00:00Z",
+        "status": "merged",
+        "commits": ["abc123f", "def456a", "789ghi0"]
+      },
+
       "dependencies": ["feature_user_model"],
       "dependents": ["feature_profile_sync"],
 
@@ -353,6 +360,25 @@ Central state file tracking all work items:
   }
 }
 ```
+
+**Git Tracking Field:**
+
+The `git` field tracks branch information for work items that span multiple sessions or require significant work:
+
+- **`branch`**: Name of the git branch created for this work item
+- **`created_at`**: When the branch was created  
+- **`status`**: Current branch status
+  - `"in_progress"`: Work continuing, branch open
+  - `"ready_to_merge"`: Work complete, ready for merge
+  - `"merged"`: Branch merged to main
+- **`commits`**: Array of commit SHAs on this branch
+
+**Notes:**
+- Not all work items need branches. Small work items completed in a single session may commit directly to main.
+- The `git` field is only present for work items that have an associated branch.
+- Multi-session work items should always have a dedicated branch to maintain clean git history.
+- Session-start checks `git.status` to determine whether to create a new branch or continue existing one.
+- Session-end updates `git.commits` and `git.status` based on work completion state.
 
 #### 4. `status_update.json` - Session Summary
 
@@ -1049,8 +1075,10 @@ User: @session-start
 1. Read CLAUDE.md (automatic)
 2. Sees `@session-start` trigger in protocol
 3. Runs: `python .session/scripts/session_init.py --next`
-4. Reads generated briefing file
-5. Confirms understanding:
+4. Validates git status (clean working directory)
+5. Creates or resumes branch for work item
+6. Reads generated briefing file
+7. Confirms understanding:
    ```
    Session 5 initialized: OAuth2 Authentication
 
@@ -1124,6 +1152,10 @@ User: @session-end
 
    Session summary: .session/history/session_005_summary.md
    ```
+4. Git operations:
+   - Commits changes with standardized message
+   - Pushes branch to remote
+   - Optionally merges if work item complete
 
 ---
 

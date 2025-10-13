@@ -6,6 +6,7 @@
   "commands": [
     "session-start",
     "session-end",
+    "session-validate",
     "session-status",
     "work-item",
     "learning"
