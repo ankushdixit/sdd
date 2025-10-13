@@ -115,9 +115,101 @@ def update_all_tracking(session_num):
     return True
 
 
+def load_curation_config():
+    """Load curation configuration from config.json"""
+    config_path = Path(".session/config.json")
+    if not config_path.exists():
+        return {"auto_curate": False, "frequency": 5, "dry_run": False}
+
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+            return config.get("curation", {})
+    except Exception:
+        return {"auto_curate": False, "frequency": 5, "dry_run": False}
+
+
+def trigger_curation_if_needed(session_num):
+    """Check if curation should run and trigger it"""
+    config = load_curation_config()
+
+    if not config.get("auto_curate", False):
+        return
+
+    frequency = config.get("frequency", 5)
+
+    # Run curation every N sessions
+    if session_num % frequency == 0:
+        print(f"\n{'='*50}")
+        print(f"Running automatic learning curation (session {session_num})...")
+        print(f"{'='*50}\n")
+
+        try:
+            result = subprocess.run(
+                ["python3", "scripts/learning_curator.py", "curate"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+
+            if result.returncode == 0:
+                print(result.stdout)
+                print("✓ Learning curation completed\n")
+            else:
+                print("⚠️  Learning curation encountered issues")
+                if result.stderr:
+                    print(result.stderr)
+        except Exception as e:
+            print(f"⚠️  Learning curation failed: {e}\n")
+
+
+def auto_extract_learnings(session_num):
+    """Auto-extract learnings from session artifacts"""
+    print("\nAuto-extracting learnings from session artifacts...")
+
+    try:
+        # Import learning curator
+        from learning_curator import LearningsCurator
+
+        curator = LearningsCurator()
+
+        total_extracted = 0
+
+        # Extract from session summary (if it exists)
+        summary_file = Path(f".session/history/session_{session_num:03d}_summary.md")
+        if summary_file.exists():
+            from_summary = curator.extract_from_session_summary(summary_file)
+            for learning in from_summary:
+                if curator.add_learning_if_new(learning):
+                    total_extracted += 1
+
+        # Extract from git commits
+        from_commits = curator.extract_from_git_commits()
+        for learning in from_commits:
+            if curator.add_learning_if_new(learning):
+                total_extracted += 1
+
+        # Extract from inline code comments
+        from_code = curator.extract_from_code_comments()
+        for learning in from_code:
+            if curator.add_learning_if_new(learning):
+                total_extracted += 1
+
+        if total_extracted > 0:
+            print(f"✓ Auto-extracted {total_extracted} new learning(s)\n")
+        else:
+            print("No new learnings extracted\n")
+
+        return total_extracted
+
+    except Exception as e:
+        print(f"⚠️  Auto-extraction failed: {e}\n")
+        return 0
+
+
 def extract_learnings_from_session():
-    """Extract learnings from work done in session."""
-    print("\nExtract learnings from this session...")
+    """Extract learnings from work done in session (manual input)."""
+    print("\nCapture additional learnings manually...")
     print("(Type each learning, or 'done' to finish, or 'skip' to skip):")
 
     learnings = []
@@ -254,7 +346,13 @@ def main():
     # Update all tracking (stack, tree)
     update_all_tracking(session_num)
 
-    # Extract learnings
+    # Trigger curation if needed (every N sessions)
+    trigger_curation_if_needed(session_num)
+
+    # Auto-extract learnings from session artifacts
+    auto_extract_learnings(session_num)
+
+    # Extract learnings manually
     learnings = extract_learnings_from_session()
 
     # Process learnings with learning_curator if available
