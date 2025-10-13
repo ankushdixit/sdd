@@ -4,45 +4,188 @@ This roadmap outlines the phased development of the Claude Code Session Plugin f
 
 ---
 
-## Phase 1: Core Plugin (v0.1) - Foundation
+## Phase 0: Foundation & Documentation (v0.0) - Complete
 
-**Goal:** Working `/session-start` and `/session-end` commands with basic workflow
+**Goal:** Establish repository structure and define comprehensive methodology
 
-**Status:** Not started
+**Status:** ✅ Complete
+
+**Completed:** 10th October 2025
+
+### Accomplishments
+
+**Repository Structure Created:**
+```
+claude-session-plugin/
+├── .claude-plugin/
+│   └── plugin.json              ✅ Plugin manifest
+├── commands/
+│   ├── session-start.md         ✅ Basic definition
+│   └── session-end.md           ✅ Basic definition
+├── scripts/
+│   ├── briefing_generator.py    ✅ Basic version
+│   ├── session_complete.py      ✅ Basic version
+│   ├── learning_curator.py      ✅ Complete, production-ready
+│   ├── dependency_graph.py      ✅ Complete, production-ready
+│   ├── file_ops.py              ✅ Utilities
+│   └── init_project.py          ✅ Basic version
+├── templates/
+│   ├── work_items.json          ✅ Schema defined
+│   ├── learnings.json           ✅ Schema defined
+│   └── status_update.json       ✅ Schema defined
+├── docs/
+│   ├── session-driven-development.md     ✅ Complete methodology
+│   ├── implementation-insights.md        ✅ Lessons learned
+│   └── ai-augmented-solo-framework.md    ✅ Framework reference
+├── ROADMAP.md                   ✅ Project roadmap
+└── README.md                    ✅ Project overview
+```
+
+**What Works:**
+- ✅ Plugin manifest is valid
+- ✅ Learning curation system complete (auto-categorize, similarity detection, merge duplicates)
+- ✅ Dependency graph visualization complete (ASCII, DOT, SVG formats with critical path analysis)
+- ✅ Basic briefing generation (finds next work item, generates briefing)
+- ✅ Basic session completion (runs tests/linting, updates status)
+- ✅ File utilities for safe JSON operations
+- ✅ Comprehensive documentation (methodology, formats, philosophy)
+
+**Key Assets:**
+- **Algorithms ready to use:**
+  - Dependency resolution (DFS-based critical path analysis)
+  - Learning categorization (keyword-based with 6 categories)
+  - Similarity detection (Jaccard + containment, thresholds: 0.6/0.8)
+- **Formats fully defined:**
+  - Reference: session-driven-development.md lines 113-601 ("Key Files Explained" section)
+  - work_items.json schema (with git tracking)
+  - learnings.json structure
+  - status_update.json format
+  - stack.txt and stack_updates.json formats
+  - tree.txt and tree_updates.json formats
+
+### What's Missing (Phase 1 Will Add)
+
+- ❌ `/session-init` command (project initialization)
+- ❌ Stack tracking system (generate_stack.py, stack.txt, stack_updates.json)
+- ❌ Tree tracking system (generate_tree.py, tree.txt, tree_updates.json)
+- ❌ Git workflow integration (git_integration.py, branch management)
+- ❌ Enhanced session-start (load full context: docs, stack, tree, git)
+- ❌ Enhanced session-end (update stack, tree, git operations, comprehensive reporting)
+- ❌ Integration/deployment work item types
+
+---
+
+## Phase 1: Core Plugin Foundation (v0.1) - Essential Session Workflow
+
+**Goal:** Complete working session workflow with stack tracking, tree tracking, git integration, and comprehensive context loading
+
+**Status:** 📋 Not Started
+
+**Priority:** HIGH - This is the foundation everything else builds on
+
+**Target:** 2-3 weeks
+
+**Depends On:** Phase 0 (Complete)
 
 ### Features
 
-- [x] **Plugin structure and manifest**
-  - `.claude-plugin/` directory setup
-  - `plugin.json` with metadata
-  - Initial command definitions
+- [ ] **Session initialization command**
+  - `/session-init` - Initialize .session/ structure in project
+  - Check for project documentation (docs/ folder)
+  - Create directory structure and tracking files
+  - Run initial stack and tree scans
+  - Validate setup completion
 
-- [ ] **Session management commands**
-  - `/session-start` - Generate briefing, begin work
-  - `/session-end` - Run quality gates, create summary
-  - `/session-status` - Show current session state
-  - `/session-validate` - Check if session can complete
+- [ ] **Stack tracking system**
+  - `scripts/generate_stack.py` - Auto-detect technology stack
+  - Generate `tracking/stack.txt` (current technologies)
+  - Update `tracking/stack_updates.json` (changes with reasoning)
+  - Detect: languages, frameworks, libraries, MCP servers, external APIs
+  - Integration: Run on session-end, include in session-start briefing
 
-- [ ] **Project initialization**
-  - Detect if project has `.session/` directory
-  - Create directory structure on first use
-  - Generate initial configuration
-  - Create empty work_items.json
+- [ ] **Tree tracking system**
+  - `scripts/generate_tree.py` - Generate project structure
+  - Generate `tracking/tree.txt` (current structure)
+  - Update `tracking/tree_updates.json` (structural changes with reasoning)
+  - Detect: new directories, file moves, architectural changes
+  - Integration: Run on session-end, include in session-start briefing
 
-- [ ] **Basic briefing generation**
-  - Read next work item
-  - Generate markdown briefing
-  - Include work item details
-  - List implementation checklist
+- [ ] **Git workflow integration**
+  - `scripts/git_integration.py` - Automate git operations
+  - Session-start: Check git status, create/resume branch
+  - Session-end: Commit, push, optionally merge
+  - Track git state in work_items.json (branch, commits, status)
+  - Support multi-session work items (continue same branch)
+  - Handle small work items (may not need separate branch)
 
-- [ ] **Basic session completion**
-  - Create session summary
-  - Update work item status
-  - Record completion metrics
-  - Update status_update.json
+- [ ] **Enhanced session-start**
+  - Read project documentation (vision, PRD, architecture)
+  - Load current stack (from stack.txt)
+  - Load current tree structure (from tree.txt)
+  - Validate environment (dependencies installed, services running)
+  - Git validation and branch creation/continuation
+  - Generate comprehensive briefing with full context
+  - Update work item status to in_progress
 
-### Target
-**2-3 weeks** - Functional session workflow, no quality gates yet
+- [ ] **Enhanced session-end**
+  - Run quality gates (tests, linting, formatting)
+  - Update stack.txt and stack_updates.json (if changes detected)
+  - Update tree.txt and tree_updates.json (if structure changed)
+  - Extract learnings from session work
+  - Update work item status and session notes
+  - Git commit with standardized message
+  - Git push to remote
+  - Optionally merge branch if work item complete
+  - Generate comprehensive session report
+
+- [ ] **Session validation command**
+  - `/session-validate` - Pre-flight check before session-end
+  - Validates git status, quality gates, acceptance criteria
+  - Non-destructive preview of what session-end will do
+  - Shows what needs fixing before completion
+  - Helps developer fix issues proactively
+
+- [ ] **Integration and deployment work item types**
+  - `integration_test` type with special quality gates
+  - `deployment` type with deployment validation
+  - Dependencies mandatory for these types
+  - Phase-specific validation criteria
+
+### Implementation Order
+
+**Week 1: Foundation**
+- 1.1: Create `/session-init` command
+- 1.2: Implement `generate_stack.py`
+- 1.3: Implement `generate_tree.py`
+- 1.4: Implement `git_integration.py`
+
+**Week 2: Enhancement**
+- 1.5: Enhance `briefing_generator.py` to read all context
+- 1.6: Enhance `session_complete.py` to update all tracking
+- 1.7: Add `/session-validate` command
+- 1.8: Add integration/deployment work item types
+
+**Week 3: Testing**
+- 1.9: Phase 1 Testing & Validation
+  - Test complete workflow on fresh project
+  - Test multi-session work items
+  - Test branch continuation
+  - Validate all tracking files updated correctly
+  - Test `/session-validate` command
+
+### Success Criteria
+
+✅ `/session-init` successfully initializes project structure
+✅ Stack tracking detects and records all technologies with reasoning
+✅ Tree tracking detects and records structural changes with reasoning
+✅ Git workflow prevents mistakes (wrong branch, uncommitted changes)
+✅ Session-start loads complete project context
+✅ Session-end updates all tracking files correctly
+✅ `/session-validate` accurately previews session completion readiness
+✅ Multi-session work items continue on same branch
+✅ Quality gates prevent broken states
+✅ Integration/deployment work item types properly validated
+✅ No manual git operations needed
 
 ---
 
@@ -50,7 +193,13 @@ This roadmap outlines the phased development of the Claude Code Session Plugin f
 
 **Goal:** Full work item management with dependency resolution
 
-**Status:** Not started
+**Status:** 📅 Not Started
+
+**Priority:** HIGH
+
+**Target:** 1-2 weeks after Phase 1
+
+**Depends On:** Phase 1 (Core Plugin Foundation)
 
 ### Features
 
@@ -62,7 +211,7 @@ This roadmap outlines the phased development of the Claude Code Session Plugin f
   - `/work-item next` - Show next available item
 
 - [ ] **Dependency management**
-  - Dependency resolution algorithm (already implemented)
+  - Dependency resolution algorithm (already implemented in scripts)
   - Dependency validation at session start
   - Block starting items with unmet dependencies
   - Show dependency chain in briefings
@@ -78,11 +227,21 @@ This roadmap outlines the phased development of the Claude Code Session Plugin f
   - List related work items
   - Include estimated effort
 
-### Priority: HIGH
-Core functionality for managing complex projects
+- [ ] **Session status command**
+  - `/session-status` - Show current session state
+  - Display work item context, progress, time elapsed
+  - Show files changed, git branch status
+  - Quick reference without re-reading full briefing
+  - Integration with milestone and dependency info
 
-### Target
-**1-2 weeks** after Phase 1
+### Success Criteria
+
+✅ Work items can be created interactively
+✅ Dependencies enforced automatically
+✅ Milestones track progress accurately
+✅ Briefings include comprehensive context
+✅ `/session-status` provides quick session overview
+✅ Session context easily accessible without re-reading briefing
 
 ---
 
@@ -90,7 +249,13 @@ Core functionality for managing complex projects
 
 **Goal:** Visual dependency graph with critical path analysis
 
-**Status:** ✅ Script ready - `scripts/dependency_graph.py`
+**Status:** 📅 Not Started (⭐ Scripts Ready)
+
+**Priority:** HIGH
+
+**Target:** 1 week after Phase 2
+
+**Depends On:** Phase 2 (Work Item System)
 
 ### Features
 
@@ -114,11 +279,12 @@ Core functionality for managing complex projects
   - Show/hide completed items
   - Zoom to work item neighborhood
 
-### Priority: HIGH
-Essential for understanding project structure
+### Success Criteria
 
-### Target
-**1 week** after Phase 2 (algorithms already implemented)
+✅ Graphs generated in all formats (ASCII, DOT, SVG)
+✅ Critical path correctly identified
+✅ Filtering and exploration work smoothly
+✅ Helps identify project bottlenecks
 
 ---
 
@@ -126,7 +292,13 @@ Essential for understanding project structure
 
 **Goal:** Automated learning capture and curation
 
-**Status:** ✅ Script ready - `scripts/learning_curator.py`
+**Status:** 📅 Not Started (⭐ Scripts Ready)
+
+**Priority:** MEDIUM-HIGH
+
+**Target:** 1-2 weeks after Phase 3
+
+**Depends On:** Phase 3 (Visualization)
 
 ### Features
 
@@ -166,19 +338,26 @@ Essential for understanding project structure
   - Filter by date/session
   - Related learnings suggestions
 
-### Priority: MEDIUM-HIGH
-Critical for long-running projects
+### Success Criteria
 
-### Target
-**1-2 weeks** after Phase 3 (algorithms already implemented)
+✅ Learnings captured during sessions
+✅ Auto-categorization accurate (>85%)
+✅ Duplicates detected and merged
+✅ Knowledge base grows organically
 
 ---
 
-## Phase 5: Quality Gates (v0.5) - Validation
+## Phase 5: Quality Gates (v0.5) - Validation & Security
 
 **Goal:** Automated quality enforcement at session completion
 
-**Status:** Not started
+**Status:** 📅 Not Started (Partially Implemented)
+
+**Priority:** HIGH
+
+**Target:** 2-3 weeks after Phase 4
+
+**Depends On:** Phase 4 (Learning Management)
 
 ### Features
 
@@ -199,17 +378,22 @@ Critical for long-running projects
   - Auto-format when possible
   - Ensure consistent style
 
+- [ ] **Security scanning**
+  - Run security scanners (bandit, safety, npm audit)
+  - Check for known vulnerabilities
+  - Validate dependencies
+  - Fail on critical security issues
+
 - [ ] **Documentation validation**
   - Check if CHANGELOG updated
   - Verify docstrings present
   - Ensure README current
   - Validate API documentation
 
-- [ ] **Git integration**
-  - Auto-generate commit message
-  - Stage changes
-  - Create commit
-  - Optionally push to remote
+- [ ] **Context7 verification**
+  - Ensure important libraries checked via Context7 MCP
+  - Validate library versions in stack
+  - Track which libraries verified
 
 - [ ] **Custom validation rules**
   - Per-work-item validation criteria
@@ -217,24 +401,110 @@ Critical for long-running projects
   - Optional gates (can be skipped)
   - Required gates (must pass)
 
-### Priority: HIGH
-Core to maintaining quality over time
+### Success Criteria
 
-### Target
-**2-3 weeks** after Phase 4
+✅ All quality gates run automatically
+✅ Security vulnerabilities caught early
+✅ Code quality consistently high
+✅ Documentation stays current
 
 ---
 
-## Phase 6: Spec-Kit Integration (v0.6) - Specification-Driven
+## Phase 5.5: Integration & System Testing (v0.5.5) - Testing Support
+
+**Goal:** Support integration testing and system validation work items
+
+**Status:** 📅 Not Started
+
+**Priority:** MEDIUM-HIGH
+
+**Target:** 1 week after Phase 5
+
+**Depends On:** Phase 5 (Quality Gates)
+
+### Features
+
+- [ ] **Integration test work item type**
+  - Special validation criteria for integration tests
+  - End-to-end test execution
+  - Performance benchmarking
+  - Multi-component validation
+
+- [ ] **Quality gates for integration**
+  - All integration tests must pass
+  - Performance benchmarks met
+  - Cross-component data flow validated
+  - API contract tests passing
+
+- [ ] **Integration documentation**
+  - Document integration points
+  - Track API contracts
+  - Record test scenarios
+
+### Success Criteria
+
+✅ Integration tests tracked as work items
+✅ Special validation for integration phases
+✅ Performance benchmarks enforced
+
+---
+
+## Phase 5.6: Deployment & Launch (v0.6) - Deployment Support
+
+**Goal:** Support deployment work items with validation
+
+**Status:** 📅 Not Started
+
+**Priority:** MEDIUM-HIGH
+
+**Target:** 1 week after Phase 5.5
+
+**Depends On:** Phase 5.5 (Integration Testing)
+
+### Features
+
+- [ ] **Deployment work item type**
+  - Deployment procedure validation
+  - Environment configuration checks
+  - Rollback procedure testing
+  - Smoke test execution
+
+- [ ] **Quality gates for deployment**
+  - Deployment successful
+  - Smoke tests passing
+  - Monitoring operational
+  - Rollback tested
+  - Documentation updated
+
+- [ ] **Deployment documentation**
+  - Track deployment procedures
+  - Record configuration changes
+  - Document rollback steps
+
+### Success Criteria
+
+✅ Deployments tracked as work items
+✅ Deployment validation automated
+✅ Rollback procedures tested
+
+---
+
+## Phase 6: Spec-Kit Integration (v0.7) - Specification-Driven
 
 **Goal:** Import work items from Spec-Kit specifications
 
-**Status:** To be implemented
+**Status:** 📅 Not Started
+
+**Priority:** MEDIUM
+
+**Target:** 1-2 weeks (can be done independently)
+
+**Depends On:** Phase 2 (Work Item System)
 
 ### Features
 
 - [ ] **Import from Spec-Kit**
-  - `/import spec-kit --from-file tasks.md`
+  - `/work-item import-speckit --from-file tasks.md`
   - Parse `/speckit.constitution` format
   - Parse `/speckit.specify` format
   - Parse `/speckit.tasks` format
@@ -249,24 +519,31 @@ Core to maintaining quality over time
   - Alert when specs updated
 
 - [ ] **Enhanced work item model**
-  - Include rationale field
-  - Include acceptance criteria
+  - Include rationale field (already in model)
+  - Include acceptance criteria (already in model)
   - Link to specification source
   - Intent-driven work items
 
-### Priority: MEDIUM
-Valuable for spec-driven projects, not essential for all
+### Success Criteria
 
-### Target
-**1 week** after Phase 5 (mostly porting existing code)
+✅ Work items imported from spec-kit
+✅ Rationale and criteria preserved
+✅ Dependencies detected automatically
+✅ Specs linked to work items
 
 ---
 
-## Phase 7: Advanced Features (v0.7+)
+## Phase 7: Advanced Features (v0.8+) - Polish
 
 **Goal:** Polish and advanced capabilities
 
-**Status:** Future work
+**Status:** 📅 Not Started
+
+**Priority:** LOW
+
+**Target:** On-demand after core complete
+
+**Depends On:** Phases 1-6 (All Core Phases)
 
 ### Features
 
@@ -300,12 +577,6 @@ Valuable for spec-driven projects, not essential for all
   - Time estimates vs. actual
   - Coverage trends over time
 
-- [ ] **GitHub integration**
-  - Sync work items with GitHub Issues
-  - Create PRs from sessions
-  - Link commits to work items
-  - Status synchronization
-
 - [ ] **AI-powered enhancements**
   - Context-aware session suggestions
   - Automatic priority recommendations
@@ -313,15 +584,16 @@ Valuable for spec-driven projects, not essential for all
   - Work item decomposition suggestions
   - Time estimation based on historical data
 
-### Priority: LOW
-Nice-to-have, implement based on personal needs
+### Success Criteria
 
-### Target
-**On-demand** after core functionality solid
+✅ Project templates available
+✅ Custom work item types work
+✅ Metrics provide useful insights
+✅ AI enhancements improve workflow
 
 ---
 
-## NOT Included
+## NOT Included (Out of Scope)
 
 The following features are **NOT relevant** for personal Claude Code plugin:
 
@@ -332,21 +604,26 @@ The following features are **NOT relevant** for personal Claude Code plugin:
   - Team velocity tracking
   - Not needed for solo development
 
+❌ **Role-based AI interaction**
+  - AI as Product Manager, Architect, etc.
+  - Too complex for solo development needs
+  - Framework document provides philosophical guidance instead
+
 ❌ **Enterprise features**
   - SSO integration
-  - Audit logs
+  - Audit logs beyond git
   - Compliance reporting
   - Role-based access control
   - Not needed for personal tool
 
 ❌ **Package distribution**
   - PyPI publishing
-  - Package versioning
-  - Installation documentation
+  - Package versioning beyond plugin version
+  - Installation documentation for external users
   - Community support
   - Plugin is for personal use only
 
-❌ **External tool plugins**
+❌ **External tool deep integrations**
   - Notion sync
   - Linear integration
   - Jira integration
@@ -360,22 +637,31 @@ The following features are **NOT relevant** for personal Claude Code plugin:
   - Export functionality
   - Terminal-based is sufficient
 
+❌ **GitHub integration beyond git**
+  - Sync work items with GitHub Issues
+  - Create PRs from sessions
+  - Link commits to work items
+  - Status synchronization
+  - Git workflow is sufficient
+
 ---
 
 ## Implementation Priority Order
 
-**Phases 1-5 are CORE** - Must be implemented for plugin to be useful:
+**Phases 1-5.6 are CORE** - Must be implemented for plugin to be useful:
 
-1. **Phase 1** (Core Plugin) - Foundation
+1. **Phase 1** (Core Plugin) - Foundation with tracking and git
 2. **Phase 2** (Work Items) - Task management
 3. **Phase 3** (Visualization) - Understanding structure
 4. **Phase 4** (Learning) - Knowledge capture
-5. **Phase 5** (Quality Gates) - Maintaining quality
+5. **Phase 5** (Quality Gates) - Maintaining quality and security
+6. **Phase 5.5** (Integration Testing) - System validation
+7. **Phase 5.6** (Deployment) - Launch support
 
 **Phases 6-7 are ENHANCEMENTS** - Implement based on needs:
 
-6. **Phase 6** (Spec-Kit) - If using specification-driven workflow
-7. **Phase 7** (Advanced) - Polish and nice-to-haves
+8. **Phase 6** (Spec-Kit) - Specification-driven workflow
+9. **Phase 7** (Advanced) - Polish and nice-to-haves
 
 ---
 
@@ -383,22 +669,25 @@ The following features are **NOT relevant** for personal Claude Code plugin:
 
 Plugin is **production-ready** when:
 
-✅ Phase 1-5 complete
+✅ Phase 1-5.6 complete
 ✅ Used successfully on 3+ different projects
 ✅ 20+ sessions completed without issues
 ✅ Zero context loss between sessions
 ✅ Quality gates prevent broken states
 ✅ Learnings accumulate automatically
+✅ Stack and tree tracked accurately
+✅ Git workflow prevents all common mistakes
 ✅ No need to touch terminal/scripts manually
 
 Plugin is **mature** when:
 
-✅ Phase 6 complete (if using specs)
+✅ Phase 6 complete (spec-kit integration working)
 ✅ 50+ sessions completed
 ✅ Used on project with 100+ work items
 ✅ Dependency graphs with 20+ nodes
 ✅ 100+ learnings curated and categorized
 ✅ All quality gates passing consistently
+✅ Zero manual tracking or documentation updates needed
 
 ---
 
@@ -407,19 +696,24 @@ Plugin is **mature** when:
 **Personal tool, no formal releases.**
 
 Milestones:
-- **v0.1** - Core session workflow working
+- **v0.0** - Foundation and documentation ✅
+- **v0.1** - Core session workflow with tracking (Phase 1 complete)
 - **v0.2** - Work item management functional
 - **v0.3** - Can visualize dependencies
 - **v0.4** - Learning system operational
 - **v0.5** - Quality gates enforced
+- **v0.5.5** - Integration testing support
+- **v0.6** - Deployment support
+- **v0.7** - Spec-kit integration working
 - **v1.0** - Battle-tested on real project
 
-Estimate: **v1.0 in 6-8 weeks** of focused development
+Estimate: **v1.0 in 8-10 weeks** of focused development
 
 ---
 
 ## Related Documentation
 
-- [implementation-insights.md](./docs/implementation-insights.md) - Implementation patterns and insights
+- [PLUGIN_IMPLEMENTATION_PLAN.md](./PLUGIN_IMPLEMENTATION_PLAN.md) - Detailed implementation guide
 - [session-driven-development.md](./docs/session-driven-development.md) - Core methodology
+- [implementation-insights.md](./docs/implementation-insights.md) - Implementation patterns and insights
 - [ai-augmented-solo-framework.md](./docs/ai-augmented-solo-framework.md) - Personal development framework
