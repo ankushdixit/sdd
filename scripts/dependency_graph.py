@@ -301,9 +301,7 @@ class DependencyGraphVisualizer:
         }
         return icons.get(item.get("status"), "○")
 
-    def _group_by_dependency_level(
-        self, work_items: list[dict]
-    ) -> list[list[dict]]:
+    def _group_by_dependency_level(self, work_items: list[dict]) -> list[list[dict]]:
         """Group work items by dependency level
 
         Level 0 = no dependencies
@@ -363,14 +361,10 @@ class DependencyGraphVisualizer:
                     1 for item in level_items if item.get("status") == "completed"
                 )
                 in_progress_count = sum(
-                    1
-                    for item in level_items
-                    if item.get("status") == "in_progress"
+                    1 for item in level_items if item.get("status") == "in_progress"
                 )
                 not_started_count = sum(
-                    1
-                    for item in level_items
-                    if item.get("status") == "not_started"
+                    1 for item in level_items if item.get("status") == "not_started"
                 )
 
                 lines.append(
@@ -399,22 +393,16 @@ def main():
         "--format",
         choices=["ascii", "dot", "svg"],
         default="ascii",
-        help="Output format"
+        help="Output format",
     )
+    parser.add_argument("--output", type=Path, help="Output file path (for svg format)")
     parser.add_argument(
-        "--output",
-        type=Path,
-        help="Output file path (for svg format)"
-    )
-    parser.add_argument(
-        "--include-completed",
-        action="store_true",
-        help="Include completed work items"
+        "--include-completed", action="store_true", help="Include completed work items"
     )
     parser.add_argument(
         "--work-items-file",
         type=Path,
-        help="Path to work_items.json (default: .session/tracking/work_items.json)"
+        help="Path to work_items.json (default: .session/tracking/work_items.json)",
     )
 
     args = parser.parse_args()
@@ -433,8 +421,7 @@ def main():
                 print("Error: --output required for SVG format", file=sys.stderr)
                 return 1
             visualizer.generate_svg(
-                output_path=args.output,
-                include_completed=args.include_completed
+                output_path=args.output, include_completed=args.include_completed
             )
             print(f"SVG saved to {args.output}.svg")
     except Exception as e:
