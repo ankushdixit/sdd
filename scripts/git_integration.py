@@ -69,7 +69,9 @@ class GitWorkflow:
 
         return None
 
-    def create_branch(self, work_item_id: str, session_num: int) -> Tuple[bool, str, Optional[str]]:
+    def create_branch(
+        self, work_item_id: str, session_num: int
+    ) -> Tuple[bool, str, Optional[str]]:
         """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
         # Capture parent branch BEFORE creating new branch
         parent_branch = self.get_current_branch()
@@ -171,7 +173,9 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error pushing: {e}"
 
-    def merge_to_parent(self, branch_name: str, parent_branch: str = "main") -> Tuple[bool, str]:
+    def merge_to_parent(
+        self, branch_name: str, parent_branch: str = "main"
+    ) -> Tuple[bool, str]:
         """Merge branch to parent branch and delete branch."""
         try:
             # Checkout parent branch (not hardcoded main)
@@ -228,7 +232,9 @@ class GitWorkflow:
             }
         else:
             # Create new branch
-            success, branch_name, parent_branch = self.create_branch(work_item_id, session_num)
+            success, branch_name, parent_branch = self.create_branch(
+                work_item_id, session_num
+            )
 
             if success:
                 # Update work item with git info (including parent branch)
