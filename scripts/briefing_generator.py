@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
 Generate session briefing for next work item.
+Enhanced with full project context loading.
 """
 
 import json
+import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime
 
@@ -77,23 +80,157 @@ def get_relevant_learnings(learnings_data, work_item):
     return sorted(relevant, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
 
 
+def load_project_docs():
+    """Load project documentation for context."""
+    docs = {}
+
+    # Look for common doc files
+    doc_files = [
+        "docs/vision.md",
+        "docs/prd.md",
+        "docs/architecture.md",
+        "README.md"
+    ]
+
+    for doc_file in doc_files:
+        path = Path(doc_file)
+        if path.exists():
+            docs[path.name] = path.read_text()
+
+    return docs
+
+
+def load_current_stack():
+    """Load current technology stack."""
+    stack_file = Path(".session/tracking/stack.txt")
+    if stack_file.exists():
+        return stack_file.read_text()
+    return "Stack not yet generated"
+
+
+def load_current_tree():
+    """Load current project structure."""
+    tree_file = Path(".session/tracking/tree.txt")
+    if tree_file.exists():
+        # Return first 50 lines (preview)
+        lines = tree_file.read_text().split('\n')
+        return '\n'.join(lines[:50])
+    return "Tree not yet generated"
+
+
+def validate_environment():
+    """Validate development environment."""
+    checks = []
+
+    # Check Python version
+    checks.append(f"Python: {sys.version.split()[0]}")
+
+    # Check git
+    try:
+        result = subprocess.run(
+            ["git", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            checks.append(f"Git: {result.stdout.strip()}")
+        else:
+            checks.append("Git: NOT FOUND")
+    except:
+        checks.append("Git: NOT FOUND")
+
+    return checks
+
+
+def check_git_status():
+    """Check git status for session start."""
+    try:
+        # Import git workflow
+        git_module_path = Path(__file__).parent / "git_integration.py"
+        if git_module_path.exists():
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
+            git_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(git_module)
+
+            workflow = git_module.GitWorkflow()
+            is_clean, status_msg = workflow.check_git_status()
+            current_branch = workflow.get_current_branch()
+
+            return {
+                "clean": is_clean,
+                "status": status_msg,
+                "branch": current_branch
+            }
+    except Exception as e:
+        return {
+            "clean": False,
+            "status": f"Error checking git: {e}",
+            "branch": None
+        }
+
+    return {"clean": True, "status": "Git check skipped", "branch": None}
+
+
 def generate_briefing(item_id, item, learnings_data):
-    """Generate markdown briefing for work item."""
+    """Generate comprehensive markdown briefing with full project context."""
 
-    briefing = f"""# Session Briefing
+    # Load all context
+    project_docs = load_project_docs()
+    current_stack = load_current_stack()
+    current_tree = load_current_tree()
+    env_checks = validate_environment()
+    git_status = check_git_status()
 
-## Work Item: {item['title']}
-- **ID:** {item_id}
+    # Start briefing
+    briefing = f"""# Session Briefing: {item['title']}
+
+## Quick Reference
+- **Work Item ID:** {item_id}
 - **Type:** {item['type']}
 - **Priority:** {item['priority']}
 - **Status:** {item['status']}
 
-## Objective
+## Environment Status
+"""
 
+    # Show environment checks
+    for check in env_checks:
+        briefing += f"- {check}\n"
+
+    # Show git status
+    briefing += f"\n### Git Status\n"
+    briefing += f"- Status: {git_status['status']}\n"
+    if git_status.get('branch'):
+        briefing += f"- Current Branch: {git_status['branch']}\n"
+
+    # Project context section
+    briefing += "\n## Project Context\n\n"
+
+    # Vision (if available)
+    if 'vision.md' in project_docs:
+        vision_preview = project_docs['vision.md'][:500]
+        briefing += f"### Vision\n{vision_preview}...\n\n"
+
+    # Architecture (if available)
+    if 'architecture.md' in project_docs:
+        arch_preview = project_docs['architecture.md'][:500]
+        briefing += f"### Architecture\n{arch_preview}...\n\n"
+
+    # Current stack
+    briefing += f"### Current Stack\n```\n{current_stack}\n```\n\n"
+
+    # Project structure preview
+    briefing += f"### Project Structure (Preview)\n```\n{current_tree}\n```\n\n"
+
+    # Work item details
+    briefing += f"""## Work Item Details
+
+### Objective
 {item.get('rationale', 'No rationale provided')}
 
-## Dependencies
-
+### Dependencies
 """
 
     # Show dependency status
