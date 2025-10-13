@@ -41,6 +41,37 @@ SDD provides:
 ✅ **Visualization** - Dependency graphs with critical path analysis
 ✅ **Git Integration** - Standardized commits with session summaries
 
+### Dependency Graph Visualization
+
+Visualize project structure and identify bottlenecks with dependency graphs:
+
+```bash
+# Generate ASCII graph (terminal-friendly)
+python3 scripts/dependency_graph.py
+
+# Show critical path only
+python3 scripts/dependency_graph.py --critical-path
+
+# Bottleneck analysis
+python3 scripts/dependency_graph.py --bottlenecks
+
+# Filter by milestone
+python3 scripts/dependency_graph.py --milestone "Phase 3"
+
+# Generate SVG (requires Graphviz)
+python3 scripts/dependency_graph.py --format svg --output graph.svg
+
+# Statistics view
+python3 scripts/dependency_graph.py --stats
+```
+
+**Features:**
+- **Critical Path Highlighting** - Red nodes/edges show longest dependency chain
+- **Bottleneck Detection** - Identify items blocking multiple other items
+- **Multiple Formats** - ASCII (terminal), DOT (Graphviz), SVG (visual)
+- **Flexible Filtering** - By status, milestone, type, or focus on specific items
+- **Timeline Projection** - Estimate completion based on dependency levels
+
 ## Installation
 
 > **Note:** This is a personal development tool. Installation instructions will be added once Phase 1 is complete.
