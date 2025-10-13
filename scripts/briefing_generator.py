@@ -297,6 +297,63 @@ def main():
         + 1
     )
 
+    # Start git workflow for work item
+    try:
+        # Import git workflow
+        git_module_path = Path(__file__).parent / "git_integration.py"
+        if git_module_path.exists():
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location(
+                "git_integration", git_module_path
+            )
+            git_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(git_module)
+
+            workflow = git_module.GitWorkflow()
+            git_result = workflow.start_work_item(item_id, session_num)
+
+            if git_result["success"]:
+                if git_result["action"] == "created":
+                    print(f"✓ Created git branch: {git_result['branch']}\n")
+                else:
+                    print(f"✓ Resumed git branch: {git_result['branch']}\n")
+            else:
+                print(f"⚠️  Git workflow warning: {git_result['message']}\n")
+    except Exception as e:
+        print(f"⚠️  Could not start git workflow: {e}\n")
+
+    # Update work item status and session tracking
+    work_items_file = session_dir / "tracking" / "work_items.json"
+    if work_items_file.exists():
+        with open(work_items_file) as f:
+            work_items_data = json.load(f)
+
+        # Update work item status
+        if item_id in work_items_data["work_items"]:
+            work_item = work_items_data["work_items"][item_id]
+            work_item["status"] = "in_progress"
+            work_item["updated_at"] = datetime.now().isoformat()
+
+            # Add session tracking
+            if "sessions" not in work_item:
+                work_item["sessions"] = []
+            work_item["sessions"].append(
+                {"session_num": session_num, "started_at": datetime.now().isoformat()}
+            )
+
+            # Update metadata
+            work_items_data["metadata"]["in_progress"] = sum(
+                1
+                for item in work_items_data["work_items"].values()
+                if item["status"] == "in_progress"
+            )
+            work_items_data["metadata"]["last_updated"] = datetime.now().isoformat()
+
+            # Save updated work items
+            with open(work_items_file, "w") as f:
+                json.dump(work_items_data, f, indent=2)
+
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
     with open(briefing_file, "w") as f:
         f.write(briefing)
