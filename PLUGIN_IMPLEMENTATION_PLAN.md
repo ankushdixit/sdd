@@ -5,7 +5,7 @@ This document provides a **complete, step-by-step implementation plan** for buil
 
 ---
 
-## Current State (Updated: October 2025)
+## Current State (Updated: 13th October 2025)
 
 ### ✅ What Exists
 
@@ -15,45 +15,53 @@ claude-session-plugin/
 ├── .claude-plugin/
 │   └── plugin.json              ✅ Valid manifest
 ├── commands/
-│   ├── session-start.md         ✅ Basic command
-│   └── session-end.md           ✅ Basic command
+│   ├── session-start.md         ✅ Enhanced (full context loading)
+│   ├── session-end.md           ✅ Enhanced (comprehensive completion)
+│   ├── session-init.md          ✅ Project initialization
+│   └── session-validate.md      ✅ Pre-flight validation
 ├── scripts/
-│   ├── briefing_generator.py    ✅ Basic (needs enhancement)
-│   ├── session_complete.py      ✅ Basic (needs enhancement)
+│   ├── briefing_generator.py    ✅ Enhanced (context-aware)
+│   ├── session_complete.py      ✅ Enhanced (full tracking updates)
+│   ├── generate_stack.py        ✅ Auto-detect tech stack
+│   ├── generate_tree.py         ✅ Project structure tracking
+│   ├── git_integration.py       ✅ Complete git workflow automation
+│   ├── session_validate.py      ✅ Pre-flight validation
 │   ├── learning_curator.py      ✅ Complete, production-ready
 │   ├── dependency_graph.py      ✅ Complete, production-ready
 │   ├── file_ops.py              ✅ Utilities ready
-│   └── init_project.py          ✅ Basic (needs enhancement)
+│   └── init_project.py          ✅ Enhanced with doc checks
 ├── templates/
-│   ├── work_items.json          ✅ Schema defined
+│   ├── work_items.json          ✅ Schema with 6 types
 │   ├── learnings.json           ✅ Schema defined
-│   └── status_update.json       ✅ Schema defined
+│   ├── status_update.json       ✅ Schema defined
+│   ├── WORK_ITEM_TYPES.md       ✅ Type definitions
+│   ├── security_task.md         ✅ Security work item template
+│   ├── integration_test_spec.md ✅ Integration test template
+│   └── deployment_spec.md       ✅ Deployment template
 ├── docs/
 │   ├── session-driven-development.md     ✅ Complete
 │   ├── implementation-insights.md        ✅ Complete
 │   └── ai-augmented-solo-framework.md    ✅ Complete
-├── ROADMAP.md                   ✅ Complete
+├── ROADMAP.md                   ✅ Updated (Phase 1 complete)
 └── README.md                    ✅ Complete
 ```
 
 ### 🔧 What Works
 
 - ✅ Plugin manifest is valid
+- ✅ **Complete session workflow (init → start → validate → end)**
+- ✅ **Project initialization with documentation checks**
+- ✅ **Stack tracking with auto-detection and reasoning**
+- ✅ **Tree tracking with structural change detection**
+- ✅ **Git workflow automation (branch management, commits, merges)**
+- ✅ **Multi-session work item support (resume branches)**
+- ✅ **Pre-flight validation (`/session-validate`)**
+- ✅ **6 work item types (feature, bug, refactor, security, integration_test, deployment)**
 - ✅ Learning curation system complete (auto-categorize, similarity detection, merge)
 - ✅ Dependency graph visualization complete (ASCII, DOT, SVG with critical path)
-- ✅ Basic briefing generation (finds next work item, creates briefing)
-- ✅ Basic session completion (runs tests/linting, updates status)
+- ✅ Enhanced briefing generation with full project context
+- ✅ Comprehensive session completion with tracking updates
 - ✅ File utilities for safe atomic JSON operations
-
-### 📋 What's Missing (Phase 1 Focus)
-
-- ❌ `/session-init` command (project initialization)
-- ❌ Stack tracking system (generate_stack.py, stack.txt, stack_updates.json)
-- ❌ Tree tracking system (generate_tree.py, tree.txt, tree_updates.json)
-- ❌ Git workflow integration (git_integration.py, branch management)
-- ❌ Enhanced session-start (load full context: docs, stack, tree, git)
-- ❌ Enhanced session-end (update stack, tree, git, comprehensive reports)
-- ❌ Integration/deployment work item types
 
 ---
 
@@ -61,17 +69,17 @@ claude-session-plugin/
 
 **Goal:** Complete working session workflow with full tracking and git integration
 
-**Status:** 🚧 Ready to Start
+**Status:** ✅ Complete
+
+**Completed:** 13th October 2025
 
 **Priority:** HIGH
-
-**Target:** 2-3 weeks
 
 **Depends On:** Phase 0 (Complete)
 
 ### Overview
 
-Phase 1 establishes the complete session workflow with:
+Phase 1 successfully established the complete session workflow with:
 - Project initialization that checks documentation and sets up tracking
 - Automated stack tracking to record technology decisions
 - Automated tree tracking to maintain structural consistency
@@ -79,7 +87,42 @@ Phase 1 establishes the complete session workflow with:
 - Enhanced briefings with full project context
 - Comprehensive session completion that updates all tracking systems
 
-This phase transforms the basic session workflow into a production-ready system.
+This phase transformed the basic session workflow into a production-ready system.
+
+### What Was Accomplished
+
+Phase 1 successfully implemented all 9 sections with critical bug fixes and comprehensive testing. The plugin now provides a complete, production-ready session workflow with:
+
+**Core Features:**
+- Project initialization with documentation checking
+- Automated technology stack tracking with change reasoning
+- Project structure monitoring with tree tracking
+- Complete git workflow integration (branch management, commits, merges)
+- Comprehensive context loading at session start
+- Quality gates enforcement at session end
+- Pre-flight validation command
+- 6 work item types with proper validation
+
+**Critical Fixes:**
+- Multi-session support (resume in-progress work items)
+- Parent branch tracking (merge to parent, not hardcoded main)
+
+**Testing:**
+- Complete end-to-end workflow validated
+- Multi-session work items tested (3 sessions on same branch)
+- 6 edge cases thoroughly tested
+
+### Lessons Learned
+
+1. **Git workflow complexity:** Parent branch tracking essential for feature branch workflows
+2. **Multi-session support:** Resuming in-progress items required priority-based selection logic
+3. **Quality gates:** Non-destructive validation (`/session-validate`) valuable for preview
+4. **Edge cases critical:** Dirty git, missing docs, dependencies all need proper handling
+5. **Testing thoroughness:** Comprehensive testing uncovered 2 critical issues that were fixed
+
+### Known Limitations
+
+None significant. All Phase 1 success criteria met.
 
 ---
 
@@ -87,7 +130,7 @@ This phase transforms the basic session workflow into a production-ready system.
 
 **Purpose:** Initialize .session/ structure in a project for the first time
 
-**Status:** 📋 To Implement
+**Status:** ✅ Complete
 
 **Files:**
 - `commands/session-init.md` (NEW)
@@ -355,14 +398,14 @@ if __name__ == "__main__":
 
 #### Testing Checklist
 
-- [ ] Initialize fresh project (no .session/)
-- [ ] Initialize project with docs/
-- [ ] Initialize project without docs/ (prompts user)
-- [ ] Attempt re-initialization (should error)
-- [ ] Verify all directories created
-- [ ] Verify tracking files initialized
-- [ ] Verify stack.txt generated
-- [ ] Verify tree.txt generated
+- [x] Initialize fresh project (no .session/)
+- [x] Initialize project with docs/
+- [x] Initialize project without docs/ (prompts user)
+- [x] Attempt re-initialization (should error)
+- [x] Verify all directories created
+- [x] Verify tracking files initialized
+- [x] Verify stack.txt generated
+- [x] Verify tree.txt generated
 
 ---
 
@@ -2334,35 +2377,35 @@ Test work item spanning multiple sessions:
 ### Phase 1 Completion Checklist
 
 **Implementation Complete:**
-- [ ] `/session-init` command implemented and tested (1.1)
-- [ ] Stack tracking (`generate_stack.py`) implemented and tested (1.2)
-- [ ] Tree tracking (`generate_tree.py`) implemented and tested (1.3)
-- [ ] Git integration (`git_integration.py`) implemented and tested (1.4)
-- [ ] Enhanced session-start implemented and tested (1.5)
-- [ ] Enhanced session-end implemented and tested (1.6)
-- [ ] `/session-validate` command implemented and tested (1.7)
-- [ ] Integration/deployment types defined (1.8)
-- [ ] All scripts have proper error handling
+- [x] `/session-init` command implemented and tested (1.1)
+- [x] Stack tracking (`generate_stack.py`) implemented and tested (1.2)
+- [x] Tree tracking (`generate_tree.py`) implemented and tested (1.3)
+- [x] Git integration (`git_integration.py`) implemented and tested (1.4)
+- [x] Enhanced session-start implemented and tested (1.5)
+- [x] Enhanced session-end implemented and tested (1.6)
+- [x] `/session-validate` command implemented and tested (1.7)
+- [x] Integration/deployment types defined (1.8)
+- [x] All scripts have proper error handling
 
 **Testing Complete:**
-- [ ] Complete workflow test passed
-- [ ] Multi-session work item test passed
-- [ ] All edge cases tested
-- [ ] All integration points tested
-- [ ] Documentation test passed
+- [x] Complete workflow test passed
+- [x] Multi-session work item test passed
+- [x] All edge cases tested
+- [x] All integration points tested
+- [x] Documentation test passed
 
 **Documentation Complete:**
-- [ ] README.md updated with Phase 1 features
-- [ ] Commands documented
-- [ ] Examples provided
-- [ ] Troubleshooting guide updated
-- [ ] Phase 1 marked complete in ROADMAP.md
+- [x] README.md updated with Phase 1 features
+- [x] Commands documented
+- [x] Examples provided
+- [x] Troubleshooting guide updated
+- [x] Phase 1 marked complete in ROADMAP.md
 
 **Ready for Phase 2:**
-- [ ] All Phase 1 features working
-- [ ] No known critical bugs
-- [ ] Foundation solid for work item management
-- [ ] Team member (you) can use plugin productively
+- [x] All Phase 1 features working
+- [x] No known critical bugs
+- [x] Foundation solid for work item management
+- [x] Team member (you) can use plugin productively
 
 ---
 
@@ -2370,70 +2413,2003 @@ Test work item spanning multiple sessions:
 
 **Goal:** Full work item management with dependency resolution
 
-**Status:** 📅 Not Started
+**Status:** 📋 Ready to Implement
 
 **Priority:** HIGH
 
-**Target:** 1-2 weeks after Phase 1
+**Target:** 1-2 weeks
 
-**Depends On:** Phase 1 (Complete)
+**Depends On:** Phase 1 (✅ Complete)
 
 ### Overview
 
 Phase 2 adds comprehensive work item management through `/work-item` command group. Users can create, list, view, and update work items interactively. Dependency resolution ensures work items are completed in logical order.
 
-### Implementation Approach
+Phase 2 builds on Phase 1's solid foundation by adding:
+- Complete work item type templates (6 types)
+- Interactive work item creation with validation
+- Multiple views for work items (list, show, next)
+- Work item updates with history tracking
+- Milestone-based organization
+- Enhanced briefings with milestone context
+- Quick session status command
 
-**Commands to implement:**
-- `/work-item create` - Interactive creation with prompts
-- `/work-item list [--status]` - Filtered listing
-- `/work-item show <id>` - Detailed view
-- `/work-item update <id> [--field value]` - Update fields
-- `/work-item next` - Show next available item
+---
 
-**Key script:** `scripts/work_item_manager.py`
+### 2.1 Complete Work Item Type Templates
 
-**Functions needed:**
-```python
-def create_work_item(title, type, priority, deps, ...):
-    """Interactive creation with validation."""
-    pass
+**Purpose:** Provide consistent templates for all 6 work item types
 
-def list_work_items(status_filter=None):
-    """List with formatting and dependency indicators."""
-    pass
+**Status:** 📋 To Implement (Quick Setup)
 
-def show_work_item(item_id):
-    """Detailed view with full context."""
-    pass
+**Files:**
+- Rename `templates/security_task.md` to `templates/security_spec.md`
+- Create `templates/feature_spec.md` (NEW)
+- Create `templates/bug_spec.md` (NEW)
+- Create `templates/refactor_spec.md` (NEW)
 
-def update_work_item(item_id, **updates):
-    """Safe atomic updates with validation."""
-    pass
+**Reference:** Existing `integration_test_spec.md` and `deployment_spec.md` for format
 
-def get_next_work_item():
-    """Find next available (deps satisfied, highest priority)."""
-    # Algorithm already implemented in dependency_graph.py
-    pass
+#### Implementation
+
+**File:** `templates/feature_spec.md`
+
+```markdown
+# Feature: [Feature Name]
+
+## Overview
+Brief description of what this feature does and why it's needed.
+
+## User Story
+As a [type of user], I want [goal] so that [benefit].
+
+## Rationale
+Why is this feature important? What problem does it solve?
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+
+## Implementation Details
+
+### Approach
+High-level approach to implementing this feature.
+
+### Components Affected
+- Component 1
+- Component 2
+
+### API Changes
+List any new or modified APIs.
+
+### Database Changes
+List any schema changes needed.
+
+## Testing Strategy
+- Unit tests: [Description]
+- Integration tests: [Description]
+- Manual testing: [Description]
+
+## Documentation Updates
+- [ ] User documentation
+- [ ] API documentation
+- [ ] README updates
+
+## Dependencies
+List any other work items this depends on.
+
+## Estimated Effort
+[Number] sessions
 ```
 
-**Milestones feature:**
-- Group work items
-- Track progress
-- Show in reports
+**File:** `templates/bug_spec.md`
 
-**Enhanced briefings:**
-- Include milestone context
-- Show related work items
-- Better dependency visualization
+```markdown
+# Bug: [Bug Title]
+
+## Description
+Clear description of the bug and its impact.
+
+## Steps to Reproduce
+1. Step 1
+2. Step 2
+3. Step 3
+
+## Expected Behavior
+What should happen.
+
+## Actual Behavior
+What actually happens.
+
+## Impact
+- **Severity:** [Critical/High/Medium/Low]
+- **Affected Users:** [Description]
+- **Workaround:** [If available]
+
+## Root Cause Analysis
+
+### Investigation
+What investigation was done to understand the bug?
+
+### Root Cause
+What is the underlying cause of this bug?
+
+### Why It Happened
+Why did this bug get introduced? What can we learn?
+
+## Fix Approach
+How will this bug be fixed?
+
+## Testing Strategy
+- [ ] Regression test added
+- [ ] Manual verification steps
+- [ ] Edge cases covered
+
+## Prevention
+How can we prevent similar bugs in the future?
+
+## Dependencies
+List any related issues or dependencies.
+
+## Estimated Effort
+[Number] sessions
+```
+
+**File:** `templates/refactor_spec.md`
+
+```markdown
+# Refactor: [Refactor Title]
+
+## Overview
+What is being refactored and why?
+
+## Current State
+Description of the current implementation and its problems.
+
+## Problems with Current Approach
+- Problem 1
+- Problem 2
+- Problem 3
+
+## Proposed Refactor
+
+### New Approach
+Description of the refactored implementation.
+
+### Benefits
+- Benefit 1
+- Benefit 2
+- Benefit 3
+
+### Trade-offs
+Any trade-offs or considerations.
+
+## Implementation Plan
+1. Step 1
+2. Step 2
+3. Step 3
+
+## Scope
+
+### In Scope
+What will be refactored in this work item.
+
+### Out of Scope
+What will NOT be refactored (future work).
+
+## Risk Assessment
+- **Risk Level:** [Low/Medium/High]
+- **Mitigation:** How to mitigate risks
+
+## Testing Strategy
+- [ ] All existing tests still pass
+- [ ] No functionality changes
+- [ ] Code quality metrics improved
+- [ ] Performance maintained or improved
+
+## Success Criteria
+- [ ] Code is more maintainable
+- [ ] Complexity reduced
+- [ ] All tests pass
+- [ ] No regressions
+
+## Dependencies
+List any dependencies on other work.
+
+## Estimated Effort
+[Number] sessions
+```
+
+**File:** Rename `templates/security_task.md` to `templates/security_spec.md`
+
+Just rename the existing file for consistency - content is already good.
+
+#### Integration
+
+- All 6 types now have consistent `*_spec.md` templates
+- Used by `/work-item create` command (Section 2.2)
+- Provides structure and guidance for all work item types
+- Ensures nothing important is forgotten
+
+#### Testing Checklist
+
+- [ ] All template files exist with correct names
+- [ ] Templates follow consistent format
+- [ ] All required sections included
+- [ ] Examples are clear and helpful
+- [ ] WORK_ITEM_TYPES.md references correct filenames
+
+---
+
+### 2.2 Implement `/work-item create` Command
+
+**Purpose:** Interactive work item creation with validation
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/work-item-create.md` (NEW)
+- `scripts/work_item_manager.py` (NEW - core manager)
+
+**Reference:** Phase 1 command patterns for consistency
+
+#### Implementation
+
+**File:** `commands/work-item-create.md`
+
+```markdown
+# Work Item Create Command
+
+**Usage:** `/work-item create`
+
+**Description:** Interactively create a new work item with validation.
+
+**Behavior:**
+
+1. Prompt for work item type
+   - Show list: feature, bug, refactor, security, integration_test, deployment
+   - Validate selection
+
+2. Load appropriate template
+   - Read from templates/{type}_spec.md
+   - Show template structure
+
+3. Prompt for required fields
+   - Title (required)
+   - Priority (critical, high, medium, low)
+   - Dependencies (optional, comma-separated IDs)
+   - For integration_test/deployment: dependencies required
+
+4. Generate work item ID
+   - Format: {type}_{short_title}
+   - Example: feature_oauth, bug_login_failure
+
+5. Create specification file
+   - Save to .session/specs/{work_item_id}.md
+   - Pre-fill with template content
+
+6. Update work_items.json
+   - Add new work item entry
+   - Set status to not_started
+   - Record creation timestamp
+
+7. Confirm creation
+   - Display work item ID
+   - Show next steps (edit spec, start session)
+
+**Example:**
+
+\`\`\`
+User: /work-item create
+
+Claude: Creating new work item...
+
+Select work item type:
+1. feature - Standard feature development
+2. bug - Bug fix
+3. refactor - Code refactoring
+4. security - Security-focused work
+5. integration_test - Integration testing
+6. deployment - Deployment to environment
+
+Your choice (1-6): 1
+
+Title: OAuth Integration
+
+Priority (critical/high/medium/low) [high]: high
+
+Dependencies (comma-separated IDs, or press Enter for none):
+
+Work item created successfully!
+
+ID: feature_oauth
+Type: feature
+Priority: high
+Status: not_started
+
+Specification saved to: .session/specs/feature_oauth.md
+
+Next steps:
+1. Edit specification: .session/specs/feature_oauth.md
+2. Start working: /session-start
+\`\`\`
+```
+
+**File:** `scripts/work_item_manager.py`
+
+```python
+#!/usr/bin/env python3
+"""
+Work Item Manager - Core work item operations.
+
+Handles creation, listing, showing, updating work items.
+"""
+
+import json
+import re
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, List, Optional
+from scripts.file_ops import read_json, write_json
+
+
+class WorkItemManager:
+    """Manage work items."""
+
+    WORK_ITEM_TYPES = [
+        "feature",
+        "bug",
+        "refactor",
+        "security",
+        "integration_test",
+        "deployment"
+    ]
+
+    PRIORITIES = ["critical", "high", "medium", "low"]
+
+    def __init__(self, project_root: Path = None):
+        self.project_root = project_root or Path.cwd()
+        self.session_dir = self.project_root / ".session"
+        self.work_items_file = self.session_dir / "tracking" / "work_items.json"
+        self.specs_dir = self.session_dir / "specs"
+        self.templates_dir = Path(__file__).parent.parent / "templates"
+
+    def create_work_item(self) -> Optional[str]:
+        """Interactive work item creation."""
+        print("Creating new work item...\n")
+
+        # 1. Select type
+        work_type = self._prompt_type()
+        if not work_type:
+            return None
+
+        # 2. Get title
+        title = self._prompt_title()
+        if not title:
+            return None
+
+        # 3. Get priority
+        priority = self._prompt_priority()
+
+        # 4. Get dependencies
+        dependencies = self._prompt_dependencies(work_type)
+
+        # 5. Generate ID
+        work_id = self._generate_id(work_type, title)
+
+        # 6. Check for duplicates
+        if self._work_item_exists(work_id):
+            print(f"❌ Error: Work item {work_id} already exists")
+            return None
+
+        # 7. Create specification file
+        spec_created = self._create_spec_file(work_id, work_type, title)
+        if not spec_created:
+            print("⚠️  Warning: Could not create specification file")
+
+        # 8. Add to work_items.json
+        self._add_to_tracking(work_id, work_type, title, priority, dependencies)
+
+        # 9. Confirm
+        print(f"\n{'='*50}")
+        print("Work item created successfully!")
+        print('='*50)
+        print(f"\nID: {work_id}")
+        print(f"Type: {work_type}")
+        print(f"Priority: {priority}")
+        print(f"Status: not_started")
+        if dependencies:
+            print(f"Dependencies: {', '.join(dependencies)}")
+
+        if spec_created:
+            spec_path = self.specs_dir / f"{work_id}.md"
+            print(f"\nSpecification saved to: {spec_path}")
+
+        print("\nNext steps:")
+        print(f"1. Edit specification: .session/specs/{work_id}.md")
+        print("2. Start working: /session-start")
+        print()
+
+        return work_id
+
+    def _prompt_type(self) -> Optional[str]:
+        """Prompt user to select work item type."""
+        print("Select work item type:")
+        print("1. feature - Standard feature development")
+        print("2. bug - Bug fix")
+        print("3. refactor - Code refactoring")
+        print("4. security - Security-focused work")
+        print("5. integration_test - Integration testing")
+        print("6. deployment - Deployment to environment")
+        print()
+
+        choice = input("Your choice (1-6): ").strip()
+
+        type_map = {
+            "1": "feature",
+            "2": "bug",
+            "3": "refactor",
+            "4": "security",
+            "5": "integration_test",
+            "6": "deployment"
+        }
+
+        return type_map.get(choice)
+
+    def _prompt_title(self) -> Optional[str]:
+        """Prompt for work item title."""
+        title = input("\nTitle: ").strip()
+        if not title:
+            print("❌ Error: Title is required")
+            return None
+        return title
+
+    def _prompt_priority(self) -> str:
+        """Prompt for priority."""
+        priority = input("\nPriority (critical/high/medium/low) [high]: ").strip().lower()
+        if not priority:
+            priority = "high"
+        if priority not in self.PRIORITIES:
+            print(f"⚠️  Invalid priority, using 'high'")
+            priority = "high"
+        return priority
+
+    def _prompt_dependencies(self, work_type: str) -> List[str]:
+        """Prompt for dependencies."""
+        required = work_type in ["integration_test", "deployment"]
+
+        prompt = "\nDependencies (comma-separated IDs"
+        if required:
+            prompt += ", REQUIRED): "
+        else:
+            prompt += ", or press Enter for none): "
+
+        deps_input = input(prompt).strip()
+
+        if not deps_input:
+            if required:
+                print("⚠️  Warning: This work item type requires dependencies")
+                return self._prompt_dependencies(work_type)  # Retry
+            return []
+
+        # Parse and validate
+        deps = [d.strip() for d in deps_input.split(",")]
+        deps = [d for d in deps if d]  # Remove empty
+
+        # Validate dependencies exist
+        valid_deps = []
+        for dep in deps:
+            if self._work_item_exists(dep):
+                valid_deps.append(dep)
+            else:
+                print(f"⚠️  Warning: Dependency '{dep}' not found, skipping")
+
+        return valid_deps
+
+    def _generate_id(self, work_type: str, title: str) -> str:
+        """Generate work item ID from type and title."""
+        # Clean title: lowercase, alphanumeric + underscore only
+        clean_title = re.sub(r'[^a-z0-9]+', '_', title.lower())
+        clean_title = clean_title.strip('_')
+
+        # Truncate if too long
+        if len(clean_title) > 30:
+            clean_title = clean_title[:30]
+
+        return f"{work_type}_{clean_title}"
+
+    def _work_item_exists(self, work_id: str) -> bool:
+        """Check if work item ID already exists."""
+        if not self.work_items_file.exists():
+            return False
+
+        data = read_json(self.work_items_file)
+        return work_id in data.get("work_items", {})
+
+    def _create_spec_file(self, work_id: str, work_type: str, title: str) -> bool:
+        """Create specification file from template."""
+        # Ensure specs directory exists
+        self.specs_dir.mkdir(parents=True, exist_ok=True)
+
+        # Load template
+        template_file = self.templates_dir / f"{work_type}_spec.md"
+        if not template_file.exists():
+            return False
+
+        template_content = template_file.read_text()
+
+        # Replace title placeholder
+        if work_type == "feature":
+            spec_content = template_content.replace("[Feature Name]", title)
+        elif work_type == "bug":
+            spec_content = template_content.replace("[Bug Title]", title)
+        elif work_type == "refactor":
+            spec_content = template_content.replace("[Refactor Title]", title)
+        elif work_type == "security":
+            spec_content = template_content.replace("[Security Issue]", title)
+        elif work_type == "integration_test":
+            spec_content = template_content.replace("[Name]", title)
+        elif work_type == "deployment":
+            spec_content = template_content.replace("[Environment]", title)
+        else:
+            spec_content = template_content
+
+        # Save spec file
+        spec_path = self.specs_dir / f"{work_id}.md"
+        spec_path.write_text(spec_content)
+
+        return True
+
+    def _add_to_tracking(self, work_id: str, work_type: str, title: str,
+                        priority: str, dependencies: List[str]):
+        """Add work item to work_items.json."""
+        # Load existing data
+        if self.work_items_file.exists():
+            data = read_json(self.work_items_file)
+        else:
+            data = {"work_items": {}}
+
+        # Create work item entry
+        work_item = {
+            "id": work_id,
+            "type": work_type,
+            "title": title,
+            "status": "not_started",
+            "priority": priority,
+            "dependencies": dependencies,
+            "created_at": datetime.now().isoformat(),
+            "sessions": [],
+            "rationale": "",
+            "acceptance_criteria": [],
+            "implementation_paths": [],
+            "test_paths": []
+        }
+
+        # Add to data
+        data["work_items"][work_id] = work_item
+
+        # Save atomically
+        write_json(self.work_items_file, data)
+
+
+def main():
+    """CLI entry point."""
+    manager = WorkItemManager()
+    work_id = manager.create_work_item()
+
+    if work_id:
+        return 0
+    else:
+        return 1
+
+
+if __name__ == "__main__":
+    exit(main())
+```
+
+#### Integration
+
+- Integrates with Phase 1's file_ops for atomic JSON writes
+- Uses template system for consistent work item structure
+- Validates dependencies and types
+- Auto-generates meaningful IDs
+
+#### Testing Checklist
+
+- [ ] Create feature work item
+- [ ] Create bug work item
+- [ ] Create refactor work item
+- [ ] Create security work item
+- [ ] Create integration_test (requires dependencies)
+- [ ] Create deployment (requires dependencies)
+- [ ] Duplicate ID detection works
+- [ ] Invalid type rejected
+- [ ] Invalid priority defaults to 'high'
+- [ ] Specification file created correctly
+- [ ] work_items.json updated atomically
+
+---
+
+### 2.3 Implement `/work-item list` Command
+
+**Purpose:** List work items with filtering and visual indicators
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/work-item-list.md` (NEW)
+- Enhance `scripts/work_item_manager.py` with list methods
+
+**Reference:** Standard CLI list commands for UX patterns
+
+#### Implementation
+
+**File:** `commands/work-item-list.md`
+
+```markdown
+# Work Item List Command
+
+**Usage:** `/work-item list [--status STATUS] [--type TYPE] [--milestone MILESTONE]`
+
+**Description:** List all work items with optional filtering.
+
+**Options:**
+- `--status STATUS` - Filter by status (not_started, in_progress, blocked, completed)
+- `--type TYPE` - Filter by type (feature, bug, refactor, security, integration_test, deployment)
+- `--milestone MILESTONE` - Filter by milestone name
+
+**Behavior:**
+
+1. Load work_items.json
+2. Apply filters (if specified)
+3. Sort by:
+   - Priority (critical > high > medium > low)
+   - Dependency order (items with no unmet dependencies first)
+   - Creation date (oldest first)
+4. Display with color coding and indicators
+5. Show summary statistics
+
+**Output Format:**
+
+```
+Work Items (15 total, 3 in progress, 8 not started, 4 completed)
+
+🔴 CRITICAL
+  [  ] feature_oauth_integration (blocked - waiting on: feature_user_model) 🚫
+  [>>] security_fix_sql_injection (in progress, session 3)
+
+🟠 HIGH
+  [>>] feature_user_profile (in progress, session 1)
+  [  ] bug_login_timeout (ready to start) ✓
+  [✓] feature_user_model (completed, 2 sessions)
+
+🟡 MEDIUM
+  [  ] refactor_database_queries (ready to start) ✓
+  [  ] feature_email_notifications (ready to start) ✓
+
+🟢 LOW
+  [  ] refactor_code_cleanup (ready to start) ✓
+
+Legend:
+  [  ] Not started
+  [>>] In progress
+  [✓] Completed
+  🚫 Blocked by dependencies
+  ✓ Ready to start
+```
+
+**Example:**
+
+\`\`\`
+User: /work-item list --status not_started --type feature
+
+Claude: Work Items (5 matching filters)
+
+🟠 HIGH
+  [  ] feature_oauth_integration (blocked - waiting on: feature_user_model) 🚫
+  [  ] feature_user_profile (ready to start) ✓
+
+🟡 MEDIUM
+  [  ] feature_email_notifications (ready to start) ✓
+  [  ] feature_password_reset (ready to start) ✓
+
+🟢 LOW
+  [  ] feature_user_preferences (ready to start) ✓
+\`\`\`
+```
+
+**File:** Add to `scripts/work_item_manager.py`
+
+```python
+def list_work_items(self, status_filter: Optional[str] = None,
+                   type_filter: Optional[str] = None,
+                   milestone_filter: Optional[str] = None) -> Dict:
+    """List work items with optional filtering."""
+    if not self.work_items_file.exists():
+        print("No work items found. Create one with /work-item create")
+        return {"items": [], "count": 0}
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    # Apply filters
+    filtered_items = {}
+    for work_id, item in items.items():
+        # Status filter
+        if status_filter and item["status"] != status_filter:
+            continue
+
+        # Type filter
+        if type_filter and item["type"] != type_filter:
+            continue
+
+        # Milestone filter
+        if milestone_filter and item.get("milestone") != milestone_filter:
+            continue
+
+        filtered_items[work_id] = item
+
+    # Check dependency status for each item
+    for work_id, item in filtered_items.items():
+        item["_blocked"] = self._is_blocked(item, items)
+        item["_ready"] = not item["_blocked"] and item["status"] == "not_started"
+
+    # Sort items
+    sorted_items = self._sort_items(filtered_items)
+
+    # Display
+    self._display_items(sorted_items)
+
+    return {
+        "items": sorted_items,
+        "count": len(sorted_items)
+    }
+
+def _is_blocked(self, item: Dict, all_items: Dict) -> bool:
+    """Check if work item is blocked by dependencies."""
+    if item["status"] != "not_started":
+        return False
+
+    dependencies = item.get("dependencies", [])
+    if not dependencies:
+        return False
+
+    for dep_id in dependencies:
+        if dep_id not in all_items:
+            continue
+        if all_items[dep_id]["status"] != "completed":
+            return True
+
+    return False
+
+def _sort_items(self, items: Dict) -> List[Dict]:
+    """Sort items by priority, dependency status, and date."""
+    priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
+    items_list = list(items.values())
+
+    # Sort by:
+    # 1. Priority (critical first)
+    # 2. Blocked status (ready items first)
+    # 3. Status (in_progress first)
+    # 4. Creation date (oldest first)
+    items_list.sort(key=lambda x: (
+        priority_order.get(x["priority"], 99),
+        x.get("_blocked", False),
+        0 if x["status"] == "in_progress" else 1,
+        x.get("created_at", "")
+    ))
+
+    return items_list
+
+def _display_items(self, items: List[Dict]):
+    """Display items with color coding and indicators."""
+    if not items:
+        print("No work items found matching filters.")
+        return
+
+    # Count by status
+    status_counts = {
+        "not_started": 0,
+        "in_progress": 0,
+        "blocked": 0,
+        "completed": 0
+    }
+
+    for item in items:
+        if item.get("_blocked"):
+            status_counts["blocked"] += 1
+        else:
+            status_counts[item["status"]] += 1
+
+    # Header
+    total = len(items)
+    print(f"\nWork Items ({total} total, "
+          f"{status_counts['in_progress']} in progress, "
+          f"{status_counts['not_started']} not started, "
+          f"{status_counts['completed']} completed)\n")
+
+    # Group by priority
+    priority_groups = {
+        "critical": [],
+        "high": [],
+        "medium": [],
+        "low": []
+    }
+
+    for item in items:
+        priority = item.get("priority", "medium")
+        priority_groups[priority].append(item)
+
+    # Display each priority group
+    priority_emoji = {
+        "critical": "🔴",
+        "high": "🟠",
+        "medium": "🟡",
+        "low": "🟢"
+    }
+
+    for priority in ["critical", "high", "medium", "low"]:
+        group_items = priority_groups[priority]
+        if not group_items:
+            continue
+
+        print(f"{priority_emoji[priority]} {priority.upper()}")
+
+        for item in group_items:
+            status_icon = self._get_status_icon(item)
+            title = item["title"]
+            work_id = item["id"]
+
+            # Build status string
+            if item.get("_blocked"):
+                # Show blocking dependencies
+                blocking_deps = [
+                    dep for dep in item.get("dependencies", [])
+                    # Would need to check actual status, simplified here
+                ]
+                status_str = f"(blocked - waiting on: {', '.join(item.get('dependencies', [])[:2])}) 🚫"
+            elif item["status"] == "in_progress":
+                sessions = len(item.get("sessions", []))
+                status_str = f"(in progress, session {sessions})"
+            elif item["status"] == "completed":
+                sessions = len(item.get("sessions", []))
+                status_str = f"(completed, {sessions} session{'s' if sessions != 1 else ''})"
+            elif item.get("_ready"):
+                status_str = "(ready to start) ✓"
+            else:
+                status_str = ""
+
+            print(f"  {status_icon} {work_id} {status_str}")
+
+        print()
+
+    # Legend
+    print("Legend:")
+    print("  [  ] Not started")
+    print("  [>>] In progress")
+    print("  [✓] Completed")
+    print("  🚫 Blocked by dependencies")
+    print("  ✓ Ready to start")
+    print()
+
+def _get_status_icon(self, item: Dict) -> str:
+    """Get status icon for work item."""
+    if item["status"] == "completed":
+        return "[✓]"
+    elif item["status"] == "in_progress":
+        return "[>>]"
+    else:
+        return "[  ]"
+```
+
+#### Integration
+
+- Uses existing work_items.json structure
+- Integrates dependency checking logic
+- Color coding enhances readability
+- Filtering enables focused views
+
+#### Testing Checklist
+
+- [ ] List all work items (no filters)
+- [ ] Filter by status (not_started, in_progress, completed)
+- [ ] Filter by type (feature, bug, etc.)
+- [ ] Filter by milestone
+- [ ] Multiple filters combined
+- [ ] Empty list handled gracefully
+- [ ] Blocked items identified correctly
+- [ ] Sorting is correct (priority > dependencies > date)
+- [ ] Color coding displays correctly
+- [ ] Summary statistics accurate
+
+---
+
+### 2.4 Implement `/work-item show` Command
+
+**Purpose:** Display detailed information about a specific work item
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/work-item-show.md` (NEW)
+- Enhance `scripts/work_item_manager.py` with show methods
+
+#### Implementation
+
+**File:** `commands/work-item-show.md`
+
+```markdown
+# Work Item Show Command
+
+**Usage:** `/work-item show <work_item_id>`
+
+**Description:** Display detailed information about a specific work item.
+
+**Behavior:**
+
+1. Load work item from work_items.json
+2. Load specification file from .session/specs/
+3. Display comprehensive view:
+   - Basic info (ID, type, status, priority)
+   - Dependencies (with status)
+   - Session history
+   - Git branch info
+   - Specification content
+4. Show actionable next steps
+
+**Example:**
+
+\`\`\`
+User: /work-item show feature_oauth
+
+Claude:
+================================================================================
+Work Item: feature_oauth
+================================================================================
+
+Type: feature
+Status: in_progress
+Priority: high
+Created: 2025-10-10
+
+Dependencies:
+  ✓ feature_user_model (completed)
+  ✗ feature_database_migration (in progress)
+
+Sessions:
+  1. 2025-10-11 14:30-16:45 (2h 15m) - Initial implementation
+  2. 2025-10-12 10:00-11:30 (1h 30m) - Added OAuth providers
+
+Git Branch: session-003-feature_oauth
+Commits: 5
+
+Specification:
+--------------
+# Feature: OAuth Integration
+
+## Overview
+Enable users to log in using OAuth providers (Google, GitHub).
+
+## User Story
+As a user, I want to log in using my existing Google or GitHub account
+so that I don't need to create another password.
+
+[... rest of specification ...]
+
+Next Steps:
+- Continue working: /session-start
+- Update fields: /work-item update feature_oauth
+- View related items: /work-item list --milestone auth
+\`\`\`
+```
+
+**File:** Add to `scripts/work_item_manager.py`
+
+```python
+def show_work_item(self, work_id: str) -> Optional[Dict]:
+    """Display detailed information about a work item."""
+    if not self.work_items_file.exists():
+        print("No work items found.")
+        return None
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    if work_id not in items:
+        print(f"❌ Error: Work item '{work_id}' not found")
+        print("\nAvailable work items:")
+        for wid in list(items.keys())[:5]:
+            print(f"  - {wid}")
+        return None
+
+    item = items[work_id]
+
+    # Display header
+    print("=" * 80)
+    print(f"Work Item: {work_id}")
+    print("=" * 80)
+    print()
+
+    # Basic info
+    print(f"Type: {item['type']}")
+    print(f"Status: {item['status']}")
+    print(f"Priority: {item['priority']}")
+    print(f"Created: {item.get('created_at', 'Unknown')[:10]}")
+    print()
+
+    # Dependencies
+    if item.get("dependencies"):
+        print("Dependencies:")
+        for dep_id in item["dependencies"]:
+            if dep_id in items:
+                dep_status = items[dep_id]["status"]
+                icon = "✓" if dep_status == "completed" else "✗"
+                print(f"  {icon} {dep_id} ({dep_status})")
+            else:
+                print(f"  ? {dep_id} (not found)")
+        print()
+
+    # Sessions
+    sessions = item.get("sessions", [])
+    if sessions:
+        print(f"Sessions: {len(sessions)}")
+        for i, session in enumerate(sessions[-5:], 1):  # Last 5 sessions
+            session_num = session.get("session_number", i)
+            date = session.get("date", "Unknown")
+            duration = session.get("duration", "Unknown")
+            notes = session.get("notes", "")
+            print(f"  {session_num}. {date} ({duration}) - {notes[:50]}")
+        print()
+
+    # Git info
+    git_info = item.get("git", {})
+    if git_info:
+        print(f"Git Branch: {git_info.get('branch', 'N/A')}")
+        commits = git_info.get("commits", [])
+        print(f"Commits: {len(commits)}")
+        print()
+
+    # Specification
+    spec_path = self.specs_dir / f"{work_id}.md"
+    if spec_path.exists():
+        print("Specification:")
+        print("-" * 80)
+        spec_content = spec_path.read_text()
+        # Show first 30 lines
+        lines = spec_content.split('\n')[:30]
+        print('\n'.join(lines))
+        if len(spec_content.split('\n')) > 30:
+            print("\n[... see full specification in .session/specs/{}.md]".format(work_id))
+        print()
+
+    # Next steps
+    print("Next Steps:")
+    if item["status"] == "not_started":
+        # Check dependencies
+        blocked = any(
+            items.get(dep_id, {}).get("status") != "completed"
+            for dep_id in item.get("dependencies", [])
+        )
+        if blocked:
+            print("- Waiting on dependencies to complete")
+        else:
+            print("- Start working: /session-start")
+    elif item["status"] == "in_progress":
+        print("- Continue working: /session-start")
+    elif item["status"] == "completed":
+        print("- Work item is complete")
+
+    print(f"- Update fields: /work-item update {work_id}")
+    if item.get("milestone"):
+        print(f"- View related items: /work-item list --milestone {item['milestone']}")
+    print()
+
+    return item
+```
+
+#### Testing Checklist
+
+- [ ] Show existing work item
+- [ ] Show non-existent work item (error handling)
+- [ ] Display dependencies correctly
+- [ ] Display session history
+- [ ] Display git information
+- [ ] Display specification preview
+- [ ] Show appropriate next steps based on status
+
+---
+
+### 2.5 Implement `/work-item update` Command
+
+**Purpose:** Update work item fields interactively
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/work-item-update.md` (NEW)
+- Enhance `scripts/work_item_manager.py` with update methods
+
+#### Implementation
+
+**File:** `commands/work-item-update.md`
+
+```markdown
+# Work Item Update Command
+
+**Usage:** `/work-item update <work_item_id> [--field value]`
+
+**Description:** Update work item fields interactively or with flags.
+
+**Updatable Fields:**
+- `--status` - Change status (not_started, in_progress, blocked, completed)
+- `--priority` - Change priority (critical, high, medium, low)
+- `--milestone` - Assign to milestone
+- `--add-dependency` - Add a dependency
+- `--remove-dependency` - Remove a dependency
+
+**Behavior:**
+
+1. Load work item
+2. If flags provided: Apply updates directly
+3. If no flags: Interactive mode
+4. Validate updates based on type
+5. Record update in history
+6. Save atomically
+
+**Example:**
+
+\`\`\`
+User: /work-item update feature_oauth --priority critical
+
+Claude: Updated feature_oauth
+  priority: high → critical
+
+User: /work-item update feature_oauth
+
+Claude: Update Work Item: feature_oauth
+
+Current values:
+  Status: in_progress
+  Priority: critical
+  Milestone: (none)
+
+What would you like to update?
+1. Status
+2. Priority
+3. Milestone
+4. Add dependency
+5. Remove dependency
+6. Cancel
+
+Your choice: 3
+
+Enter milestone name: auth-mvp
+
+Updated feature_oauth:
+  milestone: (none) → auth-mvp
+\`\`\`
+```
+
+**File:** Add to `scripts/work_item_manager.py`
+
+```python
+def update_work_item(self, work_id: str, **updates) -> bool:
+    """Update work item fields."""
+    if not self.work_items_file.exists():
+        print("No work items found.")
+        return False
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    if work_id not in items:
+        print(f"❌ Error: Work item '{work_id}' not found")
+        return False
+
+    item = items[work_id]
+    changes = []
+
+    # Apply updates
+    for field, value in updates.items():
+        if field == "status":
+            if value not in ["not_started", "in_progress", "blocked", "completed"]:
+                print(f"⚠️  Invalid status: {value}")
+                continue
+            old_value = item["status"]
+            item["status"] = value
+            changes.append(f"  status: {old_value} → {value}")
+
+        elif field == "priority":
+            if value not in self.PRIORITIES:
+                print(f"⚠️  Invalid priority: {value}")
+                continue
+            old_value = item["priority"]
+            item["priority"] = value
+            changes.append(f"  priority: {old_value} → {value}")
+
+        elif field == "milestone":
+            old_value = item.get("milestone", "(none)")
+            item["milestone"] = value
+            changes.append(f"  milestone: {old_value} → {value}")
+
+        elif field == "add_dependency":
+            deps = item.get("dependencies", [])
+            if value not in deps:
+                if value in items:
+                    deps.append(value)
+                    item["dependencies"] = deps
+                    changes.append(f"  added dependency: {value}")
+                else:
+                    print(f"⚠️  Dependency '{value}' not found")
+
+        elif field == "remove_dependency":
+            deps = item.get("dependencies", [])
+            if value in deps:
+                deps.remove(value)
+                item["dependencies"] = deps
+                changes.append(f"  removed dependency: {value}")
+
+    if not changes:
+        print("No changes made.")
+        return False
+
+    # Record update
+    item.setdefault("update_history", []).append({
+        "timestamp": datetime.now().isoformat(),
+        "changes": changes
+    })
+
+    # Save
+    data["work_items"][work_id] = item
+    write_json(self.work_items_file, data)
+
+    print(f"\nUpdated {work_id}:")
+    for change in changes:
+        print(change)
+    print()
+
+    return True
+
+def update_work_item_interactive(self, work_id: str) -> bool:
+    """Interactive work item update."""
+    if not self.work_items_file.exists():
+        print("No work items found.")
+        return False
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    if work_id not in items:
+        print(f"❌ Error: Work item '{work_id}' not found")
+        return False
+
+    item = items[work_id]
+
+    print(f"\nUpdate Work Item: {work_id}\n")
+    print("Current values:")
+    print(f"  Status: {item['status']}")
+    print(f"  Priority: {item['priority']}")
+    print(f"  Milestone: {item.get('milestone', '(none)')}")
+    print()
+
+    print("What would you like to update?")
+    print("1. Status")
+    print("2. Priority")
+    print("3. Milestone")
+    print("4. Add dependency")
+    print("5. Remove dependency")
+    print("6. Cancel")
+    print()
+
+    choice = input("Your choice: ").strip()
+
+    if choice == "1":
+        status = input("New status (not_started/in_progress/blocked/completed): ").strip()
+        return self.update_work_item(work_id, status=status)
+    elif choice == "2":
+        priority = input("New priority (critical/high/medium/low): ").strip()
+        return self.update_work_item(work_id, priority=priority)
+    elif choice == "3":
+        milestone = input("Milestone name: ").strip()
+        return self.update_work_item(work_id, milestone=milestone)
+    elif choice == "4":
+        dep = input("Dependency ID to add: ").strip()
+        return self.update_work_item(work_id, add_dependency=dep)
+    elif choice == "5":
+        dep = input("Dependency ID to remove: ").strip()
+        return self.update_work_item(work_id, remove_dependency=dep)
+    else:
+        print("Cancelled.")
+        return False
+```
+
+#### Testing Checklist
+
+- [ ] Update status with flag
+- [ ] Update priority with flag
+- [ ] Update milestone with flag
+- [ ] Add dependency
+- [ ] Remove dependency
+- [ ] Interactive mode
+- [ ] Invalid values rejected
+- [ ] Update history recorded
+- [ ] Atomic save works
+
+---
+
+### 2.6 Implement `/work-item next` Command
+
+**Purpose:** Find the next work item to start based on dependencies and priority
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/work-item-next.md` (NEW)
+- Enhance `scripts/work_item_manager.py` with next logic
+
+#### Implementation
+
+**File:** `commands/work-item-next.md`
+
+```markdown
+# Work Item Next Command
+
+**Usage:** `/work-item next`
+
+**Description:** Show the next recommended work item to start.
+
+**Logic:**
+1. Filter to not_started items
+2. Check dependencies (skip blocked items)
+3. Sort by priority
+4. Return highest priority, unblocked item
+5. Explain why other items are blocked
+
+**Example:**
+
+\`\`\`
+User: /work-item next
+
+Claude:
+Next Recommended Work Item:
+================================================================================
+
+🟠 HIGH: feature_user_profile
+ID: feature_user_profile
+Type: feature
+Priority: high
+Ready to start: Yes ✓
+
+Dependencies: All satisfied
+  ✓ feature_user_model (completed)
+
+Estimated effort: 2-3 sessions
+
+To start: /session-start
+
+Other items waiting:
+  🔴 feature_oauth_integration - Blocked by: feature_database_migration
+  🟡 feature_email_notifications - Ready (medium priority)
+\`\`\`
+```
+
+**File:** Add to `scripts/work_item_manager.py`
+
+```python
+def get_next_work_item(self) -> Optional[Dict]:
+    """Find next work item to start."""
+    if not self.work_items_file.exists():
+        print("No work items found.")
+        return None
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    # Filter to not_started items
+    not_started = {
+        wid: item for wid, item in items.items()
+        if item["status"] == "not_started"
+    }
+
+    if not not_started:
+        print("No work items available to start.")
+        print("All items are either in progress or completed.")
+        return None
+
+    # Check dependencies and categorize
+    ready_items = []
+    blocked_items = []
+
+    for work_id, item in not_started.items():
+        is_blocked = self._is_blocked(item, items)
+        if is_blocked:
+            # Find what's blocking
+            blocking = [
+                dep_id for dep_id in item.get("dependencies", [])
+                if items.get(dep_id, {}).get("status") != "completed"
+            ]
+            blocked_items.append((work_id, item, blocking))
+        else:
+            ready_items.append((work_id, item))
+
+    if not ready_items:
+        print("No work items ready to start. All have unmet dependencies.\n")
+        print("Blocked items:")
+        for work_id, item, blocking in blocked_items:
+            print(f"  🔴 {work_id} - Blocked by: {', '.join(blocking)}")
+        return None
+
+    # Sort ready items by priority
+    priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    ready_items.sort(key=lambda x: priority_order.get(x[1]["priority"], 99))
+
+    # Get top item
+    next_id, next_item = ready_items[0]
+
+    # Display
+    print("\nNext Recommended Work Item:")
+    print("=" * 80)
+    print()
+
+    priority_emoji = {
+        "critical": "🔴",
+        "high": "🟠",
+        "medium": "🟡",
+        "low": "🟢"
+    }
+
+    emoji = priority_emoji.get(next_item["priority"], "")
+    print(f"{emoji} {next_item['priority'].upper()}: {next_item['title']}")
+    print(f"ID: {next_id}")
+    print(f"Type: {next_item['type']}")
+    print(f"Priority: {next_item['priority']}")
+    print("Ready to start: Yes ✓")
+    print()
+
+    # Dependencies
+    deps = next_item.get("dependencies", [])
+    if deps:
+        print("Dependencies: All satisfied")
+        for dep_id in deps:
+            print(f"  ✓ {dep_id} (completed)")
+    else:
+        print("Dependencies: None")
+    print()
+
+    # Estimated effort
+    estimated = next_item.get("estimated_effort", "Unknown")
+    print(f"Estimated effort: {estimated}")
+    print()
+
+    print("To start: /session-start")
+    print()
+
+    # Show other items
+    if len(ready_items) > 1 or blocked_items:
+        print("Other items waiting:")
+        for work_id, item in ready_items[1:3]:  # Show next 2 ready items
+            emoji = priority_emoji.get(item["priority"], "")
+            print(f"  {emoji} {work_id} - Ready ({item['priority']} priority)")
+
+        for work_id, item, blocking in blocked_items[:2]:  # Show 2 blocked items
+            print(f"  🔴 {work_id} - Blocked by: {', '.join(blocking[:2])}")
+        print()
+
+    return next_item
+```
+
+#### Testing Checklist
+
+- [ ] Find next item when available
+- [ ] Handle no items available
+- [ ] Handle all items blocked
+- [ ] Priority sorting works
+- [ ] Dependency checking accurate
+- [ ] Display blocked items
+- [ ] Show other waiting items
+
+---
+
+### 2.7 Add Milestone Tracking
+
+**Purpose:** Group work items into milestones for better organization
+
+**Status:** 📋 To Implement
+
+**Files:**
+- Enhance `work_items.json` schema with milestone field
+- Add milestone methods to `work_item_manager.py`
+
+#### Implementation
+
+**Milestone Structure in work_items.json:**
+
+```json
+{
+  "work_items": { ... },
+  "milestones": {
+    "auth-mvp": {
+      "name": "auth-mvp",
+      "title": "Authentication MVP",
+      "description": "Basic authentication system",
+      "target_date": "2025-11-01",
+      "status": "in_progress",
+      "created_at": "2025-10-10T10:00:00"
+    }
+  }
+}
+```
+
+**Add milestone field to work items:**
+
+```python
+# In _add_to_tracking method
+work_item = {
+    ...
+    "milestone": "",  # Add this field
+    ...
+}
+```
+
+**File:** Add to `scripts/work_item_manager.py`
+
+```python
+def create_milestone(self, name: str, title: str, description: str,
+                    target_date: Optional[str] = None) -> bool:
+    """Create a new milestone."""
+    if not self.work_items_file.exists():
+        data = {"work_items": {}, "milestones": {}}
+    else:
+        data = read_json(self.work_items_file)
+        if "milestones" not in data:
+            data["milestones"] = {}
+
+    if name in data["milestones"]:
+        print(f"❌ Milestone '{name}' already exists")
+        return False
+
+    milestone = {
+        "name": name,
+        "title": title,
+        "description": description,
+        "target_date": target_date or "",
+        "status": "not_started",
+        "created_at": datetime.now().isoformat()
+    }
+
+    data["milestones"][name] = milestone
+    write_json(self.work_items_file, data)
+
+    print(f"✓ Created milestone: {name}")
+    return True
+
+def get_milestone_progress(self, milestone_name: str) -> Dict:
+    """Calculate milestone progress."""
+    if not self.work_items_file.exists():
+        return {"error": "No work items found"}
+
+    data = read_json(self.work_items_file)
+    items = data.get("work_items", {})
+
+    # Filter items in this milestone
+    milestone_items = [
+        item for item in items.values()
+        if item.get("milestone") == milestone_name
+    ]
+
+    if not milestone_items:
+        return {
+            "total": 0,
+            "completed": 0,
+            "in_progress": 0,
+            "not_started": 0,
+            "percent": 0
+        }
+
+    total = len(milestone_items)
+    completed = sum(1 for item in milestone_items if item["status"] == "completed")
+    in_progress = sum(1 for item in milestone_items if item["status"] == "in_progress")
+    not_started = sum(1 for item in milestone_items if item["status"] == "not_started")
+    percent = int((completed / total) * 100) if total > 0 else 0
+
+    return {
+        "total": total,
+        "completed": completed,
+        "in_progress": in_progress,
+        "not_started": not_started,
+        "percent": percent
+    }
+
+def list_milestones(self) -> None:
+    """List all milestones with progress."""
+    if not self.work_items_file.exists():
+        print("No milestones found.")
+        return
+
+    data = read_json(self.work_items_file)
+    milestones = data.get("milestones", {})
+
+    if not milestones:
+        print("No milestones found.")
+        return
+
+    print("\nMilestones:\n")
+
+    for name, milestone in milestones.items():
+        progress = self.get_milestone_progress(name)
+        percent = progress["percent"]
+
+        # Progress bar
+        bar_length = 20
+        filled = int(bar_length * percent / 100)
+        bar = "█" * filled + "░" * (bar_length - filled)
+
+        print(f"{milestone['title']}")
+        print(f"  [{bar}] {percent}%")
+        print(f"  {progress['completed']}/{progress['total']} complete, "
+              f"{progress['in_progress']} in progress")
+
+        if milestone.get("target_date"):
+            print(f"  Target: {milestone['target_date']}")
+        print()
+```
+
+#### Testing Checklist
+
+- [ ] Create milestone
+- [ ] Assign work item to milestone
+- [ ] Calculate milestone progress
+- [ ] List milestones with progress
+- [ ] Filter work items by milestone
+- [ ] Display progress bars correctly
+
+---
+
+### 2.8 Enhance Briefings with Milestones
+
+**Purpose:** Add milestone context to session briefings
+
+**Status:** 📋 To Implement
+
+**Files:**
+- Enhance `scripts/briefing_generator.py`
+
+#### Implementation
+
+**File:** Update `briefing_generator.py`
+
+```python
+def load_milestone_context(work_item):
+    """Load milestone context for briefing."""
+    milestone_name = work_item.get("milestone")
+    if not milestone_name:
+        return None
+
+    work_items_file = Path(".session/tracking/work_items.json")
+    if not work_items_file.exists():
+        return None
+
+    data = json.loads(work_items_file.read_text())
+    milestones = data.get("milestones", {})
+    milestone = milestones.get(milestone_name)
+
+    if not milestone:
+        return None
+
+    # Calculate progress
+    items = data.get("work_items", {})
+    milestone_items = [
+        item for item in items.values()
+        if item.get("milestone") == milestone_name
+    ]
+
+    total = len(milestone_items)
+    completed = sum(1 for item in milestone_items if item["status"] == "completed")
+    percent = int((completed / total) * 100) if total > 0 else 0
+
+    return {
+        "name": milestone_name,
+        "title": milestone["title"],
+        "description": milestone["description"],
+        "target_date": milestone.get("target_date", ""),
+        "progress": percent,
+        "total_items": total,
+        "completed_items": completed
+    }
+
+def generate_comprehensive_briefing(item_id, item, learnings_data):
+    """Generate comprehensive briefing with milestone context."""
+    # ... existing code ...
+
+    # Add milestone section
+    milestone_context = load_milestone_context(item)
+    if milestone_context:
+        briefing += f"""
+## Milestone Context
+
+**{milestone_context['title']}**
+{milestone_context['description']}
+
+Progress: {milestone_context['progress']}% ({milestone_context['completed_items']}/{milestone_context['total_items']} items complete)
+Target Date: {milestone_context['target_date']}
+
+Related work items in this milestone:
+"""
+        # Show other items in same milestone
+        related_items = [
+            other_item for other_item in work_items.values()
+            if other_item.get("milestone") == milestone_context["name"]
+            and other_item["id"] != item_id
+        ][:5]
+
+        for related in related_items:
+            status_icon = "✓" if related["status"] == "completed" else "○"
+            briefing += f"- {status_icon} {related['id']} - {related['title']}\n"
+
+    # ... rest of briefing ...
+
+    return briefing
+```
+
+#### Testing Checklist
+
+- [ ] Milestone context included in briefing
+- [ ] Related work items shown
+- [ ] Progress accurate
+- [ ] Works when no milestone assigned
+
+---
+
+### 2.9 Implement `/session-status` Command
+
+**Purpose:** Quick view of current session state without re-reading full briefing
+
+**Status:** 📋 To Implement
+
+**Files:**
+- `commands/session-status.md` (NEW)
+- `scripts/session_status.py` (NEW)
+
+#### Implementation
+
+**File:** `commands/session-status.md`
+
+```markdown
+# Session Status Command
+
+**Usage:** `/session-status`
+
+**Description:** Display current session state and progress.
+
+**Displays:**
+- Current work item
+- Time elapsed in session
+- Files changed (git diff)
+- Git branch status
+- Milestone progress (if applicable)
+- Next upcoming work items
+
+**Example:**
+
+\`\`\`
+User: /session-status
+
+Claude:
+Current Session Status
+================================================================================
+
+Work Item: feature_user_profile
+Type: feature
+Priority: high
+Session: 2 (of estimated 3)
+
+Time Elapsed: 1h 23m
+
+Files Changed (5):
+  M  src/models/user.py
+  M  src/api/profile.py
+  A  tests/test_profile.py
+  M  README.md
+  M  requirements.txt
+
+Git Branch: session-003-feature_user_profile
+Commits: 3
+
+Milestone: auth-mvp (45% complete)
+  Related items: 2 in progress, 3 not started
+
+Next up:
+  🟠 feature_oauth_integration (blocked)
+  🟡 feature_email_notifications (ready)
+
+Quick actions:
+  - Validate session: /session-validate
+  - Complete session: /session-end
+  - View work item: /work-item show feature_user_profile
+\`\`\`
+```
+
+**File:** `scripts/session_status.py`
+
+```python
+#!/usr/bin/env python3
+"""
+Display current session status.
+"""
+
+import json
+import subprocess
+from pathlib import Path
+from datetime import datetime
+
+
+def get_session_status():
+    """Get current session status."""
+    session_dir = Path(".session")
+    status_file = session_dir / "tracking" / "status_update.json"
+
+    if not status_file.exists():
+        print("No active session.")
+        return 1
+
+    # Load status
+    status = json.loads(status_file.read_text())
+    work_item_id = status.get("current_work_item")
+
+    if not work_item_id:
+        print("No active work item in this session.")
+        return 1
+
+    # Load work item
+    work_items_file = session_dir / "tracking" / "work_items.json"
+    data = json.loads(work_items_file.read_text())
+    item = data["work_items"].get(work_item_id)
+
+    if not item:
+        print(f"Work item {work_item_id} not found.")
+        return 1
+
+    print("\nCurrent Session Status")
+    print("=" * 80)
+    print()
+
+    # Work item info
+    print(f"Work Item: {work_item_id}")
+    print(f"Type: {item['type']}")
+    print(f"Priority: {item['priority']}")
+
+    sessions = len(item.get("sessions", []))
+    estimated = item.get("estimated_effort", "Unknown")
+    print(f"Session: {sessions} (of estimated {estimated})")
+    print()
+
+    # Time elapsed (if session start time recorded)
+    session_start = status.get("session_start")
+    if session_start:
+        start_time = datetime.fromisoformat(session_start)
+        elapsed = datetime.now() - start_time
+        hours = int(elapsed.total_seconds() // 3600)
+        minutes = int((elapsed.total_seconds() % 3600) // 60)
+        print(f"Time Elapsed: {hours}h {minutes}m")
+        print()
+
+    # Git changes
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-status", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        if result.returncode == 0 and result.stdout:
+            lines = result.stdout.strip().split('\n')
+            print(f"Files Changed ({len(lines)}):")
+            for line in lines[:10]:  # Show first 10
+                print(f"  {line}")
+            if len(lines) > 10:
+                print(f"  ... and {len(lines) - 10} more")
+            print()
+    except:
+        pass
+
+    # Git branch
+    git_info = item.get("git", {})
+    if git_info:
+        branch = git_info.get("branch", "N/A")
+        commits = len(git_info.get("commits", []))
+        print(f"Git Branch: {branch}")
+        print(f"Commits: {commits}")
+        print()
+
+    # Milestone
+    milestone_name = item.get("milestone")
+    if milestone_name:
+        milestones = data.get("milestones", {})
+        milestone = milestones.get(milestone_name)
+        if milestone:
+            # Calculate progress (simplified)
+            milestone_items = [
+                i for i in data["work_items"].values()
+                if i.get("milestone") == milestone_name
+            ]
+            total = len(milestone_items)
+            completed = sum(1 for i in milestone_items if i["status"] == "completed")
+            percent = int((completed / total) * 100) if total > 0 else 0
+
+            in_prog = sum(1 for i in milestone_items if i["status"] == "in_progress")
+            not_started = sum(1 for i in milestone_items if i["status"] == "not_started")
+
+            print(f"Milestone: {milestone_name} ({percent}% complete)")
+            print(f"  Related items: {in_prog} in progress, {not_started} not started")
+            print()
+
+    # Next items
+    print("Next up:")
+    items = data["work_items"]
+    not_started = [
+        (wid, i) for wid, i in items.items()
+        if i["status"] == "not_started"
+    ][:3]
+
+    priority_emoji = {
+        "critical": "🔴",
+        "high": "🟠",
+        "medium": "🟡",
+        "low": "🟢"
+    }
+
+    for wid, i in not_started:
+        emoji = priority_emoji.get(i["priority"], "")
+        # Check if blocked
+        blocked = any(
+            items.get(dep_id, {}).get("status") != "completed"
+            for dep_id in i.get("dependencies", [])
+        )
+        status_str = "(blocked)" if blocked else "(ready)"
+        print(f"  {emoji} {wid} {status_str}")
+    print()
+
+    # Quick actions
+    print("Quick actions:")
+    print("  - Validate session: /session-validate")
+    print("  - Complete session: /session-end")
+    print(f"  - View work item: /work-item show {work_item_id}")
+    print()
+
+    return 0
+
+
+if __name__ == "__main__":
+    exit(get_session_status())
+```
+
+#### Testing Checklist
+
+- [ ] Display current work item
+- [ ] Show time elapsed
+- [ ] List files changed
+- [ ] Show git status
+- [ ] Display milestone progress
+- [ ] Show next items
+- [ ] Handle no active session
+
+---
 
 ### Phase 2 Completion Checklist
 
 **Implementation:**
-- [ ] All work item commands implemented
-- [ ] Dependency validation working
-- [ ] Milestones tracked correctly
-- [ ] Briefings enhanced
+- [ ] All work item type templates created (2.1)
+- [ ] `/work-item create` command implemented (2.2)
+- [ ] `/work-item list` command implemented (2.3)
+- [ ] `/work-item show` command implemented (2.4)
+- [ ] `/work-item update` command implemented (2.5)
+- [ ] `/work-item next` command implemented (2.6)
+- [ ] Milestone tracking added (2.7)
+- [ ] Briefings enhanced with milestones (2.8)
+- [ ] `/session-status` command implemented (2.9)
 
 **Testing:**
 - [ ] Create work item interactively
@@ -2442,9 +4418,11 @@ def get_next_work_item():
 - [ ] Show work item details
 - [ ] Update work item fields
 - [ ] Get next work item respects dependencies
+- [ ] Milestone tracking works
+- [ ] Session status command accurate
 
 **Documentation:**
-- [ ] Commands documented
+- [ ] All commands documented
 - [ ] Examples provided
 - [ ] Phase 2 complete in ROADMAP.md
 

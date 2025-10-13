@@ -96,6 +96,48 @@ def get_relevant_learnings(learnings_data, work_item):
     return sorted(relevant, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
 
 
+def load_milestone_context(work_item):
+    """Load milestone context for briefing."""
+    milestone_name = work_item.get("milestone")
+    if not milestone_name:
+        return None
+
+    work_items_file = Path(".session/tracking/work_items.json")
+    if not work_items_file.exists():
+        return None
+
+    with open(work_items_file) as f:
+        data = json.load(f)
+
+    milestones = data.get("milestones", {})
+    milestone = milestones.get(milestone_name)
+
+    if not milestone:
+        return None
+
+    # Calculate progress
+    items = data.get("work_items", {})
+    milestone_items = [
+        item for item in items.values()
+        if item.get("milestone") == milestone_name
+    ]
+
+    total = len(milestone_items)
+    completed = sum(1 for item in milestone_items if item["status"] == "completed")
+    percent = int((completed / total) * 100) if total > 0 else 0
+
+    return {
+        "name": milestone_name,
+        "title": milestone["title"],
+        "description": milestone["description"],
+        "target_date": milestone.get("target_date", ""),
+        "progress": percent,
+        "total_items": total,
+        "completed_items": completed,
+        "milestone_items": milestone_items
+    }
+
+
 def load_project_docs():
     """Load project documentation for context."""
     docs = {}
@@ -243,7 +285,29 @@ def generate_briefing(item_id, item, learnings_data):
     else:
         briefing += "No dependencies\n"
 
-    briefing += "\n## Implementation Checklist\n\n"
+    # Add milestone context
+    milestone_context = load_milestone_context(item)
+    if milestone_context:
+        briefing += f"""
+## Milestone Context
+
+**{milestone_context['title']}**
+{milestone_context['description']}
+
+Progress: {milestone_context['progress']}% ({milestone_context['completed_items']}/{milestone_context['total_items']} items complete)
+"""
+        if milestone_context['target_date']:
+            briefing += f"Target Date: {milestone_context['target_date']}\n"
+
+        briefing += "\nRelated work items in this milestone:\n"
+        # Show other items in same milestone
+        for related_item in milestone_context['milestone_items']:
+            if related_item['id'] != item.get('id'):
+                status_icon = "✓" if related_item["status"] == "completed" else "○"
+                briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
+        briefing += "\n"
+
+    briefing += "## Implementation Checklist\n\n"
 
     # Acceptance criteria become checklist
     if item.get("acceptance_criteria"):
