@@ -57,7 +57,7 @@ def get_next_work_item(work_items_data):
     priority_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
     available.sort(
         key=lambda x: priority_order.get(x[1].get("priority", "medium"), 2),
-        reverse=True
+        reverse=True,
     )
 
     return available[0]
@@ -85,12 +85,7 @@ def load_project_docs():
     docs = {}
 
     # Look for common doc files
-    doc_files = [
-        "docs/vision.md",
-        "docs/prd.md",
-        "docs/architecture.md",
-        "README.md"
-    ]
+    doc_files = ["docs/vision.md", "docs/prd.md", "docs/architecture.md", "README.md"]
 
     for doc_file in doc_files:
         path = Path(doc_file)
@@ -113,8 +108,8 @@ def load_current_tree():
     tree_file = Path(".session/tracking/tree.txt")
     if tree_file.exists():
         # Return first 50 lines (preview)
-        lines = tree_file.read_text().split('\n')
-        return '\n'.join(lines[:50])
+        lines = tree_file.read_text().split("\n")
+        return "\n".join(lines[:50])
     return "Tree not yet generated"
 
 
@@ -128,16 +123,13 @@ def validate_environment():
     # Check git
     try:
         result = subprocess.run(
-            ["git", "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5
+            ["git", "--version"], capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0:
             checks.append(f"Git: {result.stdout.strip()}")
         else:
             checks.append("Git: NOT FOUND")
-    except:
+    except:  # noqa: E722
         checks.append("Git: NOT FOUND")
 
     return checks
@@ -150,7 +142,10 @@ def check_git_status():
         git_module_path = Path(__file__).parent / "git_integration.py"
         if git_module_path.exists():
             import importlib.util
-            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
+
+            spec = importlib.util.spec_from_file_location(
+                "git_integration", git_module_path
+            )
             git_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(git_module)
 
@@ -158,17 +153,9 @@ def check_git_status():
             is_clean, status_msg = workflow.check_git_status()
             current_branch = workflow.get_current_branch()
 
-            return {
-                "clean": is_clean,
-                "status": status_msg,
-                "branch": current_branch
-            }
+            return {"clean": is_clean, "status": status_msg, "branch": current_branch}
     except Exception as e:
-        return {
-            "clean": False,
-            "status": f"Error checking git: {e}",
-            "branch": None
-        }
+        return {"clean": False, "status": f"Error checking git: {e}", "branch": None}
 
     return {"clean": True, "status": "Git check skipped", "branch": None}
 
@@ -184,13 +171,13 @@ def generate_briefing(item_id, item, learnings_data):
     git_status = check_git_status()
 
     # Start briefing
-    briefing = f"""# Session Briefing: {item['title']}
+    briefing = f"""# Session Briefing: {item["title"]}
 
 ## Quick Reference
 - **Work Item ID:** {item_id}
-- **Type:** {item['type']}
-- **Priority:** {item['priority']}
-- **Status:** {item['status']}
+- **Type:** {item["type"]}
+- **Priority:** {item["priority"]}
+- **Status:** {item["status"]}
 
 ## Environment Status
 """
@@ -200,22 +187,22 @@ def generate_briefing(item_id, item, learnings_data):
         briefing += f"- {check}\n"
 
     # Show git status
-    briefing += f"\n### Git Status\n"
+    briefing += "\n### Git Status\n"
     briefing += f"- Status: {git_status['status']}\n"
-    if git_status.get('branch'):
+    if git_status.get("branch"):
         briefing += f"- Current Branch: {git_status['branch']}\n"
 
     # Project context section
     briefing += "\n## Project Context\n\n"
 
     # Vision (if available)
-    if 'vision.md' in project_docs:
-        vision_preview = project_docs['vision.md'][:500]
+    if "vision.md" in project_docs:
+        vision_preview = project_docs["vision.md"][:500]
         briefing += f"### Vision\n{vision_preview}...\n\n"
 
     # Architecture (if available)
-    if 'architecture.md' in project_docs:
-        arch_preview = project_docs['architecture.md'][:500]
+    if "architecture.md" in project_docs:
+        arch_preview = project_docs["architecture.md"][:500]
         briefing += f"### Architecture\n{arch_preview}...\n\n"
 
     # Current stack
@@ -228,7 +215,7 @@ def generate_briefing(item_id, item, learnings_data):
     briefing += f"""## Work Item Details
 
 ### Objective
-{item.get('rationale', 'No rationale provided')}
+{item.get("rationale", "No rationale provided")}
 
 ### Dependencies
 """
@@ -256,7 +243,9 @@ def generate_briefing(item_id, item, learnings_data):
     if relevant_learnings:
         briefing += "\n## Relevant Learnings\n\n"
         for learning in relevant_learnings:
-            briefing += f"**{learning.get('category', 'general')}:** {learning['content']}\n\n"
+            briefing += (
+                f"**{learning.get('category', 'general')}:** {learning['content']}\n\n"
+            )
 
     # Validation requirements
     briefing += "\n## Validation Requirements\n\n"
@@ -300,10 +289,13 @@ def main():
     briefings_dir.mkdir(exist_ok=True)
 
     # Determine session number
-    session_num = max(
-        [int(f.stem.split("_")[1]) for f in briefings_dir.glob("session_*.md")],
-        default=0
-    ) + 1
+    session_num = (
+        max(
+            [int(f.stem.split("_")[1]) for f in briefings_dir.glob("session_*.md")],
+            default=0,
+        )
+        + 1
+    )
 
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
     with open(briefing_file, "w") as f:
@@ -318,7 +310,7 @@ def main():
         "current_session": session_num,
         "current_work_item": item_id,
         "started_at": datetime.now().isoformat(),
-        "status": "in_progress"
+        "status": "in_progress",
     }
     with open(status_file, "w") as f:
         json.dump(status, f, indent=2)

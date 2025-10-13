@@ -22,7 +22,9 @@ class GitWorkflow:
 
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
-        self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
+        self.work_items_file = (
+            self.project_root / ".session" / "tracking" / "work_items.json"
+        )
 
     def check_git_status(self) -> Tuple[bool, str]:
         """Check if working directory is clean."""
@@ -32,7 +34,7 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=5
+                timeout=5,
             )
 
             if result.returncode != 0:
@@ -56,13 +58,13 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=5
+                timeout=5,
             )
 
             if result.returncode == 0:
                 return result.stdout.strip()
 
-        except:
+        except:  # noqa: E722
             pass
 
         return None
@@ -78,7 +80,7 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=5
+                timeout=5,
             )
 
             if result.returncode == 0:
@@ -97,7 +99,7 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=5
+                timeout=5,
             )
 
             if result.returncode == 0:
@@ -113,10 +115,7 @@ class GitWorkflow:
         try:
             # Stage all changes
             subprocess.run(
-                ["git", "add", "."],
-                cwd=self.project_root,
-                timeout=10,
-                check=True
+                ["git", "add", "."], cwd=self.project_root, timeout=10, check=True
             )
 
             # Commit
@@ -125,7 +124,7 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=10
+                timeout=10,
             )
 
             if result.returncode == 0:
@@ -135,7 +134,7 @@ class GitWorkflow:
                     capture_output=True,
                     text=True,
                     cwd=self.project_root,
-                    timeout=5
+                    timeout=5,
                 )
                 commit_sha = sha_result.stdout.strip()[:7]
                 return True, commit_sha
@@ -153,14 +152,17 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
                 return True, "Pushed to remote"
             else:
                 # Check if it's just "no upstream" error
-                if "no upstream" in result.stderr.lower() or "no remote" in result.stderr.lower():
+                if (
+                    "no upstream" in result.stderr.lower()
+                    or "no remote" in result.stderr.lower()
+                ):
                     return True, "No remote configured (local only)"
                 return False, f"Push failed: {result.stderr}"
 
@@ -176,7 +178,7 @@ class GitWorkflow:
                 capture_output=True,
                 cwd=self.project_root,
                 timeout=5,
-                check=True
+                check=True,
             )
 
             # Merge
@@ -185,7 +187,7 @@ class GitWorkflow:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=10
+                timeout=10,
             )
 
             if result.returncode == 0:
@@ -193,7 +195,7 @@ class GitWorkflow:
                 subprocess.run(
                     ["git", "branch", "-d", branch_name],
                     cwd=self.project_root,
-                    timeout=5
+                    timeout=5,
                 )
                 return True, "Merged to main and branch deleted"
             else:
@@ -220,7 +222,7 @@ class GitWorkflow:
                 "action": "resumed",
                 "branch": branch_name,
                 "success": success,
-                "message": msg
+                "message": msg,
             }
         else:
             # Create new branch
@@ -232,21 +234,25 @@ class GitWorkflow:
                     "branch": branch_name,
                     "created_at": datetime.now().isoformat(),
                     "status": "in_progress",
-                    "commits": []
+                    "commits": [],
                 }
 
                 # Save updated work items
-                with open(self.work_items_file, 'w') as f:
+                with open(self.work_items_file, "w") as f:
                     json.dump(data, f, indent=2)
 
             return {
                 "action": "created",
                 "branch": branch_name,
                 "success": success,
-                "message": branch_name if success else branch_name  # branch_name is error msg on failure
+                "message": branch_name
+                if success
+                else branch_name,  # branch_name is error msg on failure
             }
 
-    def complete_work_item(self, work_item_id: str, commit_message: str, merge: bool = False) -> Dict:
+    def complete_work_item(
+        self, work_item_id: str, commit_message: str, merge: bool = False
+    ) -> Dict:
         """Complete work on a work item (commit, push, optionally merge)."""
         # Load work items
         with open(self.work_items_file) as f:
@@ -257,7 +263,7 @@ class GitWorkflow:
         if "git" not in work_item:
             return {
                 "success": False,
-                "message": "Work item has no git tracking (may be single-session item)"
+                "message": "Work item has no git tracking (may be single-session item)",
             }
 
         branch_name = work_item["git"]["branch"]
@@ -265,10 +271,7 @@ class GitWorkflow:
         # Commit changes
         success, commit_sha = self.commit_changes(commit_message)
         if not success:
-            return {
-                "success": False,
-                "message": f"Commit failed: {commit_sha}"
-            }
+            return {"success": False, "message": f"Commit failed: {commit_sha}"}
 
         # Update work item commits
         work_item["git"]["commits"].append(commit_sha)
@@ -285,10 +288,14 @@ class GitWorkflow:
                 work_item["git"]["status"] = "ready_to_merge"
                 merge_msg = f"⚠️  {merge_msg} - Manual merge required"
         else:
-            work_item["git"]["status"] = "ready_to_merge" if work_item["status"] == "completed" else "in_progress"
+            work_item["git"]["status"] = (
+                "ready_to_merge"
+                if work_item["status"] == "completed"
+                else "in_progress"
+            )
 
         # Save updated work items
-        with open(self.work_items_file, 'w') as f:
+        with open(self.work_items_file, "w") as f:
             json.dump(data, f, indent=2)
 
         return {
@@ -296,7 +303,7 @@ class GitWorkflow:
             "commit": commit_sha,
             "pushed": push_success,
             "merged": merge if merge else False,
-            "message": f"Committed {commit_sha}, " + (merge_msg if merge else push_msg)
+            "message": f"Committed {commit_sha}, " + (merge_msg if merge else push_msg),
         }
 
 

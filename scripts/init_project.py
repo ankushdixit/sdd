@@ -8,7 +8,6 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from datetime import datetime
 
 
 def check_documentation():
@@ -19,7 +18,7 @@ def check_documentation():
         print("⚠️  No docs/ directory found")
         print("   Recommendation: Create at least docs/vision.md and docs/prd.md")
         response = input("Continue anyway? (y/n): ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             return False
 
     # Check for common doc files
@@ -104,9 +103,7 @@ def run_initial_scans():
     # Run generate_stack.py
     try:
         subprocess.run(
-            ["python", "scripts/generate_stack.py"],
-            check=True,
-            capture_output=True
+            ["python", "scripts/generate_stack.py"], check=True, capture_output=True
         )
         print("✓ Generated stack.txt")
     except subprocess.CalledProcessError:
@@ -115,9 +112,7 @@ def run_initial_scans():
     # Run generate_tree.py
     try:
         subprocess.run(
-            ["python", "scripts/generate_tree.py"],
-            check=True,
-            capture_output=True
+            ["python", "scripts/generate_tree.py"], check=True, capture_output=True
         )
         print("✓ Generated tree.txt")
     except subprocess.CalledProcessError:
@@ -145,9 +140,9 @@ def init_project():
     # Run initial scans
     run_initial_scans()
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Session-Driven Development initialized successfully!")
-    print("="*50)
+    print("=" * 50)
     print("\nNext steps:")
     print("1. Create work items: /work-item create")
     print("2. Start first session: /session-start")

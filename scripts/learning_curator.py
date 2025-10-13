@@ -457,9 +457,7 @@ class LearningsCurator:
         frequency_days = config.get("auto_curate_frequency_days", 7)
 
         if days_since >= frequency_days:
-            print(
-                f"Auto-curating (last curated {days_since} days ago)...\n"
-            )
+            print(f"Auto-curating (last curated {days_since} days ago)...\n")
             self.curate(dry_run=False)
             return True
 
@@ -531,9 +529,7 @@ class LearningsCurator:
                 print(f"Category not found: {category}\n")
                 return
 
-            print(
-                f"\n{category.replace('_', ' ').title()}\n"
-            )
+            print(f"\n{category.replace('_', ' ').title()}\n")
             print("=" * 50)
 
             for i, learning in enumerate(categories[category], 1):
@@ -548,9 +544,7 @@ class LearningsCurator:
                 if not category_learnings:
                     continue
 
-                print(
-                    f"\n{category_name.replace('_', ' ').title()}"
-                )
+                print(f"\n{category_name.replace('_', ' ').title()}")
                 print(f"Count: {len(category_learnings)}\n")
 
                 # Show first 3
@@ -558,9 +552,7 @@ class LearningsCurator:
                     print(f"  • {learning.get('content', 'N/A')}")
 
                 if len(category_learnings) > 3:
-                    print(
-                        f"  ... and {len(category_learnings) - 3} more"
-                    )
+                    print(f"  ... and {len(category_learnings) - 3} more")
 
                 print()
 

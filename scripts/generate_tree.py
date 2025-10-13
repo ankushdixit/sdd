@@ -18,14 +18,27 @@ class TreeGenerator:
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
-        self.updates_file = self.project_root / ".session" / "tracking" / "tree_updates.json"
+        self.updates_file = (
+            self.project_root / ".session" / "tracking" / "tree_updates.json"
+        )
 
         # Items to ignore
         self.ignore_patterns = [
-            ".git", "__pycache__", "*.pyc", ".pytest_cache",
-            ".venv", "venv", "node_modules", ".DS_Store",
-            "*.egg-info", ".mypy_cache", ".ruff_cache",
-            "*.log", "*.tmp", "*.backup", ".session"
+            ".git",
+            "__pycache__",
+            "*.pyc",
+            ".pytest_cache",
+            ".venv",
+            "venv",
+            "node_modules",
+            ".DS_Store",
+            "*.egg-info",
+            ".mypy_cache",
+            ".ruff_cache",
+            "*.log",
+            "*.tmp",
+            "*.backup",
+            ".session",
         ]
 
     def generate_tree(self) -> str:
@@ -41,7 +54,7 @@ class TreeGenerator:
                 capture_output=True,
                 text=True,
                 cwd=self.project_root,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -74,7 +87,9 @@ class TreeGenerator:
             lines.append(prefix + connector + path.name)
 
             if path.is_dir():
-                children = sorted(path.iterdir(), key=lambda p: (not p.is_dir(), p.name))
+                children = sorted(
+                    path.iterdir(), key=lambda p: (not p.is_dir(), p.name)
+                )
                 children = [c for c in children if not should_ignore(c)]
 
                 for i, child in enumerate(children):
@@ -83,7 +98,9 @@ class TreeGenerator:
                     add_tree(child, prefix + extension, is_last_child)
 
         # Generate tree
-        children = sorted(self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name))
+        children = sorted(
+            self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name)
+        )
         children = [c for c in children if not should_ignore(c)]
 
         for i, child in enumerate(children):
@@ -93,8 +110,8 @@ class TreeGenerator:
 
     def detect_changes(self, old_tree: str, new_tree: str) -> List[Dict]:
         """Detect structural changes between trees."""
-        old_lines = set(old_tree.split('\n'))
-        new_lines = set(new_tree.split('\n'))
+        old_lines = set(old_tree.split("\n"))
+        new_lines = set(new_tree.split("\n"))
 
         added = new_lines - old_lines
         removed = old_lines - new_lines
@@ -103,28 +120,16 @@ class TreeGenerator:
 
         # Categorize changes
         for line in added:
-            if '/' in line or line.strip().endswith('/'):
-                changes.append({
-                    "type": "directory_added",
-                    "path": line.strip()
-                })
+            if "/" in line or line.strip().endswith("/"):
+                changes.append({"type": "directory_added", "path": line.strip()})
             elif line.strip():
-                changes.append({
-                    "type": "file_added",
-                    "path": line.strip()
-                })
+                changes.append({"type": "file_added", "path": line.strip()})
 
         for line in removed:
-            if '/' in line or line.strip().endswith('/'):
-                changes.append({
-                    "type": "directory_removed",
-                    "path": line.strip()
-                })
+            if "/" in line or line.strip().endswith("/"):
+                changes.append({"type": "directory_removed", "path": line.strip()})
             elif line.strip():
-                changes.append({
-                    "type": "file_removed",
-                    "path": line.strip()
-                })
+                changes.append({"type": "file_removed", "path": line.strip()})
 
         return changes
 
@@ -143,8 +148,9 @@ class TreeGenerator:
 
         # Filter out minor changes (just ordering, etc.)
         significant_changes = [
-            c for c in changes
-            if c['type'] in ['directory_added', 'directory_removed']
+            c
+            for c in changes
+            if c["type"] in ["directory_added", "directory_removed"]
             or len(changes) < 20  # If few changes, they're probably significant
         ]
 
@@ -154,9 +160,9 @@ class TreeGenerator:
 
         # If significant changes detected, prompt for reasoning
         if significant_changes and session_num:
-            print(f"\n{'='*50}")
+            print(f"\n{'=' * 50}")
             print("Structural Changes Detected")
-            print('='*50)
+            print("=" * 50)
 
             for change in significant_changes[:10]:  # Show first 10
                 print(f"  {change['type'].upper()}: {change['path']}")
@@ -172,14 +178,16 @@ class TreeGenerator:
 
         return changes
 
-    def _record_tree_update(self, session_num: int, changes: List[Dict], reasoning: str):
+    def _record_tree_update(
+        self, session_num: int, changes: List[Dict], reasoning: str
+    ):
         """Record tree update in tree_updates.json."""
         updates = {"updates": []}
 
         if self.updates_file.exists():
             try:
                 updates = json.loads(self.updates_file.read_text())
-            except:
+            except:  # noqa: E722
                 pass
 
         update_entry = {
@@ -187,7 +195,7 @@ class TreeGenerator:
             "session": session_num,
             "changes": changes,
             "reasoning": reasoning,
-            "architecture_impact": ""  # Could prompt for this too
+            "architecture_impact": "",  # Could prompt for this too
         }
 
         updates["updates"].append(update_entry)
@@ -201,7 +209,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
     parser.add_argument("--session", type=int, help="Current session number")
-    parser.add_argument("--show-changes", action="store_true", help="Show changes from last run")
+    parser.add_argument(
+        "--show-changes", action="store_true", help="Show changes from last run"
+    )
     args = parser.parse_args()
 
     generator = TreeGenerator()

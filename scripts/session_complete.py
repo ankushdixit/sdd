@@ -6,7 +6,6 @@ Enhanced with full tracking updates and git workflow.
 
 import json
 import subprocess
-import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -43,7 +42,7 @@ def run_quality_gates():
             ["pytest", "--cov=.", "--cov-report=term"],
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=300,
         )
         results["tests"]["passed"] = result.returncode == 0
         results["tests"]["details"] = result.stdout
@@ -54,10 +53,7 @@ def run_quality_gates():
     # Run linting (if ruff available)
     try:
         result = subprocess.run(
-            ["ruff", "check", "--fix", "."],
-            capture_output=True,
-            text=True,
-            timeout=60
+            ["ruff", "check", "--fix", "."], capture_output=True, text=True, timeout=60
         )
         results["linting"]["passed"] = result.returncode == 0
         results["linting"]["details"] = result.stdout
@@ -70,7 +66,7 @@ def run_quality_gates():
             ["ruff", "format", "--check", "."],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=60,
         )
         if result.returncode != 0:
             # Auto-format
@@ -92,7 +88,7 @@ def update_all_tracking(session_num):
             ["python", "scripts/generate_stack.py", "--session", str(session_num)],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         if result.returncode == 0:
             print("✓ Stack updated")
@@ -107,7 +103,7 @@ def update_all_tracking(session_num):
             ["python", "scripts/generate_tree.py", "--session", str(session_num)],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         if result.returncode == 0:
             print("✓ Tree updated")
@@ -127,9 +123,9 @@ def extract_learnings_from_session():
     learnings = []
     while True:
         learning = input("> ")
-        if learning.lower() == 'done':
+        if learning.lower() == "done":
             break
-        if learning.lower() == 'skip':
+        if learning.lower() == "skip":
             return []
         if learning:
             learnings.append(learning)
@@ -146,7 +142,10 @@ def complete_git_workflow(work_item_id, commit_message):
             return {"success": False, "message": "git_integration.py not found"}
 
         import importlib.util
-        spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
+
+        spec = importlib.util.spec_from_file_location(
+            "git_integration", git_module_path
+        )
         git_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(git_module)
 
@@ -161,9 +160,7 @@ def complete_git_workflow(work_item_id, commit_message):
 
         # Complete work item in git
         result = workflow.complete_work_item(
-            work_item_id,
-            commit_message,
-            merge=should_merge
+            work_item_id, commit_message, merge=should_merge
         )
 
         return result
@@ -198,17 +195,17 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
     work_item_id = status["current_work_item"]
     work_item = work_items_data["work_items"][work_item_id]
 
-    summary = f"""# Session {status['current_session']} Summary
+    summary = f"""# Session {status["current_session"]} Summary
 
-{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Work Items
-- **{work_item_id}**: {work_item['title']} ({work_item['status']})
+- **{work_item_id}**: {work_item["title"]} ({work_item["status"]})
 
 ## Quality Gates
-- Tests: {'✓ PASSED' if gate_results['tests']['passed'] else '✗ FAILED'}
-- Linting: {'✓ PASSED' if gate_results['linting']['passed'] else '✗ FAILED'}
-- Formatting: {'✓ PASSED' if gate_results['formatting']['passed'] else '✗ FAILED'}
+- Tests: {"✓ PASSED" if gate_results["tests"]["passed"] else "✗ FAILED"}
+- Linting: {"✓ PASSED" if gate_results["linting"]["passed"] else "✗ FAILED"}
+- Formatting: {"✓ PASSED" if gate_results["formatting"]["passed"] else "✗ FAILED"}
 """
 
     if learnings:
@@ -242,7 +239,9 @@ def main():
     # Print results
     for gate, result in gate_results.items():
         status_icon = "✓" if result["passed"] else "✗"
-        print(f"{status_icon} {gate.title()}: {'passed' if result['passed'] else 'failed'}")
+        print(
+            f"{status_icon} {gate.title()}: {'passed' if result['passed'] else 'failed'}"
+        )
 
     all_passed = all(r["passed"] for r in gate_results.values())
 
@@ -264,15 +263,19 @@ def main():
         # Learning curation will be handled by learning_curator.py
 
     # Ask about work item completion status
-    print(f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): ")
-    is_complete = input("> ").lower() == 'y'
+    print(
+        f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
+    )
+    is_complete = input("> ").lower() == "y"
 
     # Update work item status
     if is_complete:
         work_items_data["work_items"][work_item_id]["status"] = "completed"
         if "metadata" not in work_items_data["work_items"][work_item_id]:
             work_items_data["work_items"][work_item_id]["metadata"] = {}
-        work_items_data["work_items"][work_item_id]["metadata"]["completed_at"] = datetime.now().isoformat()
+        work_items_data["work_items"][work_item_id]["metadata"]["completed_at"] = (
+            datetime.now().isoformat()
+        )
     else:
         work_items_data["work_items"][work_item_id]["status"] = "in_progress"
 
@@ -304,9 +307,9 @@ def main():
         f.write(summary)
 
     # Print summary
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print(summary)
-    print("="*50)
+    print("=" * 50)
 
     # Update status
     status["status"] = "completed"

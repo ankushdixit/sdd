@@ -15,7 +15,7 @@ import json
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Set
+from typing import Dict, List
 
 
 class StackGenerator:
@@ -24,7 +24,9 @@ class StackGenerator:
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
         self.stack_file = self.project_root / ".session" / "tracking" / "stack.txt"
-        self.updates_file = self.project_root / ".session" / "tracking" / "stack_updates.json"
+        self.updates_file = (
+            self.project_root / ".session" / "tracking" / "stack_updates.json"
+        )
 
     def detect_languages(self) -> Dict[str, str]:
         """Detect programming languages from file extensions."""
@@ -45,10 +47,21 @@ class StackGenerator:
         for ext, (name, key) in extensions.items():
             files = list(self.project_root.rglob(f"*{ext}"))
             # Exclude common non-source directories
-            files = [f for f in files if not any(
-                part in f.parts for part in
-                ['node_modules', 'venv', '.venv', 'build', 'dist', '__pycache__']
-            )]
+            files = [
+                f
+                for f in files
+                if not any(
+                    part in f.parts
+                    for part in [
+                        "node_modules",
+                        "venv",
+                        ".venv",
+                        "build",
+                        "dist",
+                        "__pycache__",
+                    ]
+                )
+            ]
 
             if files:
                 # Try to detect version
@@ -69,30 +82,26 @@ class StackGenerator:
         if language in version_commands:
             try:
                 import subprocess
+
                 result = subprocess.run(
                     version_commands[language],
                     capture_output=True,
                     text=True,
-                    timeout=2
+                    timeout=2,
                 )
                 if result.returncode == 0:
                     # Extract version number
-                    version_match = re.search(r'(\d+\.\d+(?:\.\d+)?)', result.stdout)
+                    version_match = re.search(r"(\d+\.\d+(?:\.\d+)?)", result.stdout)
                     if version_match:
                         return version_match.group(1)
-            except:
+            except:  # noqa: E722
                 pass
 
         return ""
 
     def detect_frameworks(self) -> Dict[str, List[str]]:
         """Detect frameworks from imports and config files."""
-        frameworks = {
-            "backend": [],
-            "frontend": [],
-            "testing": [],
-            "database": []
-        }
+        frameworks = {"backend": [], "frontend": [], "testing": [], "database": []}
 
         # Check Python imports
         if (self.project_root / "requirements.txt").exists():
@@ -116,7 +125,10 @@ class StackGenerator:
         if (self.project_root / "package.json").exists():
             try:
                 package = json.loads((self.project_root / "package.json").read_text())
-                deps = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
+                deps = {
+                    **package.get("dependencies", {}),
+                    **package.get("devDependencies", {}),
+                }
 
                 if "react" in deps:
                     frameworks["frontend"].append(f"React {deps['react']}")
@@ -126,14 +138,14 @@ class StackGenerator:
                     frameworks["frontend"].append(f"Next.js {deps['next']}")
                 if "jest" in deps:
                     frameworks["testing"].append("Jest")
-            except:
+            except:  # noqa: E722
                 pass
 
         return {k: v for k, v in frameworks.items() if v}
 
     def _extract_version(self, requirements: str, package: str) -> str:
         """Extract version from requirements file."""
-        pattern = rf'{package}\s*[>=<~]+\s*([0-9.]+)'
+        pattern = rf"{package}\s*[>=<~]+\s*([0-9.]+)"
         match = re.search(pattern, requirements, re.IGNORECASE)
         if match:
             return match.group(1)
@@ -146,11 +158,11 @@ class StackGenerator:
         # Python libraries
         if (self.project_root / "requirements.txt").exists():
             requirements = (self.project_root / "requirements.txt").read_text()
-            for line in requirements.split('\n'):
+            for line in requirements.split("\n"):
                 line = line.strip()
-                if line and not line.startswith('#'):
+                if line and not line.startswith("#"):
                     # Extract package name and version
-                    match = re.match(r'([a-zA-Z0-9_-]+)([>=<~]+.*)?', line)
+                    match = re.match(r"([a-zA-Z0-9_-]+)([>=<~]+.*)?", line)
                     if match:
                         libraries.append(line)
 
@@ -168,7 +180,7 @@ class StackGenerator:
                     if "Context7 (library documentation)" not in mcp_servers:
                         mcp_servers.append("Context7 (library documentation)")
                         break  # Found it, no need to continue
-            except:
+            except:  # noqa: E722
                 pass
 
         return mcp_servers
@@ -230,26 +242,28 @@ class StackGenerator:
 
     def detect_changes(self, old_content: str, new_content: str) -> List[Dict]:
         """Detect changes between old and new stack."""
-        old_lines = set(old_content.split('\n'))
-        new_lines = set(new_content.split('\n'))
+        old_lines = set(old_content.split("\n"))
+        new_lines = set(new_content.split("\n"))
 
         added = new_lines - old_lines
         removed = old_lines - new_lines
 
         changes = []
         for line in added:
-            if line.strip() and not line.startswith('#') and not line.startswith('Generated:'):
-                changes.append({
-                    "type": "addition",
-                    "content": line.strip()
-                })
+            if (
+                line.strip()
+                and not line.startswith("#")
+                and not line.startswith("Generated:")
+            ):
+                changes.append({"type": "addition", "content": line.strip()})
 
         for line in removed:
-            if line.strip() and not line.startswith('#') and not line.startswith('Generated:'):
-                changes.append({
-                    "type": "removal",
-                    "content": line.strip()
-                })
+            if (
+                line.strip()
+                and not line.startswith("#")
+                and not line.startswith("Generated:")
+            ):
+                changes.append({"type": "removal", "content": line.strip()})
 
         return changes
 
@@ -272,9 +286,9 @@ class StackGenerator:
 
         # If changes detected, prompt for reasoning
         if changes and session_num:
-            print(f"\n{'='*50}")
+            print(f"\n{'=' * 50}")
             print("Stack Changes Detected")
-            print('='*50)
+            print("=" * 50)
 
             for change in changes:
                 print(f"  {change['type'].upper()}: {change['content']}")
@@ -287,21 +301,23 @@ class StackGenerator:
 
         return changes
 
-    def _record_stack_update(self, session_num: int, changes: List[Dict], reasoning: str):
+    def _record_stack_update(
+        self, session_num: int, changes: List[Dict], reasoning: str
+    ):
         """Record stack update in stack_updates.json."""
         updates = {"updates": []}
 
         if self.updates_file.exists():
             try:
                 updates = json.loads(self.updates_file.read_text())
-            except:
+            except:  # noqa: E722
                 pass
 
         update_entry = {
             "timestamp": datetime.now().isoformat(),
             "session": session_num,
             "changes": changes,
-            "reasoning": reasoning
+            "reasoning": reasoning,
         }
 
         updates["updates"].append(update_entry)
@@ -313,7 +329,9 @@ def main():
     """CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Generate technology stack documentation")
+    parser = argparse.ArgumentParser(
+        description="Generate technology stack documentation"
+    )
     parser.add_argument("--session", type=int, help="Current session number")
     args = parser.parse_args()
 
