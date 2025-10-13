@@ -22,6 +22,31 @@ Code refactoring work items.
 - **Typical sessions:** 1-3
 - **Validation:** Tests pass, no functionality changes, code quality improved
 
+### security
+Security-focused work items for vulnerabilities, hardening, and compliance.
+- **Template:** `templates/security_task.md`
+- **Typical sessions:** 1-2
+- **Priority:** Critical (by default)
+- **Validation:**
+  - Security scan required
+  - Penetration testing (for critical issues)
+  - Security review completed
+  - No new vulnerabilities introduced
+
+**Usage:**
+```json
+{
+  "type": "security",
+  "title": "Fix SQL Injection in User Login",
+  "priority": "critical",
+  "validation_criteria": {
+    "security_scan_required": true,
+    "penetration_test": true,
+    "security_review": true
+  }
+}
+```
+
 ## Integration & Deployment Types (Phase 1.8)
 
 ### integration_test
@@ -85,6 +110,11 @@ Deployment work items for releasing code to environments.
 - Must have a type from the list above
 - Must have a status (not_started, in_progress, completed)
 - Must have a priority (critical, high, medium, low)
+
+### security
+- **Priority should be critical or high** - Security issues are high priority by default
+- **Security validation required** - Must pass security scans and reviews
+- **May require external review** - Security team or penetration testing
 
 ### integration_test and deployment
 - **Must have dependencies** - Cannot be created without specifying dependencies
