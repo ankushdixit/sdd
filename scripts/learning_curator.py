@@ -13,9 +13,12 @@ Curates and organizes accumulated learnings:
 import argparse
 import json
 import re
+import subprocess
 import sys
+import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
 
 class LearningsCurator:
@@ -464,23 +467,196 @@ class LearningsCurator:
         return False
 
     def _load_curation_config(self) -> dict:
-        """Load curation configuration from .sessionrc.json"""
-        config_path = self.project_root / ".sessionrc.json"
+        """Load curation configuration from .session/config.json"""
+        config_path = self.session_dir / "config.json"
 
         if config_path.exists():
             try:
                 config = self._load_json(config_path)
-                return config.get("learning_curation", {})
+                return config.get("curation", {})
             except Exception:
                 pass
 
         # Return defaults
         return {
-            "auto_curate_enabled": False,
-            "auto_curate_frequency_days": 7,
-            "similarity_threshold": 0.6,
-            "archive_after_sessions": 50,
+            "auto_curate": False,
+            "frequency": 5,
+            "dry_run": False,
+            "similarity_threshold": 0.7,
         }
+
+    def extract_from_session_summary(self, session_file: Path) -> List[dict]:
+        """Extract learnings from session summary file"""
+        if not session_file.exists():
+            return []
+
+        try:
+            with open(session_file) as f:
+                content = f.read()
+        except Exception:
+            return []
+
+        learnings = []
+
+        # Extract session number from filename (e.g., session_005_summary.md)
+        session_match = re.search(r"session_(\d+)", session_file.name)
+        session_num = int(session_match.group(1)) if session_match else 0
+
+        # Look for "Challenges Encountered" or "Learnings Captured" sections
+        patterns = [
+            r"##\s*Challenges?\s*Encountered\s*\n(.*?)(?=\n##|\Z)",
+            r"##\s*Learnings?\s*Captured\s*\n(.*?)(?=\n##|\Z)",
+        ]
+
+        for pattern in patterns:
+            matches = re.findall(pattern, content, re.DOTALL | re.IGNORECASE)
+            for match in matches:
+                # Each bullet point is a potential learning
+                for line in match.split("\n"):
+                    line = line.strip()
+                    if line.startswith("-") or line.startswith("*"):
+                        learning_text = line.lstrip("-*").strip()
+                        if learning_text and len(learning_text) > 10:
+                            learnings.append(
+                                {
+                                    "content": learning_text,
+                                    "source": "session_summary",
+                                    "learned_in": f"session_{session_num:03d}",
+                                    "timestamp": datetime.now().isoformat(),
+                                }
+                            )
+
+        return learnings
+
+    def extract_from_git_commits(self, since_session: int = 0) -> List[dict]:
+        """Extract learnings from git commit messages"""
+        try:
+            # Get recent commits
+            result = subprocess.run(
+                ["git", "log", "--format=%H|||%B", "-n", "100"],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root,
+                timeout=10,
+            )
+
+            if result.returncode != 0:
+                return []
+
+            learnings = []
+            learning_pattern = r"LEARNING:\s*(.+?)(?=\n|$)"
+
+            # Parse commit messages
+            commits = result.stdout.split("\n\n")
+            for commit_block in commits:
+                if "|||" not in commit_block:
+                    continue
+
+                commit_hash, message = commit_block.split("|||", 1)
+
+                # Find LEARNING: annotations
+                for match in re.finditer(learning_pattern, message, re.MULTILINE):
+                    learning_text = match.group(1).strip()
+                    if learning_text and len(learning_text) > 10:
+                        learnings.append(
+                            {
+                                "content": learning_text,
+                                "source": "git_commit",
+                                "context": f"Commit {commit_hash[:8]}",
+                                "timestamp": datetime.now().isoformat(),
+                            }
+                        )
+
+            return learnings
+
+        except Exception:
+            return []
+
+    def extract_from_code_comments(self, changed_files: List[Path] = None) -> List[dict]:
+        """Extract learnings from inline code comments"""
+        if changed_files is None:
+            # Get recently changed files from git
+            try:
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", "HEAD~5", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    cwd=self.project_root,
+                    timeout=10,
+                )
+
+                if result.returncode == 0:
+                    changed_files = [
+                        self.project_root / f.strip()
+                        for f in result.stdout.split("\n")
+                        if f.strip()
+                    ]
+                else:
+                    changed_files = []
+            except Exception:
+                changed_files = []
+
+        learnings = []
+        learning_pattern = r"#\s*LEARNING:\s*(.+?)$"
+
+        for file_path in changed_files:
+            if not file_path.exists() or not file_path.is_file():
+                continue
+
+            # Skip binary files and large files
+            if file_path.stat().st_size > 1_000_000:
+                continue
+
+            try:
+                with open(file_path, encoding="utf-8", errors="ignore") as f:
+                    for line_num, line in enumerate(f, 1):
+                        match = re.search(learning_pattern, line)
+                        if match:
+                            learning_text = match.group(1).strip()
+                            if learning_text and len(learning_text) > 10:
+                                learnings.append(
+                                    {
+                                        "content": learning_text,
+                                        "source": "inline_comment",
+                                        "context": f"{file_path.name}:{line_num}",
+                                        "timestamp": datetime.now().isoformat(),
+                                    }
+                                )
+            except Exception:
+                continue
+
+        return learnings
+
+    def add_learning_if_new(self, learning_dict: dict) -> bool:
+        """Add learning if it doesn't already exist (based on similarity)"""
+        learnings = self._load_learnings()
+        categories = learnings.get("categories", {})
+
+        # Check against all existing learnings
+        for category_learnings in categories.values():
+            for existing in category_learnings:
+                if self._are_similar(existing, learning_dict):
+                    return False  # Skip, already exists
+
+        # Auto-categorize if needed
+        category = learning_dict.get("category")
+        if not category:
+            category = self._auto_categorize_learning(learning_dict)
+
+        # Add to category
+        if category not in categories:
+            categories[category] = []
+
+        # Generate ID if missing
+        if "id" not in learning_dict:
+            learning_dict["id"] = str(uuid.uuid4())[:8]
+
+        categories[category].append(learning_dict)
+
+        # Save
+        self._save_json(self.learnings_path, learnings)
+
+        return True  # Successfully added
 
     def generate_report(self) -> None:
         """Generate learning summary report"""
@@ -518,43 +694,345 @@ class LearningsCurator:
         else:
             print("Never curated\n")
 
-    def show_learnings(self, category: str = None) -> None:
-        """Show learnings by category"""
+    def add_learning(
+        self,
+        content: str,
+        category: str,
+        session: int = None,
+        tags: list = None,
+        context: str = None,
+    ) -> str:
+        """Add a new learning"""
+        learnings = self._load_learnings()
+
+        # Generate unique ID
+        learning_id = str(uuid.uuid4())[:8]
+
+        # Create learning object
+        learning = {
+            "id": learning_id,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+            "learned_in": f"session_{session:03d}" if session else "unknown",
+        }
+
+        if tags:
+            learning["tags"] = tags if isinstance(tags, list) else [tags]
+
+        if context:
+            learning["context"] = context
+
+        # Add to category
+        categories = learnings.setdefault("categories", {})
+        if category not in categories:
+            categories[category] = []
+
+        categories[category].append(learning)
+
+        # Save
+        self._save_json(self.learnings_path, learnings)
+
+        print(f"\n✓ Learning captured!")
+        print(f"  ID: {learning_id}")
+        print(f"  Category: {category}")
+        if tags:
+            print(f"  Tags: {', '.join(learning['tags'])}")
+        print("\nIt will be auto-categorized and curated.\n")
+
+        return learning_id
+
+    def search_learnings(self, query: str) -> None:
+        """Search learnings by keyword"""
         learnings = self._load_learnings()
         categories = learnings.get("categories", {})
 
+        query_lower = query.lower()
+        matches = []
+
+        # Search through all learnings
+        for category_name, category_learnings in categories.items():
+            for learning in category_learnings:
+                # Search in content
+                content = learning.get("content", "").lower()
+                tags = learning.get("tags", [])
+                context = learning.get("context", "").lower()
+
+                if (
+                    query_lower in content
+                    or query_lower in context
+                    or any(query_lower in tag.lower() for tag in tags)
+                ):
+                    matches.append({**learning, "category": category_name})
+
+        # Display results
+        if not matches:
+            print(f"\nNo learnings found matching '{query}'\n")
+            return
+
+        print(f"\n=== Search Results for '{query}' ===\n")
+        print(f"Found {len(matches)} matching learning(s):\n")
+
+        for i, learning in enumerate(matches, 1):
+            print(f"{i}. [{learning['category'].replace('_', ' ').title()}]")
+            print(f"   {learning['content']}")
+
+            if "tags" in learning:
+                print(f"   Tags: {', '.join(learning['tags'])}")
+
+            print(f"   Session: {learning.get('learned_in', 'unknown')}")
+            print(f"   ID: {learning.get('id', 'N/A')}")
+            print()
+
+    def show_learnings(
+        self,
+        category: str = None,
+        tag: str = None,
+        session: int = None,
+        date_from: str = None,
+        date_to: str = None,
+        include_archived: bool = False,
+    ) -> None:
+        """Show learnings with optional filters"""
+        learnings = self._load_learnings()
+        categories = learnings.get("categories", {})
+
+        # Apply filters
+        filtered = []
+        for category_name, category_learnings in categories.items():
+            # Category filter
+            if category and category_name != category:
+                continue
+
+            for learning in category_learnings:
+                # Tag filter
+                if tag and tag not in learning.get("tags", []):
+                    continue
+
+                # Session filter
+                if session:
+                    learned_in = learning.get("learned_in", "")
+                    session_num = self._extract_session_number(learned_in)
+                    if session_num != session:
+                        continue
+
+                # Date range filter
+                if date_from or date_to:
+                    learning_date = learning.get("timestamp", "")
+                    if date_from and learning_date < date_from:
+                        continue
+                    if date_to and learning_date > date_to:
+                        continue
+
+                filtered.append({**learning, "category": category_name})
+
+        # Display results
+        if not filtered:
+            print("\nNo learnings found matching the filters\n")
+            return
+
         if category:
             # Show specific category
-            if category not in categories:
-                print(f"Category not found: {category}\n")
-                return
-
             print(f"\n{category.replace('_', ' ').title()}\n")
             print("=" * 50)
 
-            for i, learning in enumerate(categories[category], 1):
+            for i, learning in enumerate(filtered, 1):
                 print(f"\n{i}. {learning.get('content', 'N/A')}")
+                if "tags" in learning:
+                    print(f"   Tags: {', '.join(learning['tags'])}")
                 if "learned_in" in learning:
                     print(f"   Learned in: {learning['learned_in']}")
                 if "timestamp" in learning:
                     print(f"   Date: {learning['timestamp']}")
+                print(f"   ID: {learning.get('id', 'N/A')}")
         else:
             # Show all categories
-            for category_name, category_learnings in categories.items():
-                if not category_learnings:
-                    continue
+            grouped = {}
+            for learning in filtered:
+                cat = learning["category"]
+                if cat not in grouped:
+                    grouped[cat] = []
+                grouped[cat].append(learning)
 
+            for category_name, category_learnings in grouped.items():
                 print(f"\n{category_name.replace('_', ' ').title()}")
                 print(f"Count: {len(category_learnings)}\n")
 
                 # Show first 3
                 for learning in category_learnings[:3]:
                     print(f"  • {learning.get('content', 'N/A')}")
+                    if "tags" in learning:
+                        print(f"    Tags: {', '.join(learning['tags'])}")
 
                 if len(category_learnings) > 3:
                     print(f"  ... and {len(category_learnings) - 3} more")
 
                 print()
+
+    def get_related_learnings(self, learning_id: str, limit: int = 5) -> List[dict]:
+        """Get similar learnings using similarity algorithms"""
+        learnings = self._load_learnings()
+        categories = learnings.get("categories", {})
+
+        # Find target learning
+        target = None
+        for category_learnings in categories.values():
+            for learning in category_learnings:
+                if learning.get("id") == learning_id:
+                    target = learning
+                    break
+            if target:
+                break
+
+        if not target:
+            return []
+
+        # Calculate similarity scores
+        similarities = []
+        for category_name, category_learnings in categories.items():
+            for learning in category_learnings:
+                if learning.get("id") == learning_id:
+                    continue
+
+                # Use existing similarity algorithm
+                if self._are_similar(target, learning):
+                    # Calculate a simple similarity score (0-100)
+                    # Based on word overlap
+                    target_words = set(target.get("content", "").lower().split())
+                    learning_words = set(learning.get("content", "").lower().split())
+                    overlap = len(target_words & learning_words)
+                    total = len(target_words | learning_words)
+                    score = int((overlap / total * 100)) if total > 0 else 0
+
+                    similarities.append(
+                        (score, {**learning, "category": category_name})
+                    )
+
+        # Sort by score and return top N
+        similarities.sort(reverse=True, key=lambda x: x[0])
+        return [learning for _, learning in similarities[:limit]]
+
+    def generate_statistics(self) -> dict:
+        """Generate learning statistics"""
+        learnings = self._load_learnings()
+        categories = learnings.get("categories", {})
+
+        stats = {
+            "total": 0,
+            "by_category": {},
+            "by_tag": {},
+            "top_tags": [],
+            "by_session": {},
+        }
+
+        # Count by category
+        for cat, items in categories.items():
+            count = len(items)
+            stats["by_category"][cat] = count
+            stats["total"] += count
+
+        # Count by tag and session
+        tag_counts = {}
+        session_counts = {}
+
+        for items in categories.values():
+            for learning in items:
+                # Tag counts
+                for tag in learning.get("tags", []):
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+                # Session counts
+                learned_in = learning.get("learned_in", "unknown")
+                session_num = self._extract_session_number(learned_in)
+                if session_num > 0:
+                    session_counts[session_num] = session_counts.get(session_num, 0) + 1
+
+        # Top tags
+        stats["top_tags"] = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[
+            :10
+        ]
+        stats["by_tag"] = tag_counts
+        stats["by_session"] = session_counts
+
+        return stats
+
+    def show_statistics(self) -> None:
+        """Display learning statistics"""
+        stats = self.generate_statistics()
+
+        print("\n=== Learning Statistics ===\n")
+
+        # Total
+        print(f"Total learnings: {stats['total']}\n")
+
+        # By category
+        print("By Category:")
+        print("-" * 40)
+        for cat, count in stats["by_category"].items():
+            cat_name = cat.replace("_", " ").title()
+            print(f"  {cat_name:<30} {count:>5}")
+
+        # Top tags
+        if stats["top_tags"]:
+            print("\nTop Tags:")
+            print("-" * 40)
+            for tag, count in stats["top_tags"]:
+                print(f"  {tag:<30} {count:>5}")
+
+        # Sessions with most learnings
+        if stats["by_session"]:
+            top_sessions = sorted(
+                stats["by_session"].items(), key=lambda x: x[1], reverse=True
+            )[:5]
+            print("\nSessions with Most Learnings:")
+            print("-" * 40)
+            for session_num, count in top_sessions:
+                print(f"  Session {session_num:<22} {count:>5}")
+
+        print()
+
+    def show_timeline(self, sessions: int = 10) -> None:
+        """Show learning timeline for recent sessions"""
+        learnings = self._load_learnings()
+        categories = learnings.get("categories", {})
+
+        # Group by session
+        by_session = {}
+        for items in categories.values():
+            for learning in items:
+                learned_in = learning.get("learned_in", "unknown")
+                session = self._extract_session_number(learned_in)
+                if session > 0:
+                    if session not in by_session:
+                        by_session[session] = []
+                    by_session[session].append(learning)
+
+        if not by_session:
+            print("\nNo session timeline available\n")
+            return
+
+        # Display recent sessions
+        recent = sorted(by_session.keys(), reverse=True)[:sessions]
+
+        print(f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n")
+
+        for session in recent:
+            session_learnings = by_session[session]
+            count = len(session_learnings)
+
+            print(f"Session {session:03d}: {count} learning(s)")
+
+            # Show first 3 learnings
+            for learning in session_learnings[:3]:
+                content = learning.get("content", "")
+                # Truncate long learnings
+                if len(content) > 60:
+                    content = content[:57] + "..."
+                print(f"  - {content}")
+
+            if len(session_learnings) > 3:
+                print(f"  ... and {len(session_learnings) - 3} more")
+
+            print()
 
     def _load_json(self, file_path: Path) -> dict:
         """Load JSON file"""
@@ -575,14 +1053,57 @@ class LearningsCurator:
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description="Curate project learnings")
-    parser.add_argument(
+    parser = argparse.ArgumentParser(description="Learning curation and management")
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Curate command
+    curate_parser = subparsers.add_parser("curate", help="Run curation process")
+    curate_parser.add_argument(
         "--dry-run", action="store_true", help="Show changes without saving"
     )
-    parser.add_argument("--report", action="store_true", help="Generate summary report")
-    parser.add_argument("--show", type=str, help="Show learnings by category")
-    parser.add_argument(
-        "--recategorize-all", action="store_true", help="Recategorize all learnings"
+
+    # Show learnings command
+    show_parser = subparsers.add_parser("show-learnings", help="Show learnings")
+    show_parser.add_argument("--category", type=str, help="Filter by category")
+    show_parser.add_argument("--tag", type=str, help="Filter by tag")
+    show_parser.add_argument("--session", type=int, help="Filter by session number")
+
+    # Search command
+    search_parser = subparsers.add_parser("search", help="Search learnings")
+    search_parser.add_argument("query", type=str, help="Search query")
+
+    # Add learning command
+    add_parser = subparsers.add_parser("add-learning", help="Add a new learning")
+    add_parser.add_argument("--content", type=str, required=True, help="Learning content")
+    add_parser.add_argument(
+        "--category",
+        type=str,
+        required=True,
+        choices=[
+            "architecture_patterns",
+            "gotchas",
+            "best_practices",
+            "technical_debt",
+            "performance_insights",
+            "security",
+        ],
+        help="Learning category",
+    )
+    add_parser.add_argument("--session", type=int, help="Session number")
+    add_parser.add_argument("--tags", type=str, help="Comma-separated tags")
+    add_parser.add_argument("--context", type=str, help="Additional context")
+
+    # Report command (legacy)
+    report_parser = subparsers.add_parser("report", help="Generate summary report")
+
+    # Statistics command
+    stats_parser = subparsers.add_parser("statistics", help="Show learning statistics")
+
+    # Timeline command
+    timeline_parser = subparsers.add_parser("timeline", help="Show learning timeline")
+    timeline_parser.add_argument(
+        "--sessions", type=int, default=10, help="Number of recent sessions to show"
     )
 
     args = parser.parse_args()
@@ -592,17 +1113,37 @@ def main():
 
     if not session_dir.exists():
         print("Error: .session directory not found", file=sys.stderr)
-        print("Run /session-start to initialize the project first\n")
+        print("Run /session-init to initialize the project first\n")
         sys.exit(1)
 
     curator = LearningsCurator(project_root)
 
-    if args.report:
-        curator.generate_report()
-    elif args.show:
-        curator.show_learnings(category=args.show)
-    else:
+    if args.command == "curate":
         curator.curate(dry_run=args.dry_run)
+    elif args.command == "show-learnings":
+        curator.show_learnings(
+            category=args.category, tag=args.tag, session=args.session
+        )
+    elif args.command == "search":
+        curator.search_learnings(args.query)
+    elif args.command == "add-learning":
+        tags = args.tags.split(",") if args.tags else None
+        curator.add_learning(
+            content=args.content,
+            category=args.category,
+            session=args.session,
+            tags=tags,
+            context=args.context,
+        )
+    elif args.command == "report":
+        curator.generate_report()
+    elif args.command == "statistics":
+        curator.show_statistics()
+    elif args.command == "timeline":
+        curator.show_timeline(sessions=args.sessions)
+    else:
+        # Default to report if no command specified
+        curator.generate_report()
 
 
 if __name__ == "__main__":

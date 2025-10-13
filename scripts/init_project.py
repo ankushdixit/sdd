@@ -93,6 +93,26 @@ def initialize_tracking_files():
     )
     print("✓ Created tree_updates.json")
 
+    # Create config.json with default curation settings
+    config_data = {
+        "curation": {
+            "auto_curate": True,
+            "frequency": 5,
+            "dry_run": False,
+            "similarity_threshold": 0.7,
+            "categories": [
+                "architecture_patterns",
+                "gotchas",
+                "best_practices",
+                "technical_debt",
+                "performance_insights",
+                "security",
+            ],
+        }
+    }
+    (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
+    print("✓ Created config.json")
+
     return True
 
 
