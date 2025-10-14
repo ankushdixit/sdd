@@ -326,6 +326,72 @@ class WorkItemManager:
         # Save atomically
         save_json(self.work_items_file, data)
 
+    def validate_integration_test(self, work_item: dict) -> tuple[bool, list[str]]:
+        """
+        Validate integration test work item.
+
+        Returns:
+            (is_valid: bool, errors: List[str])
+        """
+        errors = []
+
+        # Required fields for integration tests
+        required_fields = [
+            "scope",
+            "test_scenarios",
+            "performance_benchmarks",
+            "api_contracts",
+            "environment_requirements"
+        ]
+
+        for field in required_fields:
+            if not work_item.get(field):
+                errors.append(f"Missing required field for integration test: {field}")
+
+        # Validate test scenarios structure
+        scenarios = work_item.get("test_scenarios", [])
+        if not scenarios:
+            errors.append("At least one test scenario required")
+        else:
+            for i, scenario in enumerate(scenarios):
+                if not scenario.get("setup"):
+                    errors.append(f"Scenario {i+1}: Missing setup section")
+                if not scenario.get("actions"):
+                    errors.append(f"Scenario {i+1}: Missing actions section")
+                if not scenario.get("expected_results"):
+                    errors.append(f"Scenario {i+1}: Missing expected results")
+
+        # Validate performance benchmarks
+        benchmarks = work_item.get("performance_benchmarks", {})
+        if benchmarks:
+            if not benchmarks.get("response_time"):
+                errors.append("Performance benchmarks missing response time requirements")
+            if not benchmarks.get("throughput"):
+                errors.append("Performance benchmarks missing throughput requirements")
+
+        # Validate API contracts
+        contracts = work_item.get("api_contracts", [])
+        if not contracts:
+            errors.append("Integration tests must specify API contracts")
+        else:
+            for contract in contracts:
+                if not contract.get("contract_file"):
+                    errors.append("API contract missing contract_file reference")
+                if not contract.get("version"):
+                    errors.append("API contract missing version")
+
+        # Validate environment requirements
+        env_reqs = work_item.get("environment_requirements", {})
+        if not env_reqs.get("services_required"):
+            errors.append("Must specify required services for integration test")
+
+        # Check for service dependencies
+        dependencies = work_item.get("dependencies", [])
+        if not dependencies:
+            errors.append("Integration tests must have dependencies (component implementations)")
+
+        return len(errors) == 0, errors
+
     def list_work_items(
         self,
         status_filter: Optional[str] = None,

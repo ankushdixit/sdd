@@ -160,6 +160,36 @@ def initialize_tracking_files():
             "custom_validations": {
                 "rules": []
             }
+        },
+        "integration_tests": {
+            "enabled": True,
+            "docker_compose_file": "docker-compose.integration.yml",
+            "environment_validation": True,
+            "health_check_timeout": 300,
+            "test_data_fixtures": True,
+            "parallel_execution": True,
+            "performance_benchmarks": {
+                "enabled": True,
+                "required": True,
+                "regression_threshold": 0.10,
+                "baseline_storage": ".session/tracking/performance_baselines.json",
+                "load_test_tool": "wrk",
+                "metrics": ["response_time", "throughput", "resource_usage"]
+            },
+            "api_contracts": {
+                "enabled": True,
+                "required": True,
+                "contract_format": "openapi",
+                "breaking_change_detection": True,
+                "version_storage": ".session/tracking/api_contracts/",
+                "fail_on_breaking_changes": True
+            },
+            "documentation": {
+                "architecture_diagrams": True,
+                "sequence_diagrams": True,
+                "contract_documentation": True,
+                "performance_baseline_docs": True
+            }
         }
     }
     (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
