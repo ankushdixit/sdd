@@ -572,7 +572,9 @@ class LearningsCurator:
         except Exception:
             return []
 
-    def extract_from_code_comments(self, changed_files: List[Path] = None) -> List[dict]:
+    def extract_from_code_comments(
+        self, changed_files: List[Path] = None
+    ) -> List[dict]:
         """Extract learnings from inline code comments"""
         if changed_files is None:
             # Get recently changed files from git
@@ -732,7 +734,7 @@ class LearningsCurator:
         # Save
         self._save_json(self.learnings_path, learnings)
 
-        print(f"\n✓ Learning captured!")
+        print("\n✓ Learning captured!")
         print(f"  ID: {learning_id}")
         print(f"  Category: {category}")
         if tags:
@@ -947,9 +949,9 @@ class LearningsCurator:
                     session_counts[session_num] = session_counts.get(session_num, 0) + 1
 
         # Top tags
-        stats["top_tags"] = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[
-            :10
-        ]
+        stats["top_tags"] = sorted(
+            tag_counts.items(), key=lambda x: x[1], reverse=True
+        )[:10]
         stats["by_tag"] = tag_counts
         stats["by_session"] = session_counts
 
@@ -1013,7 +1015,9 @@ class LearningsCurator:
         # Display recent sessions
         recent = sorted(by_session.keys(), reverse=True)[:sessions]
 
-        print(f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n")
+        print(
+            f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n"
+        )
 
         for session in recent:
             session_learnings = by_session[session]
@@ -1075,7 +1079,9 @@ def main():
 
     # Add learning command
     add_parser = subparsers.add_parser("add-learning", help="Add a new learning")
-    add_parser.add_argument("--content", type=str, required=True, help="Learning content")
+    add_parser.add_argument(
+        "--content", type=str, required=True, help="Learning content"
+    )
     add_parser.add_argument(
         "--category",
         type=str,
