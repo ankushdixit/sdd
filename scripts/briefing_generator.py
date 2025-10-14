@@ -118,8 +118,7 @@ def load_milestone_context(work_item):
     # Calculate progress
     items = data.get("work_items", {})
     milestone_items = [
-        item for item in items.values()
-        if item.get("milestone") == milestone_name
+        item for item in items.values() if item.get("milestone") == milestone_name
     ]
 
     total = len(milestone_items)
@@ -134,7 +133,7 @@ def load_milestone_context(work_item):
         "progress": percent,
         "total_items": total,
         "completed_items": completed,
-        "milestone_items": milestone_items
+        "milestone_items": milestone_items,
     }
 
 
@@ -291,20 +290,22 @@ def generate_briefing(item_id, item, learnings_data):
         briefing += f"""
 ## Milestone Context
 
-**{milestone_context['title']}**
-{milestone_context['description']}
+**{milestone_context["title"]}**
+{milestone_context["description"]}
 
-Progress: {milestone_context['progress']}% ({milestone_context['completed_items']}/{milestone_context['total_items']} items complete)
+Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"]}/{milestone_context["total_items"]} items complete)
 """
-        if milestone_context['target_date']:
+        if milestone_context["target_date"]:
             briefing += f"Target Date: {milestone_context['target_date']}\n"
 
         briefing += "\nRelated work items in this milestone:\n"
         # Show other items in same milestone
-        for related_item in milestone_context['milestone_items']:
-            if related_item['id'] != item.get('id'):
+        for related_item in milestone_context["milestone_items"]:
+            if related_item["id"] != item.get("id"):
                 status_icon = "✓" if related_item["status"] == "completed" else "○"
-                briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
+                briefing += (
+                    f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
+                )
         briefing += "\n"
 
     briefing += "## Implementation Checklist\n\n"

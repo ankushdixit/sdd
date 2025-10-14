@@ -494,9 +494,7 @@ def main():
     """CLI entry point for graph generation."""
     import sys
 
-    parser = argparse.ArgumentParser(
-        description="Generate work item dependency graphs"
-    )
+    parser = argparse.ArgumentParser(description="Generate work item dependency graphs")
 
     # Output format
     parser.add_argument(
@@ -529,9 +527,7 @@ def main():
         "--bottlenecks", action="store_true", help="Show bottleneck analysis"
     )
     parser.add_argument("--stats", action="store_true", help="Show graph statistics")
-    parser.add_argument(
-        "--focus", help="Focus on neighborhood of specific work item"
-    )
+    parser.add_argument("--focus", help="Focus on neighborhood of specific work item")
 
     # Work items file
     parser.add_argument(
@@ -613,7 +609,9 @@ def main():
 
         elif args.format == "svg":
             dot_output = viz.generate_dot(work_items)
-            output_file = Path(args.output) if args.output else Path("dependency_graph.svg")
+            output_file = (
+                Path(args.output) if args.output else Path("dependency_graph.svg")
+            )
             if viz.generate_svg(dot_output, output_file):
                 print(f"SVG graph saved to {output_file}")
             else:
