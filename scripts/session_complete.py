@@ -6,8 +6,14 @@ Enhanced with full tracking updates and git workflow.
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 from datetime import datetime
+
+# Add scripts directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+
+from quality_gates import QualityGates
 
 
 def load_status():
@@ -25,57 +31,76 @@ def load_work_items():
         return json.load(f)
 
 
-def run_quality_gates():
+def run_quality_gates(work_item=None):
     """
-    Run quality gates: tests, linting, formatting.
-    Returns dict with results.
+    Run comprehensive quality gates using QualityGates class.
+    Returns dict with results from all gates.
     """
-    results = {
-        "tests": {"passed": False, "details": None},
-        "linting": {"passed": False, "details": None},
-        "formatting": {"passed": False, "details": None},
-    }
+    gates = QualityGates()
+    all_results = {}
+    all_passed = True
+    failed_gates = []
 
-    # Run tests (if pytest available)
-    try:
-        result = subprocess.run(
-            ["pytest", "--cov=.", "--cov-report=term"],
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        results["tests"]["passed"] = result.returncode == 0
-        results["tests"]["details"] = result.stdout
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        results["tests"]["passed"] = True  # Skip if pytest not found
-        results["tests"]["details"] = "Tests skipped (pytest not found)"
+    # Run tests
+    passed, test_results = gates.run_tests()
+    all_results["tests"] = test_results
+    if not passed and gates.config.get("test_execution", {}).get("required", True):
+        all_passed = False
+        failed_gates.append("tests")
 
-    # Run linting (if ruff available)
-    try:
-        result = subprocess.run(
-            ["ruff", "check", "--fix", "."], capture_output=True, text=True, timeout=60
-        )
-        results["linting"]["passed"] = result.returncode == 0
-        results["linting"]["details"] = result.stdout
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        results["linting"]["passed"] = True  # Skip if ruff not found
+    # Run security scanning
+    passed, security_results = gates.run_security_scan()
+    all_results["security"] = security_results
+    if not passed and gates.config.get("security", {}).get("required", True):
+        all_passed = False
+        failed_gates.append("security")
 
-    # Check formatting (if ruff available)
-    try:
-        result = subprocess.run(
-            ["ruff", "format", "--check", "."],
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-        if result.returncode != 0:
-            # Auto-format
-            subprocess.run(["ruff", "format", "."], timeout=60)
-        results["formatting"]["passed"] = True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        results["formatting"]["passed"] = True
+    # Run linting
+    passed, linting_results = gates.run_linting()
+    all_results["linting"] = linting_results
+    if not passed and gates.config.get("linting", {}).get("required", False):
+        all_passed = False
+        failed_gates.append("linting")
 
-    return results
+    # Run formatting
+    passed, formatting_results = gates.run_formatting()
+    all_results["formatting"] = formatting_results
+    if not passed and gates.config.get("formatting", {}).get("required", False):
+        all_passed = False
+        failed_gates.append("formatting")
+
+    # Validate documentation
+    passed, doc_results = gates.validate_documentation(work_item)
+    all_results["documentation"] = doc_results
+    if not passed and gates.config.get("documentation", {}).get("required", False):
+        all_passed = False
+        failed_gates.append("documentation")
+
+    # Verify Context7 libraries
+    passed, context7_results = gates.verify_context7_libraries()
+    all_results["context7"] = context7_results
+    if not passed and gates.config.get("context7", {}).get("required", False):
+        all_passed = False
+        failed_gates.append("context7")
+
+    # Run custom validations
+    if work_item:
+        passed, custom_results = gates.run_custom_validations(work_item)
+        all_results["custom"] = custom_results
+        if not passed:
+            all_passed = False
+            failed_gates.append("custom")
+
+    # Generate and print report
+    report = gates.generate_report(all_results)
+    print("\n" + report)
+
+    # Print remediation guidance if any gates failed
+    if failed_gates:
+        guidance = gates.get_remediation_guidance(failed_gates)
+        print(guidance)
+
+    return all_results, all_passed, failed_gates
 
 
 def update_all_tracking(session_num):
@@ -140,9 +165,9 @@ def trigger_curation_if_needed(session_num):
 
     # Run curation every N sessions
     if session_num % frequency == 0:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"Running automatic learning curation (session {session_num})...")
-        print(f"{'='*50}\n")
+        print(f"{'=' * 50}\n")
 
         try:
             result = subprocess.run(
@@ -295,10 +320,26 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
 - **{work_item_id}**: {work_item["title"]} ({work_item["status"]})
 
 ## Quality Gates
-- Tests: {"✓ PASSED" if gate_results["tests"]["passed"] else "✗ FAILED"}
-- Linting: {"✓ PASSED" if gate_results["linting"]["passed"] else "✗ FAILED"}
-- Formatting: {"✓ PASSED" if gate_results["formatting"]["passed"] else "✗ FAILED"}
 """
+
+    # Add results for each gate
+    for gate_name, gate_result in gate_results.items():
+        status_text = gate_result.get("status", "unknown")
+        if status_text == "skipped":
+            summary += f"- {gate_name.title()}: ⊘ SKIPPED\n"
+        elif status_text == "passed":
+            summary += f"- {gate_name.title()}: ✓ PASSED\n"
+        else:
+            summary += f"- {gate_name.title()}: ✗ FAILED\n"
+
+        # Add coverage for tests
+        if gate_name == "tests" and gate_result.get("coverage"):
+            summary += f"  - Coverage: {gate_result['coverage']}%\n"
+
+        # Add severity counts for security
+        if gate_name == "security" and gate_result.get("by_severity"):
+            for severity, count in gate_result["by_severity"].items():
+                summary += f"  - {severity}: {count}\n"
 
     if learnings:
         summary += "\n## Learnings Captured\n"
@@ -321,27 +362,22 @@ def main():
     work_items_data = load_work_items()
     work_item_id = status["current_work_item"]
     session_num = status["current_session"]
+    work_item = work_items_data["work_items"][work_item_id]
 
     print("Completing session...\n")
-    print("Running quality gates...")
+    print("Running comprehensive quality gates...\n")
 
-    # Run quality gates
-    gate_results = run_quality_gates()
-
-    # Print results
-    for gate, result in gate_results.items():
-        status_icon = "✓" if result["passed"] else "✗"
-        print(
-            f"{status_icon} {gate.title()}: {'passed' if result['passed'] else 'failed'}"
-        )
-
-    all_passed = all(r["passed"] for r in gate_results.values())
+    # Run quality gates with work item context
+    gate_results, all_passed, failed_gates = run_quality_gates(work_item)
 
     if not all_passed:
-        print("\n❌ Quality gates failed. Fix issues before completing session.")
+        print(
+            "\n❌ Required quality gates failed. Fix issues before completing session."
+        )
+        print(f"Failed gates: {', '.join(failed_gates)}")
         return 1
 
-    print("\n✓ Quality gates PASSED\n")
+    print("\n✓ All required quality gates PASSED\n")
 
     # Update all tracking (stack, tree)
     update_all_tracking(session_num)
@@ -382,7 +418,6 @@ def main():
         json.dump(work_items_data, f, indent=2)
 
     # Generate commit message
-    work_item = work_items_data["work_items"][work_item_id]
     commit_message = generate_commit_message(status, work_item)
 
     # Complete git workflow (commit, push, optionally merge)
