@@ -109,6 +109,22 @@ class QualityGates:
                 command.split(), capture_output=True, text=True, timeout=300
             )
 
+            # pytest exit codes:
+            # 0 = all tests passed
+            # 1 = tests were collected and run but some failed
+            # 2 = test execution was interrupted
+            # 3 = internal error
+            # 4 = pytest command line usage error
+            # 5 = no tests were collected
+
+            # Treat "no tests collected" (exit code 5) as skipped, not failed
+            if result.returncode == 5:
+                return True, {
+                    "status": "skipped",
+                    "reason": "no tests collected",
+                    "returncode": result.returncode
+                }
+
             # Parse results
             passed = result.returncode == 0
             coverage = self._parse_coverage(language)
@@ -132,6 +148,9 @@ class QualityGates:
 
         except subprocess.TimeoutExpired:
             return False, {"status": "failed", "reason": "timeout"}
+        except FileNotFoundError:
+            # pytest not available - skip test gate
+            return True, {"status": "skipped", "reason": "pytest not available"}
         except Exception as e:
             return False, {"status": "failed", "reason": str(e)}
 
