@@ -17,8 +17,8 @@ This roadmap outlines the phased development of the Claude Code Session Plugin f
 **Repository Structure Created:**
 ```
 claude-session-plugin/
-├── .claude-plugin/
-│   └── plugin.json              ✅ Plugin manifest
+├── .claude/
+│   └── commands/                ✅ 16 executable slash commands
 ├── commands/
 │   ├── session-start.md         ✅ Basic definition
 │   └── session-end.md           ✅ Basic definition

@@ -12,8 +12,8 @@ This document provides a **complete, step-by-step implementation plan** for buil
 **Repository Structure:**
 ```
 claude-session-plugin/
-├── .claude-plugin/
-│   └── plugin.json              ✅ Valid manifest
+├── .claude/
+│   └── commands/                ✅ 16 executable slash commands (runtime)
 ├── commands/
 │   ├── session-start.md         ✅ Enhanced (full context loading)
 │   ├── session-end.md           ✅ Enhanced (comprehensive completion)
