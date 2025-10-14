@@ -129,9 +129,10 @@ python3 scripts/learning_curator.py curate --dry-run
 
 ```
 claude-session-plugin/
-├── .claude-plugin/           # Plugin configuration (to be created)
-├── commands/                 # Slash command definitions (to be created)
-├── scripts/                  # Core Python logic
+├── .claude/                  # Claude Code plugin runtime
+│   └── commands/             # ✅ Executable slash commands (16 commands)
+├── commands/                 # Developer documentation for commands
+├── scripts/                  # Core Python logic (13 modules)
 │   ├── dependency_graph.py   # ✅ Dependency visualization (ready)
 │   ├── learning_curator.py   # ✅ Learning management (ready)
 │   └── file_ops.py           # ✅ Utilities (ready)

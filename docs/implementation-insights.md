@@ -735,7 +735,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Shell commands for session complete | `/session-end` slash command |
 | Shell commands for work items | `/work-item` slash command |
 | CLI framework | Plugin command markdown files |
-| Standalone scripts | Plugin hooks in `.claude-plugin/hooks/` |
+| Standalone scripts | Plugin hooks in `.claude/hooks/` (if needed) |
 | External execution | Loaded as Claude extension |
 
 ### What to Keep (High Value)
