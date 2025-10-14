@@ -563,7 +563,7 @@ claude-session-plugin/
 
 **Status:** ✅ Complete
 
-**Completed:** October 14, 2025
+**Completed:** 14th October 2025
 
 **Priority:** HIGH
 
@@ -606,12 +606,6 @@ claude-session-plugin/
 - 4 commits: Main implementation, auto-fix formatting, pytest fix, config initialization
 - 7 quality gate types implemented
 - 54 tests passed across all sections
-
-### Overview
-
-Phase 5 enhances existing basic quality gates with comprehensive validation including security scanning, documentation checks, Context7 verification, and custom validation rules.
-
-**Completed:** Extracted quality gate logic from session_complete.py into dedicated quality_gates.py module with comprehensive validation for all 7 gate types.
 
 ### Features
 
@@ -672,23 +666,22 @@ Phase 5 enhances existing basic quality gates with comprehensive validation incl
   - Remediation guidance generation
   - Clear next-steps for failures
 
-### Implementation Order
+### Lessons Learned
 
-**Week 1: Core Gates**
-- 5.1: Enhanced test execution with coverage
-- 5.2: Security scanning integration
-- Testing: Test execution and security for all languages
+1. **pytest exit codes matter:** Exit code 5 (no tests collected) should be treated as skipped, not failed, to allow projects without tests to pass quality gates
+2. **Multi-language support requires language detection:** Auto-detecting project language from files (pyproject.toml, package.json, tsconfig.json) makes configuration simpler
+3. **Required vs optional gates critical:** Some gates (tests, security) must pass, others (linting, formatting, docs) should warn but not block
+4. **Auto-fix modes valuable:** Linting and formatting with auto-fix significantly improves developer experience
+5. **Config integration essential:** Adding quality_gates to `.session/config.json` during init ensures all projects get proper configuration
+6. **Graceful degradation important:** When tools unavailable (bandit, safety, pydocstyle), gates should skip gracefully rather than fail
+7. **Comprehensive reporting needed:** Per-gate status + remediation guidance makes failures actionable
 
-**Week 2: Code Quality**
-- 5.3: Linting and formatting with auto-fix
-- 5.4: Documentation validation
-- Testing: Linting, formatting, documentation checks
+### Known Limitations
 
-**Week 3: Custom & Integration**
-- 5.5: Context7 MCP integration
-- 5.6: Custom validation rules
-- 5.7: Quality gate reporting
-- Testing: End-to-end quality gate workflow
+1. **Context7 MCP stub:** Context7 integration is stubbed - requires actual MCP server connection for production use
+2. **Tool availability assumed:** Security scanners (bandit, safety) and linters (ruff, eslint) must be installed separately
+3. **No parallel execution:** Quality gates run sequentially, could be optimized with parallel execution
+4. **Coverage parsing language-specific:** Different coverage formats for Python (coverage.json) vs JS/TS (coverage-summary.json) require per-language parsing
 
 ### Success Criteria
 
