@@ -70,7 +70,8 @@ The `.claude/commands/` files are **concise by design**. Full context exists in:
 - `commands/*.md` - Detailed command documentation
 - `scripts/*.py` - Complete implementation with comments
 - `docs/*.md` - Methodology and framework documentation
-- `PLUGIN_IMPLEMENTATION_PLAN.md` - Complete technical specifications
+- `PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md` - Technical specs for Phases 0-4 (Foundation)
+- `PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md` - Technical specs for Phases 5+ (Quality & Operations)
 
 The short command files are just **runtime instructions** for Claude to follow.
 Think of them as "quick reference cards" not "full manuals".

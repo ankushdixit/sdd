@@ -2496,7 +2496,7 @@ Outcome: Functional MVP shipped on schedule
 
 ### Installation
 
-The Session plugin is installed through Claude Code's plugin system. Refer to PLUGIN_IMPLEMENTATION_PLAN.md for installation instructions.
+The Session plugin is installed through Claude Code's plugin system. Refer to PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md and PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md for installation instructions.
 
 ### Plugin Commands
 
@@ -2688,7 +2688,9 @@ jobs:
 ### Resources
 
 - Documentation available in the `docs/` directory
-- Implementation guide in PLUGIN_IMPLEMENTATION_PLAN.md
+- Implementation guides:
+  - PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md (Foundation - Complete)
+  - PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md (Quality & Operations - In Progress)
 - Roadmap in ROADMAP.md
 
 ---

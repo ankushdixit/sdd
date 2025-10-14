@@ -123,7 +123,9 @@ python3 scripts/learning_curator.py curate --dry-run
 - [AI-Augmented Solo Framework](docs/ai-augmented-solo-framework.md) - Philosophical context and broader methodology
 - [Implementation Insights](docs/implementation-insights.md) - Lessons learned and proven patterns
 - [Roadmap](ROADMAP.md) - Phased development plan
-- [Implementation Plan](PLUGIN_IMPLEMENTATION_PLAN.md) - Detailed technical implementation guide
+- **Implementation Plans:**
+  - [Phases 0-4 (Foundation)](PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md) - ✅ Complete
+  - [Phases 5+ (Quality & Operations)](PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md) - In Progress
 
 ## Project Structure
 
@@ -139,7 +141,8 @@ claude-session-plugin/
 ├── templates/                # JSON schema templates
 ├── docs/                     # Comprehensive documentation
 ├── ROADMAP.md               # Development roadmap
-└── PLUGIN_IMPLEMENTATION_PLAN.md  # Implementation guide
+├── PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md  # Implementation guide (Phases 0-4)
+└── PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md   # Implementation guide (Phases 5+)
 ```
 
 ## Development Status
