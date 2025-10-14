@@ -1047,7 +1047,9 @@ Estimate: **v1.0 in 8-10 weeks** of focused development
 
 ## Related Documentation
 
-- [PLUGIN_IMPLEMENTATION_PLAN.md](./PLUGIN_IMPLEMENTATION_PLAN.md) - Detailed implementation guide
+- **Implementation Plans:**
+  - [PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md](./PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md) - Phases 0-4 (Foundation) - ✅ Complete
+  - [PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md](./PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md) - Phases 5+ (Quality & Operations) - In Progress
 - [session-driven-development.md](./docs/session-driven-development.md) - Core methodology
 - [implementation-insights.md](./docs/implementation-insights.md) - Implementation patterns and insights
 - [ai-augmented-solo-framework.md](./docs/ai-augmented-solo-framework.md) - Personal development framework
