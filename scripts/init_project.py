@@ -93,7 +93,7 @@ def initialize_tracking_files():
     )
     print("✓ Created tree_updates.json")
 
-    # Create config.json with default curation settings
+    # Create config.json with default settings
     config_data = {
         "curation": {
             "auto_curate": True,
@@ -108,6 +108,58 @@ def initialize_tracking_files():
                 "performance_insights",
                 "security",
             ],
+        },
+        "quality_gates": {
+            "test_execution": {
+                "enabled": True,
+                "required": True,
+                "coverage_threshold": 80,
+                "commands": {
+                    "python": "pytest --cov --cov-report=json",
+                    "javascript": "npm test -- --coverage",
+                    "typescript": "npm test -- --coverage"
+                }
+            },
+            "linting": {
+                "enabled": True,
+                "required": False,
+                "auto_fix": True,
+                "commands": {
+                    "python": "ruff check .",
+                    "javascript": "eslint .",
+                    "typescript": "eslint ."
+                }
+            },
+            "formatting": {
+                "enabled": True,
+                "required": False,
+                "auto_fix": True,
+                "commands": {
+                    "python": "ruff format .",
+                    "javascript": "prettier --write .",
+                    "typescript": "prettier --write ."
+                }
+            },
+            "security": {
+                "enabled": True,
+                "required": True,
+                "fail_on": "high"
+            },
+            "documentation": {
+                "enabled": True,
+                "required": False,
+                "check_changelog": True,
+                "check_docstrings": True,
+                "check_readme": False
+            },
+            "context7": {
+                "enabled": False,
+                "required": False,
+                "important_libraries": []
+            },
+            "custom_validations": {
+                "rules": []
+            }
         }
     }
     (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
