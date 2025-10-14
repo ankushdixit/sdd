@@ -4469,6 +4469,14 @@ Phase 3 delivered:
 - Graph statistics and analysis
 - Integration with existing work item commands
 
+### Lessons Learned
+
+1. **Graphviz Optional Design:** SVG generation gracefully fails without Graphviz - ASCII and DOT formats provide full functionality for terminal-based development
+2. **CLI Filtering Power:** Comprehensive filtering (status/milestone/type/focus/include-completed) enables powerful graph exploration without UI complexity
+3. **Bottleneck Analysis Value:** Identifying items that block 2+ others provides actionable insights for project prioritization
+4. **Comprehensive Testing:** 36 tests across 6 sections ensured quality - testing different dependency patterns (linear, branching, diamond) validated algorithm correctness
+5. **Existing Algorithm Leverage:** Phase 0's critical path implementation worked perfectly - just needed CLI integration and enhancement
+
 ---
 
 ### 3.1 Work Item Graph Command

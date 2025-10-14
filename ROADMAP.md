@@ -563,7 +563,7 @@ claude-session-plugin/
 
 **Status:** ✅ Complete
 
-**Completed:** October 14, 2025
+**Completed:** 14th October 2025
 
 **Priority:** HIGH
 
@@ -612,6 +612,23 @@ claude-session-plugin/
 Phase 5 enhances existing basic quality gates with comprehensive validation including security scanning, documentation checks, Context7 verification, and custom validation rules.
 
 **Completed:** Extracted quality gate logic from session_complete.py into dedicated quality_gates.py module with comprehensive validation for all 7 gate types.
+
+### Lessons Learned
+
+1. **pytest exit codes matter:** Exit code 5 (no tests collected) should be treated as skipped, not failed, to allow projects without tests to pass quality gates
+2. **Multi-language support requires language detection:** Auto-detecting project language from files (pyproject.toml, package.json, tsconfig.json) makes configuration simpler
+3. **Required vs optional gates critical:** Some gates (tests, security) must pass, others (linting, formatting, docs) should warn but not block
+4. **Auto-fix modes valuable:** Linting and formatting with auto-fix significantly improves developer experience
+5. **Config integration essential:** Adding quality_gates to `.session/config.json` during init ensures all projects get proper configuration
+6. **Graceful degradation important:** When tools unavailable (bandit, safety, pydocstyle), gates should skip gracefully rather than fail
+7. **Comprehensive reporting needed:** Per-gate status + remediation guidance makes failures actionable
+
+### Known Limitations
+
+1. **Context7 MCP stub:** Context7 integration is stubbed - requires actual MCP server connection for production use
+2. **Tool availability assumed:** Security scanners (bandit, safety) and linters (ruff, eslint) must be installed separately
+3. **No parallel execution:** Quality gates run sequentially, could be optimized with parallel execution
+4. **Coverage parsing language-specific:** Different coverage formats for Python (coverage.json) vs JS/TS (coverage-summary.json) require per-language parsing
 
 ### Features
 
