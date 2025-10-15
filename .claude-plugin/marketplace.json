@@ -1,0 +1,11 @@
+{
+  "name": "session-plugin-marketplace",
+  "displayName": "Session Plugin Marketplace",
+  "description": "Official marketplace for the Claude Session Plugin",
+  "plugins": [
+    {
+      "name": "session-plugin",
+      "path": "."
+    }
+  ]
+}

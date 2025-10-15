@@ -128,39 +128,51 @@ python3 scripts/learning_curator.py curate --dry-run
 
 ### Setup
 
-1. **Clone the plugin repository:**
-   ```bash
-   # Clone to a dedicated location (NOT your project folder)
-   cd ~/plugins  # or any directory you prefer for plugins
-   git clone https://github.com/yourusername/claude-session-plugin.git
+**Method 1: Install from GitHub (Recommended)**
+
+1. **In Claude Code, add the marketplace:**
+   ```
+   /plugin marketplace add https://github.com/ankushdixit/claude-session-plugin
    ```
 
-2. **Configure Claude Code to use the plugin:**
-
-   Claude Code automatically detects plugins in the `.claude/` directory. To use this plugin:
-
-   **Option A: Symlink (Recommended)**
-   ```bash
-   # Create symlink from your plugin location to Claude Code's plugin directory
-   ln -s ~/plugins/claude-session-plugin ~/.claude/plugins/claude-session-plugin
+2. **Install the plugin:**
    ```
-
-   **Option B: Configure in Claude Code settings**
-
-   Add the plugin path to your Claude Code configuration. (Exact method depends on Claude Code version)
+   /plugin install session-plugin
+   ```
 
 3. **Verify installation:**
+   Type `/help` and you should see the session commands listed.
 
-   Open any project in Claude Code and type `/session-` - you should see autocomplete suggestions for available session commands.
+**Method 2: Install from Local Clone**
 
-### Using the Plugin in Your Existing Project
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ankushdixit/claude-session-plugin.git ~/claude-session-plugin
+   ```
 
-The plugin works with **any existing project**:
+2. **In Claude Code, add the local marketplace:**
+   ```
+   /plugin marketplace add ~/claude-session-plugin
+   ```
 
-1. **Navigate to your project in Claude Code**
+3. **Install the plugin:**
+   ```
+   /plugin install session-plugin@session-plugin-marketplace
+   ```
+
+4. **Verify installation:**
+   Type `/help` and you should see the session commands listed.
+
+**Note:** After installation, the plugin commands will be available in **all your projects**, not just the plugin directory.
+
+### Using the Plugin in Any Project
+
+Once installed, the plugin works in **any project**:
+
+1. **Navigate to your project:**
    ```bash
    cd ~/my-existing-project
-   # Open Claude Code here
+   # Open Claude Code
    ```
 
 2. **Initialize SDD in your project:**
@@ -168,26 +180,26 @@ The plugin works with **any existing project**:
    /session-init
    ```
 
-   This creates a `.session/` directory in your project root with:
+   This creates a `.session/` directory with:
    - `work_items.json` - Your task list
    - `learnings.json` - Knowledge base
    - `status_update.json` - Session state
-   - `tracking/` - Stack, tree, and other artifacts
-   - `config.json` - Project-specific configuration
+   - `tracking/` - Stack, tree, artifacts
+   - `config.json` - Project configuration
 
-3. **Start using the plugin:**
+3. **Start working:**
    ```
    /work-item-create
    /session-start
-   # ... do your work ...
+   # ... develop ...
    /session-end
    ```
 
-**Important Notes:**
-- The plugin **does not modify** your existing code or git history
-- The `.session/` directory is project-specific (add to `.gitignore` if you want)
-- You can use the plugin in multiple projects simultaneously
-- Each project maintains its own work items, learnings, and tracking
+**Important:**
+- Plugin installed once, works everywhere
+- Each project gets its own `.session/` directory
+- Your existing code is never modified
+- Add `.session/` to `.gitignore` if desired
 
 ## Quick Start
 
@@ -458,13 +470,12 @@ This plugin includes battle-tested algorithms:
 
 ### Q: How do I use this plugin in my existing project?
 
-The plugin is installed **once** in Claude Code's plugin directory, then works in **any project**:
+The plugin is installed **once** using Claude Code's `/plugin` command, then works in **any project**:
 
-1. Clone the plugin to a dedicated location (e.g., `~/plugins/claude-session-plugin`)
-2. Symlink or configure it in Claude Code's plugin system
-3. Navigate to your existing project in Claude Code
-4. Run `/session-init` to create the `.session/` directory
-5. Start using session commands in your project
+1. Install the plugin: `/plugin marketplace add https://github.com/ankushdixit/claude-session-plugin` then `/plugin install session-plugin`
+2. Navigate to your existing project in Claude Code
+3. Run `/session-init` to create the `.session/` directory
+4. Start using session commands (`/work-item-create`, `/session-start`, etc.)
 
 The plugin creates a `.session/` folder in your project root but doesn't modify your existing code.
 

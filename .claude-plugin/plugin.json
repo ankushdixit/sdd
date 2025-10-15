@@ -1,0 +1,86 @@
+{
+  "name": "session-plugin",
+  "displayName": "Claude Session Plugin",
+  "version": "0.5.6",
+  "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with work item management, quality gates, and knowledge accumulation",
+  "author": {
+    "name": "Ankush Dixit",
+    "url": "https://github.com/ankushdixit/claude-session-plugin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankushdixit/claude-session-plugin.git"
+  },
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "session-init",
+      "description": "Initialize Session-Driven Development in your project"
+    },
+    {
+      "name": "session-start",
+      "description": "Start a development session with comprehensive briefing"
+    },
+    {
+      "name": "session-end",
+      "description": "Complete session with quality gates and summary"
+    },
+    {
+      "name": "session-validate",
+      "description": "Pre-flight check before session completion"
+    },
+    {
+      "name": "session-status",
+      "description": "Show current session state and progress"
+    },
+    {
+      "name": "work-item-create",
+      "description": "Create new work item with dependencies"
+    },
+    {
+      "name": "work-item-list",
+      "description": "List work items with filters"
+    },
+    {
+      "name": "work-item-show",
+      "description": "Show work item details"
+    },
+    {
+      "name": "work-item-update",
+      "description": "Update work item fields"
+    },
+    {
+      "name": "work-item-next",
+      "description": "Get next recommended work item"
+    },
+    {
+      "name": "work-item-graph",
+      "description": "Visualize dependencies with critical path"
+    },
+    {
+      "name": "learning-capture",
+      "description": "Capture insight during development"
+    },
+    {
+      "name": "learning-show",
+      "description": "Browse learnings with filters"
+    },
+    {
+      "name": "learning-search",
+      "description": "Full-text search across learnings"
+    },
+    {
+      "name": "learning-curate",
+      "description": "Run curation process (categorize, deduplicate, merge)"
+    }
+  ],
+  "keywords": [
+    "session-management",
+    "work-items",
+    "quality-gates",
+    "learning-system",
+    "dependency-graph",
+    "context-continuity",
+    "ai-augmented-development"
+  ]
+}
