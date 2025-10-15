@@ -256,6 +256,17 @@ class SessionValidator:
                             for issue in gate_result["issues"][:5]:
                                 print(f"      - {issue}")
 
+            # Show missing paths for work item criteria
+            if not result["passed"] and check_name == "work_item_criteria":
+                if "missing_impl" in result and result["missing_impl"]:
+                    print(f"   Missing implementation paths:")
+                    for path in result["missing_impl"]:
+                        print(f"      - {path}")
+                if "missing_tests" in result and result["missing_tests"]:
+                    print(f"   Missing test paths:")
+                    for path in result["missing_tests"]:
+                        print(f"      - {path}")
+
         all_passed = all(c["passed"] for c in checks.values())
 
         print()
