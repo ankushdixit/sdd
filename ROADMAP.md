@@ -374,6 +374,7 @@ claude-session-plugin/
 - ✅ Section 3.4: 6/6 tests (ASCII, DOT, SVG, file output, graceful failures)
 - ✅ Section 3.5: 4/4 tests (critical path view, bottlenecks, statistics, updates)
 - ✅ Section 3.6: 3/3 tests (all documented examples verified)
+- ✅ Automated test script created (tests/phase_3/test_phase_3_complete.py) - 11/11 tests passing (15th Oct 2025)
 
 **Statistics:**
 - 3 files modified/created: 1 new command, 2 enhanced files
