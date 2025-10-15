@@ -348,6 +348,79 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
 
     summary += "\n## Next Session\nTo be determined\n"
 
+    # Add integration test summary if applicable
+    integration_summary = generate_integration_test_summary(work_item, gate_results)
+    if integration_summary:
+        summary += integration_summary
+
+    return summary
+
+
+def generate_integration_test_summary(work_item: dict, gate_results: dict) -> str:
+    """
+    Generate integration test summary for session completion.
+
+    Args:
+        work_item: Integration test work item
+        gate_results: Results from quality gates
+
+    Returns:
+        Integration test summary section
+    """
+    if work_item.get("type") != "integration_test":
+        return ""
+
+    summary = "\n## Integration Test Results\n\n"
+
+    # Integration test execution results
+    integration_results = gate_results.get("integration_tests", {})
+
+    if integration_results:
+        test_results = integration_results.get("integration_tests", {})
+
+        if test_results:
+            summary += f"**Integration Tests:**\n"
+            summary += f"- Passed: {test_results.get('passed', 0)}\n"
+            summary += f"- Failed: {test_results.get('failed', 0)}\n"
+            summary += f"- Skipped: {test_results.get('skipped', 0)}\n"
+            summary += f"- Duration: {test_results.get('total_duration', 0):.2f}s\n\n"
+
+        # Performance benchmarks
+        perf_results = integration_results.get("performance_benchmarks", {})
+        if perf_results:
+            summary += "**Performance Benchmarks:**\n"
+
+            latency = perf_results.get("load_test", {}).get("latency", {})
+            if latency:
+                summary += f"- p50 latency: {latency.get('p50', 'N/A')}ms\n"
+                summary += f"- p95 latency: {latency.get('p95', 'N/A')}ms\n"
+                summary += f"- p99 latency: {latency.get('p99', 'N/A')}ms\n"
+
+            throughput = perf_results.get("load_test", {}).get("throughput", {})
+            if throughput:
+                summary += f"- Throughput: {throughput.get('requests_per_sec', 'N/A')} req/s\n"
+
+            if perf_results.get("regression_detected"):
+                summary += "- ⚠️  Performance regression detected!\n"
+
+            summary += "\n"
+
+        # API contracts
+        contract_results = integration_results.get("api_contracts", {})
+        if contract_results:
+            summary += "**API Contract Validation:**\n"
+            summary += f"- Contracts validated: {contract_results.get('contracts_validated', 0)}\n"
+
+            breaking_changes = contract_results.get("breaking_changes", [])
+            if breaking_changes:
+                summary += f"- ⚠️  Breaking changes detected: {len(breaking_changes)}\n"
+                for change in breaking_changes[:3]:  # Show first 3
+                    summary += f"  - {change.get('message', 'Unknown')}\n"
+            else:
+                summary += "- ✓ No breaking changes\n"
+
+            summary += "\n"
+
     return summary
 
 
