@@ -14,7 +14,7 @@ import subprocess
 import json
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Tuple
 from datetime import datetime
 
 
@@ -38,7 +38,7 @@ class IntegrationTestRunner:
             "total_duration": 0,
             "passed": 0,
             "failed": 0,
-            "skipped": 0
+            "skipped": 0,
         }
 
     def setup_environment(self) -> Tuple[bool, str]:
@@ -51,7 +51,9 @@ class IntegrationTestRunner:
         print("Setting up integration test environment...")
 
         # Check if Docker Compose file exists
-        compose_file = self.env_requirements.get("compose_file", "docker-compose.integration.yml")
+        compose_file = self.env_requirements.get(
+            "compose_file", "docker-compose.integration.yml"
+        )
         if not Path(compose_file).exists():
             return False, f"Docker Compose file not found: {compose_file}"
 
@@ -61,7 +63,7 @@ class IntegrationTestRunner:
                 ["docker-compose", "-f", compose_file, "up", "-d"],
                 capture_output=True,
                 text=True,
-                timeout=180
+                timeout=180,
             )
 
             if result.returncode != 0:
@@ -107,17 +109,21 @@ class IntegrationTestRunner:
                     ["docker-compose", "ps", "-q", service],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=5,
                 )
 
                 if result.returncode == 0 and result.stdout.strip():
                     # Check health status
                     health_result = subprocess.run(
-                        ["docker", "inspect", "--format='{{.State.Health.Status}}'",
-                         result.stdout.strip()],
+                        [
+                            "docker",
+                            "inspect",
+                            "--format='{{.State.Health.Status}}'",
+                            result.stdout.strip(),
+                        ],
                         capture_output=True,
                         text=True,
-                        timeout=5
+                        timeout=5,
                     )
 
                     if "healthy" in health_result.stdout:
@@ -141,11 +147,7 @@ class IntegrationTestRunner:
 
             # Execute fixture loading script
             try:
-                subprocess.run(
-                    ["python", str(fixture_path)],
-                    check=True,
-                    timeout=30
-                )
+                subprocess.run(["python", str(fixture_path)], check=True, timeout=30)
                 print(f"✓ Loaded fixture: {fixture}")
             except Exception as e:
                 print(f"✗ Failed to load fixture {fixture}: {e}")
@@ -200,11 +202,11 @@ class IntegrationTestRunner:
                     "-v",
                     "--tb=short",
                     "--json-report",
-                    "--json-report-file=integration-test-results.json"
+                    "--json-report-file=integration-test-results.json",
                 ],
                 capture_output=True,
                 text=True,
-                timeout=600  # 10 minute timeout
+                timeout=600,  # 10 minute timeout
             )
 
             # Parse results
@@ -232,15 +234,16 @@ class IntegrationTestRunner:
         try:
             result = subprocess.run(
                 [
-                    "npm", "test",
+                    "npm",
+                    "test",
                     "--",
                     "--testPathPattern=integration",
                     "--json",
-                    "--outputFile=integration-test-results.json"
+                    "--outputFile=integration-test-results.json",
                 ],
                 capture_output=True,
                 text=True,
-                timeout=600
+                timeout=600,
             )
 
             # Parse results
@@ -281,7 +284,9 @@ class IntegrationTestRunner:
         """
         print("\nTearing down integration test environment...")
 
-        compose_file = self.env_requirements.get("compose_file", "docker-compose.integration.yml")
+        compose_file = self.env_requirements.get(
+            "compose_file", "docker-compose.integration.yml"
+        )
 
         try:
             # Stop and remove services
@@ -289,7 +294,7 @@ class IntegrationTestRunner:
                 ["docker-compose", "-f", compose_file, "down", "-v"],
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
 
             if result.returncode != 0:
@@ -309,19 +314,19 @@ class IntegrationTestRunner:
         """Generate integration test report."""
         report = f"""
 Integration Test Report
-{'='*80}
+{"=" * 80}
 
-Work Item: {self.work_item.get('id', 'N/A')}
-Test Name: {self.work_item.get('title', 'N/A')}
+Work Item: {self.work_item.get("id", "N/A")}
+Test Name: {self.work_item.get("title", "N/A")}
 
-Duration: {self.results['total_duration']:.2f} seconds
+Duration: {self.results["total_duration"]:.2f} seconds
 
 Results:
-  ✓ Passed:  {self.results['passed']}
-  ✗ Failed:  {self.results['failed']}
-  ○ Skipped: {self.results['skipped']}
+  ✓ Passed:  {self.results["passed"]}
+  ✗ Failed:  {self.results["failed"]}
+  ○ Skipped: {self.results["skipped"]}
 
-Status: {'PASSED' if self.results['failed'] == 0 else 'FAILED'}
+Status: {"PASSED" if self.results["failed"] == 0 else "FAILED"}
 """
         return report
 
@@ -338,6 +343,7 @@ def main():
 
     # Load work item
     from file_ops import load_json
+
     work_items_file = Path(".session/tracking/work_items.json")
     data = load_json(work_items_file)
     work_item = data["work_items"].get(work_item_id)

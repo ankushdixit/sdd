@@ -384,7 +384,7 @@ def generate_integration_test_summary(work_item: dict, gate_results: dict) -> st
         test_results = integration_results.get("integration_tests", {})
 
         if test_results:
-            summary += f"**Integration Tests:**\n"
+            summary += "**Integration Tests:**\n"
             summary += f"- Passed: {test_results.get('passed', 0)}\n"
             summary += f"- Failed: {test_results.get('failed', 0)}\n"
             summary += f"- Skipped: {test_results.get('skipped', 0)}\n"
@@ -403,7 +403,9 @@ def generate_integration_test_summary(work_item: dict, gate_results: dict) -> st
 
             throughput = perf_results.get("load_test", {}).get("throughput", {})
             if throughput:
-                summary += f"- Throughput: {throughput.get('requests_per_sec', 'N/A')} req/s\n"
+                summary += (
+                    f"- Throughput: {throughput.get('requests_per_sec', 'N/A')} req/s\n"
+                )
 
             if perf_results.get("regression_detected"):
                 summary += "- ⚠️  Performance regression detected!\n"

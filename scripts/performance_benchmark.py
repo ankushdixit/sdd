@@ -10,10 +10,8 @@ Tracks:
 """
 
 import subprocess
-import json
-import statistics
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Tuple
 from datetime import datetime
 import sys
 
@@ -50,7 +48,9 @@ class PerformanceBenchmark:
         print("Running performance benchmarks...")
 
         if test_endpoint is None:
-            test_endpoint = self.benchmarks.get("endpoint", "http://localhost:8000/health")
+            test_endpoint = self.benchmarks.get(
+                "endpoint", "http://localhost:8000/health"
+            )
 
         # Run load test
         load_test_results = self._run_load_test(test_endpoint)
@@ -92,15 +92,18 @@ class PerformanceBenchmark:
             result = subprocess.run(
                 [
                     "wrk",
-                    "-t", str(threads),
-                    "-c", str(connections),
-                    "-d", f"{duration}s",
+                    "-t",
+                    str(threads),
+                    "-c",
+                    str(connections),
+                    "-d",
+                    f"{duration}s",
                     "--latency",
-                    endpoint
+                    endpoint,
                 ],
                 capture_output=True,
                 text=True,
-                timeout=duration + 30
+                timeout=duration + 30,
             )
 
             # Parse wrk output
@@ -114,12 +117,9 @@ class PerformanceBenchmark:
 
     def _parse_wrk_output(self, output: str) -> dict:
         """Parse wrk output to extract metrics."""
-        results = {
-            "latency": {},
-            "throughput": {}
-        }
+        results = {"latency": {}, "throughput": {}}
 
-        lines = output.split('\n')
+        lines = output.split("\n")
 
         for line in lines:
             if "50.000%" in line or "50%" in line:
@@ -144,10 +144,10 @@ class PerformanceBenchmark:
     def _parse_latency(self, latency_str: str) -> float:
         """Convert latency string (e.g., '1.23ms') to milliseconds."""
         latency_str = latency_str.strip()
-        if 'ms' in latency_str:  # milliseconds
-            return float(latency_str.rstrip('ms'))
-        elif 's' in latency_str:  # seconds
-            return float(latency_str.rstrip('s')) * 1000
+        if "ms" in latency_str:  # milliseconds
+            return float(latency_str.rstrip("ms"))
+        elif "s" in latency_str:  # seconds
+            return float(latency_str.rstrip("s")) * 1000
         return 0.0
 
     def _run_simple_load_test(self, endpoint: str, duration: int) -> dict:
@@ -164,7 +164,7 @@ class PerformanceBenchmark:
         while time.time() - start_time < duration:
             req_start = time.time()
             try:
-                response = requests.get(endpoint, timeout=5)
+                requests.get(endpoint, timeout=5)
                 latency = (time.time() - req_start) * 1000  # Convert to ms
                 latencies.append(latency)
                 request_count += 1
@@ -186,14 +186,14 @@ class PerformanceBenchmark:
                 "p95": latencies[int(len(latencies) * 0.95)],
                 "p99": latencies[int(len(latencies) * 0.99)],
             },
-            "throughput": {
-                "requests_per_sec": request_count / total_duration
-            }
+            "throughput": {"requests_per_sec": request_count / total_duration},
         }
 
     def _measure_resource_usage(self) -> dict:
         """Measure CPU and memory usage of services."""
-        services = self.work_item.get("environment_requirements", {}).get("services_required", [])
+        services = self.work_item.get("environment_requirements", {}).get(
+            "services_required", []
+        )
 
         resource_usage = {}
 
@@ -204,7 +204,7 @@ class PerformanceBenchmark:
                     ["docker-compose", "ps", "-q", service],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=5,
                 )
 
                 container_id = result.stdout.strip()
@@ -213,18 +213,24 @@ class PerformanceBenchmark:
 
                 # Get resource stats
                 stats_result = subprocess.run(
-                    ["docker", "stats", container_id, "--no-stream", "--format",
-                     "{{.CPUPerc}},{{.MemUsage}}"],
+                    [
+                        "docker",
+                        "stats",
+                        container_id,
+                        "--no-stream",
+                        "--format",
+                        "{{.CPUPerc}},{{.MemUsage}}",
+                    ],
                     capture_output=True,
                     text=True,
-                    timeout=10
+                    timeout=10,
                 )
 
                 if stats_result.returncode == 0:
-                    parts = stats_result.stdout.strip().split(',')
+                    parts = stats_result.stdout.strip().split(",")
                     resource_usage[service] = {
-                        "cpu_percent": parts[0].rstrip('%'),
-                        "memory_usage": parts[1]
+                        "cpu_percent": parts[0].rstrip("%"),
+                        "memory_usage": parts[1],
                     }
 
             except Exception as e:
@@ -242,18 +248,24 @@ class PerformanceBenchmark:
 
         # Check response time requirements
         if "p50" in requirements:
-            if latency.get("p50", float('inf')) > requirements["p50"]:
-                print(f"  ✗ p50 latency {latency.get('p50')}ms exceeds requirement {requirements['p50']}ms")
+            if latency.get("p50", float("inf")) > requirements["p50"]:
+                print(
+                    f"  ✗ p50 latency {latency.get('p50')}ms exceeds requirement {requirements['p50']}ms"
+                )
                 passed = False
 
         if "p95" in requirements:
-            if latency.get("p95", float('inf')) > requirements["p95"]:
-                print(f"  ✗ p95 latency {latency.get('p95')}ms exceeds requirement {requirements['p95']}ms")
+            if latency.get("p95", float("inf")) > requirements["p95"]:
+                print(
+                    f"  ✗ p95 latency {latency.get('p95')}ms exceeds requirement {requirements['p95']}ms"
+                )
                 passed = False
 
         if "p99" in requirements:
-            if latency.get("p99", float('inf')) > requirements["p99"]:
-                print(f"  ✗ p99 latency {latency.get('p99')}ms exceeds requirement {requirements['p99']}ms")
+            if latency.get("p99", float("inf")) > requirements["p99"]:
+                print(
+                    f"  ✗ p99 latency {latency.get('p99')}ms exceeds requirement {requirements['p99']}ms"
+                )
                 passed = False
 
         # Check throughput requirements
@@ -263,7 +275,9 @@ class PerformanceBenchmark:
         if "minimum" in throughput_req:
             actual_rps = throughput.get("requests_per_sec", 0)
             if actual_rps < throughput_req["minimum"]:
-                print(f"  ✗ Throughput {actual_rps} req/s below minimum {throughput_req['minimum']} req/s")
+                print(
+                    f"  ✗ Throughput {actual_rps} req/s below minimum {throughput_req['minimum']} req/s"
+                )
                 passed = False
 
         return passed
@@ -294,8 +308,10 @@ class PerformanceBenchmark:
             baseline_val = baseline_latency.get(percentile, 0)
 
             if baseline_val > 0 and current > baseline_val * regression_threshold:
-                print(f"  ⚠️  Performance regression detected: {percentile} increased from "
-                      f"{baseline_val}ms to {current}ms ({((current/baseline_val - 1) * 100):.1f}% slower)")
+                print(
+                    f"  ⚠️  Performance regression detected: {percentile} increased from "
+                    f"{baseline_val}ms to {current}ms ({((current / baseline_val - 1) * 100):.1f}% slower)"
+                )
                 return True
 
         return False
@@ -313,7 +329,7 @@ class PerformanceBenchmark:
             "throughput": self.results.get("load_test", {}).get("throughput", {}),
             "resource_usage": self.results.get("resource_usage", {}),
             "timestamp": datetime.now().isoformat(),
-            "session": self._get_current_session()
+            "session": self._get_current_session(),
         }
 
         save_json(self.baselines_file, baselines)
@@ -335,17 +351,17 @@ class PerformanceBenchmark:
 
         report = f"""
 Performance Benchmark Report
-{'='*80}
+{"=" * 80}
 
 Latency:
-  p50: {latency.get('p50', 'N/A')} ms
-  p75: {latency.get('p75', 'N/A')} ms
-  p90: {latency.get('p90', 'N/A')} ms
-  p95: {latency.get('p95', 'N/A')} ms
-  p99: {latency.get('p99', 'N/A')} ms
+  p50: {latency.get("p50", "N/A")} ms
+  p75: {latency.get("p75", "N/A")} ms
+  p90: {latency.get("p90", "N/A")} ms
+  p95: {latency.get("p95", "N/A")} ms
+  p99: {latency.get("p99", "N/A")} ms
 
 Throughput:
-  Requests/sec: {throughput.get('requests_per_sec', 'N/A')}
+  Requests/sec: {throughput.get("requests_per_sec", "N/A")}
 
 Resource Usage:
 """

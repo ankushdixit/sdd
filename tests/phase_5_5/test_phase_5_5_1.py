@@ -3,7 +3,6 @@
 Test script for Phase 5.5.1 - Enhanced Integration Test Work Item Type
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -36,23 +35,20 @@ def test_integration_test_validation():
                 "name": "Happy path",
                 "setup": "Services running",
                 "actions": ["Send request", "Verify response"],
-                "expected_results": "HTTP 200"
+                "expected_results": "HTTP 200",
             }
         ],
         "performance_benchmarks": {
             "response_time": {"p50": 100, "p95": 500},
-            "throughput": {"min": 100, "target": 500}
+            "throughput": {"min": 100, "target": 500},
         },
         "api_contracts": [
-            {
-                "contract_file": "contracts/service-a-to-b.yaml",
-                "version": "1.0.0"
-            }
+            {"contract_file": "contracts/service-a-to-b.yaml", "version": "1.0.0"}
         ],
         "environment_requirements": {
             "services_required": ["service-a", "service-b", "postgres"]
         },
-        "dependencies": ["FEAT-001", "FEAT-002"]
+        "dependencies": ["FEAT-001", "FEAT-002"],
     }
 
     is_valid, errors = manager.validate_integration_test(valid_work_item)

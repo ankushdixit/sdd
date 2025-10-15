@@ -356,11 +356,7 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
 def check_command_exists(command: str) -> bool:
     """Check if a command is available."""
     try:
-        subprocess.run(
-            [command, "--version"],
-            capture_output=True,
-            timeout=5
-        )
+        subprocess.run([command, "--version"], capture_output=True, timeout=5)
         return True
     except:
         return False
@@ -402,7 +398,9 @@ def generate_integration_test_briefing(work_item: dict) -> str:
     if scenarios:
         briefing += f"**Test Scenarios ({len(scenarios)} total):**\n"
         for i, scenario in enumerate(scenarios[:5], 1):  # Show first 5
-            scenario_name = scenario.get("name", scenario.get("description", f"Scenario {i}"))
+            scenario_name = scenario.get(
+                "name", scenario.get("description", f"Scenario {i}")
+            )
             briefing += f"{i}. {scenario_name}\n"
 
         if len(scenarios) > 5:
@@ -441,10 +439,14 @@ def generate_integration_test_briefing(work_item: dict) -> str:
 
     # Check Docker Compose
     compose_available = check_command_exists("docker-compose")
-    briefing += f"- Docker Compose: {'✓ Available' if compose_available else '✗ Not found'}\n"
+    briefing += (
+        f"- Docker Compose: {'✓ Available' if compose_available else '✗ Not found'}\n"
+    )
 
     # Check compose file
-    compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
+    compose_file = env_requirements.get(
+        "compose_file", "docker-compose.integration.yml"
+    )
     compose_exists = Path(compose_file).exists()
     briefing += f"- Compose file ({compose_file}): {'✓ Found' if compose_exists else '✗ Missing'}\n"
 
@@ -498,6 +500,7 @@ def generate_deployment_briefing(work_item: dict) -> str:
     briefing.append("\n**Pre-Session Environment Checks:**")
     try:
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent))
         from environment_validator import EnvironmentValidator
 
@@ -505,7 +508,9 @@ def generate_deployment_briefing(work_item: dict) -> str:
         validator = EnvironmentValidator(environment)
         passed, results = validator.validate_all()
 
-        briefing.append(f"  Environment validation: {'✓ PASSED' if passed else '✗ FAILED'}")
+        briefing.append(
+            f"  Environment validation: {'✓ PASSED' if passed else '✗ FAILED'}"
+        )
         for validation in results.get("validations", []):
             status = "✓" if validation["passed"] else "✗"
             briefing.append(f"    {status} {validation['name']}")

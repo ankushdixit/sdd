@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Check if PyYAML is available
 try:
     import yaml
+
     YAML_AVAILABLE = True
 except ImportError:
     YAML_AVAILABLE = False
@@ -40,11 +41,8 @@ def test_api_contract_validator_class():
         "type": "integration_test",
         "title": "API Contract Test",
         "api_contracts": [
-            {
-                "contract_file": "contracts/api-v1.yaml",
-                "version": "1.0.0"
-            }
-        ]
+            {"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}
+        ],
     }
 
     try:
@@ -65,7 +63,7 @@ def test_api_contract_validator_class():
         "_load_spec",
         "_check_endpoint_changes",
         "_check_parameter_changes",
-        "generate_report"
+        "generate_report",
     ]
 
     for method in required_methods:
@@ -153,7 +151,7 @@ paths:
 
         work_item = {
             "id": "TEST-001",
-            "api_contracts": [{"contract_file": str(valid_yaml_contract)}]
+            "api_contracts": [{"contract_file": str(valid_yaml_contract)}],
         }
         validator = APIContractValidator(work_item)
 
@@ -168,18 +166,23 @@ paths:
         # Test 2: Valid OpenAPI JSON file
         print("Test 2: Valid OpenAPI JSON file")
         valid_json_contract = temp_dir / "valid-api.json"
-        valid_json_contract.write_text(json.dumps({
-            "openapi": "3.0.0",
-            "info": {"title": "Test API", "version": "1.0.0"},
-            "paths": {
-                "/users": {
-                    "get": {
-                        "summary": "Get users",
-                        "responses": {"200": {"description": "Success"}}
-                    }
-                }
-            }
-        }, indent=2))
+        valid_json_contract.write_text(
+            json.dumps(
+                {
+                    "openapi": "3.0.0",
+                    "info": {"title": "Test API", "version": "1.0.0"},
+                    "paths": {
+                        "/users": {
+                            "get": {
+                                "summary": "Get users",
+                                "responses": {"200": {"description": "Success"}},
+                            }
+                        }
+                    },
+                },
+                indent=2,
+            )
+        )
 
         if validator._validate_contract_file(str(valid_json_contract)):
             print("✅ PASS: Valid JSON contract accepted")
@@ -234,7 +237,9 @@ info:
         # Clean up temporary directory
         shutil.rmtree(temp_dir)
 
-    print(f"Contract validation tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Contract validation tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -324,12 +329,12 @@ paths:
         validator = APIContractValidator(work_item)
 
         changes = validator._detect_breaking_changes(
-            str(v2_removed_endpoint),
-            str(v1_contract)
+            str(v2_removed_endpoint), str(v1_contract)
         )
 
-        removed_endpoint = any(c["type"] == "removed_endpoint" and "/posts" in c["path"]
-                              for c in changes)
+        removed_endpoint = any(
+            c["type"] == "removed_endpoint" and "/posts" in c["path"] for c in changes
+        )
         if removed_endpoint:
             print("✅ PASS: Removed endpoint detected")
             tests_passed += 1
@@ -368,13 +373,15 @@ paths:
 """)
 
         changes = validator._detect_breaking_changes(
-            str(v2_removed_method),
-            str(v1_contract)
+            str(v2_removed_method), str(v1_contract)
         )
 
-        removed_method = any(c["type"] == "removed_method" and
-                           c["method"] == "POST" and "/users" in c["path"]
-                           for c in changes)
+        removed_method = any(
+            c["type"] == "removed_method"
+            and c["method"] == "POST"
+            and "/users" in c["path"]
+            for c in changes
+        )
         if removed_method:
             print("✅ PASS: Removed HTTP method detected")
             tests_passed += 1
@@ -419,13 +426,13 @@ paths:
 """)
 
         changes = validator._detect_breaking_changes(
-            str(v2_removed_param),
-            str(v1_contract)
+            str(v2_removed_param), str(v1_contract)
         )
 
-        removed_param = any(c["type"] == "removed_required_parameter" and
-                          c["parameter"] == "id"
-                          for c in changes)
+        removed_param = any(
+            c["type"] == "removed_required_parameter" and c["parameter"] == "id"
+            for c in changes
+        )
         if removed_param:
             print("✅ PASS: Removed required parameter detected")
             tests_passed += 1
@@ -480,13 +487,13 @@ paths:
 """)
 
         changes = validator._detect_breaking_changes(
-            str(v2_added_param),
-            str(v1_contract)
+            str(v2_added_param), str(v1_contract)
         )
 
-        added_param = any(c["type"] == "added_required_parameter" and
-                         c["parameter"] == "email"
-                         for c in changes)
+        added_param = any(
+            c["type"] == "added_required_parameter" and c["parameter"] == "email"
+            for c in changes
+        )
         if added_param:
             print("✅ PASS: Added required parameter detected")
             tests_passed += 1
@@ -547,8 +554,7 @@ paths:
 """)
 
         changes = validator._detect_breaking_changes(
-            str(v2_compatible),
-            str(v1_contract)
+            str(v2_compatible), str(v1_contract)
         )
 
         if len(changes) == 0:
@@ -563,7 +569,9 @@ paths:
         # Clean up temporary directory
         shutil.rmtree(temp_dir)
 
-    print(f"Breaking change detection tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Breaking change detection tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -591,17 +599,19 @@ def test_report_generation():
                 "type": "removed_endpoint",
                 "path": "/users",
                 "severity": "high",
-                "message": "Endpoint removed: /users"
+                "message": "Endpoint removed: /users",
             }
         ],
         "warnings": [],
-        "passed": False
+        "passed": False,
     }
 
     report = validator.generate_report()
-    if ("Contracts Validated: 2" in report and
-        "Breaking Changes: 1" in report and
-        "FAILED" in report):
+    if (
+        "Contracts Validated: 2" in report
+        and "Breaking Changes: 1" in report
+        and "FAILED" in report
+    ):
         print("✅ PASS: Report with breaking changes generated correctly")
         tests_passed += 1
     else:
@@ -615,13 +625,15 @@ def test_report_generation():
         "contracts_validated": 3,
         "breaking_changes": [],
         "warnings": ["Optional parameter added"],
-        "passed": True
+        "passed": True,
     }
 
     report = validator.generate_report()
-    if ("Contracts Validated: 3" in report and
-        "Breaking Changes: 0" in report and
-        "PASSED" in report):
+    if (
+        "Contracts Validated: 3" in report
+        and "Breaking Changes: 0" in report
+        and "PASSED" in report
+    ):
         print("✅ PASS: Report with no breaking changes generated correctly")
         tests_passed += 1
     else:
@@ -629,7 +641,9 @@ def test_report_generation():
         tests_failed += 1
     print()
 
-    print(f"Report generation tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Report generation tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -660,6 +674,7 @@ def test_file_structure():
     # Test 2: File is executable
     print("Test 2: File has executable permissions")
     import os
+
     if os.access(file_path, os.X_OK):
         print("✅ PASS: File is executable")
         tests_passed += 1
@@ -676,7 +691,7 @@ def test_file_structure():
         "import yaml",
         "from pathlib import Path",
         "from typing import",
-        "from scripts.file_ops import"
+        "from scripts.file_ops import",
     ]
 
     for imp in required_imports:

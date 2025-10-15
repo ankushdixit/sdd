@@ -38,10 +38,7 @@ def test_integration_quality_gate_methods():
 
     # Test 2: Integration test methods exist
     print("Test 2: Integration quality gate methods exist")
-    integration_methods = [
-        "run_integration_tests",
-        "validate_integration_environment"
-    ]
+    integration_methods = ["run_integration_tests", "validate_integration_environment"]
 
     for method in integration_methods:
         if hasattr(gates, method):
@@ -54,11 +51,7 @@ def test_integration_quality_gate_methods():
 
     # Test 3: Skips non-integration work items
     print("Test 3: Skips non-integration work items")
-    work_item = {
-        "id": "FEAT-001",
-        "type": "feature",
-        "title": "Regular Feature"
-    }
+    work_item = {"id": "FEAT-001", "type": "feature", "title": "Regular Feature"}
 
     passed, results = gates.run_integration_tests(work_item)
     if passed and results.get("status") == "skipped":
@@ -76,7 +69,9 @@ def test_integration_quality_gate_methods():
         print("✅ PASS: Environment validation skipped for non-integration work items")
         tests_passed += 1
     else:
-        print("❌ FAIL: Should skip environment validation for non-integration work items")
+        print(
+            "❌ FAIL: Should skip environment validation for non-integration work items"
+        )
         tests_failed += 1
     print()
 
@@ -86,16 +81,14 @@ def test_integration_quality_gate_methods():
     # Create temp config with integration tests disabled
     temp_dir = Path(tempfile.mkdtemp())
     temp_config = temp_dir / "config.json"
-    temp_config.write_text(json.dumps({
-        "integration_tests": {"enabled": False}
-    }))
+    temp_config.write_text(json.dumps({"integration_tests": {"enabled": False}}))
 
     gates_disabled = QualityGates(config_path=temp_config)
 
     work_item = {
         "id": "INTEG-001",
         "type": "integration_test",
-        "title": "Integration Test"
+        "title": "Integration Test",
     }
 
     passed, results = gates_disabled.run_integration_tests(work_item)
@@ -139,9 +132,7 @@ def test_environment_validation():
     work_item = {
         "id": "INTEG-001",
         "type": "integration_test",
-        "environment_requirements": {
-            "compose_file": "docker-compose.integration.yml"
-        }
+        "environment_requirements": {"compose_file": "docker-compose.integration.yml"},
     }
 
     passed, results = gates.validate_integration_environment(work_item)
@@ -172,9 +163,7 @@ def test_environment_validation():
     work_item_missing = {
         "id": "INTEG-002",
         "type": "integration_test",
-        "environment_requirements": {
-            "compose_file": "nonexistent-compose.yml"
-        }
+        "environment_requirements": {"compose_file": "nonexistent-compose.yml"},
     }
 
     passed, results = gates.validate_integration_environment(work_item_missing)
@@ -194,14 +183,19 @@ def test_environment_validation():
         "type": "integration_test",
         "environment_requirements": {
             "compose_file": "docker-compose.integration.yml",
-            "config_files": ["missing-config.yml", "another-missing.json"]
-        }
+            "config_files": ["missing-config.yml", "another-missing.json"],
+        },
     }
 
     passed, results = gates.validate_integration_environment(work_item_config)
 
-    missing_count = len([f for f in results.get("missing_config", [])
-                        if "missing-config.yml" in f or "another-missing.json" in f])
+    missing_count = len(
+        [
+            f
+            for f in results.get("missing_config", [])
+            if "missing-config.yml" in f or "another-missing.json" in f
+        ]
+    )
     if missing_count >= 2:
         print("✅ PASS: Missing config files detected")
         tests_passed += 1
@@ -212,8 +206,13 @@ def test_environment_validation():
 
     # Test 5: Results dictionary structure
     print("Test 5: Results dictionary has correct structure")
-    expected_keys = ["docker_available", "docker_compose_available",
-                    "required_services", "missing_config", "passed"]
+    expected_keys = [
+        "docker_available",
+        "docker_compose_available",
+        "required_services",
+        "missing_config",
+        "passed",
+    ]
 
     all_keys_present = all(key in results for key in expected_keys)
     if all_keys_present:
@@ -224,7 +223,9 @@ def test_environment_validation():
         tests_failed += 1
     print()
 
-    print(f"Environment validation tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Environment validation tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -248,14 +249,12 @@ def test_integration_gate_configuration():
         print("Test 1: Load config with integration_tests section")
         config_file = temp_dir / "config.json"
         config_data = {
-            "quality_gates": {
-                "test_execution": {"enabled": True}
-            },
+            "quality_gates": {"test_execution": {"enabled": True}},
             "integration_tests": {
                 "enabled": True,
                 "performance_benchmarks": {"required": True},
-                "api_contracts": {"required": True}
-            }
+                "api_contracts": {"required": True},
+            },
         }
         config_file.write_text(json.dumps(config_data, indent=2))
 
@@ -268,11 +267,7 @@ def test_integration_gate_configuration():
 
         # Test 2: Integration gate respects enabled flag
         print("Test 2: Integration gate respects enabled flag")
-        work_item = {
-            "id": "INTEG-001",
-            "type": "integration_test",
-            "title": "Test"
-        }
+        work_item = {"id": "INTEG-001", "type": "integration_test", "title": "Test"}
 
         # Should not be skipped since enabled is True
         passed, results = gates.run_integration_tests(work_item)
@@ -393,7 +388,9 @@ def test_file_enhancements():
         tests_failed += 1
     print()
 
-    print(f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed

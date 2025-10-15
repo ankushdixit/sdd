@@ -11,11 +11,8 @@ Validates:
 - Infrastructure (load balancers, DNS)
 """
 
-import subprocess
-import json
 import os
-from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 
 class EnvironmentValidator:
@@ -58,10 +55,9 @@ class EnvironmentValidator:
             value = os.environ.get(var)
             check_passed = value is not None and value != ""
 
-            results["checks"].append({
-                "name": f"Environment variable: {var}",
-                "passed": check_passed
-            })
+            results["checks"].append(
+                {"name": f"Environment variable: {var}", "passed": check_passed}
+            )
 
             if not check_passed:
                 results["passed"] = False
@@ -165,44 +161,58 @@ class EnvironmentValidator:
 
         # Connectivity
         passed, results = self.validate_connectivity()
-        all_results["validations"].append({"name": "Connectivity", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Connectivity", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 
         # Configuration
         if required_env_vars:
             passed, results = self.validate_configuration(required_env_vars)
-            all_results["validations"].append({"name": "Configuration", "passed": passed, "details": results})
+            all_results["validations"].append(
+                {"name": "Configuration", "passed": passed, "details": results}
+            )
             if not passed:
                 all_results["passed"] = False
 
         # Dependencies
         passed, results = self.validate_dependencies()
-        all_results["validations"].append({"name": "Dependencies", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Dependencies", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 
         # Health checks
         passed, results = self.validate_health_checks()
-        all_results["validations"].append({"name": "Health Checks", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Health Checks", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 
         # Monitoring
         passed, results = self.validate_monitoring()
-        all_results["validations"].append({"name": "Monitoring", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Monitoring", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 
         # Infrastructure
         passed, results = self.validate_infrastructure()
-        all_results["validations"].append({"name": "Infrastructure", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Infrastructure", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 
         # Capacity
         passed, results = self.validate_capacity()
-        all_results["validations"].append({"name": "Capacity", "passed": passed, "details": results})
+        all_results["validations"].append(
+            {"name": "Capacity", "passed": passed, "details": results}
+        )
         if not passed:
             all_results["passed"] = False
 

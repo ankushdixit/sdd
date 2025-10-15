@@ -1101,10 +1101,10 @@ def main():
     add_parser.add_argument("--context", type=str, help="Additional context")
 
     # Report command (legacy)
-    report_parser = subparsers.add_parser("report", help="Generate summary report")
+    subparsers.add_parser("report", help="Generate summary report")
 
     # Statistics command
-    stats_parser = subparsers.add_parser("statistics", help="Show learning statistics")
+    subparsers.add_parser("statistics", help="Show learning statistics")
 
     # Timeline command
     timeline_parser = subparsers.add_parser("timeline", help="Show learning timeline")

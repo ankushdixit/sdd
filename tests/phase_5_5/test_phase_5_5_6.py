@@ -38,11 +38,7 @@ def test_integration_documentation_validation():
 
     # Test 2: Skips non-integration work items
     print("Test 2: Skips non-integration work items")
-    work_item = {
-        "id": "FEAT-001",
-        "type": "feature",
-        "title": "Regular Feature"
-    }
+    work_item = {"id": "FEAT-001", "type": "feature", "title": "Regular Feature"}
 
     passed, results = gates.validate_integration_documentation(work_item)
     if passed and results.get("status") == "skipped":
@@ -60,7 +56,7 @@ def test_integration_documentation_validation():
         "type": "integration_test",
         "title": "Integration Test",
         "scope": "Test scope description with sufficient detail",
-        "test_scenarios": []
+        "test_scenarios": [],
     }
 
     passed, results = gates.validate_integration_documentation(work_item)
@@ -115,7 +111,7 @@ def test_architecture_diagram_validation():
                     "architecture_diagrams": True,
                     "sequence_diagrams": False,
                     "contract_documentation": False,
-                    "performance_baseline_docs": False
+                    "performance_baseline_docs": False,
                 }
             }
         }
@@ -130,14 +126,18 @@ def test_architecture_diagram_validation():
             "type": "integration_test",
             "title": "Test",
             "scope": "Test scope with sufficient detail here",
-            "test_scenarios": []
+            "test_scenarios": [],
         }
 
         passed, results = gates.validate_integration_documentation(work_item)
 
-        has_arch_check = any(c["name"] == "Integration architecture diagram"
-                            for c in results.get("checks", []))
-        if has_arch_check and "Integration architecture diagram" in results.get("missing", []):
+        has_arch_check = any(
+            c["name"] == "Integration architecture diagram"
+            for c in results.get("checks", [])
+        )
+        if has_arch_check and "Integration architecture diagram" in results.get(
+            "missing", []
+        ):
             print("✅ PASS: Missing architecture diagram detected")
             tests_passed += 1
         else:
@@ -154,6 +154,7 @@ def test_architecture_diagram_validation():
 
         # Change to temp directory for test
         import os
+
         original_dir = os.getcwd()
         os.chdir(temp_dir)
 
@@ -161,8 +162,14 @@ def test_architecture_diagram_validation():
 
         os.chdir(original_dir)
 
-        arch_check = next((c for c in results.get("checks", [])
-                          if c["name"] == "Integration architecture diagram"), None)
+        arch_check = next(
+            (
+                c
+                for c in results.get("checks", [])
+                if c["name"] == "Integration architecture diagram"
+            ),
+            None,
+        )
         if arch_check and arch_check["passed"]:
             print("✅ PASS: Architecture diagram found in docs/")
             tests_passed += 1
@@ -174,7 +181,9 @@ def test_architecture_diagram_validation():
     finally:
         shutil.rmtree(temp_dir)
 
-    print(f"Architecture diagram tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Architecture diagram tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -202,7 +211,7 @@ def test_sequence_diagram_validation():
                     "architecture_diagrams": False,
                     "sequence_diagrams": True,
                     "contract_documentation": False,
-                    "performance_baseline_docs": False
+                    "performance_baseline_docs": False,
                 }
             }
         }
@@ -221,13 +230,14 @@ def test_sequence_diagram_validation():
             "type": "integration_test",
             "title": "Test",
             "scope": "Test scope with sufficient detail here",
-            "test_scenarios": [{"name": "Scenario 1"}]
+            "test_scenarios": [{"name": "Scenario 1"}],
         }
 
         spec_file = specs_dir / "INTEG-001.md"
         spec_file.write_text("# Integration Test\n\nNo diagrams here")
 
         import os
+
         original_dir = os.getcwd()
         os.chdir(temp_dir)
 
@@ -267,8 +277,10 @@ sequenceDiagram
         passed, results = gates.validate_integration_documentation(work_item)
         os.chdir(original_dir)
 
-        seq_check = next((c for c in results.get("checks", [])
-                         if c["name"] == "Sequence diagrams"), None)
+        seq_check = next(
+            (c for c in results.get("checks", []) if c["name"] == "Sequence diagrams"),
+            None,
+        )
         if seq_check and seq_check["passed"]:
             print("✅ PASS: Mermaid sequence diagram found")
             tests_passed += 1
@@ -291,8 +303,10 @@ sequenceDiagram
         passed, results = gates.validate_integration_documentation(work_item)
         os.chdir(original_dir)
 
-        seq_check = next((c for c in results.get("checks", [])
-                         if c["name"] == "Sequence diagrams"), None)
+        seq_check = next(
+            (c for c in results.get("checks", []) if c["name"] == "Sequence diagrams"),
+            None,
+        )
         if seq_check and seq_check["passed"]:
             print("✅ PASS: Scenario sections found")
             tests_passed += 1
@@ -304,7 +318,9 @@ sequenceDiagram
     finally:
         shutil.rmtree(temp_dir)
 
-    print(f"Sequence diagram tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Sequence diagram tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -332,7 +348,7 @@ def test_api_contract_documentation():
                     "architecture_diagrams": False,
                     "sequence_diagrams": False,
                     "contract_documentation": True,
-                    "performance_baseline_docs": False
+                    "performance_baseline_docs": False,
                 }
             }
         }
@@ -349,19 +365,22 @@ def test_api_contract_documentation():
             "scope": "Test scope with sufficient detail here",
             "api_contracts": [
                 {"contract_file": "contracts/api-v1.yaml"},
-                {"contract_file": "contracts/api-v2.json"}
-            ]
+                {"contract_file": "contracts/api-v2.json"},
+            ],
         }
 
         passed, results = gates.validate_integration_documentation(work_item)
 
-        missing_contracts = [m for m in results.get("missing", [])
-                            if "contract" in m.lower()]
+        missing_contracts = [
+            m for m in results.get("missing", []) if "contract" in m.lower()
+        ]
         if len(missing_contracts) == 2:
             print("✅ PASS: Missing contract files detected")
             tests_passed += 1
         else:
-            print(f"❌ FAIL: Should detect 2 missing contracts, found {len(missing_contracts)}")
+            print(
+                f"❌ FAIL: Should detect 2 missing contracts, found {len(missing_contracts)}"
+            )
             tests_failed += 1
         print()
 
@@ -373,6 +392,7 @@ def test_api_contract_documentation():
         (contracts_dir / "api-v2.json").write_text('{"openapi": "3.0.0"}')
 
         import os
+
         original_dir = os.getcwd()
         os.chdir(temp_dir)
 
@@ -380,8 +400,14 @@ def test_api_contract_documentation():
 
         os.chdir(original_dir)
 
-        contract_check = next((c for c in results.get("checks", [])
-                              if c["name"] == "API contracts documented"), None)
+        contract_check = next(
+            (
+                c
+                for c in results.get("checks", [])
+                if c["name"] == "API contracts documented"
+            ),
+            None,
+        )
         if contract_check and contract_check["passed"]:
             print("✅ PASS: Existing contract files validated")
             tests_passed += 1
@@ -421,7 +447,7 @@ def test_performance_baseline_documentation():
                     "architecture_diagrams": False,
                     "sequence_diagrams": False,
                     "contract_documentation": False,
-                    "performance_baseline_docs": True
+                    "performance_baseline_docs": True,
                 }
             }
         }
@@ -436,7 +462,7 @@ def test_performance_baseline_documentation():
             "type": "integration_test",
             "title": "Test",
             "scope": "Test scope with sufficient detail here",
-            "performance_benchmarks": {"p50": 100}
+            "performance_benchmarks": {"p50": 100},
         }
 
         passed, results = gates.validate_integration_documentation(work_item)
@@ -457,6 +483,7 @@ def test_performance_baseline_documentation():
         baseline_file.write_text('{"INTEG-001": {"p50": 80}}')
 
         import os
+
         original_dir = os.getcwd()
         os.chdir(temp_dir)
 
@@ -464,8 +491,14 @@ def test_performance_baseline_documentation():
 
         os.chdir(original_dir)
 
-        baseline_check = next((c for c in results.get("checks", [])
-                              if c["name"] == "Performance baseline documented"), None)
+        baseline_check = next(
+            (
+                c
+                for c in results.get("checks", [])
+                if c["name"] == "Performance baseline documented"
+            ),
+            None,
+        )
         if baseline_check and baseline_check["passed"]:
             print("✅ PASS: Existing baseline file validated")
             tests_passed += 1
@@ -477,7 +510,9 @@ def test_performance_baseline_documentation():
     finally:
         shutil.rmtree(temp_dir)
 
-    print(f"Performance baseline tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Performance baseline tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
@@ -501,7 +536,7 @@ def test_integration_points_documentation():
         "id": "INTEG-001",
         "type": "integration_test",
         "title": "Test",
-        "scope": "Short"
+        "scope": "Short",
     }
 
     passed, results = gates.validate_integration_documentation(work_item)
@@ -516,12 +551,20 @@ def test_integration_points_documentation():
 
     # Test 2: Documented integration points (detailed scope)
     print("Test 2: Documented integration points (detailed scope)")
-    work_item["scope"] = "This is a detailed scope describing the integration between Service A and Service B with sufficient detail"
+    work_item["scope"] = (
+        "This is a detailed scope describing the integration between Service A and Service B with sufficient detail"
+    )
 
     passed, results = gates.validate_integration_documentation(work_item)
 
-    points_check = next((c for c in results.get("checks", [])
-                        if c["name"] == "Integration points documented"), None)
+    points_check = next(
+        (
+            c
+            for c in results.get("checks", [])
+            if c["name"] == "Integration points documented"
+        ),
+        None,
+    )
     if points_check and points_check["passed"]:
         print("✅ PASS: Integration points documented")
         tests_passed += 1
@@ -530,7 +573,9 @@ def test_integration_points_documentation():
         tests_failed += 1
     print()
 
-    print(f"Integration points tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"Integration points tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed

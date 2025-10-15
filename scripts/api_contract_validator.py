@@ -12,7 +12,7 @@ Supports:
 import json
 import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import List, Tuple
 import sys
 
 # Add parent directory to path for imports
@@ -36,7 +36,7 @@ class APIContractValidator:
             "contracts_validated": 0,
             "breaking_changes": [],
             "warnings": [],
-            "passed": False
+            "passed": False,
         }
 
     def validate_contracts(self) -> Tuple[bool, dict]:
@@ -65,12 +65,11 @@ class APIContractValidator:
             previous_version = contract.get("previous_version")
             if previous_version:
                 breaking_changes = self._detect_breaking_changes(
-                    contract_file,
-                    previous_version
+                    contract_file, previous_version
                 )
                 if breaking_changes:
                     self.results["breaking_changes"].extend(breaking_changes)
-                    if contract.get("allow_breaking_changes", False) == False:
+                    if not contract.get("allow_breaking_changes", False):
                         all_passed = False
 
             self.results["contracts_validated"] += 1
@@ -96,7 +95,7 @@ class APIContractValidator:
 
         # Load contract
         try:
-            if contract_file.endswith('.yaml') or contract_file.endswith('.yml'):
+            if contract_file.endswith(".yaml") or contract_file.endswith(".yml"):
                 with open(contract_path) as f:
                     spec = yaml.safe_load(f)
             else:
@@ -119,7 +118,9 @@ class APIContractValidator:
         print(f"  ✓ Contract valid: {contract_file}")
         return True
 
-    def _detect_breaking_changes(self, current_file: str, previous_file: str) -> List[dict]:
+    def _detect_breaking_changes(
+        self, current_file: str, previous_file: str
+    ) -> List[dict]:
         """
         Detect breaking changes between contract versions.
 
@@ -145,19 +146,19 @@ class APIContractValidator:
 
         removed_paths = previous_paths - current_paths
         for path in removed_paths:
-            breaking_changes.append({
-                "type": "removed_endpoint",
-                "path": path,
-                "severity": "high",
-                "message": f"Endpoint removed: {path}"
-            })
+            breaking_changes.append(
+                {
+                    "type": "removed_endpoint",
+                    "path": path,
+                    "severity": "high",
+                    "message": f"Endpoint removed: {path}",
+                }
+            )
 
         # Check for modified endpoints
         for path in previous_paths & current_paths:
             endpoint_changes = self._check_endpoint_changes(
-                path,
-                previous_spec["paths"][path],
-                current_spec["paths"][path]
+                path, previous_spec["paths"][path], current_spec["paths"][path]
             )
             breaking_changes.extend(endpoint_changes)
 
@@ -166,7 +167,7 @@ class APIContractValidator:
             for change in breaking_changes:
                 print(f"     - {change['type']}: {change['message']}")
         else:
-            print(f"  ✓ No breaking changes detected")
+            print("  ✓ No breaking changes detected")
 
         return breaking_changes
 
@@ -174,14 +175,16 @@ class APIContractValidator:
         """Load OpenAPI/Swagger spec from file."""
         path = Path(file_path)
 
-        if file_path.endswith('.yaml') or file_path.endswith('.yml'):
+        if file_path.endswith(".yaml") or file_path.endswith(".yml"):
             with open(path) as f:
                 return yaml.safe_load(f)
         else:
             with open(path) as f:
                 return json.load(f)
 
-    def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> List[dict]:
+    def _check_endpoint_changes(
+        self, path: str, previous: dict, current: dict
+    ) -> List[dict]:
         """Check for breaking changes in a specific endpoint."""
         changes = []
 
@@ -191,29 +194,29 @@ class APIContractValidator:
 
         removed_methods = previous_methods - current_methods
         for method in removed_methods:
-            changes.append({
-                "type": "removed_method",
-                "path": path,
-                "method": method.upper(),
-                "severity": "high",
-                "message": f"HTTP method removed: {method.upper()} {path}"
-            })
+            changes.append(
+                {
+                    "type": "removed_method",
+                    "path": path,
+                    "method": method.upper(),
+                    "severity": "high",
+                    "message": f"HTTP method removed: {method.upper()} {path}",
+                }
+            )
 
         # Check parameters for common methods
         for method in previous_methods & current_methods:
             if method in ["get", "post", "put", "patch", "delete"]:
                 param_changes = self._check_parameter_changes(
-                    path,
-                    method,
-                    previous.get(method, {}),
-                    current.get(method, {})
+                    path, method, previous.get(method, {}), current.get(method, {})
                 )
                 changes.extend(param_changes)
 
         return changes
 
-    def _check_parameter_changes(self, path: str, method: str,
-                                 previous: dict, current: dict) -> List[dict]:
+    def _check_parameter_changes(
+        self, path: str, method: str, previous: dict, current: dict
+    ) -> List[dict]:
         """Check for breaking changes in endpoint parameters."""
         changes = []
 
@@ -224,36 +227,42 @@ class APIContractValidator:
         for param_name, param in previous_params.items():
             if param.get("required", False):
                 if param_name not in current_params:
-                    changes.append({
-                        "type": "removed_required_parameter",
-                        "path": path,
-                        "method": method.upper(),
-                        "parameter": param_name,
-                        "severity": "high",
-                        "message": f"Required parameter removed: {param_name} from {method.upper()} {path}"
-                    })
+                    changes.append(
+                        {
+                            "type": "removed_required_parameter",
+                            "path": path,
+                            "method": method.upper(),
+                            "parameter": param_name,
+                            "severity": "high",
+                            "message": f"Required parameter removed: {param_name} from {method.upper()} {path}",
+                        }
+                    )
 
         # Check for newly required parameters (breaking change)
         for param_name, param in current_params.items():
             if param.get("required", False):
                 if param_name not in previous_params:
-                    changes.append({
-                        "type": "added_required_parameter",
-                        "path": path,
-                        "method": method.upper(),
-                        "parameter": param_name,
-                        "severity": "high",
-                        "message": f"New required parameter: {param_name} in {method.upper()} {path}"
-                    })
+                    changes.append(
+                        {
+                            "type": "added_required_parameter",
+                            "path": path,
+                            "method": method.upper(),
+                            "parameter": param_name,
+                            "severity": "high",
+                            "message": f"New required parameter: {param_name} in {method.upper()} {path}",
+                        }
+                    )
                 elif not previous_params[param_name].get("required", False):
-                    changes.append({
-                        "type": "parameter_now_required",
-                        "path": path,
-                        "method": method.upper(),
-                        "parameter": param_name,
-                        "severity": "high",
-                        "message": f"Parameter became required: {param_name} in {method.upper()} {path}"
-                    })
+                    changes.append(
+                        {
+                            "type": "parameter_now_required",
+                            "path": path,
+                            "method": method.upper(),
+                            "parameter": param_name,
+                            "severity": "high",
+                            "message": f"Parameter became required: {param_name} in {method.upper()} {path}",
+                        }
+                    )
 
         return changes
 
@@ -261,21 +270,21 @@ class APIContractValidator:
         """Generate API contract validation report."""
         report = f"""
 API Contract Validation Report
-{'='*80}
+{"=" * 80}
 
-Contracts Validated: {self.results['contracts_validated']}
+Contracts Validated: {self.results["contracts_validated"]}
 
-Breaking Changes: {len(self.results['breaking_changes'])}
+Breaking Changes: {len(self.results["breaking_changes"])}
 """
 
-        if self.results['breaking_changes']:
+        if self.results["breaking_changes"]:
             report += "\nBreaking Changes Detected:\n"
-            for change in self.results['breaking_changes']:
+            for change in self.results["breaking_changes"]:
                 report += f"  • [{change['severity'].upper()}] {change['message']}\n"
 
-        if self.results['warnings']:
+        if self.results["warnings"]:
             report += "\nWarnings:\n"
-            for warning in self.results['warnings']:
+            for warning in self.results["warnings"]:
                 report += f"  • {warning}\n"
 
         report += f"\nStatus: {'PASSED' if self.results['passed'] else 'FAILED'}\n"

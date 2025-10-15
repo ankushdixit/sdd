@@ -34,11 +34,9 @@ def test_performance_benchmark_class():
             "throughput": {"minimum": 100, "target": 500},
             "load_test_duration": 30,
             "threads": 4,
-            "connections": 100
+            "connections": 100,
         },
-        "environment_requirements": {
-            "services_required": ["api", "db"]
-        }
+        "environment_requirements": {"services_required": ["api", "db"]},
     }
 
     try:
@@ -63,7 +61,7 @@ def test_performance_benchmark_class():
         "_check_for_regression",
         "_store_baseline",
         "_get_current_session",
-        "generate_report"
+        "generate_report",
     ]
 
     for method in required_methods:
@@ -144,7 +142,7 @@ def test_performance_benchmark_class():
     benchmark.results = {
         "load_test": {
             "latency": {"p50": 80, "p95": 400, "p99": 900},
-            "throughput": {"requests_per_sec": 150}
+            "throughput": {"requests_per_sec": 150},
         }
     }
     passed = benchmark._check_against_requirements()
@@ -161,7 +159,7 @@ def test_performance_benchmark_class():
     benchmark.results = {
         "load_test": {
             "latency": {"p50": 150, "p95": 400, "p99": 900},
-            "throughput": {"requests_per_sec": 150}
+            "throughput": {"requests_per_sec": 150},
         }
     }
     passed = benchmark._check_against_requirements()
@@ -178,7 +176,7 @@ def test_performance_benchmark_class():
     benchmark.results = {
         "load_test": {
             "latency": {"p50": 80, "p95": 400, "p99": 900},
-            "throughput": {"requests_per_sec": 50}
+            "throughput": {"requests_per_sec": 50},
         }
     }
     passed = benchmark._check_against_requirements()
@@ -186,7 +184,9 @@ def test_performance_benchmark_class():
         print("✅ PASS: Requirements check failed correctly (throughput below minimum)")
         tests_passed += 1
     else:
-        print("❌ FAIL: Requirements check should have failed (throughput below minimum)")
+        print(
+            "❌ FAIL: Requirements check should have failed (throughput below minimum)"
+        )
         tests_failed += 1
     print()
 
@@ -199,11 +199,7 @@ def test_performance_benchmark_class():
     else:
         baseline_backup = None
 
-    benchmark.results = {
-        "load_test": {
-            "latency": {"p50": 80, "p95": 400, "p99": 900}
-        }
-    }
+    benchmark.results = {"load_test": {"latency": {"p50": 80, "p95": 400, "p99": 900}}}
     regression = benchmark._check_for_regression()
     if not regression:
         print("✅ PASS: No regression when no baseline exists")
@@ -223,7 +219,7 @@ def test_performance_benchmark_class():
     baseline_data = {
         "INTEG-001": {
             "latency": {"p50": 80, "p95": 400, "p99": 900},
-            "timestamp": "2024-01-01T10:00:00"
+            "timestamp": "2024-01-01T10:00:00",
         }
     }
     benchmark.baselines_file.parent.mkdir(parents=True, exist_ok=True)
@@ -231,9 +227,7 @@ def test_performance_benchmark_class():
 
     # Set current results with regression
     benchmark.results = {
-        "load_test": {
-            "latency": {"p50": 100, "p95": 500, "p99": 1100}
-        }
+        "load_test": {"latency": {"p50": 100, "p95": 500, "p99": 1100}}
     }
     regression = benchmark._check_for_regression()
     if regression:
@@ -254,11 +248,7 @@ def test_performance_benchmark_class():
     benchmark.baselines_file.write_text(json.dumps(baseline_data, indent=2))
 
     # Set current results without regression
-    benchmark.results = {
-        "load_test": {
-            "latency": {"p50": 85, "p95": 420, "p99": 950}
-        }
-    }
+    benchmark.results = {"load_test": {"latency": {"p50": 85, "p95": 420, "p99": 950}}}
     regression = benchmark._check_for_regression()
     if not regression:
         print("✅ PASS: No regression when within threshold")
@@ -277,18 +267,22 @@ def test_performance_benchmark_class():
     benchmark.results = {
         "load_test": {
             "latency": {"p50": 80, "p75": 150, "p90": 300, "p95": 400, "p99": 900},
-            "throughput": {"requests_per_sec": 150}
+            "throughput": {"requests_per_sec": 150},
         },
         "resource_usage": {
             "api": {"cpu_percent": "45%", "memory_usage": "512MB"},
-            "db": {"cpu_percent": "30%", "memory_usage": "1GB"}
+            "db": {"cpu_percent": "30%", "memory_usage": "1GB"},
         },
         "passed": True,
-        "regression_detected": False
+        "regression_detected": False,
     }
 
     report = benchmark.generate_report()
-    if "Performance Benchmark Report" in report and "PASSED" in report and "p50: 80" in report:
+    if (
+        "Performance Benchmark Report" in report
+        and "PASSED" in report
+        and "p50: 80" in report
+    ):
         print("✅ PASS: Report generated correctly")
         tests_passed += 1
     else:
@@ -338,6 +332,7 @@ def test_file_structure():
     # Test 2: File is executable
     print("Test 2: File has executable permissions")
     import os
+
     if os.access(file_path, os.X_OK):
         print("✅ PASS: File is executable")
         tests_passed += 1
@@ -355,7 +350,7 @@ def test_file_structure():
         "from pathlib import Path",
         "from typing import",
         "from datetime import datetime",
-        "from scripts.file_ops import"
+        "from scripts.file_ops import",
     ]
 
     for imp in required_imports:
@@ -398,7 +393,9 @@ def test_file_structure():
     print()
 
     # Summary
-    print(f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     if tests_failed == 0:
@@ -426,9 +423,9 @@ def test_wrk_fallback():
         "performance_benchmarks": {
             "load_test_duration": 5,  # Short duration for testing
             "threads": 2,
-            "connections": 10
+            "connections": 10,
         },
-        "environment_requirements": {"services_required": []}
+        "environment_requirements": {"services_required": []},
     }
 
     benchmark = PerformanceBenchmark(work_item)
@@ -451,8 +448,10 @@ Transfer/sec:      0.76MB
 """
 
     result = benchmark._parse_wrk_output(wrk_output)
-    if (result.get("latency", {}).get("p50") and
-        result.get("throughput", {}).get("requests_per_sec") == 2279.82):
+    if (
+        result.get("latency", {}).get("p50")
+        and result.get("throughput", {}).get("requests_per_sec") == 2279.82
+    ):
         print("✅ PASS: wrk output parsed correctly")
         tests_passed += 1
     else:

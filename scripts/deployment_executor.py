@@ -10,10 +10,9 @@ Provides automated deployment execution with:
 - Deployment state tracking
 """
 
-import subprocess
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 from datetime import datetime
 
 
@@ -44,29 +43,19 @@ class DeploymentExecutor:
             "pre_deployment_checks": {
                 "integration_tests": True,
                 "security_scans": True,
-                "environment_validation": True
+                "environment_validation": True,
             },
-            "smoke_tests": {
-                "enabled": True,
-                "timeout": 300,
-                "retry_count": 3
-            },
+            "smoke_tests": {"enabled": True, "timeout": 300, "retry_count": 3},
             "rollback": {
                 "automatic": True,
                 "on_smoke_test_failure": True,
                 "on_error_threshold": True,
-                "error_threshold_percent": 5
+                "error_threshold_percent": 5,
             },
             "environments": {
-                "staging": {
-                    "auto_deploy": True,
-                    "require_approval": False
-                },
-                "production": {
-                    "auto_deploy": False,
-                    "require_approval": True
-                }
-            }
+                "staging": {"auto_deploy": True, "require_approval": False},
+                "production": {"auto_deploy": False, "require_approval": True},
+            },
         }
 
     def pre_deployment_validation(self) -> Tuple[bool, dict]:
@@ -81,30 +70,25 @@ class DeploymentExecutor:
         # Check integration tests
         if self.config["pre_deployment_checks"].get("integration_tests"):
             tests_passed = self._check_integration_tests()
-            results["checks"].append({
-                "name": "Integration Tests",
-                "passed": tests_passed
-            })
+            results["checks"].append(
+                {"name": "Integration Tests", "passed": tests_passed}
+            )
             if not tests_passed:
                 results["passed"] = False
 
         # Check security scans
         if self.config["pre_deployment_checks"].get("security_scans"):
             scans_passed = self._check_security_scans()
-            results["checks"].append({
-                "name": "Security Scans",
-                "passed": scans_passed
-            })
+            results["checks"].append({"name": "Security Scans", "passed": scans_passed})
             if not scans_passed:
                 results["passed"] = False
 
         # Check environment readiness
         if self.config["pre_deployment_checks"].get("environment_validation"):
             env_ready = self._check_environment_readiness()
-            results["checks"].append({
-                "name": "Environment Readiness",
-                "passed": env_ready
-            })
+            results["checks"].append(
+                {"name": "Environment Readiness", "passed": env_ready}
+            )
             if not env_ready:
                 results["passed"] = False
 
@@ -124,7 +108,7 @@ class DeploymentExecutor:
         results = {
             "started_at": datetime.now().isoformat(),
             "steps": [],
-            "success": True
+            "success": True,
         }
 
         self._log("Deployment started", {"dry_run": dry_run})
@@ -140,11 +124,9 @@ class DeploymentExecutor:
             else:
                 step_success = True  # Simulate success in dry run
 
-            results["steps"].append({
-                "number": i,
-                "description": step,
-                "success": step_success
-            })
+            results["steps"].append(
+                {"number": i, "description": step, "success": step_success}
+            )
 
             if not step_success:
                 results["success"] = False
@@ -177,13 +159,10 @@ class DeploymentExecutor:
             test_passed = self._execute_smoke_test(
                 test,
                 timeout=config.get("timeout", 300),
-                retry_count=config.get("retry_count", 3)
+                retry_count=config.get("retry_count", 3),
             )
 
-            results["tests"].append({
-                "name": test.get("name"),
-                "passed": test_passed
-            })
+            results["tests"].append({"name": test.get("name"), "passed": test_passed})
 
             if not test_passed:
                 results["passed"] = False
@@ -201,7 +180,7 @@ class DeploymentExecutor:
         results = {
             "started_at": datetime.now().isoformat(),
             "steps": [],
-            "success": True
+            "success": True,
         }
 
         self._log("Rollback started", {})
@@ -214,11 +193,9 @@ class DeploymentExecutor:
 
             step_success = self._execute_rollback_step(step)
 
-            results["steps"].append({
-                "number": i,
-                "description": step,
-                "success": step_success
-            })
+            results["steps"].append(
+                {"number": i, "description": step, "success": step_success}
+            )
 
             if not step_success:
                 results["success"] = False
@@ -280,7 +257,7 @@ class DeploymentExecutor:
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "event": event,
-            "data": data
+            "data": data,
         }
         self.deployment_log.append(log_entry)
 

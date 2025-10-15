@@ -8,7 +8,10 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
-from scripts.briefing_generator import generate_integration_test_briefing, check_command_exists
+from scripts.briefing_generator import (
+    generate_integration_test_briefing,
+    check_command_exists,
+)
 from scripts.session_complete import generate_integration_test_summary
 
 
@@ -24,11 +27,7 @@ def test_integration_briefing():
 
     # Test 1: Non-integration work item returns empty
     print("Test 1: Non-integration work item returns empty briefing")
-    work_item = {
-        "id": "FEAT-001",
-        "type": "feature",
-        "title": "Regular Feature"
-    }
+    work_item = {"id": "FEAT-001", "type": "feature", "title": "Regular Feature"}
 
     briefing = generate_integration_test_briefing(work_item)
     if briefing == "":
@@ -48,19 +47,22 @@ def test_integration_briefing():
         "scope": "Testing the integration between Service A and Service B components",
         "environment_requirements": {
             "services_required": ["service-a", "service-b", "postgres"],
-            "compose_file": "docker-compose.integration.yml"
+            "compose_file": "docker-compose.integration.yml",
         },
         "test_scenarios": [
-            {"name": "Happy path scenario", "description": "Test successful integration"},
-            {"name": "Error handling", "description": "Test error scenarios"}
+            {
+                "name": "Happy path scenario",
+                "description": "Test successful integration",
+            },
+            {"name": "Error handling", "description": "Test error scenarios"},
         ],
         "performance_benchmarks": {
             "response_time": {"p95": 500},
-            "throughput": {"minimum": 100}
+            "throughput": {"minimum": 100},
         },
         "api_contracts": [
             {"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}
-        ]
+        ],
     }
 
     briefing = generate_integration_test_briefing(work_item)
@@ -163,11 +165,7 @@ def test_integration_summary():
 
     # Test 1: Non-integration work item returns empty
     print("Test 1: Non-integration work item returns empty summary")
-    work_item = {
-        "id": "FEAT-001",
-        "type": "feature",
-        "title": "Regular Feature"
-    }
+    work_item = {"id": "FEAT-001", "type": "feature", "title": "Regular Feature"}
 
     gate_results = {}
     summary = generate_integration_test_summary(work_item, gate_results)
@@ -185,7 +183,7 @@ def test_integration_summary():
     work_item = {
         "id": "INTEG-001",
         "type": "integration_test",
-        "title": "Test API Integration"
+        "title": "Test API Integration",
     }
 
     gate_results = {
@@ -194,25 +192,16 @@ def test_integration_summary():
                 "passed": 10,
                 "failed": 1,
                 "skipped": 2,
-                "total_duration": 45.5
+                "total_duration": 45.5,
             },
             "performance_benchmarks": {
                 "load_test": {
-                    "latency": {
-                        "p50": 80,
-                        "p95": 450,
-                        "p99": 900
-                    },
-                    "throughput": {
-                        "requests_per_sec": 150
-                    }
+                    "latency": {"p50": 80, "p95": 450, "p99": 900},
+                    "throughput": {"requests_per_sec": 150},
                 },
-                "regression_detected": False
+                "regression_detected": False,
             },
-            "api_contracts": {
-                "contracts_validated": 2,
-                "breaking_changes": []
-            }
+            "api_contracts": {"contracts_validated": 2, "breaking_changes": []},
         }
     }
 
@@ -276,13 +265,15 @@ def test_integration_summary():
                 "contracts_validated": 2,
                 "breaking_changes": [
                     {"message": "Endpoint removed: /users"},
-                    {"message": "Required parameter added: email"}
-                ]
-            }
+                    {"message": "Required parameter added: email"},
+                ],
+            },
         }
     }
 
-    summary_breaks = generate_integration_test_summary(work_item, gate_results_with_breaks)
+    summary_breaks = generate_integration_test_summary(
+        work_item, gate_results_with_breaks
+    )
     if "Breaking changes detected: 2" in summary_breaks:
         print("✅ PASS: Summary highlights breaking changes")
         tests_passed += 1
@@ -297,17 +288,16 @@ def test_integration_summary():
         "integration_tests": {
             "integration_tests": {},
             "performance_benchmarks": {
-                "load_test": {
-                    "latency": {"p50": 150},
-                    "throughput": {}
-                },
-                "regression_detected": True
+                "load_test": {"latency": {"p50": 150}, "throughput": {}},
+                "regression_detected": True,
             },
-            "api_contracts": {}
+            "api_contracts": {},
         }
     }
 
-    summary_regression = generate_integration_test_summary(work_item, gate_results_regression)
+    summary_regression = generate_integration_test_summary(
+        work_item, gate_results_regression
+    )
     if "Performance regression detected" in summary_regression:
         print("✅ PASS: Summary highlights performance regression")
         tests_passed += 1
@@ -394,7 +384,9 @@ def test_file_enhancements():
         tests_failed += 1
     print()
 
-    print(f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     return tests_passed, tests_failed
