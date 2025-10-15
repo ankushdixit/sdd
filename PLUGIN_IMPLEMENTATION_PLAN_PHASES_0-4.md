@@ -4839,6 +4839,7 @@ if __name__ == "__main__":
 - [x] Save to file ✓
 - [x] Test with no work items ✓
 - [x] Test with completed items hidden/shown ✓
+- [x] Automated test script created: `tests/phase_3/test_phase_3_complete.py` (11/11 tests passing, 15th Oct 2025) ✓
 
 ---
 
