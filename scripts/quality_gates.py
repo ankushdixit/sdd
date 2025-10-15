@@ -23,6 +23,7 @@ class QualityGates:
         """Initialize quality gates with configuration."""
         if config_path is None:
             config_path = Path(".session/config.json")
+        self._config_path = config_path
         self.config = self._load_config(config_path)
 
     def _load_config(self, config_path: Path) -> dict:
@@ -646,6 +647,310 @@ class QualityGates:
                 missing.append(gate_name)
 
         return len(missing) == 0, missing
+
+    def run_integration_tests(self, work_item: dict) -> Tuple[bool, dict]:
+        """
+        Run integration tests for integration test work items.
+
+        Args:
+            work_item: Integration test work item
+
+        Returns:
+            (passed: bool, results: dict)
+        """
+        # Get integration test config
+        # Try to load from the full config file since integration_tests is a sibling of quality_gates
+        full_config = {}
+        if hasattr(self, '_config_path') and self._config_path.exists():
+            with open(self._config_path) as f:
+                full_config = json.load(f)
+        else:
+            config_path = Path(".session/config.json")
+            if config_path.exists():
+                with open(config_path) as f:
+                    full_config = json.load(f)
+
+        config = full_config.get("integration_tests", {})
+
+        if not config.get("enabled", True):
+            return True, {"status": "skipped", "reason": "disabled"}
+
+        # Only run for integration_test work items
+        if work_item.get("type") != "integration_test":
+            return True, {"status": "skipped", "reason": "not integration test"}
+
+        print("Running integration test quality gates...")
+
+        results = {
+            "integration_tests": {},
+            "performance_benchmarks": {},
+            "api_contracts": {},
+            "passed": False
+        }
+
+        # Import here to avoid circular imports
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent))
+
+        # 1. Run integration tests
+        from integration_test_runner import IntegrationTestRunner
+
+        runner = IntegrationTestRunner(work_item)
+
+        # Setup environment
+        setup_success, setup_message = runner.setup_environment()
+        if not setup_success:
+            results["error"] = f"Environment setup failed: {setup_message}"
+            return False, results
+
+        try:
+            # Execute integration tests
+            tests_passed, test_results = runner.run_tests()
+            results["integration_tests"] = test_results
+
+            if not tests_passed:
+                print(f"  ✗ Integration tests failed")
+                return False, results
+
+            print(f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)")
+
+            # 2. Run performance benchmarks
+            if work_item.get("performance_benchmarks"):
+                from performance_benchmark import PerformanceBenchmark
+
+                benchmark = PerformanceBenchmark(work_item)
+                benchmarks_passed, benchmark_results = benchmark.run_benchmarks()
+                results["performance_benchmarks"] = benchmark_results
+
+                if not benchmarks_passed:
+                    print(f"  ✗ Performance benchmarks failed")
+                    if config.get("performance_benchmarks", {}).get("required", True):
+                        return False, results
+                else:
+                    print(f"  ✓ Performance benchmarks passed")
+
+            # 3. Validate API contracts
+            if work_item.get("api_contracts"):
+                from api_contract_validator import APIContractValidator
+
+                validator = APIContractValidator(work_item)
+                contracts_passed, contract_results = validator.validate_contracts()
+                results["api_contracts"] = contract_results
+
+                if not contracts_passed:
+                    print(f"  ✗ API contract validation failed")
+                    if config.get("api_contracts", {}).get("required", True):
+                        return False, results
+                else:
+                    print(f"  ✓ API contracts validated")
+
+            results["passed"] = True
+            return True, results
+
+        finally:
+            # Always teardown environment
+            runner.teardown_environment()
+
+    def validate_integration_environment(self, work_item: dict) -> Tuple[bool, dict]:
+        """
+        Validate integration test environment requirements.
+
+        Args:
+            work_item: Integration test work item
+
+        Returns:
+            (passed: bool, results: dict)
+        """
+        if work_item.get("type") != "integration_test":
+            return True, {"status": "skipped"}
+
+        env_requirements = work_item.get("environment_requirements", {})
+        results = {
+            "docker_available": False,
+            "docker_compose_available": False,
+            "required_services": [],
+            "missing_config": [],
+            "passed": False
+        }
+
+        # Check Docker available
+        try:
+            result = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                timeout=5
+            )
+            results["docker_available"] = result.returncode == 0
+        except:
+            results["docker_available"] = False
+
+        # Check Docker Compose available
+        try:
+            result = subprocess.run(
+                ["docker-compose", "--version"],
+                capture_output=True,
+                timeout=5
+            )
+            results["docker_compose_available"] = result.returncode == 0
+        except:
+            results["docker_compose_available"] = False
+
+        # Check compose file exists
+        compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
+        if not Path(compose_file).exists():
+            results["missing_config"].append(compose_file)
+
+        # Check config files exist
+        config_files = env_requirements.get("config_files", [])
+        for config_file in config_files:
+            if not Path(config_file).exists():
+                results["missing_config"].append(config_file)
+
+        # Determine if passed
+        results["passed"] = (
+            results["docker_available"] and
+            results["docker_compose_available"] and
+            len(results["missing_config"]) == 0
+        )
+
+        return results["passed"], results
+
+    def validate_integration_documentation(self, work_item: dict) -> Tuple[bool, dict]:
+        """
+        Validate integration test documentation requirements.
+
+        Args:
+            work_item: Integration test work item
+
+        Returns:
+            (passed: bool, results: dict)
+        """
+        if work_item.get("type") != "integration_test":
+            return True, {"status": "skipped"}
+
+        # Get integration documentation config
+        full_config = {}
+        if hasattr(self, '_config_path') and self._config_path.exists():
+            with open(self._config_path) as f:
+                full_config = json.load(f)
+        else:
+            config_path = Path(".session/config.json")
+            if config_path.exists():
+                with open(config_path) as f:
+                    full_config = json.load(f)
+
+        config = full_config.get("integration_tests", {}).get("documentation", {})
+        if not config.get("enabled", True):
+            return True, {"status": "skipped"}
+
+        results = {
+            "checks": [],
+            "missing": [],
+            "passed": False
+        }
+
+        # 1. Check for integration architecture diagram
+        if config.get("architecture_diagrams", True):
+            diagram_paths = [
+                "docs/architecture/integration-architecture.md",
+                "docs/integration-architecture.md",
+                ".session/specs/integration-architecture.md"
+            ]
+
+            diagram_found = any(Path(p).exists() for p in diagram_paths)
+            results["checks"].append({
+                "name": "Integration architecture diagram",
+                "passed": diagram_found
+            })
+
+            if not diagram_found:
+                results["missing"].append("Integration architecture diagram")
+
+        # 2. Check for sequence diagrams
+        if config.get("sequence_diagrams", True):
+            scenarios = work_item.get("test_scenarios", [])
+
+            if scenarios:
+                # Check if sequence diagrams documented in spec file
+                spec_file = Path(".session/specs") / f"{work_item.get('id')}.md"
+                has_sequence = False
+
+                if spec_file.exists():
+                    with open(spec_file) as f:
+                        spec_content = f.read()
+
+                    # Look for sequence diagram indicators
+                    has_sequence = (
+                        "```mermaid" in spec_content or
+                        "sequenceDiagram" in spec_content or
+                        "## Sequence Diagram" in spec_content or
+                        "### Scenario" in spec_content  # Basic indicator
+                    )
+
+                results["checks"].append({
+                    "name": "Sequence diagrams",
+                    "passed": has_sequence
+                })
+
+                if not has_sequence:
+                    results["missing"].append("Sequence diagrams for test scenarios")
+
+        # 3. Check for API contract documentation
+        if config.get("contract_documentation", True):
+            contracts = work_item.get("api_contracts", [])
+
+            if contracts:
+                all_contracts_documented = True
+
+                for contract in contracts:
+                    contract_file = contract.get("contract_file")
+                    if not contract_file or not Path(contract_file).exists():
+                        all_contracts_documented = False
+                        results["missing"].append(f"API contract: {contract_file}")
+
+                results["checks"].append({
+                    "name": "API contracts documented",
+                    "passed": all_contracts_documented
+                })
+
+        # 4. Check for performance baseline documentation
+        if config.get("performance_baseline_docs", True):
+            benchmarks = work_item.get("performance_benchmarks")
+
+            if benchmarks:
+                baseline_file = Path(".session/tracking/performance_baselines.json")
+                baseline_exists = baseline_file.exists()
+
+                results["checks"].append({
+                    "name": "Performance baseline documented",
+                    "passed": baseline_exists
+                })
+
+                if not baseline_exists:
+                    results["missing"].append("Performance baseline documentation")
+
+        # 5. Check for integration point documentation
+        scope = work_item.get("scope", "")
+        # Check if scope has meaningful content
+        documented = len(scope) > 20  # More than just placeholder text
+
+        results["checks"].append({
+            "name": "Integration points documented",
+            "passed": documented
+        })
+
+        if not documented:
+            results["missing"].append("Integration points documentation")
+
+        # Determine overall pass/fail
+        passed_checks = sum(1 for check in results["checks"] if check["passed"])
+        total_checks = len(results["checks"])
+
+        # Pass if all required checks pass
+        results["passed"] = len(results["missing"]) == 0
+        results["summary"] = f"{passed_checks}/{total_checks} documentation requirements met"
+
+        return results["passed"], results
 
     def generate_report(self, all_results: dict) -> str:
         """Generate comprehensive quality gate report."""

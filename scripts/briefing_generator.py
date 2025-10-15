@@ -340,6 +340,111 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
     if criteria.get("documentation_required", False):
         briefing += "- Documentation must be updated\n"
 
+    # Add integration test specific briefing
+    integration_briefing = generate_integration_test_briefing(item)
+    if integration_briefing:
+        briefing += integration_briefing
+
+    return briefing
+
+
+def check_command_exists(command: str) -> bool:
+    """Check if a command is available."""
+    try:
+        subprocess.run(
+            [command, "--version"],
+            capture_output=True,
+            timeout=5
+        )
+        return True
+    except:
+        return False
+
+
+def generate_integration_test_briefing(work_item: dict) -> str:
+    """
+    Generate integration test specific briefing sections.
+
+    Args:
+        work_item: Integration test work item
+
+    Returns:
+        Additional briefing sections for integration tests
+    """
+    if work_item.get("type") != "integration_test":
+        return ""
+
+    briefing = "\n## Integration Test Context\n\n"
+
+    # 1. Components being integrated (from scope description)
+    scope = work_item.get("scope", "")
+    if scope and len(scope) > 20:
+        briefing += "**Integration Scope:**\n"
+        briefing += f"{scope[:200]}...\n\n" if len(scope) > 200 else f"{scope}\n\n"
+
+    # 2. Environment requirements
+    env_requirements = work_item.get("environment_requirements", {})
+    services = env_requirements.get("services_required", [])
+
+    if services:
+        briefing += "**Required Services:**\n"
+        for service in services:
+            briefing += f"- {service}\n"
+        briefing += "\n"
+
+    # 3. Test scenarios summary
+    scenarios = work_item.get("test_scenarios", [])
+    if scenarios:
+        briefing += f"**Test Scenarios ({len(scenarios)} total):**\n"
+        for i, scenario in enumerate(scenarios[:5], 1):  # Show first 5
+            scenario_name = scenario.get("name", scenario.get("description", f"Scenario {i}"))
+            briefing += f"{i}. {scenario_name}\n"
+
+        if len(scenarios) > 5:
+            briefing += f"... and {len(scenarios) - 5} more scenarios\n"
+        briefing += "\n"
+
+    # 4. Performance benchmarks
+    benchmarks = work_item.get("performance_benchmarks", {})
+    if benchmarks:
+        briefing += "**Performance Requirements:**\n"
+
+        response_time = benchmarks.get("response_time", {})
+        if response_time:
+            briefing += f"- Response time: p95 < {response_time.get('p95', 'N/A')}ms\n"
+
+        throughput = benchmarks.get("throughput", {})
+        if throughput:
+            briefing += f"- Throughput: > {throughput.get('minimum', 'N/A')} req/s\n"
+
+        briefing += "\n"
+
+    # 5. API contracts
+    contracts = work_item.get("api_contracts", [])
+    if contracts:
+        briefing += f"**API Contracts ({len(contracts)} contracts):**\n"
+        for contract in contracts:
+            briefing += f"- {contract.get('contract_file', 'N/A')} (version: {contract.get('version', 'N/A')})\n"
+        briefing += "\n"
+
+    # 6. Environment validation status
+    briefing += "**Pre-Session Checks:**\n"
+
+    # Check Docker
+    docker_available = check_command_exists("docker")
+    briefing += f"- Docker: {'✓ Available' if docker_available else '✗ Not found'}\n"
+
+    # Check Docker Compose
+    compose_available = check_command_exists("docker-compose")
+    briefing += f"- Docker Compose: {'✓ Available' if compose_available else '✗ Not found'}\n"
+
+    # Check compose file
+    compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
+    compose_exists = Path(compose_file).exists()
+    briefing += f"- Compose file ({compose_file}): {'✓ Found' if compose_exists else '✗ Missing'}\n"
+
+    briefing += "\n"
+
     return briefing
 
 
