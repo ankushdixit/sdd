@@ -52,77 +52,82 @@ def test_deployment_quality_gates():
 
 ## Monitoring & Alerting
 Metrics to monitor
-"""
+""",
     }
 
     # Test 2: Integration tests gate exists
     print("Test 2: Integration tests gate works")
     passed, results = gates.run_deployment_gates(work_item)
     integration_gate = next(
-        (g for g in results["gates"] if g["name"] == "Integration Tests"),
-        None
+        (g for g in results["gates"] if g["name"] == "Integration Tests"), None
     )
     if integration_gate:
         print("✅ PASS: Integration tests gate found")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Integration tests gate not found. Gates: {[g['name'] for g in results['gates']]}")
+        print(
+            f"❌ FAIL: Integration tests gate not found. Gates: {[g['name'] for g in results['gates']]}"
+        )
         tests_failed += 1
     print()
 
     # Test 3: Security scans gate exists
     print("Test 3: Security scans gate works")
     security_gate = next(
-        (g for g in results["gates"] if g["name"] == "Security Scans"),
-        None
+        (g for g in results["gates"] if g["name"] == "Security Scans"), None
     )
     if security_gate:
         print("✅ PASS: Security scans gate found")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Security scans gate not found. Gates: {[g['name'] for g in results['gates']]}")
+        print(
+            f"❌ FAIL: Security scans gate not found. Gates: {[g['name'] for g in results['gates']]}"
+        )
         tests_failed += 1
     print()
 
     # Test 4: Environment validation gate exists
     print("Test 4: Environment validation gate works")
     env_gate = next(
-        (g for g in results["gates"] if g["name"] == "Environment Validation"),
-        None
+        (g for g in results["gates"] if g["name"] == "Environment Validation"), None
     )
     if env_gate:
         print("✅ PASS: Environment validation gate found")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Environment validation gate not found. Gates: {[g['name'] for g in results['gates']]}")
+        print(
+            f"❌ FAIL: Environment validation gate not found. Gates: {[g['name'] for g in results['gates']]}"
+        )
         tests_failed += 1
     print()
 
     # Test 5: Deployment documentation gate exists
     print("Test 5: Deployment documentation gate works")
     docs_gate = next(
-        (g for g in results["gates"] if g["name"] == "Deployment Documentation"),
-        None
+        (g for g in results["gates"] if g["name"] == "Deployment Documentation"), None
     )
     if docs_gate:
         print("✅ PASS: Deployment documentation gate found")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment documentation gate not found. Gates: {[g['name'] for g in results['gates']]}")
+        print(
+            f"❌ FAIL: Deployment documentation gate not found. Gates: {[g['name'] for g in results['gates']]}"
+        )
         tests_failed += 1
     print()
 
     # Test 6: Rollback tested gate exists
     print("Test 6: Rollback tested gate works")
     rollback_gate = next(
-        (g for g in results["gates"] if g["name"] == "Rollback Tested"),
-        None
+        (g for g in results["gates"] if g["name"] == "Rollback Tested"), None
     )
     if rollback_gate:
         print("✅ PASS: Rollback tested gate found")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Rollback tested gate not found. Gates: {[g['name'] for g in results['gates']]}")
+        print(
+            f"❌ FAIL: Rollback tested gate not found. Gates: {[g['name'] for g in results['gates']]}"
+        )
         tests_failed += 1
     print()
 

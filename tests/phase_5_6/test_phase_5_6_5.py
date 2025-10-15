@@ -68,7 +68,7 @@ def test_enhanced_session_workflow():
 
 ## Monitoring & Alerting
 Metrics to monitor
-"""
+""",
     }
 
     # Test 2: Deployment briefing includes scope
@@ -78,7 +78,9 @@ Metrics to monitor
         print("✅ PASS: Deployment briefing includes scope section")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment briefing missing scope. Briefing preview: {briefing[:200]}")
+        print(
+            f"❌ FAIL: Deployment briefing missing scope. Briefing preview: {briefing[:200]}"
+        )
         tests_failed += 1
     print()
 
@@ -88,7 +90,7 @@ Metrics to monitor
         print("✅ PASS: Deployment briefing includes procedure")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment briefing missing procedure")
+        print("❌ FAIL: Deployment briefing missing procedure")
         tests_failed += 1
     print()
 
@@ -98,7 +100,7 @@ Metrics to monitor
         print("✅ PASS: Deployment briefing includes rollback info")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment briefing missing rollback info")
+        print("❌ FAIL: Deployment briefing missing rollback info")
         tests_failed += 1
     print()
 
@@ -108,7 +110,7 @@ Metrics to monitor
         print("✅ PASS: Environment checks included in briefing")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Environment checks not in briefing")
+        print("❌ FAIL: Environment checks not in briefing")
         tests_failed += 1
     print()
 
@@ -125,16 +127,8 @@ Metrics to monitor
     # Create gate results for testing
     gate_results = {
         "gates": [
-            {
-                "name": "Integration Tests",
-                "passed": True,
-                "required": True
-            },
-            {
-                "name": "Environment Validation",
-                "passed": True,
-                "required": True
-            }
+            {"name": "Integration Tests", "passed": True, "required": True},
+            {"name": "Environment Validation", "passed": True, "required": True},
         ]
     }
 
@@ -145,7 +139,9 @@ Metrics to monitor
         print("✅ PASS: Deployment summary includes execution results")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment summary missing execution results. Summary: {summary[:200]}")
+        print(
+            f"❌ FAIL: Deployment summary missing execution results. Summary: {summary[:200]}"
+        )
         tests_failed += 1
     print()
 
@@ -155,7 +151,7 @@ Metrics to monitor
         print("✅ PASS: Deployment summary includes smoke test results")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment summary missing smoke test results")
+        print("❌ FAIL: Deployment summary missing smoke test results")
         tests_failed += 1
     print()
 
@@ -165,7 +161,7 @@ Metrics to monitor
         print("✅ PASS: Deployment summary includes environment validation")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Deployment summary missing environment validation")
+        print("❌ FAIL: Deployment summary missing environment validation")
         tests_failed += 1
     print()
 
@@ -176,7 +172,7 @@ Metrics to monitor
         print("✅ PASS: Rollback status handling present")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Rollback handling not found")
+        print("❌ FAIL: Rollback handling not found")
         tests_failed += 1
     print()
 
@@ -186,7 +182,7 @@ Metrics to monitor
         print("✅ PASS: Post-deployment metrics included")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Post-deployment metrics not included")
+        print("❌ FAIL: Post-deployment metrics not included")
         tests_failed += 1
     print()
 

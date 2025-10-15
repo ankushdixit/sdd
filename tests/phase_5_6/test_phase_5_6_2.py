@@ -32,7 +32,7 @@ def test_deployment_executor():
 ### Deployment Steps
 1. Pull code
 2. Build
-"""
+""",
     }
 
     try:
@@ -60,7 +60,7 @@ def test_deployment_executor():
         "_execute_smoke_test",
         "_parse_rollback_steps",
         "_execute_rollback_step",
-        "get_deployment_log"
+        "get_deployment_log",
     ]
 
     for method in required_methods:
@@ -84,12 +84,7 @@ def test_deployment_executor():
 
     # Test 4: Default configuration structure
     print("Test 4: Default configuration has required keys")
-    required_keys = [
-        "pre_deployment_checks",
-        "smoke_tests",
-        "rollback",
-        "environments"
-    ]
+    required_keys = ["pre_deployment_checks", "smoke_tests", "rollback", "environments"]
 
     all_keys_present = all(key in executor.config for key in required_keys)
     if all_keys_present:
@@ -106,42 +101,45 @@ def test_deployment_executor():
     executor.config["pre_deployment_checks"]["integration_tests"] = True
     passed, results = executor.pre_deployment_validation()
     integration_check = any(
-        check["name"] == "Integration Tests"
-        for check in results.get("checks", [])
+        check["name"] == "Integration Tests" for check in results.get("checks", [])
     )
     if integration_check:
         print("✅ PASS: Integration tests check included")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Integration tests check not found. Checks: {results.get('checks')}")
+        print(
+            f"❌ FAIL: Integration tests check not found. Checks: {results.get('checks')}"
+        )
         tests_failed += 1
     print()
 
     # Test 6: Pre-deployment validation checks security scans
     print("Test 6: Pre-deployment validation checks security scans")
     security_check = any(
-        check["name"] == "Security Scans"
-        for check in results.get("checks", [])
+        check["name"] == "Security Scans" for check in results.get("checks", [])
     )
     if security_check:
         print("✅ PASS: Security scans check included")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Security scans check not found. Checks: {results.get('checks')}")
+        print(
+            f"❌ FAIL: Security scans check not found. Checks: {results.get('checks')}"
+        )
         tests_failed += 1
     print()
 
     # Test 7: Pre-deployment validation checks environment readiness
     print("Test 7: Pre-deployment validation checks environment readiness")
     env_check = any(
-        check["name"] == "Environment Readiness"
-        for check in results.get("checks", [])
+        check["name"] == "Environment Readiness" for check in results.get("checks", [])
     )
     if env_check:
         print("✅ PASS: Environment readiness check included")
         tests_passed += 1
     else:
-        print(f"❌ FAIL: Environment readiness check not found. Checks: {results.get('checks')}")
+        print(
+            f"❌ FAIL: Environment readiness check not found. Checks: {results.get('checks')}"
+        )
         tests_failed += 1
     print()
 

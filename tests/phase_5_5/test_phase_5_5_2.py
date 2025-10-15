@@ -32,14 +32,14 @@ def test_integration_test_runner_class():
                 "name": "Happy path",
                 "setup": "Start services",
                 "actions": ["Send request"],
-                "expected_results": "HTTP 200"
+                "expected_results": "HTTP 200",
             }
         ],
         "environment_requirements": {
             "compose_file": "docker-compose.integration.yml",
             "services_required": ["service-a", "service-b"],
-            "test_data_fixtures": []
-        }
+            "test_data_fixtures": [],
+        },
     }
 
     try:
@@ -62,7 +62,7 @@ def test_integration_test_runner_class():
         "_run_jest",
         "_detect_language",
         "teardown_environment",
-        "generate_report"
+        "generate_report",
     ]
 
     for method in required_methods:
@@ -76,7 +76,15 @@ def test_integration_test_runner_class():
 
     # Test 3: Results dictionary initialized correctly
     print("Test 3: Results dictionary initialized correctly")
-    expected_keys = ["scenarios", "start_time", "end_time", "total_duration", "passed", "failed", "skipped"]
+    expected_keys = [
+        "scenarios",
+        "start_time",
+        "end_time",
+        "total_duration",
+        "passed",
+        "failed",
+        "skipped",
+    ]
     all_keys_present = all(key in runner.results for key in expected_keys)
 
     if all_keys_present:
@@ -177,7 +185,7 @@ def test_integration_test_runner_class():
         "total_duration": 330.0,
         "passed": 10,
         "failed": 2,
-        "skipped": 1
+        "skipped": 1,
     }
 
     try:
@@ -288,6 +296,7 @@ def test_file_structure():
     # Test 2: File is executable
     print("Test 2: File has executable permissions")
     import os
+
     if os.access(file_path, os.X_OK):
         print("✅ PASS: File is executable")
         tests_passed += 1
@@ -305,7 +314,7 @@ def test_file_structure():
         "import time",
         "from pathlib import Path",
         "from typing import",
-        "from datetime import datetime"
+        "from datetime import datetime",
     ]
 
     for imp in required_imports:
@@ -348,7 +357,9 @@ def test_file_structure():
     print()
 
     # Summary
-    print(f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     if tests_failed == 0:
@@ -377,8 +388,8 @@ def test_docker_compose_support():
         "environment_requirements": {
             "compose_file": "custom-compose.yml",
             "services_required": ["db", "api", "cache"],
-            "test_data_fixtures": ["fixtures/users.py", "fixtures/products.py"]
-        }
+            "test_data_fixtures": ["fixtures/users.py", "fixtures/products.py"],
+        },
     }
 
     runner = IntegrationTestRunner(work_item)
@@ -397,7 +408,12 @@ def test_docker_compose_support():
     # Test 2: Multiple services configured
     print("Test 2: Multiple services configured")
     services = runner.env_requirements.get("services_required", [])
-    if len(services) == 3 and "db" in services and "api" in services and "cache" in services:
+    if (
+        len(services) == 3
+        and "db" in services
+        and "api" in services
+        and "cache" in services
+    ):
         print("✅ PASS: All services configured")
         tests_passed += 1
     else:
@@ -417,7 +433,9 @@ def test_docker_compose_support():
     print()
 
     # Summary
-    print(f"\nDocker Compose tests: {tests_passed}/{tests_passed + tests_failed} passed")
+    print(
+        f"\nDocker Compose tests: {tests_passed}/{tests_passed + tests_failed} passed"
+    )
     print()
 
     if tests_failed == 0:

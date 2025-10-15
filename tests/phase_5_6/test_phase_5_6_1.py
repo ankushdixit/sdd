@@ -78,7 +78,7 @@ DATABASE_URL=postgresql://...
         "id": "DEPLOY-001",
         "type": "deployment",
         "title": "Production Deployment v2.0",
-        "specification": valid_spec
+        "specification": valid_spec,
     }
 
     is_valid, errors = manager.validate_deployment(valid_work_item)
@@ -106,7 +106,11 @@ DATABASE_URL=postgresql://...
     # Test 3: Missing deployment procedure
     print("Test 3: Missing deployment procedure")
     spec_no_procedure = valid_spec.replace("## Deployment Procedure", "## Procedure")
-    item = {"id": "DEPLOY-003", "type": "deployment", "specification": spec_no_procedure}
+    item = {
+        "id": "DEPLOY-003",
+        "type": "deployment",
+        "specification": spec_no_procedure,
+    }
     is_valid, errors = manager.validate_deployment(item)
     if not is_valid and any("deployment procedure" in e.lower() for e in errors):
         print("✅ PASS: Missing deployment procedure detected")
@@ -131,7 +135,9 @@ DATABASE_URL=postgresql://...
 
     # Test 5: Missing deployment steps
     print("Test 5: Missing deployment steps")
-    spec_no_deploy = valid_spec.replace("### Deployment Steps\n1. Pull latest code\n2. Build artifacts", "")
+    spec_no_deploy = valid_spec.replace(
+        "### Deployment Steps\n1. Pull latest code\n2. Build artifacts", ""
+    )
     item = {"id": "DEPLOY-005", "type": "deployment", "specification": spec_no_deploy}
     is_valid, errors = manager.validate_deployment(item)
     if not is_valid and any("deployment steps" in e.lower() for e in errors):

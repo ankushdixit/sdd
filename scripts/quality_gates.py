@@ -123,7 +123,7 @@ class QualityGates:
                 return True, {
                     "status": "skipped",
                     "reason": "no tests collected",
-                    "returncode": result.returncode
+                    "returncode": result.returncode,
                 }
 
             # Parse results
@@ -207,7 +207,7 @@ class QualityGates:
         if language == "python":
             # Run bandit
             try:
-                bandit_result = subprocess.run(
+                subprocess.run(
                     ["bandit", "-r", ".", "-f", "json", "-o", "/tmp/bandit.json"],
                     capture_output=True,
                     timeout=60,
@@ -661,7 +661,7 @@ class QualityGates:
         # Get integration test config
         # Try to load from the full config file since integration_tests is a sibling of quality_gates
         full_config = {}
-        if hasattr(self, '_config_path') and self._config_path.exists():
+        if hasattr(self, "_config_path") and self._config_path.exists():
             with open(self._config_path) as f:
                 full_config = json.load(f)
         else:
@@ -685,11 +685,12 @@ class QualityGates:
             "integration_tests": {},
             "performance_benchmarks": {},
             "api_contracts": {},
-            "passed": False
+            "passed": False,
         }
 
         # Import here to avoid circular imports
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent))
 
         # 1. Run integration tests
@@ -709,10 +710,12 @@ class QualityGates:
             results["integration_tests"] = test_results
 
             if not tests_passed:
-                print(f"  ✗ Integration tests failed")
+                print("  ✗ Integration tests failed")
                 return False, results
 
-            print(f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)")
+            print(
+                f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)"
+            )
 
             # 2. Run performance benchmarks
             if work_item.get("performance_benchmarks"):
@@ -723,11 +726,11 @@ class QualityGates:
                 results["performance_benchmarks"] = benchmark_results
 
                 if not benchmarks_passed:
-                    print(f"  ✗ Performance benchmarks failed")
+                    print("  ✗ Performance benchmarks failed")
                     if config.get("performance_benchmarks", {}).get("required", True):
                         return False, results
                 else:
-                    print(f"  ✓ Performance benchmarks passed")
+                    print("  ✓ Performance benchmarks passed")
 
             # 3. Validate API contracts
             if work_item.get("api_contracts"):
@@ -738,11 +741,11 @@ class QualityGates:
                 results["api_contracts"] = contract_results
 
                 if not contracts_passed:
-                    print(f"  ✗ API contract validation failed")
+                    print("  ✗ API contract validation failed")
                     if config.get("api_contracts", {}).get("required", True):
                         return False, results
                 else:
-                    print(f"  ✓ API contracts validated")
+                    print("  ✓ API contracts validated")
 
             results["passed"] = True
             return True, results
@@ -770,15 +773,13 @@ class QualityGates:
             "docker_compose_available": False,
             "required_services": [],
             "missing_config": [],
-            "passed": False
+            "passed": False,
         }
 
         # Check Docker available
         try:
             result = subprocess.run(
-                ["docker", "--version"],
-                capture_output=True,
-                timeout=5
+                ["docker", "--version"], capture_output=True, timeout=5
             )
             results["docker_available"] = result.returncode == 0
         except:
@@ -787,16 +788,16 @@ class QualityGates:
         # Check Docker Compose available
         try:
             result = subprocess.run(
-                ["docker-compose", "--version"],
-                capture_output=True,
-                timeout=5
+                ["docker-compose", "--version"], capture_output=True, timeout=5
             )
             results["docker_compose_available"] = result.returncode == 0
         except:
             results["docker_compose_available"] = False
 
         # Check compose file exists
-        compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
+        compose_file = env_requirements.get(
+            "compose_file", "docker-compose.integration.yml"
+        )
         if not Path(compose_file).exists():
             results["missing_config"].append(compose_file)
 
@@ -808,9 +809,9 @@ class QualityGates:
 
         # Determine if passed
         results["passed"] = (
-            results["docker_available"] and
-            results["docker_compose_available"] and
-            len(results["missing_config"]) == 0
+            results["docker_available"]
+            and results["docker_compose_available"]
+            and len(results["missing_config"]) == 0
         )
 
         return results["passed"], results
@@ -830,7 +831,7 @@ class QualityGates:
 
         # Get integration documentation config
         full_config = {}
-        if hasattr(self, '_config_path') and self._config_path.exists():
+        if hasattr(self, "_config_path") and self._config_path.exists():
             with open(self._config_path) as f:
                 full_config = json.load(f)
         else:
@@ -843,25 +844,20 @@ class QualityGates:
         if not config.get("enabled", True):
             return True, {"status": "skipped"}
 
-        results = {
-            "checks": [],
-            "missing": [],
-            "passed": False
-        }
+        results = {"checks": [], "missing": [], "passed": False}
 
         # 1. Check for integration architecture diagram
         if config.get("architecture_diagrams", True):
             diagram_paths = [
                 "docs/architecture/integration-architecture.md",
                 "docs/integration-architecture.md",
-                ".session/specs/integration-architecture.md"
+                ".session/specs/integration-architecture.md",
             ]
 
             diagram_found = any(Path(p).exists() for p in diagram_paths)
-            results["checks"].append({
-                "name": "Integration architecture diagram",
-                "passed": diagram_found
-            })
+            results["checks"].append(
+                {"name": "Integration architecture diagram", "passed": diagram_found}
+            )
 
             if not diagram_found:
                 results["missing"].append("Integration architecture diagram")
@@ -881,16 +877,15 @@ class QualityGates:
 
                     # Look for sequence diagram indicators
                     has_sequence = (
-                        "```mermaid" in spec_content or
-                        "sequenceDiagram" in spec_content or
-                        "## Sequence Diagram" in spec_content or
-                        "### Scenario" in spec_content  # Basic indicator
+                        "```mermaid" in spec_content
+                        or "sequenceDiagram" in spec_content
+                        or "## Sequence Diagram" in spec_content
+                        or "### Scenario" in spec_content  # Basic indicator
                     )
 
-                results["checks"].append({
-                    "name": "Sequence diagrams",
-                    "passed": has_sequence
-                })
+                results["checks"].append(
+                    {"name": "Sequence diagrams", "passed": has_sequence}
+                )
 
                 if not has_sequence:
                     results["missing"].append("Sequence diagrams for test scenarios")
@@ -908,10 +903,12 @@ class QualityGates:
                         all_contracts_documented = False
                         results["missing"].append(f"API contract: {contract_file}")
 
-                results["checks"].append({
-                    "name": "API contracts documented",
-                    "passed": all_contracts_documented
-                })
+                results["checks"].append(
+                    {
+                        "name": "API contracts documented",
+                        "passed": all_contracts_documented,
+                    }
+                )
 
         # 4. Check for performance baseline documentation
         if config.get("performance_baseline_docs", True):
@@ -921,10 +918,12 @@ class QualityGates:
                 baseline_file = Path(".session/tracking/performance_baselines.json")
                 baseline_exists = baseline_file.exists()
 
-                results["checks"].append({
-                    "name": "Performance baseline documented",
-                    "passed": baseline_exists
-                })
+                results["checks"].append(
+                    {
+                        "name": "Performance baseline documented",
+                        "passed": baseline_exists,
+                    }
+                )
 
                 if not baseline_exists:
                     results["missing"].append("Performance baseline documentation")
@@ -934,10 +933,9 @@ class QualityGates:
         # Check if scope has meaningful content
         documented = len(scope) > 20  # More than just placeholder text
 
-        results["checks"].append({
-            "name": "Integration points documented",
-            "passed": documented
-        })
+        results["checks"].append(
+            {"name": "Integration points documented", "passed": documented}
+        )
 
         if not documented:
             results["missing"].append("Integration points documentation")
@@ -948,7 +946,9 @@ class QualityGates:
 
         # Pass if all required checks pass
         results["passed"] = len(results["missing"]) == 0
-        results["summary"] = f"{passed_checks}/{total_checks} documentation requirements met"
+        results["summary"] = (
+            f"{passed_checks}/{total_checks} documentation requirements met"
+        )
 
         return results["passed"], results
 
@@ -1084,53 +1084,55 @@ class QualityGates:
 
         # Gate 1: All integration tests must pass
         tests_passed, test_results = self.run_integration_tests(work_item)
-        results["gates"].append({
-            "name": "Integration Tests",
-            "required": True,
-            "passed": tests_passed,
-            "details": test_results
-        })
+        results["gates"].append(
+            {
+                "name": "Integration Tests",
+                "required": True,
+                "passed": tests_passed,
+                "details": test_results,
+            }
+        )
         if not tests_passed:
             results["passed"] = False
 
         # Gate 2: Security scans must pass
         security_passed, security_results = self.run_security_scan()
-        results["gates"].append({
-            "name": "Security Scans",
-            "required": True,
-            "passed": security_passed,
-            "details": security_results
-        })
+        results["gates"].append(
+            {
+                "name": "Security Scans",
+                "required": True,
+                "passed": security_passed,
+                "details": security_results,
+            }
+        )
         if not security_passed:
             results["passed"] = False
 
         # Gate 3: Environment must be validated
         env_passed = self._validate_deployment_environment(work_item)
-        results["gates"].append({
-            "name": "Environment Validation",
-            "required": True,
-            "passed": env_passed
-        })
+        results["gates"].append(
+            {"name": "Environment Validation", "required": True, "passed": env_passed}
+        )
         if not env_passed:
             results["passed"] = False
 
         # Gate 4: Deployment documentation complete
         docs_passed = self._validate_deployment_documentation(work_item)
-        results["gates"].append({
-            "name": "Deployment Documentation",
-            "required": True,
-            "passed": docs_passed
-        })
+        results["gates"].append(
+            {
+                "name": "Deployment Documentation",
+                "required": True,
+                "passed": docs_passed,
+            }
+        )
         if not docs_passed:
             results["passed"] = False
 
         # Gate 5: Rollback procedure tested
         rollback_tested = self._check_rollback_tested(work_item)
-        results["gates"].append({
-            "name": "Rollback Tested",
-            "required": True,
-            "passed": rollback_tested
-        })
+        results["gates"].append(
+            {"name": "Rollback Tested", "required": True, "passed": rollback_tested}
+        )
         if not rollback_tested:
             results["passed"] = False
 
@@ -1160,7 +1162,7 @@ class QualityGates:
             "deployment procedure",
             "rollback procedure",
             "smoke tests",
-            "monitoring & alerting"
+            "monitoring & alerting",
         ]
 
         for section in required_sections:

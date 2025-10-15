@@ -158,14 +158,14 @@ def test_environment_validator():
             "Health Checks",
             "Monitoring",
             "Infrastructure",
-            "Capacity"
+            "Capacity",
         ]
 
         validation_names = [v["name"] for v in results.get("validations", [])]
         all_present = all(name in validation_names for name in expected_validations)
 
         if all_present:
-            print(f"✅ PASS: validate_all() runs all 7 validation types")
+            print("✅ PASS: validate_all() runs all 7 validation types")
             tests_passed += 1
         else:
             missing = [n for n in expected_validations if n not in validation_names]

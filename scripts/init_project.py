@@ -7,6 +7,7 @@ Enhanced with documentation checks and initial scans.
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -17,6 +18,10 @@ def check_documentation():
     if not docs_dir.exists():
         print("⚠️  No docs/ directory found")
         print("   Recommendation: Create at least docs/vision.md and docs/prd.md")
+        # Auto-continue in non-interactive mode (for testing)
+        if not sys.stdin.isatty():
+            print("   (Non-interactive mode: continuing anyway)")
+            return True
         response = input("Continue anyway? (y/n): ")
         if response.lower() != "y":
             return False
@@ -117,8 +122,8 @@ def initialize_tracking_files():
                 "commands": {
                     "python": "pytest --cov --cov-report=json",
                     "javascript": "npm test -- --coverage",
-                    "typescript": "npm test -- --coverage"
-                }
+                    "typescript": "npm test -- --coverage",
+                },
             },
             "linting": {
                 "enabled": True,
@@ -127,8 +132,8 @@ def initialize_tracking_files():
                 "commands": {
                     "python": "ruff check .",
                     "javascript": "eslint .",
-                    "typescript": "eslint ."
-                }
+                    "typescript": "eslint .",
+                },
             },
             "formatting": {
                 "enabled": True,
@@ -137,29 +142,23 @@ def initialize_tracking_files():
                 "commands": {
                     "python": "ruff format .",
                     "javascript": "prettier --write .",
-                    "typescript": "prettier --write ."
-                }
+                    "typescript": "prettier --write .",
+                },
             },
-            "security": {
-                "enabled": True,
-                "required": True,
-                "fail_on": "high"
-            },
+            "security": {"enabled": True, "required": True, "fail_on": "high"},
             "documentation": {
                 "enabled": True,
                 "required": False,
                 "check_changelog": True,
                 "check_docstrings": True,
-                "check_readme": False
+                "check_readme": False,
             },
             "context7": {
                 "enabled": False,
                 "required": False,
-                "important_libraries": []
+                "important_libraries": [],
             },
-            "custom_validations": {
-                "rules": []
-            }
+            "custom_validations": {"rules": []},
         },
         "integration_tests": {
             "enabled": True,
@@ -174,7 +173,7 @@ def initialize_tracking_files():
                 "regression_threshold": 0.10,
                 "baseline_storage": ".session/tracking/performance_baselines.json",
                 "load_test_tool": "wrk",
-                "metrics": ["response_time", "throughput", "resource_usage"]
+                "metrics": ["response_time", "throughput", "resource_usage"],
             },
             "api_contracts": {
                 "enabled": True,
@@ -182,15 +181,15 @@ def initialize_tracking_files():
                 "contract_format": "openapi",
                 "breaking_change_detection": True,
                 "version_storage": ".session/tracking/api_contracts/",
-                "fail_on_breaking_changes": True
+                "fail_on_breaking_changes": True,
             },
             "documentation": {
                 "architecture_diagrams": True,
                 "sequence_diagrams": True,
                 "contract_documentation": True,
-                "performance_baseline_docs": True
-            }
-        }
+                "performance_baseline_docs": True,
+            },
+        },
     }
     (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
     print("✓ Created config.json")

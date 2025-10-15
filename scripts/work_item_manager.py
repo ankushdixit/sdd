@@ -341,7 +341,7 @@ class WorkItemManager:
             "test_scenarios",
             "performance_benchmarks",
             "api_contracts",
-            "environment_requirements"
+            "environment_requirements",
         ]
 
         for field in required_fields:
@@ -355,17 +355,19 @@ class WorkItemManager:
         else:
             for i, scenario in enumerate(scenarios):
                 if not scenario.get("setup"):
-                    errors.append(f"Scenario {i+1}: Missing setup section")
+                    errors.append(f"Scenario {i + 1}: Missing setup section")
                 if not scenario.get("actions"):
-                    errors.append(f"Scenario {i+1}: Missing actions section")
+                    errors.append(f"Scenario {i + 1}: Missing actions section")
                 if not scenario.get("expected_results"):
-                    errors.append(f"Scenario {i+1}: Missing expected results")
+                    errors.append(f"Scenario {i + 1}: Missing expected results")
 
         # Validate performance benchmarks
         benchmarks = work_item.get("performance_benchmarks", {})
         if benchmarks:
             if not benchmarks.get("response_time"):
-                errors.append("Performance benchmarks missing response time requirements")
+                errors.append(
+                    "Performance benchmarks missing response time requirements"
+                )
             if not benchmarks.get("throughput"):
                 errors.append("Performance benchmarks missing throughput requirements")
 
@@ -388,7 +390,9 @@ class WorkItemManager:
         # Check for service dependencies
         dependencies = work_item.get("dependencies", [])
         if not dependencies:
-            errors.append("Integration tests must have dependencies (component implementations)")
+            errors.append(
+                "Integration tests must have dependencies (component implementations)"
+            )
 
         return len(errors) == 0, errors
 
@@ -408,7 +412,7 @@ class WorkItemManager:
             "deployment procedure",
             "environment configuration",
             "rollback procedure",
-            "smoke tests"
+            "smoke tests",
         ]
 
         for section in required_sections:
@@ -423,7 +427,7 @@ class WorkItemManager:
             # (not "pre-deployment steps" or "post-deployment steps")
             if not any(
                 line.strip().lower() in ["### deployment steps", "deployment steps"]
-                for line in spec.split('\n')
+                for line in spec.split("\n")
             ):
                 errors.append("Missing deployment steps")
             if "post-deployment steps" not in spec.lower():
@@ -438,8 +442,13 @@ class WorkItemManager:
 
         # Validate smoke tests defined
         if "smoke tests" in spec.lower():
-            if "critical user flows" not in spec.lower() and "health checks" not in spec.lower():
-                errors.append("Missing smoke test scenarios (critical user flows or health checks)")
+            if (
+                "critical user flows" not in spec.lower()
+                and "health checks" not in spec.lower()
+            ):
+                errors.append(
+                    "Missing smoke test scenarios (critical user flows or health checks)"
+                )
 
         # Validate environment specified
         if "target environment" not in spec.lower():
