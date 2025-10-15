@@ -392,6 +392,61 @@ class WorkItemManager:
 
         return len(errors) == 0, errors
 
+    def validate_deployment(self, work_item: dict) -> tuple[bool, list[str]]:
+        """
+        Validate deployment work item has all required fields.
+
+        Returns:
+            (is_valid, errors)
+        """
+        errors = []
+        spec = work_item.get("specification", "")
+
+        # Required sections
+        required_sections = [
+            "deployment scope",
+            "deployment procedure",
+            "environment configuration",
+            "rollback procedure",
+            "smoke tests"
+        ]
+
+        for section in required_sections:
+            if section.lower() not in spec.lower():
+                errors.append(f"Missing required section: {section}")
+
+        # Validate deployment procedure has steps
+        if "deployment procedure" in spec.lower():
+            if "pre-deployment steps" not in spec.lower():
+                errors.append("Missing pre-deployment steps")
+            # Check for "### Deployment Steps" or "### deployment steps" specifically
+            # (not "pre-deployment steps" or "post-deployment steps")
+            if not any(
+                line.strip().lower() in ["### deployment steps", "deployment steps"]
+                for line in spec.split('\n')
+            ):
+                errors.append("Missing deployment steps")
+            if "post-deployment steps" not in spec.lower():
+                errors.append("Missing post-deployment steps")
+
+        # Validate rollback procedure
+        if "rollback procedure" in spec.lower():
+            if "rollback triggers" not in spec.lower():
+                errors.append("Missing rollback triggers")
+            if "rollback steps" not in spec.lower():
+                errors.append("Missing rollback steps")
+
+        # Validate smoke tests defined
+        if "smoke tests" in spec.lower():
+            if "critical user flows" not in spec.lower() and "health checks" not in spec.lower():
+                errors.append("Missing smoke test scenarios (critical user flows or health checks)")
+
+        # Validate environment specified
+        if "target environment" not in spec.lower():
+            errors.append("Missing target environment specification")
+
+        return len(errors) == 0, errors
+
     def list_work_items(
         self,
         status_filter: Optional[str] = None,

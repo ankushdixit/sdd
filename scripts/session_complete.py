@@ -353,6 +353,11 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
     if integration_summary:
         summary += integration_summary
 
+    # Add deployment summary if applicable
+    deployment_summary = generate_deployment_summary(work_item, gate_results)
+    if deployment_summary:
+        summary += deployment_summary
+
     return summary
 
 
@@ -422,6 +427,64 @@ def generate_integration_test_summary(work_item: dict, gate_results: dict) -> st
             summary += "\n"
 
     return summary
+
+
+def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
+    """
+    Generate deployment-specific summary section.
+
+    Args:
+        work_item: Deployment work item
+        gate_results: Results from deployment quality gates
+
+    Returns:
+        Deployment summary text
+    """
+    if work_item.get("type") != "deployment":
+        return ""
+
+    summary = []
+    summary.append("\n" + "=" * 60)
+    summary.append("DEPLOYMENT RESULTS")
+    summary.append("=" * 60)
+
+    # Deployment execution results
+    # TODO: Parse from deployment_executor results
+    summary.append("\n**Deployment Execution:**")
+    summary.append("  Status: [Success/Failed]")
+    summary.append("  Steps completed: [X/Y]")
+    summary.append("  Duration: [X minutes]")
+
+    # Smoke test results
+    summary.append("\n**Smoke Tests:**")
+    summary.append("  Passed: [X]")
+    summary.append("  Failed: [Y]")
+    summary.append("  Skipped: [Z]")
+
+    # Environment validation
+    summary.append("\n**Environment Validation:**")
+    for gate in gate_results.get("gates", []):
+        if gate.get("name") == "Environment Validation":
+            status = "✓ PASSED" if gate.get("passed") else "✗ FAILED"
+            summary.append(f"  {status}")
+
+    # Rollback status (if applicable)
+    # TODO: Check if rollback was triggered
+    rollback_triggered = False
+    if rollback_triggered:
+        summary.append("\n⚠️  ROLLBACK TRIGGERED")
+        summary.append("  Reason: [smoke test failure / error threshold]")
+        summary.append("  Rollback status: [Success/Failed]")
+
+    # Post-deployment metrics
+    summary.append("\n**Post-Deployment Metrics:**")
+    summary.append("  Error rate: [X%]")
+    summary.append("  Response time p99: [X ms]")
+    summary.append("  Active alerts: [X]")
+
+    summary.append("\n" + "=" * 60)
+
+    return "\n".join(summary)
 
 
 def main():

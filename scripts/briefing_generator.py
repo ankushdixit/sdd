@@ -345,6 +345,11 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
     if integration_briefing:
         briefing += integration_briefing
 
+    # Add deployment specific briefing
+    deployment_briefing = generate_deployment_briefing(item)
+    if deployment_briefing:
+        briefing += deployment_briefing
+
     return briefing
 
 
@@ -446,6 +451,70 @@ def generate_integration_test_briefing(work_item: dict) -> str:
     briefing += "\n"
 
     return briefing
+
+
+def generate_deployment_briefing(work_item: dict) -> str:
+    """
+    Generate deployment-specific briefing section.
+
+    Args:
+        work_item: Deployment work item
+
+    Returns:
+        Deployment briefing text
+    """
+    if work_item.get("type") != "deployment":
+        return ""
+
+    briefing = []
+    briefing.append("\n" + "=" * 60)
+    briefing.append("DEPLOYMENT CONTEXT")
+    briefing.append("=" * 60)
+
+    spec = work_item.get("specification", "")
+
+    # Parse deployment scope
+    briefing.append("\n**Deployment Scope:**")
+    # TODO: Parse from spec - for now show placeholder
+    briefing.append("  Application: [parse from spec]")
+    briefing.append("  Environment: [parse from spec]")
+    briefing.append("  Version: [parse from spec]")
+
+    # Parse deployment procedure
+    briefing.append("\n**Deployment Procedure:**")
+    # TODO: Parse steps from spec
+    briefing.append("  Pre-deployment: [X steps]")
+    briefing.append("  Deployment: [Y steps]")
+    briefing.append("  Post-deployment: [Z steps]")
+
+    # Parse rollback procedure
+    briefing.append("\n**Rollback Procedure:**")
+    # TODO: Parse from spec
+    has_rollback = "rollback procedure" in spec.lower()
+    briefing.append(f"  Rollback triggers defined: {'Yes' if has_rollback else 'No'}")
+    briefing.append("  Estimated rollback time: [X minutes]")
+
+    # Environment pre-checks
+    briefing.append("\n**Pre-Session Environment Checks:**")
+    try:
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent))
+        from environment_validator import EnvironmentValidator
+
+        environment = "staging"  # TODO: Parse from spec
+        validator = EnvironmentValidator(environment)
+        passed, results = validator.validate_all()
+
+        briefing.append(f"  Environment validation: {'✓ PASSED' if passed else '✗ FAILED'}")
+        for validation in results.get("validations", []):
+            status = "✓" if validation["passed"] else "✗"
+            briefing.append(f"    {status} {validation['name']}")
+    except Exception as e:
+        briefing.append(f"  Environment validation: ✗ Error ({str(e)})")
+
+    briefing.append("\n" + "=" * 60)
+
+    return "\n".join(briefing)
 
 
 def main():
