@@ -1,37 +1,13 @@
 {
-  "name": "claude-session-plugin",
-  "displayName": "Claude Session Plugin",
-  "owner": "ankushdixit",
-  "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with quality gates, dependency management, and knowledge accumulation",
-  "longDescription": "The Claude Code Session Plugin implements Session-Driven Development (SDD), a comprehensive methodology that enables AI coding assistants to work on software projects across multiple sessions with:\n\n- **Perfect context continuity** through automated briefings\n- **Quality enforcement** via automated validation gates\n- **Knowledge accumulation** through AI-powered learning curation\n- **Dependency-driven workflow** with critical path analysis\n- **Living documentation** with git integration\n\nIncludes 15 slash commands for session management, work item tracking, learning capture, and quality gates. Production-ready with 343 tests passing.",
-  "categories": [
-    "productivity",
-    "development-tools",
-    "project-management",
-    "quality-assurance"
-  ],
-  "tags": [
-    "session-management",
-    "quality-gates",
-    "dependency-management",
-    "learning-system",
-    "ai-development",
-    "context-management",
-    "work-items",
-    "testing",
-    "git-integration"
-  ],
-  "license": "MIT",
-  "screenshots": [],
-  "documentation": "https://github.com/ankushdixit/claude-session-plugin/blob/main/README.md",
-  "changelog": "https://github.com/ankushdixit/claude-session-plugin/blob/main/ROADMAP.md",
-  "support": {
-    "issues": "https://github.com/ankushdixit/claude-session-plugin/issues",
-    "email": "",
-    "documentation": "https://github.com/ankushdixit/claude-session-plugin/tree/main/docs"
+  "name": "claude-session-plugin-marketplace",
+  "owner": {
+    "name": "Ankush Dixit"
   },
-  "plugin": {
-    "source": ".",
-    "description": "Full Session-Driven Development plugin with 15 commands for comprehensive project management"
-  }
+  "plugins": [
+    {
+      "name": "claude-session-plugin",
+      "source": ".",
+      "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with quality gates, dependency management, and knowledge accumulation"
+    }
+  ]
 }
