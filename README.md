@@ -126,36 +126,48 @@ python3 scripts/learning_curator.py curate --dry-run
   - `npm audit` (JavaScript/TypeScript security)
   - `graphviz` (for SVG dependency graph generation)
 
-### Installation Methods
+### Installation
 
-You can use this plugin in two ways:
+#### Via Marketplace (Recommended)
 
-#### Method 1: Install as Claude Code Plugin (Recommended)
+Install the plugin from the official marketplace to use across all your projects:
 
-Install the plugin globally to use across all your projects:
+1. **Add the marketplace** in Claude Code:
+   ```
+   /plugin
+   ```
+   Select "Add marketplace" and enter: `ankushdixit/claude-plugins`
 
-```bash
-# Clone the repository to Claude Code's plugins directory
-cd ~/.claude/plugins/
-git clone https://github.com/ankushdixit/claude-session-plugin.git
+2. **Install the plugin**:
+   - Select "Browse and install plugins"
+   - Choose `claude-session-plugin`
+   - Click install
 
-# Or if you prefer a specific location and symlink it
-git clone https://github.com/ankushdixit/claude-session-plugin.git ~/my-plugins/
-ln -s ~/my-plugins/claude-session-plugin ~/.claude/plugins/claude-session-plugin
-```
+3. **Restart Claude Code** to load the plugin
+
+4. **Verify installation**:
+   Type `/session-` and you should see autocomplete suggestions for available session commands.
 
 **Benefits:**
-- Available in all projects automatically
-- Single installation and updates
-- Cleaner project directories
+- ✅ Official distribution method
+- ✅ Automatic updates via marketplace
+- ✅ Available in all projects
+- ✅ Lightweight installation (tests and docs excluded)
 
-**Verify installation:**
-In Claude Code (in any project), type `/session-` and you should see autocomplete suggestions for available session commands.
+---
 
-#### Method 2: Copy to Your Project
+#### Manual Installation (For Development)
 
-For project-specific usage or customization:
+For development or if you want full control:
 
+**Option A: Global Installation**
+```bash
+# Clone to Claude Code's plugins directory
+cd ~/.claude/plugins/
+git clone https://github.com/ankushdixit/claude-session-plugin.git
+```
+
+**Option B: Project-Specific Installation**
 ```bash
 # Clone the repository
 git clone https://github.com/ankushdixit/claude-session-plugin.git
@@ -165,20 +177,13 @@ cd claude-session-plugin
 cp -r .claude /path/to/your/project/
 cp -r scripts /path/to/your/project/
 cp -r templates /path/to/your/project/
-
-# Optional: Copy documentation if needed
-cp -r docs /path/to/your/project/
-cp README.md /path/to/your/project/
 ```
 
 **Benefits:**
-- Project-specific customization
-- No dependency on global installation
-- Can commit custom commands with your project
-- Full control over which files to include
-
-**Verify installation:**
-In Claude Code (in your project directory), type `/session-` and you should see autocomplete suggestions.
+- ✅ Full repository access (includes tests, docs)
+- ✅ Can modify commands locally
+- ✅ No dependency on marketplace
+- ✅ Good for contributing to development
 
 ### What Gets Installed
 
@@ -391,8 +396,7 @@ claude-session-plugin/
 ├── .claude/                  # Claude Code plugin runtime
 │   └── commands/             # Same commands for project-level installation
 ├── .claude-plugin/           # Plugin metadata
-│   ├── plugin.json           # Plugin manifest and configuration
-│   └── marketplace.json      # Marketplace distribution manifest
+│   └── plugin.json           # Plugin manifest and configuration
 ├── scripts/                  # Core Python logic (13 modules, 8,677 lines)
 │   ├── work_item_manager.py  # Work item CRUD operations
 │   ├── quality_gates.py      # Quality enforcement system
