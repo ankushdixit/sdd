@@ -68,13 +68,13 @@ Security-related discoveries, vulnerabilities fixed.
 
 ## Commands
 
-### `/learning-capture` - Capture a Learning
+### `/sdd:learn` - Capture a Learning
 
 Capture a learning discovered during development.
 
 **Usage:**
 ```
-/learning-capture
+/sdd:learn
 ```
 
 Claude will ask:
@@ -85,7 +85,7 @@ Claude will ask:
 
 **Example:**
 ```
-You: /learning-capture
+You: /sdd:learn
 Claude: What did you learn?
 You: FastAPI middleware order matters for CORS - add_middleware calls must be in reverse order
 Claude: Which category best fits this learning?
@@ -103,75 +103,75 @@ You: Discovered while debugging CORS issues in session 5
 It will be auto-categorized and curated.
 ```
 
-### `/learning-show` - Browse Learnings
+### `/sdd:learn-show` - Browse Learnings
 
 View captured learnings with optional filtering.
 
 **Usage:**
 ```
-/learning-show [--category CATEGORY] [--tag TAG] [--session SESSION]
+/sdd:learn-show [--category CATEGORY] [--tag TAG] [--session SESSION]
 ```
 
 **Examples:**
 
 Show all learnings:
 ```
-/learning-show
+/sdd:learn-show
 ```
 
 Show only gotchas:
 ```
-/learning-show --category gotchas
+/sdd:learn-show --category gotchas
 ```
 
 Show learnings tagged with "fastapi":
 ```
-/learning-show --tag fastapi
+/sdd:learn-show --tag fastapi
 ```
 
 Show learnings from session 5:
 ```
-/learning-show --session 5
+/sdd:learn-show --session 5
 ```
 
 Combine filters:
 ```
-/learning-show --category gotchas --tag fastapi
+/sdd:learn-show --category gotchas --tag fastapi
 ```
 
-### `/learning-search` - Search Learnings
+### `/sdd:learn-search` - Search Learnings
 
 Full-text search across all learning content, tags, and context.
 
 **Usage:**
 ```
-/learning-search <query>
+/sdd:learn-search <query>
 ```
 
 **Examples:**
 ```
-/learning-search CORS
-/learning-search "middleware order"
-/learning-search authentication
+/sdd:learn-search CORS
+/sdd:learn-search "middleware order"
+/sdd:learn-search authentication
 ```
 
-### `/learning-curate` - Manual Curation
+### `/sdd:learn-curate` - Manual Curation
 
 Run the curation process manually to categorize, detect duplicates, and merge similar learnings.
 
 **Usage:**
 ```
-/learning-curate [--dry-run]
+/sdd:learn-curate [--dry-run]
 ```
 
 **Dry-run mode** (preview only, no changes saved):
 ```
-/learning-curate --dry-run
+/sdd:learn-curate --dry-run
 ```
 
 **Normal mode** (save changes):
 ```
-/learning-curate
+/sdd:learn-curate
 ```
 
 **What curation does:**
@@ -185,7 +185,7 @@ Run the curation process manually to categorize, detect duplicates, and merge si
 
 Curation runs automatically every N sessions (configurable in `.session/config.json`).
 
-**Note:** The config.json file is automatically created when you run `/session-init` to initialize the project.
+**Note:** The config.json file is automatically created when you run `/sdd:init` to initialize the project.
 
 **Configuration:**
 ```json
@@ -359,20 +359,20 @@ for learning in related:
 
 1. Work on a feature/fix
 2. Discover something worth remembering
-3. Use `/learning-capture` to record it
+3. Use `/sdd:learn` to record it
 4. Claude asks questions conversationally
 5. Learning is saved and will be auto-curated
 
 ### Workflow 2: Browsing Learnings
 
-1. Use `/learning-show` to see all learnings
-2. Filter by category: `/learning-show --category gotchas`
-3. Filter by tag: `/learning-show --tag fastapi`
-4. Search for specific content: `/learning-search CORS`
+1. Use `/sdd:learn-show` to see all learnings
+2. Filter by category: `/sdd:learn-show --category gotchas`
+3. Filter by tag: `/sdd:learn-show --tag fastapi`
+4. Search for specific content: `/sdd:learn-search CORS`
 
 ### Workflow 3: Automatic Extraction
 
-1. Complete a session with `/session-end`
+1. Complete a session with `/sdd:end`
 2. System auto-extracts learnings from:
    - Session summary (Challenges section)
    - Git commit messages (LEARNING: annotations)
@@ -385,7 +385,7 @@ for learning in related:
 1. Capture learnings throughout multiple sessions
 2. Every 5 sessions, auto-curation runs
 3. Curation categorizes, detects duplicates, and merges similar learnings
-4. Manual curation: `/learning-curate` or `/learning-curate --dry-run`
+4. Manual curation: `/sdd:learn-curate` or `/sdd:learn-curate --dry-run`
 
 ## Best Practices
 
@@ -399,13 +399,13 @@ Tags help you find learnings later. Use specific tags like "fastapi", "cors", "a
 Include file paths, session numbers, or brief notes in the context field. This helps you remember where the learning came from.
 
 ### Review Learnings Regularly
-Use `/learning-show` to review captured learnings periodically. This reinforces knowledge retention.
+Use `/sdd:learn-show` to review captured learnings periodically. This reinforces knowledge retention.
 
 ### Use LEARNING Annotations
 Add `LEARNING:` annotations in git commit messages and `# LEARNING:` comments in code for automatic extraction.
 
 ### Run Curation Periodically
-Curation keeps your knowledge base organized. Run it manually with `/learning-curate` or let it run automatically every N sessions.
+Curation keeps your knowledge base organized. Run it manually with `/sdd:learn-curate` or let it run automatically every N sessions.
 
 ## Troubleshooting
 
@@ -482,7 +482,7 @@ Learnings are stored in `.session/tracking/learnings.json`:
 The learning system is fully integrated with the session workflow:
 
 1. **Session Start**: Load existing learnings for context
-2. **During Session**: Capture learnings with `/learning-capture`
+2. **During Session**: Capture learnings with `/sdd:learn`
 3. **Session End**:
    - Auto-extract learnings from session summary, git commits, code comments
    - Auto-curate every N sessions
@@ -535,4 +535,4 @@ The learning system helps you:
 - ✅ Track learning growth over time with statistics and timeline
 - ✅ Build an organic knowledge base that grows with your project
 
-Start capturing learnings today with `/learning-capture`!
+Start capturing learnings today with `/sdd:learn`!

@@ -1,6 +1,6 @@
 # Session Init Command
 
-**Usage:** `/session-init`
+**Usage:** `/sdd:init`
 
 **Description:** Initialize Session-Driven Development structure in current project.
 
@@ -43,7 +43,7 @@
 **Example:**
 
 ```
-User: /session-init
+User: /sdd:init
 
 Claude: Initializing Session-Driven Development...
 
@@ -70,8 +70,8 @@ Running initial scans...
 Session-Driven Development initialized successfully!
 
 Next steps:
-1. Create work items: /work-item create
-2. Start first session: /session-start
+1. Create work items: /sdd:work-new
+2. Start first session: /sdd:start
 ```
 
 **Implementation:**

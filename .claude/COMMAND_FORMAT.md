@@ -160,7 +160,7 @@ Compare @src/old-version.js with @src/new-version.js
 
 ## Complete Examples
 
-### Simple Command (session-init.md)
+### Simple Command (init.md)
 
 ```markdown
 ---
@@ -183,7 +183,7 @@ This script will create:
 After running the script, show the user the success message and explain the next steps for getting started with the session-driven workflow.
 ```
 
-### Command with Arguments (work-item-show.md)
+### Command with Arguments (work-show.md)
 
 ```markdown
 ---
@@ -212,7 +212,7 @@ This displays comprehensive details:
 Show all information to the user in a clear, formatted display. This helps understand the full context of a work item before starting work on it.
 ```
 
-### Command with Multiple Modes (work-item-update.md)
+### Command with Multiple Modes (work-update.md)
 
 ```markdown
 ---
@@ -253,7 +253,7 @@ python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManag
 After updating, display the changes made showing old → new values. All updates are automatically tracked in the work item's update_history.
 ```
 
-### Command with Filters (work-item-list.md)
+### Command with Filters (work-list.md)
 
 ```markdown
 ---
@@ -335,18 +335,16 @@ Before committing a command file:
 
 ## Plugin Command Structure
 
-For plugins (not applicable to this project, but documented for completeness):
-
-Plugin commands in `commands/` directory follow the same format but may use subdirectories for namespacing:
+For plugins, commands in `commands/` directory follow the same format. Commands are namespaced by the plugin name:
 
 ```
 commands/
-  work-item/
-    create.md     → /work-item:create or /create
-    list.md       → /work-item:list or /list
+  init.md           → /sdd:init
+  work-new.md       → /sdd:work-new
+  work-list.md      → /sdd:work-list
 ```
 
-Commands are automatically namespaced by subdirectory.
+Commands are automatically namespaced by plugin name (e.g., `/sdd:command-name`).
 
 ## References
 

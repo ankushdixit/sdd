@@ -1,6 +1,6 @@
-# Claude Code Session Plugin - Roadmap
+# SDD (Session-Driven Development) - Roadmap
 
-This roadmap outlines the phased development of the Claude Code Session Plugin, a comprehensive Session-Driven Development system for AI-augmented software development.
+This roadmap outlines the phased development of the SDD (Session-Driven Development), a comprehensive Session-Driven Development system for AI-augmented software development.
 
 ---
 
@@ -16,7 +16,7 @@ This roadmap outlines the phased development of the Claude Code Session Plugin, 
 
 **Repository Structure Created:**
 ```
-claude-session-plugin/
+SDD (Session-Driven Development)/
 ├── .claude/
 │   └── commands/                ✅ 16 executable slash commands
 ├── commands/

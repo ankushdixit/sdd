@@ -1,6 +1,6 @@
 # Work Item Show Command
 
-**Usage:** `/work-item show <work_item_id>`
+**Usage:** `/sdd:work-show <work_item_id>`
 
 **Description:** Display detailed information about a specific work item.
 
@@ -19,7 +19,7 @@
 **Example:**
 
 ```
-User: /work-item show feature_oauth
+User: /sdd:work-show feature_oauth
 
 Claude:
 ================================================================================
@@ -56,7 +56,7 @@ so that I don't need to create another password.
 [... rest of specification ...]
 
 Next Steps:
-- Continue working: /session-start
-- Update fields: /work-item update feature_oauth
-- View related items: /work-item list --milestone auth
+- Continue working: /sdd:start
+- Update fields: /sdd:work-update feature_oauth
+- View related items: /sdd:work-list --milestone auth
 ```

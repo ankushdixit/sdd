@@ -3,13 +3,13 @@
 Comprehensive End-to-End Test Script for Phase 1: Core Plugin Foundation
 
 Tests all Phase 1 functionality:
-- Section 1.1: /session-init command
+- Section 1.1: /sdd:init command
 - Section 1.2: Stack tracking system
 - Section 1.3: Tree tracking system
 - Section 1.4: Git workflow integration
 - Section 1.5: Enhanced session-start with context loading
 - Section 1.6: Enhanced session-end with comprehensive updates
-- Section 1.7: /session-validate command
+- Section 1.7: /sdd:validate command
 - Section 1.8: Work item types
 - Section 1.9: Multi-session workflow
 """
@@ -98,7 +98,7 @@ class Phase1Tester:
         print_success("Test project set up")
 
     def test_session_init(self) -> bool:
-        """Test Section 1.1: /session-init command."""
+        """Test Section 1.1: /sdd:init command."""
         print_test_header("Test 1.1: Session Initialization")
 
         try:
@@ -295,7 +295,7 @@ class Phase1Tester:
             return False
 
     def test_session_validate(self) -> bool:
-        """Test Section 1.7: /session-validate command."""
+        """Test Section 1.7: /sdd:validate command."""
         print_test_header("Test 1.7: Session Validation")
 
         try:

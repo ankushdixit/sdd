@@ -1,6 +1,6 @@
 # Session Validate Command
 
-**Usage:** `/session-validate`
+**Usage:** `/sdd:validate`
 
 **Description:** Pre-flight check to validate if current session can complete successfully.
 
@@ -35,7 +35,7 @@
 **Example:**
 
 ```
-User: /session-validate
+User: /sdd:validate
 
 Claude: Running session validation...
 
@@ -45,13 +45,13 @@ Claude: Running session validation...
 ✓ Tracking Updates: No tracking updates
 
 ✅ Session ready to complete!
-Run /session-end to complete the session.
+Run /sdd:end to complete the session.
 ```
 
 **Example with issues:**
 
 ```
-User: /session-validate
+User: /sdd:validate
 
 Claude: Running session validation...
 
@@ -66,7 +66,7 @@ Claude: Running session validation...
 
 ⚠️  Session not ready to complete
 
-Fix the issues above before running /session-end
+Fix the issues above before running /sdd:end
 ```
 
 **Implementation:**

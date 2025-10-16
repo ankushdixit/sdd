@@ -1,6 +1,6 @@
 # Learning Show Command
 
-**Usage:** `/learning-show [--category CATEGORY] [--tag TAG] [--session SESSION]`
+**Usage:** `/sdd:learn-show [--category CATEGORY] [--tag TAG] [--session SESSION]`
 
 **Description:** Browse and filter captured learnings with optional filters.
 
@@ -85,7 +85,7 @@ Total: 12 learnings across 4 categories
 ### Example 1: Show All Learnings
 
 ```
-User: /learning-show
+User: /sdd:learn-show
 
 Claude: [Executes: python3 scripts/learning_curator.py show-learnings]
 
@@ -104,7 +104,7 @@ Total: 25 learnings across 3 categories
 ### Example 2: Filter by Category
 
 ```
-User: /learning-show --category gotchas
+User: /sdd:learn-show --category gotchas
 
 Claude: [Executes: python3 scripts/learning_curator.py show-learnings --category gotchas]
 
@@ -130,7 +130,7 @@ Total: 8 gotchas
 ### Example 3: Filter by Tag
 
 ```
-User: /learning-show --tag fastapi
+User: /sdd:learn-show --tag fastapi
 
 Claude: [Executes: python3 scripts/learning_curator.py show-learnings --tag fastapi]
 
@@ -156,7 +156,7 @@ Total: 5 learnings with tag "fastapi"
 ### Example 4: Filter by Session
 
 ```
-User: /learning-show --session 5
+User: /sdd:learn-show --session 5
 
 Claude: [Executes: python3 scripts/learning_curator.py show-learnings --session 5]
 
@@ -180,7 +180,7 @@ Total: 3 learnings from session 5
 ### Example 5: Combine Filters
 
 ```
-User: /learning-show --category gotchas --tag fastapi
+User: /sdd:learn-show --category gotchas --tag fastapi
 
 Claude: [Executes: python3 scripts/learning_curator.py show-learnings --category gotchas --tag fastapi]
 
@@ -203,9 +203,9 @@ If no learnings match the filters:
 No learnings found matching your filters.
 
 Try:
-- /learning-show (show all learnings)
-- /learning-search <query> (full-text search)
-- /learning-capture (capture a new learning)
+- /sdd:learn-show (show all learnings)
+- /sdd:learn-search <query> (full-text search)
+- /sdd:learn (capture a new learning)
 ```
 
 ## Integration
@@ -218,9 +218,9 @@ This command integrates with:
 
 ## Related Commands
 
-- `/learning-capture` - Capture a new learning
-- `/learning-search <query>` - Full-text search across learnings
-- `/learning-curate` - Run curation process (categorize, deduplicate, merge)
+- `/sdd:learn` - Capture a new learning
+- `/sdd:learn-search <query>` - Full-text search across learnings
+- `/sdd:learn-curate` - Run curation process (categorize, deduplicate, merge)
 
 ## Statistics View
 

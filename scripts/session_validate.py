@@ -272,10 +272,10 @@ class SessionValidator:
         print()
         if all_passed:
             print("✅ Session ready to complete!")
-            print("Run /session-end to complete the session.")
+            print("Run /end to complete the session.")
         else:
             print("⚠️  Session not ready to complete")
-            print("\nFix the issues above before running /session-end")
+            print("\nFix the issues above before running /end")
 
         return {"ready": all_passed, "checks": checks}
 

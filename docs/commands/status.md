@@ -1,6 +1,6 @@
 # Session Status Command
 
-**Usage:** `/session-status`
+**Usage:** `/sdd:status`
 
 **Description:** Display current session state and progress.
 
@@ -15,7 +15,7 @@
 **Example:**
 
 ```
-User: /session-status
+User: /sdd:status
 
 Claude:
 Current Session Status
@@ -46,7 +46,7 @@ Next up:
   🟡 feature_email_notifications (ready)
 
 Quick actions:
-  - Validate session: /session-validate
-  - Complete session: /session-end
-  - View work item: /work-item show feature_user_profile
+  - Validate session: /sdd:validate
+  - Complete session: /sdd:end
+  - View work item: /sdd:work-show feature_user_profile
 ```

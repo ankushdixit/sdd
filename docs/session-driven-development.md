@@ -108,7 +108,7 @@ project-root/
 └── [your project files...]
 ```
 
-**Note:** The Session plugin provides the automation through Claude Code commands (`/session-start`, `/session-end`, etc.). No scripts directory is needed in your project - all automation is handled by the plugin.
+**Note:** The Session plugin provides the automation through Claude Code commands (`/sdd:start`, `/sdd:end`, etc.). No scripts directory is needed in your project - all automation is handled by the plugin.
 
 ### Key Files Explained
 
@@ -1429,7 +1429,7 @@ Framework emphasizes comprehensive documentation:
 
 1. Install the Session plugin in Claude Code
 2. Navigate to your project
-3. Run `/session-start` to initialize the `.session/` directory
+3. Run `/sdd:start` to initialize the `.session/` directory
 
 The plugin will automatically create the necessary directory structure when you start your first session.
 ```
@@ -2502,7 +2502,7 @@ The Session plugin is installed through Claude Code's plugin system. Refer to PL
 
 ```bash
 # Initialize SDD in project
-/session-start
+/sdd:start
 
 # Work item management
 /work-item create
@@ -2513,10 +2513,10 @@ The Session plugin is installed through Claude Code's plugin system. Refer to PL
 /work-item import <file.yaml>
 
 # Session management
-/session-start [--next|--item <id>]
-/session-end
-/session-validate
-/session-status
+/sdd:start [--next|--item <id>]
+/sdd:end
+/sdd:validate
+/sdd:status
 
 # Documentation
 /docs update
@@ -3544,9 +3544,9 @@ Generated: {timestamp}
 
 ---
 **Commands:**
-- Status: `/session-status`
-- Validate: `/session-validate`
-- Complete: `/session-end`
+- Status: `/sdd:status`
+- Validate: `/sdd:validate`
+- Complete: `/sdd:end`
 ```
 
 ---
@@ -3560,7 +3560,7 @@ Generated: {timestamp}
 cd existing-project
 
 # Analyze current state and initialize
-/session-start
+/sdd:start
 ```
 
 The plugin will analyze:
