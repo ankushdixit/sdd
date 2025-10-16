@@ -3,13 +3,13 @@
 Comprehensive End-to-End Test Script for Phase 1: Core Plugin Foundation
 
 Tests all Phase 1 functionality:
-- Section 1.1: /sdd:init command
+- Section 1.1: /init command
 - Section 1.2: Stack tracking system
 - Section 1.3: Tree tracking system
 - Section 1.4: Git workflow integration
-- Section 1.5: Enhanced session-start with context loading
-- Section 1.6: Enhanced session-end with comprehensive updates
-- Section 1.7: /sdd:validate command
+- Section 1.5: Enhanced /start with context loading
+- Section 1.6: Enhanced /end with comprehensive updates
+- Section 1.7: /validate command
 - Section 1.8: Work item types
 - Section 1.9: Multi-session workflow
 """
@@ -98,18 +98,18 @@ class Phase1Tester:
         print_success("Test project set up")
 
     def test_session_init(self) -> bool:
-        """Test Section 1.1: /sdd:init command."""
+        """Test Section 1.1: /init command."""
         print_test_header("Test 1.1: Session Initialization")
 
         try:
-            # Run session-init
+            # Run /init
             returncode, stdout, stderr = run_command(
                 "python3 scripts/init_project.py",
                 cwd=str(self.test_dir)
             )
 
             if returncode != 0:
-                print_failure(f"session-init failed with code {returncode}")
+                print_failure(f"/init failed with code {returncode}")
                 print_info(f"stderr: {stderr}")
                 return False
 
@@ -164,7 +164,7 @@ class Phase1Tester:
             return True
 
         except Exception as e:
-            print_failure(f"Exception during session-init: {e}")
+            print_failure(f"Exception during /init: {e}")
             return False
 
     def test_work_item_creation(self) -> bool:
@@ -225,7 +225,7 @@ class Phase1Tester:
             return False
 
     def test_session_start(self) -> bool:
-        """Test Section 1.5: Enhanced session-start."""
+        """Test Section 1.5: Enhanced /start."""
         print_test_header("Test 1.5: Session Start with Context Loading")
 
         try:

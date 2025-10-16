@@ -2,7 +2,7 @@
 """
 Session validation - pre-flight check before completion.
 
-Validates all conditions required for successful session-end without
+Validates all conditions required for successful /end without
 actually making any changes.
 """
 

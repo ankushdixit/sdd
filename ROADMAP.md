@@ -20,8 +20,8 @@ SDD (Session-Driven Development)/
 ├── .claude/
 │   └── commands/                ✅ 16 executable slash commands
 ├── commands/
-│   ├── session-start.md         ✅ Basic definition
-│   └── session-end.md           ✅ Basic definition
+│   ├── start.md                 ✅ Basic definition
+│   └── end.md                   ✅ Basic definition
 ├── scripts/
 │   ├── briefing_generator.py    ✅ Basic version
 │   ├── session_complete.py      ✅ Basic version
@@ -65,12 +65,12 @@ SDD (Session-Driven Development)/
 
 ### What's Missing (Phase 1 Will Add)
 
-- ❌ `/session-init` command (project initialization)
+- ❌ `/init` command (project initialization)
 - ❌ Stack tracking system (generate_stack.py, stack.txt, stack_updates.json)
 - ❌ Tree tracking system (generate_tree.py, tree.txt, tree_updates.json)
 - ❌ Git workflow integration (git_integration.py, branch management)
-- ❌ Enhanced session-start (load full context: docs, stack, tree, git)
-- ❌ Enhanced session-end (update stack, tree, git operations, comprehensive reporting)
+- ❌ Enhanced `/start` (load full context: docs, stack, tree, git)
+- ❌ Enhanced `/end` (update stack, tree, git operations, comprehensive reporting)
 - ❌ Integration/deployment work item types
 
 ### Comprehensive Testing
@@ -94,13 +94,13 @@ SDD (Session-Driven Development)/
 ### Accomplishments
 
 **All 9 Sections Implemented:**
-1. ✅ Section 1.1: `/session-init` command
+1. ✅ Section 1.1: `/init` command
 2. ✅ Section 1.2: Stack tracking system (generate_stack.py)
 3. ✅ Section 1.3: Tree tracking system (generate_tree.py)
 4. ✅ Section 1.4: Git workflow integration (git_integration.py)
-5. ✅ Section 1.5: Enhanced session-start with context loading
-6. ✅ Section 1.6: Enhanced session-end with comprehensive updates
-7. ✅ Section 1.7: `/session-validate` command
+5. ✅ Section 1.5: Enhanced `/start` with context loading
+6. ✅ Section 1.6: Enhanced `/end` with comprehensive updates
+7. ✅ Section 1.7: `/validate` command
 8. ✅ Section 1.8: Work item types (6 types: feature, bug, refactor, security, integration_test, deployment)
 9. ✅ Section 1.9: Comprehensive testing and validation
 
@@ -118,7 +118,7 @@ SDD (Session-Driven Development)/
 ### Features
 
 - [x] **Session initialization command**
-  - `/session-init` - Initialize .session/ structure in project
+  - `/init` - Initialize .session/ structure in project
   - Check for project documentation (docs/ folder)
   - Create directory structure and tracking files
   - Run initial stack and tree scans
@@ -129,24 +129,24 @@ SDD (Session-Driven Development)/
   - Generate `tracking/stack.txt` (current technologies)
   - Update `tracking/stack_updates.json` (changes with reasoning)
   - Detect: languages, frameworks, libraries, MCP servers, external APIs
-  - Integration: Run on session-end, include in session-start briefing
+  - Integration: Run on `/end`, include in `/start` briefing
 
 - [x] **Tree tracking system**
   - `scripts/generate_tree.py` - Generate project structure
   - Generate `tracking/tree.txt` (current structure)
   - Update `tracking/tree_updates.json` (structural changes with reasoning)
   - Detect: new directories, file moves, architectural changes
-  - Integration: Run on session-end, include in session-start briefing
+  - Integration: Run on `/end`, include in `/start` briefing
 
 - [x] **Git workflow integration**
   - `scripts/git_integration.py` - Automate git operations
-  - Session-start: Check git status, create/resume branch
-  - Session-end: Commit, push, optionally merge
+  - `/start`: Check git status, create/resume branch
+  - `/end`: Commit, push, optionally merge
   - Track git state in work_items.json (branch, commits, status)
   - Support multi-session work items (continue same branch)
   - Handle small work items (may not need separate branch)
 
-- [x] **Enhanced session-start**
+- [x] **Enhanced /start**
   - Read project documentation (vision, PRD, architecture)
   - Load current stack (from stack.txt)
   - Load current tree structure (from tree.txt)
@@ -155,7 +155,7 @@ SDD (Session-Driven Development)/
   - Generate comprehensive briefing with full context
   - Update work item status to in_progress
 
-- [x] **Enhanced session-end**
+- [x] **Enhanced /end**
   - Run quality gates (tests, linting, formatting)
   - Update stack.txt and stack_updates.json (if changes detected)
   - Update tree.txt and tree_updates.json (if structure changed)
@@ -167,9 +167,9 @@ SDD (Session-Driven Development)/
   - Generate comprehensive session report
 
 - [x] **Session validation command**
-  - `/session-validate` - Pre-flight check before session-end
+  - `/validate` - Pre-flight check before `/end`
   - Validates git status, quality gates, acceptance criteria
-  - Non-destructive preview of what session-end will do
+  - Non-destructive preview of what `/end` will do
   - Shows what needs fixing before completion
   - Helps developer fix issues proactively
 
@@ -182,7 +182,7 @@ SDD (Session-Driven Development)/
 ### Implementation Order
 
 **Week 1: Foundation**
-- 1.1: Create `/session-init` command
+- 1.1: Create `/init` command
 - 1.2: Implement `generate_stack.py`
 - 1.3: Implement `generate_tree.py`
 - 1.4: Implement `git_integration.py`
@@ -190,7 +190,7 @@ SDD (Session-Driven Development)/
 **Week 2: Enhancement**
 - 1.5: Enhance `briefing_generator.py` to read all context
 - 1.6: Enhance `session_complete.py` to update all tracking
-- 1.7: Add `/session-validate` command
+- 1.7: Add `/validate` command
 - 1.8: Add integration/deployment work item types
 
 **Week 3: Testing**
@@ -199,17 +199,17 @@ SDD (Session-Driven Development)/
   - Test multi-session work items
   - Test branch continuation
   - Validate all tracking files updated correctly
-  - Test `/session-validate` command
+  - Test `/validate` command
 
 ### Success Criteria
 
-✅ `/session-init` successfully initializes project structure ✓
+✅ `/init` successfully initializes project structure ✓
 ✅ Stack tracking detects and records all technologies with reasoning ✓
 ✅ Tree tracking detects and records structural changes with reasoning ✓
 ✅ Git workflow prevents mistakes (wrong branch, uncommitted changes) ✓
-✅ Session-start loads complete project context ✓
-✅ Session-end updates all tracking files correctly ✓
-✅ `/session-validate` accurately previews session completion readiness ✓
+✅ `/start` loads complete project context ✓
+✅ `/end` updates all tracking files correctly ✓
+✅ `/validate` accurately previews session completion readiness ✓
 ✅ Multi-session work items continue on same branch ✓
 ✅ Quality gates prevent broken states ✓
 ✅ Integration/deployment work item types properly validated ✓
@@ -242,17 +242,17 @@ SDD (Session-Driven Development)/
 
 **All 9 Sections Implemented:**
 1. ✅ Section 2.1: Work item type templates (6 types: feature, bug, refactor, security, integration_test, deployment)
-2. ✅ Section 2.2: `/work-item-create` command with conversational interface
-3. ✅ Section 2.3: `/work-item-list` command with filtering and sorting
-4. ✅ Section 2.4: `/work-item-show` command with full details
-5. ✅ Section 2.5: `/work-item-update` command with field editing
-6. ✅ Section 2.6: `/work-item-next` command with dependency resolution
+2. ✅ Section 2.2: `/work-new` command with conversational interface
+3. ✅ Section 2.3: `/work-list` command with filtering and sorting
+4. ✅ Section 2.4: `/work-show` command with full details
+5. ✅ Section 2.5: `/work-update` command with field editing
+6. ✅ Section 2.6: `/work-next` command with dependency resolution
 7. ✅ Section 2.7: Milestone tracking integrated into work items
 8. ✅ Section 2.8: Enhanced briefings with milestone context
-9. ✅ Section 2.9: `/session-status` command for quick session overview
+9. ✅ Section 2.9: `/status` command for quick session overview
 
 **Critical Fixes Implemented:**
-- ✅ Issue #8: Made `/work-item-create` work in Claude Code non-TTY environment by implementing conversational pattern
+- ✅ Issue #8: Made `/work-new` work in Claude Code non-TTY environment by implementing conversational pattern
 - ✅ Issue #9: Updated all slash commands to follow official Anthropic format
 
 **Statistics:**
@@ -271,7 +271,7 @@ SDD (Session-Driven Development)/
   - Template auto-loading on creation
 
 - [x] **2.2: Work item creation command**
-  - `/work-item-create` - Conversational work item creation
+  - `/work-new` - Conversational work item creation
   - Type selection with validation
   - Field validation based on type
   - Dependency specification
@@ -279,27 +279,27 @@ SDD (Session-Driven Development)/
   - Non-interactive CLI mode for Claude Code
 
 - [x] **2.3: Work item listing command**
-  - `/work-item-list [--status] [--type] [--milestone]` - List with filters
+  - `/work-list [--status] [--type] [--milestone]` - List with filters
   - Color-coded by priority (🔴🟠🟡🟢)
   - Show dependency indicators
   - Filter by status, type, milestone
   - Sort by priority and dependencies
 
 - [x] **2.4: Work item details command**
-  - `/work-item-show <id>` - Show work item details
+  - `/work-show <id>` - Show work item details
   - Display full specification
   - Show dependency tree
   - Display session history
   - Show git branch status
 
 - [x] **2.5: Work item update command**
-  - `/work-item-update <id> [--field value]` - Update work item fields
+  - `/work-update <id> [--field value]` - Update work item fields
   - CLI-based field editing
   - Validation based on type
   - Track update history in git
 
 - [x] **2.6: Next work item command**
-  - `/work-item-next` - Show next available item
+  - `/work-next` - Show next available item
   - Respect dependencies
   - Consider priority
   - Show why blocked items can't start
@@ -312,13 +312,13 @@ SDD (Session-Driven Development)/
   - Milestone-based filtering
 
 - [x] **2.8: Enhanced briefings with milestones**
-  - Include milestone context in session-start
+  - Include milestone context in `/start`
   - Show dependency status
   - List related work items
   - Include previous session notes from history
 
 - [x] **2.9: Session status command**
-  - `/session-status` - Show current session state
+  - `/status` - Show current session state
   - Display work item context, progress, time elapsed
   - Show files changed, git branch status
   - Quick reference without re-reading full briefing
@@ -338,7 +338,7 @@ SDD (Session-Driven Development)/
 ✅ Dependencies enforced automatically ✓
 ✅ Milestones track progress accurately ✓
 ✅ Briefings include comprehensive context ✓
-✅ `/session-status` provides quick session overview ✓
+✅ `/status` provides quick session overview ✓
 ✅ Session context easily accessible without re-reading briefing ✓
 ✅ All commands work in Claude Code environment ✓
 
@@ -347,7 +347,7 @@ SDD (Session-Driven Development)/
 ✅ Automated test script created ([tests/phase_2/test_phase_2_complete.py](tests/phase_2/test_phase_2_complete.py)) - 9/9 tests passing (15th Oct 2025)
 
 **Test Coverage:**
-- ✅ All 10 commands tested and working (session-init, session-start, session-end, session-validate, session-status, work-item-create, work-item-list, work-item-show, work-item-update, work-item-next)
+- ✅ All 10 commands tested and working (init, start, end, validate, status, work-new, work-list, work-show, work-update, work-next)
 - ✅ Work item CRUD operations validated
 - ✅ Dependency resolution tested
 - ✅ Milestone tracking validated
@@ -369,7 +369,7 @@ SDD (Session-Driven Development)/
 ### Accomplishments
 
 **All 6 Sections Implemented:**
-1. ✅ Section 3.1: `/work-item-graph` command with conversational interface
+1. ✅ Section 3.1: `/work-graph` command with conversational interface
 2. ✅ Section 3.2: Critical path analysis verified and tested
 3. ✅ Section 3.3: Graph filtering options (status, milestone, type, focus, include-completed)
 4. ✅ Section 3.4: Multiple output formats (ASCII, DOT, SVG)
@@ -380,13 +380,13 @@ SDD (Session-Driven Development)/
 - 3 files modified/created: 1 new command, 2 enhanced files
 - 426 lines added total
 - 313 lines enhanced in dependency_graph.py
-- 139 lines in work-item-graph.md command
+- 139 lines in work-graph.md command
 - 31 lines added to README.md
 
 ### Features
 
 - [x] **3.1: Work item graph command**
-  - `/work-item-graph [--format] [--filter]` - Generate dependency graphs
+  - `/work-graph [--format] [--filter]` - Generate dependency graphs
   - Uses existing `scripts/dependency_graph.py`
   - ASCII output (terminal-friendly, default)
   - DOT format output (Graphviz)
@@ -486,7 +486,7 @@ SDD (Session-Driven Development)/
 6. ✅ Section 4.6: Documentation and comprehensive testing
 
 **Critical Implementation:**
-- ✅ Config file location fixed: `.session/config.json` created during `/session-init`, not manually
+- ✅ Config file location fixed: `.session/config.json` created during `/init`, not manually
 - ✅ Multi-source extraction: Session summaries, git commits (LEARNING: annotations), inline comments (# LEARNING:)
 - ✅ Argparse subparsers: Clean CLI with 7 subcommands (curate, show-learnings, search, add-learning, report, statistics, timeline)
 
@@ -500,10 +500,10 @@ SDD (Session-Driven Development)/
 ### Features
 
 - [x] **4.1: Learning capture commands**
-  - `/learning-capture` - Record a learning during session
-  - `/learning-show [--category] [--tag] [--session]` - View learnings with filters
-  - `/learning-search <query>` - Full-text search across learnings
-  - `/learning-curate [--dry-run]` - Manual curation trigger
+  - `/learn` - Record a learning during session
+  - `/learn-show [--category] [--tag] [--session]` - View learnings with filters
+  - `/learn-search <query>` - Full-text search across learnings
+  - `/learn-curate [--dry-run]` - Manual curation trigger
   - Conversational interface for learning capture
   - Command integration with Claude Code
 
@@ -547,7 +547,7 @@ SDD (Session-Driven Development)/
 
 ### Lessons Learned
 
-1. **Config File Location Critical:** `.session/config.json` must be created during `/session-init`, not manually, since `.session/` folder is runtime-created and cleaned during testing
+1. **Config File Location Critical:** `.session/config.json` must be created during `/init`, not manually, since `.session/` folder is runtime-created and cleaned during testing
 2. **Multi-Source Extraction Valuable:** Extracting learnings from session summaries, git commits, and inline comments captures knowledge from diverse sources
 3. **Similarity Algorithms Effective:** Jaccard (0.6) and containment (0.8) thresholds effectively detect and merge duplicates
 4. **Argparse Subparsers Clean:** Using subparsers for multiple commands provides intuitive CLI interface
@@ -606,7 +606,7 @@ SDD (Session-Driven Development)/
 - ✅ pytest exit code 5 handling: Treats "no tests collected" as skipped, not failed
 - ✅ Auto-fix modes: Linting and formatting can automatically fix issues
 - ✅ Required vs optional gates: Configurable enforcement levels
-- ✅ Config integration: Quality gates configuration added to session-init
+- ✅ Config integration: Quality gates configuration added to `/init`
 
 **Statistics:**
 - 3 files created/enhanced: quality_gates.py (770 lines new), session_complete.py (75 lines refactored), init_project.py (53 lines added)

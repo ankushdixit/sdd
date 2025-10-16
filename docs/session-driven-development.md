@@ -126,8 +126,8 @@ Defines project-specific SDD settings:
   },
 
   "session_protocol": {
-    "start_trigger": "@session-start",
-    "end_trigger": "@session-end",
+    "start_trigger": "/start",
+    "end_trigger": "/end",
     "auto_briefing": true
   },
 
@@ -176,14 +176,14 @@ Auto-generated file that Claude Code reads automatically. Contains:
 ## Session Protocol
 
 ### Starting a Session
-When you see `@session-start`:
+When you run `/start`:
 1. Run: `python .session/scripts/session_init.py --next`
 2. Read generated briefing
 3. Validate environment
 4. Begin work
 
 ### Ending a Session
-When you see `@session-end`:
+When you run `/end`:
 1. Run tests
 2. Run: `python .session/scripts/session_complete.py`
 3. Update documentation
@@ -1068,12 +1068,12 @@ python .session/scripts/curate_learnings.py --report
 
 **User initiates session:**
 ```
-User: @session-start
+User: /start
 ```
 
 **Claude's workflow:**
 1. Read CLAUDE.md (automatic)
-2. Sees `@session-start` trigger in protocol
+2. Sees `/start` trigger in protocol
 3. Runs: `python .session/scripts/session_init.py --next`
 4. Validates git status (clean working directory)
 5. Creates or resumes branch for work item
@@ -1120,7 +1120,7 @@ Next: Token refresh mechanism
 
 **User signals completion:**
 ```
-User: @session-end
+User: /end
 ```
 
 **Claude's workflow:**
@@ -1459,7 +1459,7 @@ Next steps:
 1. Review .sessionrc.json configuration
 2. Create docs/vision.md with project goals
 3. Define initial work items: /work-item create
-4. Start first session: @session-start
+4. Start first session: /start
 ```
 
 ### Creating Work Items
@@ -2316,7 +2316,7 @@ work_items:
 **Session 1: Project Setup**
 
 ```
-User: @session-start
+User: /start
 
 Claude:
 Session 1 initialized: Project Structure & CI/CD
@@ -2334,7 +2334,7 @@ User: Yes, let's use Python 3.11, FastAPI, and PostgreSQL
 
 [Claude implements project structure...]
 
-User: @session-end
+User: /end
 
 Claude:
 Session 1 completed successfully!
@@ -2351,7 +2351,7 @@ Dependencies satisfied, ready to start.
 **Session 2: User Model**
 
 ```
-User: @session-start
+User: /start
 
 Claude:
 Session 2 initialized: User Model & Database
@@ -2371,7 +2371,7 @@ I'll implement:
 
 Learning captured: "Use async SQLAlchemy for database operations"
 
-User: @session-end
+User: /end
 
 Claude:
 Session 2 completed successfully!
@@ -2396,7 +2396,7 @@ Similar pattern continues...
 **Session 10: Discovering Technical Debt**
 
 ```
-User: @session-start
+User: /start
 
 Claude:
 Session 10 initialized: Task Management API
@@ -2683,7 +2683,7 @@ jobs:
 2. Initialize: `plugin initialization`
 3. Create docs: vision.md, architecture.md
 4. Define work items: `/work-item create`
-5. Start first session: `@session-start`
+5. Start first session: `/start`
 
 ### Resources
 
@@ -3054,7 +3054,7 @@ Session completion blocked.
 **Full Session Completion with All Gates:**
 
 ```
-User: @session-end
+User: /end
 
 Claude: Running session completion...
 
@@ -3237,8 +3237,8 @@ Updated session notes:
   },
 
   "session_protocol": {
-    "start_trigger": "@session-start",
-    "end_trigger": "@session-end",
+    "start_trigger": "/start",
+    "end_trigger": "/end",
     "auto_briefing": true,
     "briefing_template": "default"
   },
@@ -3625,7 +3625,7 @@ plugin initialization --existing
 /work-item create
 
 # Start session
-User: @session-start
+User: /start
 ```
 
 ---

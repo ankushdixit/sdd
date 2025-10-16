@@ -9,7 +9,7 @@ This document consolidates valuable implementation insights from the first attem
 
 ### Session Lifecycle
 
-**Initialization (session-start)**
+**Initialization (/start)**
 1. Validate environment (git clean, dependencies met)
 2. Select next work item (dependency-aware)
 3. Generate briefing file with:
@@ -21,7 +21,7 @@ This document consolidates valuable implementation insights from the first attem
 4. Present briefing to AI
 5. Begin implementation
 
-**Completion (session-end)**
+**Completion (/end)**
 1. Run quality gates:
    - Test execution (with coverage requirements)
    - Linting (with auto-fix)
