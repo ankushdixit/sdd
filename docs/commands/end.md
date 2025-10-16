@@ -1,6 +1,6 @@
 # Session End Command
 
-**Usage:** `/session-end`
+**Usage:** `/sdd:end`
 
 **Description:** Complete current session with quality gates and summary generation.
 
@@ -30,7 +30,7 @@
 **Example:**
 
 ```
-User: /session-end
+User: /sdd:end
 
 Claude: Completing session...
 

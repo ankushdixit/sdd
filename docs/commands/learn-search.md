@@ -1,6 +1,6 @@
 # Learning Search Command
 
-**Usage:** `/learning-search <query>`
+**Usage:** `/sdd:learn-search <query>`
 
 **Description:** Full-text search across all learning content, tags, and context.
 
@@ -84,7 +84,7 @@ Relevance indicators:
 ### Example 1: Single Word Search
 
 ```
-User: /learning-search pytest
+User: /sdd:learn-search pytest
 
 Claude: [Executes: python3 scripts/learning_curator.py search "pytest"]
 
@@ -119,7 +119,7 @@ Total: 7 learnings found
 ### Example 2: Multi-Word Search
 
 ```
-User: /learning-search fastapi middleware
+User: /sdd:learn-search fastapi middleware
 
 Claude: [Executes: python3 scripts/learning_curator.py search "fastapi middleware"]
 
@@ -160,7 +160,7 @@ Total: 3 learnings found
 ### Example 3: No Results
 
 ```
-User: /learning-search kubernetes
+User: /sdd:learn-search kubernetes
 
 Claude: [Executes: python3 scripts/learning_curator.py search "kubernetes"]
 
@@ -170,15 +170,15 @@ No learnings found matching "kubernetes"
 
 Suggestions:
 - Try broader search terms (e.g., "container", "deployment")
-- Browse by category: /learning-show --category architecture_patterns
-- View all learnings: /learning-show
-- Capture this as a new learning: /learning-capture
+- Browse by category: /sdd:learn-show --category architecture_patterns
+- View all learnings: /sdd:learn-show
+- Capture this as a new learning: /sdd:learn
 ```
 
 ### Example 4: Phrase Search
 
 ```
-User: /learning-search "order matters"
+User: /sdd:learn-search "order matters"
 
 Claude: [Executes: python3 scripts/learning_curator.py search "order matters"]
 
@@ -218,15 +218,15 @@ When presenting results, include helpful tips:
 - Use specific keywords for better results (e.g., "pytest fixtures" instead of "testing")
 - Try tag names to find related learnings (e.g., "fastapi", "security")
 - Use category names to narrow scope (e.g., "gotchas", "best_practices")
-- Combine with filters: /learning-show --category gotchas --tag fastapi
-- Add quotes for exact phrases: /learning-search "order matters"
+- Combine with filters: /sdd:learn-show --category gotchas --tag fastapi
+- Add quotes for exact phrases: /sdd:learn-search "order matters"
 ```
 
 ## Related Commands
 
-- `/learning-show [--category] [--tag] [--session]` - Browse with filters
-- `/learning-capture` - Capture a new learning
-- `/learning-curate` - Run curation to improve search results
+- `/sdd:learn-show [--category] [--tag] [--session]` - Browse with filters
+- `/sdd:learn` - Capture a new learning
+- `/sdd:learn-curate` - Run curation to improve search results
 
 ## Advanced Features
 

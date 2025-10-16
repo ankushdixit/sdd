@@ -1,6 +1,6 @@
 # Work Item Graph Command
 
-**Usage:** `/work-item-graph [OPTIONS]`
+**Usage:** `/sdd:work-graph [OPTIONS]`
 
 **Description:** Generate dependency graph visualization for work items with critical path analysis and bottleneck detection.
 
@@ -138,7 +138,7 @@ Rendered graph image suitable for documentation, presentations, or embedding in 
 ### Example 1: Basic Graph (All Incomplete Items)
 
 ```
-User: /work-item-graph
+User: /sdd:work-graph
 
 Claude: [Executes: python3 scripts/dependency_graph.py]
 
@@ -172,7 +172,7 @@ Next Recommended: feature-001 (in progress, high priority, critical path)
 ### Example 2: Critical Path Analysis
 
 ```
-User: /work-item-graph --critical-path
+User: /sdd:work-graph --critical-path
 
 Claude: [Executes: python3 scripts/dependency_graph.py --critical-path]
 
@@ -205,7 +205,7 @@ Timeline:
 ### Example 3: Bottleneck Detection
 
 ```
-User: /work-item-graph --bottlenecks
+User: /sdd:work-graph --bottlenecks
 
 Claude: [Executes: python3 scripts/dependency_graph.py --bottlenecks]
 
@@ -242,7 +242,7 @@ Items that block multiple other items (prioritize these!):
 ### Example 4: Milestone View
 
 ```
-User: /work-item-graph --milestone "Phase 3" --include-completed
+User: /sdd:work-graph --milestone "Phase 3" --include-completed
 
 Claude: [Executes: python3 scripts/dependency_graph.py --milestone "Phase 3" --include-completed]
 
@@ -278,7 +278,7 @@ Next Item: feature-012 (in progress)
 ### Example 5: Focus on Specific Item
 
 ```
-User: /work-item-graph --focus feature-002
+User: /sdd:work-graph --focus feature-002
 
 Claude: [Executes: python3 scripts/dependency_graph.py --focus feature-002]
 
@@ -316,7 +316,7 @@ Impact: Completing feature-002 will unblock 2 items
 ### Example 6: Statistics Only
 
 ```
-User: /work-item-graph --stats
+User: /sdd:work-graph --stats
 
 Claude: [Executes: python3 scripts/dependency_graph.py --stats]
 
@@ -369,7 +369,7 @@ Next Recommended Items:
 ### Example 7: Export to SVG
 
 ```
-User: /work-item-graph --format svg --output project-dependencies.svg
+User: /sdd:work-graph --format svg --output project-dependencies.svg
 
 Claude: [Executes: python3 scripts/dependency_graph.py --format svg --output project-dependencies.svg]
 
@@ -397,7 +397,7 @@ To view: open project-dependencies.svg
 ### Example 8: Combined Filters
 
 ```
-User: /work-item-graph --status not_started --milestone "Phase 3" --type feature
+User: /sdd:work-graph --status not_started --milestone "Phase 3" --type feature
 
 Claude: [Executes: python3 scripts/dependency_graph.py --status not_started --milestone "Phase 3" --type feature]
 
@@ -453,37 +453,37 @@ Next Recommended: feature-012 (critical path, high priority, no blockers)
 
 ### 1. Project Planning
 ```bash
-/work-item-graph --stats
+/sdd:work-graph --stats
 ```
 Get overview of project structure and completion status.
 
 ### 2. Sprint Planning
 ```bash
-/work-item-graph --milestone "Sprint 5" --status not_started
+/sdd:work-graph --milestone "Sprint 5" --status not_started
 ```
 See what's available to work on in upcoming sprint.
 
 ### 3. Timeline Estimation
 ```bash
-/work-item-graph --critical-path
+/sdd:work-graph --critical-path
 ```
 Identify minimum project duration.
 
 ### 4. Unblocking Work
 ```bash
-/work-item-graph --bottlenecks
+/sdd:work-graph --bottlenecks
 ```
 Find high-impact items to prioritize.
 
 ### 5. Documentation
 ```bash
-/work-item-graph --format svg --output docs/dependencies.svg
+/sdd:work-graph --format svg --output docs/dependencies.svg
 ```
 Generate visual documentation for architecture reviews.
 
 ### 6. Status Reports
 ```bash
-/work-item-graph --milestone "Q4 Goals" --include-completed
+/sdd:work-graph --milestone "Q4 Goals" --include-completed
 ```
 Show progress on milestone objectives.
 
@@ -514,10 +514,10 @@ This command integrates with:
 
 ## Related Commands
 
-- `/work-item-next` - Get next recommended work item (considers dependencies)
-- `/work-item-list` - List work items with filters
-- `/work-item-show <id>` - Show detailed work item including dependency info
-- `/session-start <id>` - Start working on recommended item
+- `/sdd:work-next` - Get next recommended work item (considers dependencies)
+- `/sdd:work-list` - List work items with filters
+- `/sdd:work-show <id>` - Show detailed work item including dependency info
+- `/sdd:start <id>` - Start working on recommended item
 
 ## Requirements
 

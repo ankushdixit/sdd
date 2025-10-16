@@ -135,9 +135,9 @@ def get_session_status():
 
     # Quick actions
     print("Quick actions:")
-    print("  - Validate session: /session-validate")
-    print("  - Complete session: /session-end")
-    print(f"  - View work item: /work-item show {work_item_id}")
+    print("  - Validate session: /validate")
+    print("  - Complete session: /end")
+    print(f"  - View work item: /work-show {work_item_id}")
     print()
 
     return 0

@@ -6,16 +6,21 @@ This directory contains **executable command files** for Claude Code slash comma
 
 ```
 .claude/commands/          ← Claude Code reads these at runtime
-├── session-init.md        ← Instructions for /session-init
-├── session-start.md       ← Instructions for /session-start
-├── session-end.md         ← Instructions for /session-end
-├── session-validate.md    ← Instructions for /session-validate
-├── session-status.md      ← Instructions for /session-status
-├── work-item-create.md    ← Instructions for /work-item-create
-├── work-item-list.md      ← Instructions for /work-item-list
-├── work-item-show.md      ← Instructions for /work-item-show
-├── work-item-update.md    ← Instructions for /work-item-update
-└── work-item-next.md      ← Instructions for /work-item-next
+├── init.md                ← Instructions for /sdd:init
+├── start.md               ← Instructions for /sdd:start
+├── end.md                 ← Instructions for /sdd:end
+├── validate.md            ← Instructions for /sdd:validate
+├── status.md              ← Instructions for /sdd:status
+├── work-new.md            ← Instructions for /sdd:work-new
+├── work-list.md           ← Instructions for /sdd:work-list
+├── work-show.md           ← Instructions for /sdd:work-show
+├── work-update.md         ← Instructions for /sdd:work-update
+├── work-next.md           ← Instructions for /sdd:work-next
+├── work-graph.md          ← Instructions for /sdd:work-graph
+├── learn.md               ← Instructions for /sdd:learn
+├── learn-show.md          ← Instructions for /sdd:learn-show
+├── learn-search.md        ← Instructions for /sdd:learn-search
+└── learn-curate.md        ← Instructions for /sdd:learn-curate
 
 commands/                  ← Full documentation (not used by Claude Code)
 └── *.md                   ← Detailed specs for developers
@@ -44,23 +49,30 @@ Display results to user.
 ## Available Commands
 
 ### Session Management
-- `/session-init` - Initialize project with Session-Driven Development
-- `/session-start` - Begin work session with comprehensive briefing
-- `/session-end` - Complete session with quality gates
-- `/session-validate` - Check quality standards mid-session
-- `/session-status` - Quick session overview
+- `/sdd:init` - Initialize project with Session-Driven Development
+- `/sdd:start` - Begin work session with comprehensive briefing
+- `/sdd:end` - Complete session with quality gates
+- `/sdd:validate` - Check quality standards mid-session
+- `/sdd:status` - Quick session overview
 
 ### Work Item Management
-- `/work-item-create` - Create new work item interactively
-- `/work-item-list` - List work items with filtering
-- `/work-item-show` - Show detailed work item information
-- `/work-item-update` - Update work item fields
-- `/work-item-next` - Get next recommended work item
+- `/sdd:work-new` - Create new work item interactively
+- `/sdd:work-list` - List work items with filtering
+- `/sdd:work-show` - Show detailed work item information
+- `/sdd:work-update` - Update work item fields
+- `/sdd:work-next` - Get next recommended work item
+- `/sdd:work-graph` - Generate dependency graph visualization
+
+### Learning System
+- `/sdd:learn` - Capture a learning during development session
+- `/sdd:learn-show` - Browse and filter learnings
+- `/sdd:learn-search` - Search learnings by keyword
+- `/sdd:learn-curate` - Run learning curation process
 
 ## How Commands Work
 
-1. **You type**: `/work-item-list` in Claude Code
-2. **Claude reads**: `.claude/commands/work-item-list.md`
+1. **You type**: `/sdd:work-list` in Claude Code
+2. **Claude reads**: `.claude/commands/work-list.md`
 3. **Claude executes**: The Python code/bash commands specified
 4. **Claude displays**: Formatted results to you
 
@@ -82,7 +94,7 @@ To test in a new session:
 1. Open Claude Code in this project
 2. Type `/help` to see all commands
 3. Commands appear with "(project)" label
-4. Try any command (e.g., `/work-item-list`)
+4. Try any command (e.g., `/sdd:work-list`)
 
 ## Adding New Commands
 

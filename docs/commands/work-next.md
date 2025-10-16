@@ -31,7 +31,7 @@ Dependencies: All satisfied
 
 Estimated effort: 2-3 sessions
 
-To start: /session-start
+To start: /sdd:start
 
 Other items waiting:
   🔴 feature_oauth_integration - Blocked by: feature_database_migration

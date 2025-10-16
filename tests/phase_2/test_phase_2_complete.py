@@ -4,14 +4,14 @@ Comprehensive End-to-End Test Script for Phase 2: Work Item System
 
 Tests all Phase 2 functionality:
 - Section 2.1: Complete work item type templates (6 types)
-- Section 2.2: /work-item-create command (conversational interface)
-- Section 2.3: /work-item-list command (filtering and sorting)
-- Section 2.4: /work-item-show command (full details)
-- Section 2.5: /work-item-update command (field editing)
-- Section 2.6: /work-item-next command (dependency resolution)
+- Section 2.2: /sdd:work-new command (conversational interface)
+- Section 2.3: /sdd:work-list command (filtering and sorting)
+- Section 2.4: /sdd:work-show command (full details)
+- Section 2.5: /sdd:work-update command (field editing)
+- Section 2.6: /sdd:work-next command (dependency resolution)
 - Section 2.7: Milestone tracking
 - Section 2.8: Enhanced briefings with milestone context
-- Section 2.9: /session-status command
+- Section 2.9: /sdd:status command
 """
 
 import json

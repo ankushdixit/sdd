@@ -1,6 +1,6 @@
 # Learning Curate Command
 
-**Usage:** `/learning-curate [--dry-run]`
+**Usage:** `/sdd:learn-curate [--dry-run]`
 
 **Description:** Run automatic categorization, similarity detection, and merging of learnings.
 
@@ -152,7 +152,7 @@ Phase 4: Archiving
 
 Would change: 45 → 42 learnings (3 merged, 2 archived)
 
-To apply these changes, run: /learning-curate (without --dry-run)
+To apply these changes, run: /sdd:learn-curate (without --dry-run)
 ```
 
 ## Examples
@@ -160,7 +160,7 @@ To apply these changes, run: /learning-curate (without --dry-run)
 ### Example 1: Normal Curation
 
 ```
-User: /learning-curate
+User: /sdd:learn-curate
 
 Claude: Running learning curation...
 
@@ -196,7 +196,7 @@ After:  27 learnings (1 merged, 0 archived)
 ### Example 2: Dry-Run Preview
 
 ```
-User: /learning-curate --dry-run
+User: /sdd:learn-curate --dry-run
 
 Claude: Previewing curation (no changes will be saved)...
 
@@ -220,13 +220,13 @@ Phase 3: Merging
 
 Would change: 28 → 27 learnings (1 merged)
 
-To apply these changes, run: /learning-curate (without --dry-run)
+To apply these changes, run: /sdd:learn-curate (without --dry-run)
 ```
 
 ### Example 3: No Changes Needed
 
 ```
-User: /learning-curate
+User: /sdd:learn-curate
 
 Claude: [Executes: python3 scripts/learning_curator.py curate]
 
@@ -325,16 +325,16 @@ Curation settings in `.session/config.json`:
 ## Integration
 
 This command integrates with:
-- **Session Workflow** - Auto-runs every N sessions during `/session-end`
+- **Session Workflow** - Auto-runs every N sessions during `/sdd:end`
 - **Learning Capture** - Newly captured learnings are categorized during curation
-- **Learning Display** - Curated learnings appear organized in `/learning-show`
+- **Learning Display** - Curated learnings appear organized in `/sdd:learn-show`
 - **Search** - Better categorization improves search results
 
 ## Related Commands
 
-- `/learning-capture` - Capture a new learning
-- `/learning-show [--category]` - Browse curated learnings
-- `/learning-search <query>` - Search across learnings
+- `/sdd:learn` - Capture a new learning
+- `/sdd:learn-show [--category]` - Browse curated learnings
+- `/sdd:learn-search <query>` - Search across learnings
 
 ## Implementation
 

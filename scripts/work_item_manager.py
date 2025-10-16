@@ -90,7 +90,7 @@ class WorkItemManager:
 
         print("\nNext steps:")
         print(f"1. Edit specification: .session/specs/{work_id}.md")
-        print("2. Start working: /session-start")
+        print("2. Start working: /start")
         print()
 
         return work_id
@@ -153,7 +153,7 @@ class WorkItemManager:
 
         print("\nNext steps:")
         print(f"1. Edit specification: .session/specs/{work_id}.md")
-        print("2. Start working: /session-start")
+        print("2. Start working: /start")
         print()
 
         return work_id
@@ -720,16 +720,16 @@ class WorkItemManager:
             if blocked:
                 print("- Waiting on dependencies to complete")
             else:
-                print("- Start working: /session-start")
+                print("- Start working: /start")
         elif item["status"] == "in_progress":
-            print("- Continue working: /session-start")
+            print("- Continue working: /start")
         elif item["status"] == "completed":
             print("- Work item is complete")
 
-        print(f"- Update fields: /work-item update {work_id}")
+        print(f"- Update fields: /work-update {work_id}")
         if item.get("milestone"):
             print(
-                f"- View related items: /work-item list --milestone {item['milestone']}"
+                f"- View related items: /work-list --milestone {item['milestone']}"
             )
         print()
 
@@ -945,7 +945,7 @@ class WorkItemManager:
         print(f"Estimated effort: {estimated}")
         print()
 
-        print("To start: /session-start")
+        print("To start: /start")
         print()
 
         # Show other items

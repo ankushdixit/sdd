@@ -1,6 +1,6 @@
 # Learning Capture Command
 
-**Usage:** `/learning-capture`
+**Usage:** `/sdd:learn`
 
 **Description:** Capture insights, gotchas, and best practices discovered during development.
 
@@ -79,7 +79,7 @@ Replace placeholders:
 ### Example 1: Complete Learning
 
 ```
-User: /learning-capture
+User: /sdd:learn
 
 Claude: What did you learn?
 User: FastAPI middleware order matters for CORS - add_middleware() calls execute in reverse order
@@ -112,7 +112,7 @@ Claude: ✓ Learning captured!
 ### Example 2: Minimal Learning
 
 ```
-User: /learning-capture
+User: /sdd:learn
 
 Claude: What did you learn?
 User: Use ruff instead of black for faster formatting
@@ -140,13 +140,13 @@ Claude: ✓ Learning captured!
 This command integrates with:
 - **Learning Curation System** - Learnings are auto-categorized and deduplicated during curation
 - **Session Workflow** - Session number is tracked for each learning
-- **Search & Browse** - Learnings can be found via `/learning-search` and `/learning-show`
+- **Search & Browse** - Learnings can be found via `/sdd:learn-search` and `/sdd:learn-show`
 
 ## Related Commands
 
-- `/learning-show` - Browse learnings with filters
-- `/learning-search` - Full-text search across learnings
-- `/learning-curate` - Run curation process (categorize, deduplicate, merge)
+- `/sdd:learn-show` - Browse learnings with filters
+- `/sdd:learn-search` - Full-text search across learnings
+- `/sdd:learn-curate` - Run curation process (categorize, deduplicate, merge)
 
 ## Implementation
 

@@ -1119,7 +1119,7 @@ def main():
 
     if not session_dir.exists():
         print("Error: .session directory not found", file=sys.stderr)
-        print("Run /session-init to initialize the project first\n")
+        print("Run /init to initialize the project first\n")
         sys.exit(1)
 
     curator = LearningsCurator(project_root)

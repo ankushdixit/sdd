@@ -245,8 +245,8 @@ def init_project():
     print("Session-Driven Development initialized successfully!")
     print("=" * 50)
     print("\nNext steps:")
-    print("1. Create work items: /work-item create")
-    print("2. Start first session: /session-start")
+    print("1. Create work items: /work-new")
+    print("2. Start first session: /start")
     print()
 
     return 0

@@ -1,5 +1,5 @@
 {
-  "name": "claude-session-plugin",
+  "name": "sdd",
   "version": "0.5.6",
   "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with quality gates, dependency management, and knowledge accumulation",
   "author": {
@@ -7,8 +7,8 @@
     "url": "https://github.com/ankushdixit"
   },
   "license": "MIT",
-  "homepage": "https://github.com/ankushdixit/claude-session-plugin",
-  "repository": "https://github.com/ankushdixit/claude-session-plugin",
+  "homepage": "https://github.com/ankushdixit/sdd",
+  "repository": "https://github.com/ankushdixit/sdd",
   "keywords": [
     "session-management",
     "quality-gates",

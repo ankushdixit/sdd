@@ -1,4 +1,4 @@
-# Claude Code Session Plugin
+# SDD (Session-Driven Development)
 
 **Session-Driven Development for Claude Code** - Maintain perfect context across multiple AI coding sessions.
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Claude Code Session Plugin implements **Session-Driven Development (SDD)**, a comprehensive methodology that enables AI coding assistants to work on software projects across multiple sessions with perfect context continuity, enforced quality standards, and accumulated institutional knowledge.
+**SDD** implements **Session-Driven Development**, a comprehensive methodology that enables AI coding assistants to work on software projects across multiple sessions with perfect context continuity, enforced quality standards, and accumulated institutional knowledge.
 
 ### The Problem
 
@@ -30,25 +30,25 @@ Session-Driven Development provides:
 ### Core Commands
 
 **Session Management:**
-- `/session-init` - Initialize project with .session/ structure
-- `/session-start` - Begin work session with comprehensive briefing
-- `/session-end` - Complete session with quality gates and summary
-- `/session-validate` - Pre-flight check before session completion
-- `/session-status` - Quick session overview
+- `/init` - Initialize project with .session/ structure
+- `/start` - Begin work session with comprehensive briefing
+- `/end` - Complete session with quality gates and summary
+- `/validate` - Pre-flight check before session completion
+- `/status` - Quick session overview
 
 **Work Item Management:**
-- `/work-item-create` - Create new work item with dependencies
-- `/work-item-list` - List work items with filters
-- `/work-item-show` - Show work item details
-- `/work-item-update` - Update work item fields
-- `/work-item-next` - Get next recommended work item
-- `/work-item-graph` - Visualize dependencies with critical path
+- `/work-new` - Create new work item with dependencies
+- `/work-list` - List work items with filters
+- `/work-show` - Show work item details
+- `/work-update` - Update work item fields
+- `/work-next` - Get next recommended work item
+- `/work-graph` - Visualize dependencies with critical path
 
 **Learning Management:**
-- `/learning-capture` - Capture insight during development
-- `/learning-show` - Browse learnings with filters
-- `/learning-search` - Full-text search across learnings
-- `/learning-curate` - Run curation process (categorize, deduplicate, merge)
+- `/learn` - Capture insight during development
+- `/learn-show` - Browse learnings with filters
+- `/learn-search` - Full-text search across learnings
+- `/learn-curate` - Run curation process (categorize, deduplicate, merge)
 
 ### Key Capabilities
 
@@ -65,10 +65,10 @@ Visualize project structure and identify bottlenecks with dependency graphs:
 
 ```bash
 # Via slash command
-/work-item-graph
-/work-item-graph --critical-path
-/work-item-graph --bottlenecks
-/work-item-graph --milestone "Phase 3"
+/work-graph
+/work-graph --critical-path
+/work-graph --bottlenecks
+/work-graph --milestone "Phase 3"
 
 # Via CLI
 python3 scripts/dependency_graph.py
@@ -89,11 +89,11 @@ Automated knowledge capture and curation with AI-powered categorization:
 
 ```bash
 # Via slash commands
-/learning-capture            # Capture insight conversationally
-/learning-show               # Browse all learnings
-/learning-show --category gotchas --tag fastapi
-/learning-search "CORS"      # Full-text search
-/learning-curate             # Run curation (categorize, deduplicate, merge)
+/learn            # Capture insight conversationally
+/learn-show               # Browse all learnings
+/learn-show --category gotchas --tag fastapi
+/learn-search "CORS"      # Full-text search
+/learn-curate             # Run curation (categorize, deduplicate, merge)
 
 # Via CLI
 python3 scripts/learning_curator.py statistics
@@ -140,13 +140,13 @@ Install the plugin from the official marketplace to use across all your projects
 
 2. **Install the plugin**:
    - Select "Browse and install plugins"
-   - Choose `claude-session-plugin`
+   - Choose `sdd`
    - Click install
 
 3. **Restart Claude Code** to load the plugin
 
 4. **Verify installation**:
-   Type `/session-` and you should see autocomplete suggestions for available session commands.
+   Type `/sdd:` and you should see autocomplete suggestions for available commands.
 
 **Benefits:**
 - ✅ Official distribution method
@@ -164,16 +164,16 @@ For development or if you want full control:
 ```bash
 # Clone to Claude Code's plugins directory
 cd ~/.claude/plugins/
-git clone https://github.com/ankushdixit/claude-session-plugin.git
+git clone https://github.com/ankushdixit/sdd.git
 ```
 
 **Option B: Project-Specific Installation**
 ```bash
 # Clone the repository
-git clone https://github.com/ankushdixit/claude-session-plugin.git
+git clone https://github.com/ankushdixit/sdd.git
 
 # Copy necessary directories to your project
-cd claude-session-plugin
+cd sdd
 cp -r .claude /path/to/your/project/
 cp -r scripts /path/to/your/project/
 cp -r templates /path/to/your/project/
@@ -201,7 +201,7 @@ cp -r templates /path/to/your/project/
 - `ROADMAP.md` - Development roadmap
 - `.git/` - Version control history
 
-See `.pluginignore` for the complete exclusion list. Full documentation is always available at the [GitHub repository](https://github.com/ankushdixit/claude-session-plugin).
+See `.pluginignore` for the complete exclusion list. Full documentation is always available at the [GitHub repository](https://github.com/ankushdixit/sdd).
 
 ## Quick Start
 
@@ -210,7 +210,7 @@ See `.pluginignore` for the complete exclusion list. Full documentation is alway
 Start by initializing the Session-Driven Development structure in your project:
 
 ```
-/session-init
+/init
 ```
 
 This creates:
@@ -226,7 +226,7 @@ This creates:
 Create a work item (task) to work on:
 
 ```
-/work-item-create
+/work-new
 ```
 
 Follow the conversational prompts to specify:
@@ -241,13 +241,13 @@ Follow the conversational prompts to specify:
 When ready to work, start a session:
 
 ```
-/session-start
+/start
 ```
 
 Or specify a work item ID:
 
 ```
-/session-start WI-001
+/start WI-001
 ```
 
 This generates a comprehensive briefing including:
@@ -265,17 +265,17 @@ Develop your feature/fix with Claude Code's assistance. During the session:
 
 - **Capture learnings:**
   ```
-  /learning-capture
+  /learn
   ```
 
 - **Check session status:**
   ```
-  /session-status
+  /status
   ```
 
 - **Validate readiness:**
   ```
-  /session-validate
+  /validate
   ```
 
 ### 5. Complete the Session
@@ -283,7 +283,7 @@ Develop your feature/fix with Claude Code's assistance. During the session:
 When done, end the session:
 
 ```
-/session-end
+/end
 ```
 
 This automatically:
@@ -299,13 +299,13 @@ This automatically:
 
 ```mermaid
 graph TD
-    A[/session-init] --> B[/work-item-create]
-    B --> C[/work-item-list]
-    C --> D[/session-start]
+    A[/init] --> B[/work-new]
+    B --> C[/work-list]
+    C --> D[/start]
     D --> E[Develop with Claude]
-    E --> F[/learning-capture]
-    E --> G[/session-validate]
-    G --> H[/session-end]
+    E --> F[/learn]
+    E --> G[/validate]
+    G --> H[/end]
     H --> I{More work?}
     I -->|Yes| B
     I -->|No| J[Done]
@@ -316,31 +316,31 @@ graph TD
 ### Viewing Work Items
 
 ```
-/work-item-list                    # All work items
-/work-item-list --status not_started  # Filter by status
-/work-item-list --milestone "Phase 1"  # Filter by milestone
-/work-item-show WI-001             # Show specific item
+/work-list                    # All work items
+/work-list --status not_started  # Filter by status
+/work-list --milestone "Phase 1"  # Filter by milestone
+/work-show WI-001             # Show specific item
 ```
 
 ### Managing Dependencies
 
 ```
-/work-item-graph                   # Visualize all dependencies
-/work-item-graph --critical-path   # Show critical path
-/work-item-graph --bottlenecks     # Identify blockers
-/work-item-next                    # Get next available item
+/work-graph                   # Visualize all dependencies
+/work-graph --critical-path   # Show critical path
+/work-graph --bottlenecks     # Identify blockers
+/work-next                    # Get next available item
 ```
 
 ### Updating Work Items
 
 ```
-/work-item-update WI-001 --status in_progress
-/work-item-update WI-001 --priority high
+/work-update WI-001 --status in_progress
+/work-update WI-001 --priority high
 ```
 
 ## Configuration
 
-The plugin is configured via `.session/config.json` (created during `/session-init`):
+The plugin is configured via `.session/config.json` (created during `/init`):
 
 ```json
 {
@@ -391,7 +391,7 @@ The plugin is configured via `.session/config.json` (created during `/session-in
 ## Project Structure
 
 ```
-claude-session-plugin/
+sdd/
 ├── commands/                 # ✅ Executable slash commands (15 commands, for plugin)
 ├── .claude/                  # Claude Code plugin runtime
 │   └── commands/             # Same commands for project-level installation
@@ -505,7 +505,7 @@ Currently, 6 built-in types are supported (feature, bug, refactor, security, int
 
 Yes. The plugin uses standard git commands and integrates with any git remote.
 
-### Q: What happens if I forget to run /session-end?
+### Q: What happens if I forget to run /end?
 
 Your work is still saved in git. You can manually update work items and tracking files, but you'll miss automated quality gates and learning extraction.
 
@@ -555,8 +555,8 @@ Contributions are welcome! This project follows standard open-source contributio
 
 ```bash
 # Clone the repo
-git clone https://github.com/ankushdixit/claude-session-plugin.git
-cd claude-session-plugin
+git clone https://github.com/ankushdixit/sdd.git
+cd sdd
 
 # Install development dependencies
 pip install pytest pytest-cov
@@ -573,7 +573,7 @@ pytest tests/phase_5/test_phase_5_complete.py
 
 MIT License
 
-Copyright (c) 2025 Claude Session Plugin Contributors
+Copyright (c) 2025 SDD Plugin Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

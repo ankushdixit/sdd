@@ -71,5 +71,5 @@ Specification saved to: .session/specs/feature_oauth.md
 
 Next steps:
 1. Edit specification: .session/specs/feature_oauth.md
-2. Start working: /session-start
+2. Start working: /sdd:start
 ```

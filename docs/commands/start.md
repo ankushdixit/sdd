@@ -1,6 +1,6 @@
 # Session Start Command
 
-**Usage:** `/session-start [--item <id>]`
+**Usage:** `/sdd:start [--item <id>]`
 
 **Description:** Initialize a development session with comprehensive briefing.
 
@@ -30,7 +30,7 @@
 **Example:**
 
 ```
-User: /session-start
+User: /sdd:start
 
 Claude: Initializing session...
 
