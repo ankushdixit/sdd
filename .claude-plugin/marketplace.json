@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "claude-session-plugin",
-      "source": ".",
+      "source": "./",
       "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with quality gates, dependency management, and knowledge accumulation"
     }
   ]
