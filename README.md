@@ -1,5 +1,12 @@
 # SDD (Session-Driven Development)
 
+[![Tests](https://img.shields.io/badge/tests-343%20passing-brightgreen)](https://github.com/ankushdixit/sdd/tree/main/tests)
+[![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/ankushdixit/sdd)
+[![GitHub Stars](https://img.shields.io/github/stars/ankushdixit/sdd?style=social)](https://github.com/ankushdixit/sdd/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/ankushdixit/sdd)](https://github.com/ankushdixit/sdd/issues)
+
 **Session-Driven Development for Claude Code** - Maintain perfect context across multiple AI coding sessions.
 
 > **Note:** This is designed for solo developers using Claude Code. It provides comprehensive session management, quality gates, and knowledge accumulation for AI-augmented software development.
@@ -260,16 +267,16 @@ This automatically:
 
 ```mermaid
 graph TD
-    A[/init] --> B[/work-new]
-    B --> C[/work-list]
-    C --> D[/start]
-    D --> E[Develop with Claude]
-    E --> F[/learn]
-    E --> G[/validate]
-    G --> H[/end]
-    H --> I{More work?}
+    A["init"] --> B["work-new"]
+    B --> C["work-list"]
+    C --> D["start"]
+    D --> E["Develop with Claude"]
+    E --> F["learn"]
+    E --> G["validate"]
+    G --> H["end"]
+    H --> I{"More work?"}
     I -->|Yes| B
-    I -->|No| J[Done]
+    I -->|No| J["Done"]
 ```
 
 ## Work Item Management
