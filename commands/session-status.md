@@ -1,52 +1,22 @@
-# Session Status Command
+---
+description: Display current session status with progress overview
+---
 
-**Usage:** `/session-status`
+# Session Status
 
-**Description:** Display current session state and progress.
+Get a quick overview of the current session by running:
 
-**Displays:**
-- Current work item
-- Time elapsed in session
-- Files changed (git diff)
-- Git branch status
-- Milestone progress (if applicable)
-- Next upcoming work items
-
-**Example:**
-
+```bash
+python3 scripts/session_status.py
 ```
-User: /session-status
 
-Claude:
-Current Session Status
-================================================================================
+The status includes:
+- **Current Work Item**: What you're currently working on (title, type, priority)
+- **Time Elapsed**: How long the current session has been running
+- **Files Changed**: Number of files modified during this session
+- **Git Information**: Current branch and recent commits
+- **Milestone Progress**: Progress bar and completion percentage (if applicable)
+- **Next Work Items**: Upcoming tasks ready to start
+- **Quick Actions**: Suggested next steps
 
-Work Item: feature_user_profile
-Type: feature
-Priority: high
-Session: 2 (of estimated 3)
-
-Time Elapsed: 1h 23m
-
-Files Changed (5):
-  M  src/models/user.py
-  M  src/api/profile.py
-  A  tests/test_profile.py
-  M  README.md
-  M  requirements.txt
-
-Git Branch: session-003-feature_user_profile
-Commits: 3
-
-Milestone: auth-mvp (45% complete)
-  Related items: 2 in progress, 3 not started
-
-Next up:
-  🟠 feature_oauth_integration (blocked)
-  🟡 feature_email_notifications (ready)
-
-Quick actions:
-  - Validate session: /session-validate
-  - Complete session: /session-end
-  - View work item: /work-item show feature_user_profile
-```
+Display the formatted status output to the user. This provides a quick snapshot of progress without interrupting the workflow.

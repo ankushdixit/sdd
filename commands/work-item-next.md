@@ -1,39 +1,25 @@
-# Work Item Next Command
+---
+description: Get the next recommended work item to start based on dependencies and priority
+---
 
-**Usage:** `/work-item next`
+# Work Item Next
 
-**Description:** Show the next recommended work item to start.
+Get an intelligent recommendation for the next work item to start:
 
-**Logic:**
-1. Filter to not_started items
-2. Check dependencies (skip blocked items)
-3. Sort by priority
-4. Return highest priority, unblocked item
-5. Explain why other items are blocked
-
-**Example:**
-
+```bash
+python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().get_next_work_item()"
 ```
-User: /work-item next
 
-Claude:
-Next Recommended Work Item:
-================================================================================
+The recommendation algorithm analyzes:
+- **Available Work Items**: All items with `not_started` status
+- **Dependency Blocking**: Filters out items blocked by incomplete dependencies
+- **Priority Sorting**: Ranks by priority (critical > high > medium > low)
+- **Smart Selection**: Recommends the highest priority unblocked item
 
-🟠 HIGH: feature_user_profile
-ID: feature_user_profile
-Type: feature
-Priority: high
-Ready to start: Yes ✓
+Display to the user:
+- **Recommended Work Item**: Full details (ID, title, type, priority)
+- **Selection Rationale**: Why this item was chosen
+- **Dependency Status**: Confirmation that all dependencies are satisfied
+- **Context**: Overview of other waiting items (both blocked and ready)
 
-Dependencies: All satisfied
-  ✓ feature_user_model (completed)
-
-Estimated effort: 2-3 sessions
-
-To start: /session-start
-
-Other items waiting:
-  🔴 feature_oauth_integration - Blocked by: feature_database_migration
-  🟡 feature_email_notifications - Ready (medium priority)
-```
+This helps maintain efficient workflow by always suggesting the most important work that can be started immediately.

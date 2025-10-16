@@ -1,54 +1,36 @@
-# Work Item Update Command
+---
+description: Update work item fields
+argument-hint: <work_item_id> [--field value]
+---
 
-**Usage:** `/work-item update <work_item_id> [--field value]`
+# Work Item Update
 
-**Description:** Update work item fields interactively or with flags.
+Update fields of an existing work item. This command supports two modes:
 
-**Updatable Fields:**
-- `--status` - Change status (not_started, in_progress, blocked, completed)
-- `--priority` - Change priority (critical, high, medium, low)
-- `--milestone` - Assign to milestone
-- `--add-dependency` - Add a dependency
-- `--remove-dependency` - Remove a dependency
+## Interactive Mode
 
-**Behavior:**
+When only the work item ID is provided, start an interactive update session:
 
-1. Load work item
-2. If flags provided: Apply updates directly
-3. If no flags: Interactive mode
-4. Validate updates based on type
-5. Record update in history
-6. Save atomically
-
-**Example:**
-
+```bash
+python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item_interactive('$ARGUMENTS')"
 ```
-User: /work-item update feature_oauth --priority critical
 
-Claude: Updated feature_oauth
-  priority: high → critical
+The script will prompt the user to choose what to update:
+1. Status (not_started, in_progress, blocked, completed)
+2. Priority (critical, high, medium, low)
+3. Milestone (assign or change milestone)
+4. Add dependency (link to another work item)
+5. Remove dependency (unlink from another work item)
 
-User: /work-item update feature_oauth
+## Direct Update Mode
 
-Claude: Update Work Item: feature_oauth
+When field and value are provided (e.g., `--status completed`), parse $ARGUMENTS to extract:
+- Work item ID (first argument: $1)
+- Field name and value (remaining arguments)
 
-Current values:
-  Status: in_progress
-  Priority: critical
-  Milestone: (none)
-
-What would you like to update?
-1. Status
-2. Priority
-3. Milestone
-4. Add dependency
-5. Remove dependency
-6. Cancel
-
-Your choice: 3
-
-Enter milestone name: auth-mvp
-
-Updated feature_oauth:
-  milestone: (none) → auth-mvp
+Then run:
+```bash
+python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item('$1', field_name='value')"
 ```
+
+After updating, display the changes made showing old → new values. All updates are automatically tracked in the work item's update_history.

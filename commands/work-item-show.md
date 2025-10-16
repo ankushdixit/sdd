@@ -1,62 +1,24 @@
-# Work Item Show Command
+---
+description: Show detailed information about a specific work item
+argument-hint: <work_item_id>
+---
 
-**Usage:** `/work-item show <work_item_id>`
+# Work Item Show
 
-**Description:** Display detailed information about a specific work item.
+Display detailed information for a specific work item by running:
 
-**Behavior:**
-
-1. Load work item from work_items.json
-2. Load specification file from .session/specs/
-3. Display comprehensive view:
-   - Basic info (ID, type, status, priority)
-   - Dependencies (with status)
-   - Session history
-   - Git branch info
-   - Specification content
-4. Show actionable next steps
-
-**Example:**
-
+```bash
+python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().show_work_item('$ARGUMENTS')"
 ```
-User: /work-item show feature_oauth
 
-Claude:
-================================================================================
-Work Item: feature_oauth
-================================================================================
+The work item ID is provided in $ARGUMENTS.
 
-Type: feature
-Status: in_progress
-Priority: high
-Created: 2025-10-10
+This displays comprehensive details:
+- **Work Item Info**: Type, status, priority, creation date
+- **Dependencies**: List of dependencies with their current status
+- **Session History**: All sessions where this work item was worked on
+- **Git Information**: Branch name and associated commits
+- **Specification Preview**: First 30 lines of the spec file
+- **Next Steps**: Suggested actions based on current status
 
-Dependencies:
-  ✓ feature_user_model (completed)
-  ✗ feature_database_migration (in progress)
-
-Sessions:
-  1. 2025-10-11 14:30-16:45 (2h 15m) - Initial implementation
-  2. 2025-10-12 10:00-11:30 (1h 30m) - Added OAuth providers
-
-Git Branch: session-003-feature_oauth
-Commits: 5
-
-Specification:
---------------
-# Feature: OAuth Integration
-
-## Overview
-Enable users to log in using OAuth providers (Google, GitHub).
-
-## User Story
-As a user, I want to log in using my existing Google or GitHub account
-so that I don't need to create another password.
-
-[... rest of specification ...]
-
-Next Steps:
-- Continue working: /session-start
-- Update fields: /work-item update feature_oauth
-- View related items: /work-item list --milestone auth
-```
+Show all information to the user in a clear, formatted display. This helps understand the full context of a work item before starting work on it.
