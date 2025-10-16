@@ -2,7 +2,7 @@
 
 **Session-Driven Development for Claude Code** - Maintain perfect context across multiple AI coding sessions.
 
-> **Note:** This plugin is designed for solo developers using Claude Code. It provides comprehensive session management, quality gates, and knowledge accumulation for AI-augmented software development.
+> **Note:** This is designed for solo developers using Claude Code. It provides comprehensive session management, quality gates, and knowledge accumulation for AI-augmented software development.
 
 ## Overview
 
@@ -89,7 +89,7 @@ Automated knowledge capture and curation with AI-powered categorization:
 
 ```bash
 # Via slash commands
-/learn            # Capture insight conversationally
+/learn                    # Capture insight conversationally
 /learn-show               # Browse all learnings
 /learn-show --category gotchas --tag fastapi
 /learn-search "CORS"      # Full-text search
@@ -115,7 +115,7 @@ python3 scripts/learning_curator.py curate --dry-run
 
 ### Prerequisites
 
-- **Claude Code**: This plugin requires Claude Code (desktop app)
+- **Claude Code**: CLI application required for slash command integration
 - **Python 3.9+**: Core scripts are written in Python
 - **Git**: Required for version control integration
 - **Optional Tools** (for quality gates):
@@ -128,80 +128,41 @@ python3 scripts/learning_curator.py curate --dry-run
 
 ### Installation
 
-#### Via Marketplace (Recommended)
+Clone the repository into your project directory:
 
-Install the plugin from the official marketplace to use across all your projects:
-
-1. **Add the marketplace** in Claude Code:
-   ```
-   /plugin
-   ```
-   Select "Add marketplace" and enter: `ankushdixit/claude-plugins`
-
-2. **Install the plugin**:
-   - Select "Browse and install plugins"
-   - Choose `sdd`
-   - Click install
-
-3. **Restart Claude Code** to load the plugin
-
-4. **Verify installation**:
-   Type `/sdd:` and you should see autocomplete suggestions for available commands.
-
-**Benefits:**
-- ✅ Official distribution method
-- ✅ Automatic updates via marketplace
-- ✅ Available in all projects
-- ✅ Lightweight installation (tests and docs excluded)
-
----
-
-#### Manual Installation (For Development)
-
-For development or if you want full control:
-
-**Option A: Global Installation**
 ```bash
-# Clone to Claude Code's plugins directory
-cd ~/.claude/plugins/
-git clone https://github.com/ankushdixit/sdd.git
-```
+# Navigate to your project
+cd /path/to/your/project
 
-**Option B: Project-Specific Installation**
-```bash
-# Clone the repository
+# Clone sdd into your project
 git clone https://github.com/ankushdixit/sdd.git
 
-# Copy necessary directories to your project
-cd sdd
-cp -r .claude /path/to/your/project/
-cp -r scripts /path/to/your/project/
-cp -r templates /path/to/your/project/
+# The .claude/commands/ directory will be automatically discovered by Claude Code
 ```
 
-**Benefits:**
-- ✅ Full repository access (includes tests, docs)
-- ✅ Can modify commands locally
-- ✅ No dependency on marketplace
-- ✅ Good for contributing to development
+**That's it!** Claude Code will automatically discover the commands from the `.claude/commands/` directory and make them available as `/init`, `/start`, `/end`, etc.
 
-### What Gets Installed
-
-**Essential files (included in plugin):**
-- `commands/` - 15 slash commands for session management
-- `.claude/commands/` - Same commands for project-level usage
+**What gets installed:**
+- `.claude/commands/` - 15 slash commands (automatically discovered by Claude Code)
 - `scripts/` - Python backend logic (8,677 lines)
 - `templates/` - Work item specification templates
-- `README.md` - This file
+- `docs/` - Comprehensive documentation
+- `tests/` - 343 test cases for validation
 
-**Excluded from plugin (development only):**
-- `docs/` - Comprehensive documentation (available on GitHub)
-- `tests/` - 343 test cases (not needed for usage)
-- `PLUGIN_IMPLEMENTATION_PLAN_*.md` - Development guides
-- `ROADMAP.md` - Development roadmap
-- `.git/` - Version control history
+**Alternative: Install in a separate directory**
 
-See `.pluginignore` for the complete exclusion list. Full documentation is always available at the [GitHub repository](https://github.com/ankushdixit/sdd).
+You can also clone sdd anywhere and symlink the necessary directories:
+
+```bash
+# Clone to any location
+git clone https://github.com/ankushdixit/sdd.git ~/sdd
+
+# Create symlinks in your project
+cd /path/to/your/project
+ln -s ~/sdd/.claude .claude
+ln -s ~/sdd/scripts scripts
+ln -s ~/sdd/templates templates
+```
 
 ## Quick Start
 
@@ -340,7 +301,7 @@ graph TD
 
 ## Configuration
 
-The plugin is configured via `.session/config.json` (created during `/init`):
+Configure SDD via `.session/config.json` (created during `/init`):
 
 ```json
 {
@@ -365,7 +326,7 @@ The plugin is configured via `.session/config.json` (created during `/init`):
 ### Quality Gate Configuration
 
 - `enabled`: Run this gate
-- `required`: Block session-end if fails
+- `required`: Block `/end` if fails
 - `auto_fix`: Automatically fix issues (linting/formatting)
 - `coverage_threshold`: Minimum test coverage (%)
 - `fail_on`: Security threshold (critical, high, medium, low)
@@ -377,7 +338,7 @@ The plugin is configured via `.session/config.json` (created during `/init`):
 
 ### Git Configuration
 
-- `auto_push`: Automatically push after session-end
+- `auto_push`: Automatically push after `/end`
 - `auto_merge`: Automatically merge branch if work item complete
 
 ## Documentation
@@ -392,11 +353,8 @@ The plugin is configured via `.session/config.json` (created during `/init`):
 
 ```
 sdd/
-├── commands/                 # ✅ Executable slash commands (15 commands, for plugin)
-├── .claude/                  # Claude Code plugin runtime
-│   └── commands/             # Same commands for project-level installation
-├── .claude-plugin/           # Plugin metadata
-│   └── plugin.json           # Plugin manifest and configuration
+├── .claude/                  # Claude Code command definitions
+│   └── commands/             # 15 slash commands (auto-discovered by Claude Code)
 ├── scripts/                  # Core Python logic (13 modules, 8,677 lines)
 │   ├── work_item_manager.py  # Work item CRUD operations
 │   ├── quality_gates.py      # Quality enforcement system
@@ -408,15 +366,14 @@ sdd/
 │   ├── feature_spec.md
 │   ├── bug_spec.md
 │   └── [4 more templates...]
-├── docs/                     # Comprehensive documentation (excluded from plugin)
+├── docs/                     # Comprehensive documentation
 │   ├── commands/             # Developer documentation for commands
 │   ├── session-driven-development.md    # Complete SDD methodology
 │   ├── ai-augmented-solo-framework.md   # Philosophical framework
 │   └── [2 more docs...]
-├── tests/                    # Test suites (excluded from plugin)
-│   └── phase_1/ through phase_5_6/  # 343 tests total
-├── .pluginignore             # Plugin distribution exclusions
-├── ROADMAP.md                # Development roadmap (excluded from plugin)
+├── tests/                    # Test suites (343 tests total)
+│   └── phase_1/ through phase_5_6/
+├── ROADMAP.md                # Development roadmap
 ├── README.md                 # This file
 └── [Development files...]    # Implementation plans, etc.
 ```
@@ -461,14 +418,14 @@ See [ROADMAP.md](ROADMAP.md) for detailed phase breakdown and timelines.
 ## Technology Stack
 
 - **Language:** Python 3.9+
-- **Plugin System:** Claude Code native extensions
+- **Integration:** Claude Code slash commands
 - **Visualization:** Graphviz (for dependency graphs)
 - **Testing:** pytest (for quality gates)
 - **Linting:** ruff (for code quality)
 
 ## Core Algorithms
 
-This plugin includes battle-tested algorithms:
+SDD includes battle-tested algorithms:
 
 - **Dependency Resolution** - DFS-based critical path analysis
 - **Learning Categorization** - Keyword-based auto-categorization (6 categories)
@@ -485,13 +442,17 @@ This plugin includes battle-tested algorithms:
 
 ## FAQ
 
+### Q: How do I install this in my project?
+
+Clone the sdd repository into your project directory. Claude Code will automatically discover the commands from the `.claude/commands/` directory.
+
 ### Q: Do I need to install all the optional tools?
 
 No. Quality gates gracefully skip when tools aren't available. Install only what you need for your project.
 
 ### Q: Can I use this with other AI assistants?
 
-The plugin is specifically designed for Claude Code's environment and slash command system. It won't work with other AI tools without modification.
+This is specifically designed for Claude Code's slash command system. It won't work with other AI tools without modification.
 
 ### Q: How much disk space does the .session directory use?
 
@@ -503,7 +464,7 @@ Currently, 6 built-in types are supported (feature, bug, refactor, security, int
 
 ### Q: Does this work with GitHub/GitLab?
 
-Yes. The plugin uses standard git commands and integrates with any git remote.
+Yes. It uses standard git commands and integrates with any git remote.
 
 ### Q: What happens if I forget to run /end?
 
@@ -511,11 +472,11 @@ Your work is still saved in git. You can manually update work items and tracking
 
 ### Q: Can I use this on multiple projects?
 
-Yes. Each project gets its own `.session/` directory. The plugin detects and uses the correct context automatically.
+Yes. Clone sdd into each project, or use symlinks from a single installation. Each project gets its own `.session/` directory with independent tracking.
 
 ## Troubleshooting
 
-### Session-init fails with "Directory already exists"
+### /init fails with "Directory already exists"
 
 The `.session/` directory already exists. Either delete it (`rm -rf .session/`) or use your existing setup.
 
@@ -573,7 +534,7 @@ pytest tests/phase_5/test_phase_5_complete.py
 
 MIT License
 
-Copyright (c) 2025 SDD Plugin Contributors
+Copyright (c) 2025 SDD Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
