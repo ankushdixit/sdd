@@ -126,21 +126,77 @@ python3 scripts/learning_curator.py curate --dry-run
   - `npm audit` (JavaScript/TypeScript security)
   - `graphviz` (for SVG dependency graph generation)
 
-### Setup
+### Installation Methods
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/claude-session-plugin.git
-   cd claude-session-plugin
-   ```
+You can use this plugin in two ways:
 
-2. **Install as Claude Code plugin:**
+#### Method 1: Install as Claude Code Plugin (Recommended)
 
-   The plugin uses Claude Code's native plugin system. The `.claude/` directory contains all executable slash commands that integrate with Claude Code.
+Install the plugin globally to use across all your projects:
 
-3. **Verify installation:**
+```bash
+# Clone the repository to Claude Code's plugins directory
+cd ~/.claude/plugins/
+git clone https://github.com/ankushdixit/claude-session-plugin.git
 
-   In Claude Code, type `/session-` and you should see autocomplete suggestions for available session commands.
+# Or if you prefer a specific location and symlink it
+git clone https://github.com/ankushdixit/claude-session-plugin.git ~/my-plugins/
+ln -s ~/my-plugins/claude-session-plugin ~/.claude/plugins/claude-session-plugin
+```
+
+**Benefits:**
+- Available in all projects automatically
+- Single installation and updates
+- Cleaner project directories
+
+**Verify installation:**
+In Claude Code (in any project), type `/session-` and you should see autocomplete suggestions for available session commands.
+
+#### Method 2: Copy to Your Project
+
+For project-specific usage or customization:
+
+```bash
+# Clone the repository
+git clone https://github.com/ankushdixit/claude-session-plugin.git
+
+# Copy necessary directories to your project
+cd claude-session-plugin
+cp -r .claude /path/to/your/project/
+cp -r scripts /path/to/your/project/
+cp -r templates /path/to/your/project/
+
+# Optional: Copy documentation if needed
+cp -r docs /path/to/your/project/
+cp README.md /path/to/your/project/
+```
+
+**Benefits:**
+- Project-specific customization
+- No dependency on global installation
+- Can commit custom commands with your project
+- Full control over which files to include
+
+**Verify installation:**
+In Claude Code (in your project directory), type `/session-` and you should see autocomplete suggestions.
+
+### What Gets Installed
+
+**Essential files (included in plugin):**
+- `commands/` - 15 slash commands for session management
+- `.claude/commands/` - Same commands for project-level usage
+- `scripts/` - Python backend logic (8,677 lines)
+- `templates/` - Work item specification templates
+- `README.md` - This file
+
+**Excluded from plugin (development only):**
+- `docs/` - Comprehensive documentation (available on GitHub)
+- `tests/` - 343 test cases (not needed for usage)
+- `PLUGIN_IMPLEMENTATION_PLAN_*.md` - Development guides
+- `ROADMAP.md` - Development roadmap
+- `.git/` - Version control history
+
+See `.pluginignore` for the complete exclusion list. Full documentation is always available at the [GitHub repository](https://github.com/ankushdixit/claude-session-plugin).
 
 ## Quick Start
 
@@ -331,18 +387,34 @@ The plugin is configured via `.session/config.json` (created during `/session-in
 
 ```
 claude-session-plugin/
+├── commands/                 # ✅ Executable slash commands (15 commands, for plugin)
 ├── .claude/                  # Claude Code plugin runtime
-│   └── commands/             # ✅ Executable slash commands (16 commands)
-├── commands/                 # Developer documentation for commands
-├── scripts/                  # Core Python logic (13 modules)
-│   ├── dependency_graph.py   # ✅ Dependency visualization (ready)
-│   ├── learning_curator.py   # ✅ Learning management (ready)
-│   └── file_ops.py           # ✅ Utilities (ready)
-├── templates/                # JSON schema templates
-├── docs/                     # Comprehensive documentation
-├── ROADMAP.md               # Development roadmap
-├── PLUGIN_IMPLEMENTATION_PLAN_PHASES_0-4.md  # Implementation guide (Phases 0-4)
-└── PLUGIN_IMPLEMENTATION_PLAN_PHASES_5+.md   # Implementation guide (Phases 5+)
+│   └── commands/             # Same commands for project-level installation
+├── .claude-plugin/           # Plugin metadata
+│   ├── plugin.json           # Plugin manifest and configuration
+│   └── marketplace.json      # Marketplace distribution manifest
+├── scripts/                  # Core Python logic (13 modules, 8,677 lines)
+│   ├── work_item_manager.py  # Work item CRUD operations
+│   ├── quality_gates.py      # Quality enforcement system
+│   ├── learning_curator.py   # Knowledge capture & curation
+│   ├── briefing_generator.py # Session context generation
+│   ├── dependency_graph.py   # Dependency visualization
+│   └── [8 more modules...]
+├── templates/                # Work item specification templates
+│   ├── feature_spec.md
+│   ├── bug_spec.md
+│   └── [4 more templates...]
+├── docs/                     # Comprehensive documentation (excluded from plugin)
+│   ├── commands/             # Developer documentation for commands
+│   ├── session-driven-development.md    # Complete SDD methodology
+│   ├── ai-augmented-solo-framework.md   # Philosophical framework
+│   └── [2 more docs...]
+├── tests/                    # Test suites (excluded from plugin)
+│   └── phase_1/ through phase_5_6/  # 343 tests total
+├── .pluginignore             # Plugin distribution exclusions
+├── ROADMAP.md                # Development roadmap (excluded from plugin)
+├── README.md                 # This file
+└── [Development files...]    # Implementation plans, etc.
 ```
 
 ## Development Status
@@ -479,7 +551,7 @@ Contributions are welcome! This project follows standard open-source contributio
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/claude-session-plugin.git
+git clone https://github.com/ankushdixit/claude-session-plugin.git
 cd claude-session-plugin
 
 # Install development dependencies

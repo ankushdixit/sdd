@@ -1,0 +1,41 @@
+{
+  "name": "claude-session-plugin",
+  "version": "0.5.6",
+  "description": "Session-Driven Development for Claude Code - Maintain perfect context across multiple AI coding sessions with quality gates, dependency management, and knowledge accumulation",
+  "author": "Ankush Dixit",
+  "license": "MIT",
+  "homepage": "https://github.com/ankushdixit/claude-session-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankushdixit/claude-session-plugin.git"
+  },
+  "keywords": [
+    "session-management",
+    "quality-gates",
+    "dependency-management",
+    "learning-system",
+    "ai-development",
+    "claude-code",
+    "sdd"
+  ],
+  "requirements": {
+    "claude_code": ">=1.0.0",
+    "python": ">=3.9"
+  },
+  "optional_dependencies": {
+    "testing": ["pytest", "pytest-cov"],
+    "linting": ["ruff"],
+    "security": ["bandit", "safety"],
+    "javascript": ["eslint", "prettier"],
+    "visualization": ["graphviz"]
+  },
+  "features": [
+    "Session management with comprehensive briefings",
+    "Work item tracking with dependency graphs",
+    "Learning capture and AI-powered curation",
+    "Quality gates (tests, linting, security, documentation)",
+    "Integration testing and deployment support",
+    "Git workflow automation",
+    "Critical path analysis and bottleneck detection"
+  ]
+}

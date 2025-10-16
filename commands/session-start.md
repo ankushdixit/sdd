@@ -1,77 +1,26 @@
-# Session Start Command
+---
+description: Start a new development session with comprehensive briefing
+argument-hint: [work_item_id]
+---
 
-**Usage:** `/session-start [--item <id>]`
+# Session Start
 
-**Description:** Initialize a development session with comprehensive briefing.
+Generate a comprehensive session briefing by running:
 
-**Behavior:**
-
-1. Check if project has `.session/` directory
-   - If not: initialize project (create directory structure)
-   - If yes: validate structure is intact
-
-2. Determine which work item to work on:
-   - If `--item <id>` provided: use that item
-   - Otherwise: find next available item (dependencies satisfied)
-   - If no items available: prompt to create one
-
-3. Generate briefing:
-   - Read work item details from `.session/tracking/work_items.json`
-   - Read previous session notes
-   - Read relevant learnings from `.session/tracking/learnings.json`
-   - Create comprehensive briefing markdown
-
-4. Present briefing to user (as markdown output)
-
-5. Update work item status to "in_progress"
-
-6. Begin implementation
-
-**Example:**
-
-```
-User: /session-start
-
-Claude: Initializing session...
-
-Reading work items from .session/tracking/work_items.json...
-Found 5 work items (2 completed, 3 pending)
-
-Next available work item: implement_authentication
-All dependencies satisfied ✓
-
-# Session Briefing
-
-## Work Item: Implement OAuth2 Authentication
-- ID: implement_authentication
-- Type: feature
-- Priority: high
-- Dependencies: setup_database ✓, create_user_model ✓
-
-## Objective
-Implement OAuth2 authentication flow with Google and GitHub providers.
-
-## Implementation Checklist
-- [ ] Create OAuth2 provider interface
-- [ ] Implement Google OAuth2 flow
-- [ ] Implement GitHub OAuth2 flow
-- [ ] Add token refresh mechanism
-- [ ] Write tests (coverage: 80%+)
-- [ ] Update documentation
-
-## Validation Requirements
-- All tests must pass
-- Coverage >= 80%
-- Linting must pass
-- Documentation updated
-
-Starting work on implement_authentication...
+```bash
+python3 scripts/briefing_generator.py
 ```
 
-**Implementation Details:**
+If the user provided a work item ID ($ARGUMENTS), pass it to the script. If no ID is provided, the script will automatically find the next available work item.
 
-The command markdown instructs Claude to:
-1. Run script: `python scripts/briefing_generator.py`
-2. Read generated briefing
-3. Update work item status
-4. Begin work
+The briefing includes:
+- Complete project context (technology stack, directory tree, documentation)
+- Work item details (title, type, priority, dependencies)
+- Acceptance criteria and specifications
+- Relevant past learnings from previous sessions
+- Milestone context and progress (if the work item belongs to a milestone)
+
+After generating the briefing:
+1. Display the complete briefing to the user
+2. Update the work item status to "in_progress" using the work item manager
+3. Confirm the session has started and the user can begin working

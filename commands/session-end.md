@@ -1,82 +1,32 @@
-# Session End Command
+---
+description: Complete the current development session with quality gates and summary
+---
 
-**Usage:** `/session-end`
+# Session End
 
-**Description:** Complete current session with quality gates and summary generation.
+Complete the current session by running validation and generating summary:
 
-**Behavior:**
-
-1. Determine current work item (from status)
-
-2. Run quality gates:
-   - Execute tests
-   - Run linting (auto-fix if possible)
-   - Check formatting
-   - Validate coverage meets requirements
-
-3. If quality gates pass:
-   - Update work item status (to "completed" if done, keep "in_progress" if partial)
-   - Generate session summary
-   - Update tracking files
-   - Create git commit (standardized format)
-
-4. If quality gates fail:
-   - Report failures
-   - Keep work item in "in_progress"
-   - Offer to fix issues or skip gates
-
-5. Present session summary
-
-**Example:**
-
-```
-User: /session-end
-
-Claude: Completing session...
-
-Running quality gates...
-✓ Tests: 47/47 passed (coverage: 87%)
-✓ Linting: passed (3 issues auto-fixed)
-✓ Formatting: passed
-
-Quality gates: PASSED ✓
-
-Updating work item status...
-- implement_authentication: in_progress → completed
-
-# Session Summary
-
-## Work Items Completed
-- implement_authentication
-
-## Achievements
-- Implemented OAuth2 authentication flow
-- Added Google and GitHub providers
-- Created token refresh mechanism
-- Added 15 tests with 87% coverage
-
-## Challenges Encountered
-- Token expiry handling was tricky
-- Race condition in token storage (resolved with Redis atomic ops)
-
-## Learnings
-- OAuth2 refresh tokens must be stored atomically
-- Using Redis for token storage provides TTL and atomicity
-
-## Metrics
-- Files changed: 8
-- Tests added: 15
-- Lines added: 342
-- Lines removed: 87
-
-Session completed successfully ✓
+```bash
+python3 scripts/session_complete.py
 ```
 
-**Implementation Details:**
+This script validates quality gates:
+- All tests pass
+- Linting passes
+- Git changes are committed
+- Work item status is updated
 
-The command markdown instructs Claude to:
-1. Run script: `python scripts/session_complete.py`
-2. Review quality gate results
-3. Update work item status
-4. Generate session summary
-5. Create git commit
+After validation passes, update the project context:
+
+```bash
+python3 scripts/generate_stack.py
+python3 scripts/generate_tree.py
+```
+
+Show the user:
+- Session summary with work accomplished
+- List of files changed
+- Quality gate results (pass/fail for each check)
+- Suggested next steps
+
+If any quality gates fail, display the specific errors and guide the user on what needs to be fixed before the session can be completed. Do not proceed with session completion until all quality gates pass.
