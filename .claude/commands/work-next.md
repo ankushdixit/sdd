@@ -7,7 +7,7 @@ description: Get the next recommended work item to start based on dependencies a
 Get an intelligent recommendation for the next work item to start:
 
 ```bash
-python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().get_next_work_item()"
+python3 scripts/../sdd_cli.py work-next
 ```
 
 The recommendation algorithm analyzes:

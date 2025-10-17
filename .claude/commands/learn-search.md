@@ -12,10 +12,8 @@ Full-text search across all learning content, tags, and context.
 Extract the search query from $ARGUMENTS and run:
 
 ```bash
-python3 scripts/learning_curator.py search "{{query}}"
+python3 scripts/../sdd_cli.py learn-search "$@"
 ```
-
-Replace `{{query}}` with the user's search term(s).
 
 ### How Search Works
 
@@ -31,17 +29,17 @@ Search is case-insensitive and finds partial matches.
 
 Search for "CORS":
 ```bash
-python3 scripts/learning_curator.py search "CORS"
+python3 scripts/../sdd_cli.py learn-search "CORS"
 ```
 
 Search for "FastAPI middleware":
 ```bash
-python3 scripts/learning_curator.py search "FastAPI middleware"
+python3 scripts/../sdd_cli.py learn-search "FastAPI middleware"
 ```
 
 Search for "authentication":
 ```bash
-python3 scripts/learning_curator.py search "authentication"
+python3 scripts/../sdd_cli.py learn-search "authentication"
 ```
 
 ## Display Format

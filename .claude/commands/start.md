@@ -8,10 +8,10 @@ argument-hint: [work_item_id]
 Generate a comprehensive session briefing by running:
 
 ```bash
-python3 scripts/briefing_generator.py
+python3 scripts/../sdd_cli.py start "$@"
 ```
 
-If the user provided a work item ID ($ARGUMENTS), pass it to the script. If no ID is provided, the script will automatically find the next available work item.
+If the user provided a work item ID in `$ARGUMENTS`, it will be passed through `"$@"`. If no ID is provided, the script will automatically find the next available work item.
 
 The briefing includes:
 - Complete project context (technology stack, directory tree, documentation)

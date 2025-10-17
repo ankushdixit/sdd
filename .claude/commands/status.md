@@ -7,7 +7,7 @@ description: Display current session status with progress overview
 Get a quick overview of the current session by running:
 
 ```bash
-python3 scripts/session_status.py
+python3 scripts/../sdd_cli.py status
 ```
 
 The status includes:
