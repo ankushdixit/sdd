@@ -78,9 +78,9 @@ Visualize project structure and identify bottlenecks with dependency graphs:
 /work-graph --milestone "Phase 3"
 
 # Via CLI
-python3 scripts/dependency_graph.py
-python3 scripts/dependency_graph.py --format svg --output graph.svg
-python3 scripts/dependency_graph.py --stats
+python3 sdd/sdd_cli.py work-graph
+python3 sdd/sdd_cli.py work-graph --format svg --output graph.svg
+python3 sdd/sdd_cli.py work-graph --stats
 ```
 
 **Features:**
@@ -102,10 +102,10 @@ Automated knowledge capture and curation with AI-powered categorization:
 /learn-search "CORS"      # Full-text search
 /learn-curate             # Run curation (categorize, deduplicate, merge)
 
-# Via CLI
-python3 scripts/learning_curator.py statistics
-python3 scripts/learning_curator.py timeline --sessions 10
-python3 scripts/learning_curator.py curate --dry-run
+# Via CLI (from project root)
+python3 sdd/sdd_cli.py learn-show
+python3 sdd/sdd_cli.py learn-search "keyword"
+python3 sdd/sdd_cli.py learn-curate --dry-run
 ```
 
 **Features:**
@@ -144,12 +144,18 @@ cd /path/to/your/project
 # Clone sdd into your project
 git clone https://github.com/ankushdixit/sdd.git
 
+# Make the CLI executable (recommended)
+chmod +x sdd/sdd_cli.py
+
 # The .claude/commands/ directory will be automatically discovered by Claude Code
 ```
 
 **That's it!** Claude Code will automatically discover the commands from the `.claude/commands/` directory and make them available as `/init`, `/start`, `/end`, etc.
 
+**Note:** All slash commands now route through `sdd_cli.py`, a universal CLI entry point that handles module imports correctly across different installation methods.
+
 **What gets installed:**
+- `sdd_cli.py` - Universal CLI entry point (handles all commands)
 - `.claude/commands/` - 15 slash commands (automatically discovered by Claude Code)
 - `scripts/` - Python backend logic (8,677 lines)
 - `templates/` - Work item specification templates
@@ -164,11 +170,17 @@ You can also clone sdd anywhere and symlink the necessary directories:
 # Clone to any location
 git clone https://github.com/ankushdixit/sdd.git ~/sdd
 
+# Make CLI executable
+chmod +x ~/sdd/sdd_cli.py
+
 # Create symlinks in your project
 cd /path/to/your/project
 ln -s ~/sdd/.claude .claude
 ln -s ~/sdd/scripts scripts
 ln -s ~/sdd/templates templates
+
+# Verify slash commands work
+# Commands automatically use: python3 scripts/../sdd_cli.py <command>
 ```
 
 ## Quick Start
@@ -506,6 +518,19 @@ Ensure:
 Check `.session/config.json`:
 - `auto_curate` should be `true`
 - `frequency` should be a positive integer (default: 5)
+
+### Commands fail with "Permission denied"
+
+Make the CLI executable:
+```bash
+chmod +x sdd/sdd_cli.py
+# Or if using symlink installation:
+chmod +x ~/sdd/sdd_cli.py
+```
+
+### Commands fail with "ModuleNotFoundError"
+
+Ensure you're running commands from your project root, not from within the `sdd/` directory. The CLI uses relative paths that work from the project root.
 
 ## Contributing
 
