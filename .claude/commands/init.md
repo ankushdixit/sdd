@@ -7,7 +7,7 @@ description: Initialize a new Session-Driven Development project
 Run the initialization script to set up Session-Driven Development infrastructure:
 
 ```bash
-python3 scripts/init_project.py
+python3 scripts/../sdd_cli.py init
 ```
 
 This script will create:

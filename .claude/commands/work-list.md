@@ -7,15 +7,16 @@ argument-hint: [--status STATUS] [--type TYPE] [--milestone MILESTONE]
 
 List all work items, optionally filtered by status, type, or milestone.
 
-**Without filters**, run:
+Run the following command:
+
 ```bash
-python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().list_work_items()"
+python3 scripts/../sdd_cli.py work-list "$@"
 ```
 
-**With filters**, parse $ARGUMENTS and pass to the function. For example:
-- `--status not_started` → `status_filter='not_started'`
-- `--type feature` → `type_filter='feature'`
-- `--milestone phase_2_mvp` → `milestone_filter='phase_2_mvp'`
+The CLI will automatically parse and handle filters from `$ARGUMENTS`:
+- `--status not_started` → Filters by status
+- `--type feature` → Filters by type
+- `--milestone phase_2_mvp` → Filters by milestone
 
 Available filter values:
 - **Status**: `not_started`, `in_progress`, `blocked`, `completed`

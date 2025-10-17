@@ -27,14 +27,16 @@ Guide the user through creating a new work item by asking for the following info
 Once you have all the information, create the work item by running:
 
 ```bash
-python3 scripts/work_item_manager.py --type TYPE --title "TITLE" --priority PRIORITY --dependencies "DEP_IDS"
+python3 scripts/../sdd_cli.py work-new
 ```
 
-Replace:
-- `TYPE` with the work item type
-- `TITLE` with the title (use quotes if it contains spaces)
-- `PRIORITY` with the priority level
-- `DEP_IDS` with comma-separated dependency IDs (or omit `--dependencies` if none)
+The CLI will interactively prompt the user for:
+- Work item type
+- Title
+- Priority
+- Dependencies
+
+This provides a guided experience for creating work items.
 
 The script will:
 - Generate a unique work item ID

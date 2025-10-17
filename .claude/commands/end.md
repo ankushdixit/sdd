@@ -7,7 +7,7 @@ description: Complete the current development session with quality gates and sum
 Complete the current session by running validation and generating summary:
 
 ```bash
-python3 scripts/session_complete.py
+python3 scripts/../sdd_cli.py end
 ```
 
 This script validates quality gates:
@@ -16,12 +16,7 @@ This script validates quality gates:
 - Git changes are committed
 - Work item status is updated
 
-After validation passes, update the project context:
-
-```bash
-python3 scripts/generate_stack.py
-python3 scripts/generate_tree.py
-```
+The script automatically updates project context files (stack.py and tree.py) after validation passes.
 
 Show the user:
 - Session summary with work accomplished

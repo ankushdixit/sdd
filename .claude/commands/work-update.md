@@ -12,7 +12,7 @@ Update fields of an existing work item. This command supports two modes:
 When only the work item ID is provided, start an interactive update session:
 
 ```bash
-python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item_interactive('$ARGUMENTS')"
+python3 scripts/../sdd_cli.py work-update "$@"
 ```
 
 The script will prompt the user to choose what to update:
@@ -24,13 +24,6 @@ The script will prompt the user to choose what to update:
 
 ## Direct Update Mode
 
-When field and value are provided (e.g., `--status completed`), parse $ARGUMENTS to extract:
-- Work item ID (first argument: $1)
-- Field name and value (remaining arguments)
-
-Then run:
-```bash
-python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item('$1', field_name='value')"
-```
+Currently, only interactive mode is supported through the CLI. To use direct field updates, use the interactive mode and select the field to update when prompted.
 
 After updating, display the changes made showing old → new values. All updates are automatically tracked in the work item's update_history.

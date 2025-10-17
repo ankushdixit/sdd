@@ -8,10 +8,10 @@ argument-hint: <work_item_id>
 Display detailed information for a specific work item by running:
 
 ```bash
-python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().show_work_item('$ARGUMENTS')"
+python3 scripts/../sdd_cli.py work-show "$@"
 ```
 
-The work item ID is provided in $ARGUMENTS.
+The work item ID is provided in `$ARGUMENTS` and passed through `"$@"`.
 
 This displays comprehensive details:
 - **Work Item Info**: Type, status, priority, creation date
