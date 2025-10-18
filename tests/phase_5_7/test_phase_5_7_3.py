@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 import tempfile
 import os
-import json
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -72,7 +71,9 @@ feature_001
 ## Estimated Effort
 2 sessions
 """
-        create_test_spec_file(specs_dir, "integration_test_001", "integration_test", spec_content)
+        create_test_spec_file(
+            specs_dir, "integration_test_001", "integration_test", spec_content
+        )
 
         original_dir = os.getcwd()
         try:
@@ -83,7 +84,7 @@ feature_001
                 "id": "integration_test_001",
                 "type": "integration_test",
                 "title": "Order Processing Flow",
-                "dependencies": ["feature_001"]
+                "dependencies": ["feature_001"],
             }
 
             is_valid, errors = manager.validate_integration_test(work_item)
@@ -117,7 +118,9 @@ Some scope here.
 - [ ] First criterion
 - [ ] Second criterion
 """
-        create_test_spec_file(specs_dir, "integration_test_002", "integration_test", spec_content)
+        create_test_spec_file(
+            specs_dir, "integration_test_002", "integration_test", spec_content
+        )
 
         original_dir = os.getcwd()
         try:
@@ -128,7 +131,7 @@ Some scope here.
                 "id": "integration_test_002",
                 "type": "integration_test",
                 "title": "Incomplete Test",
-                "dependencies": []
+                "dependencies": [],
             }
 
             is_valid, errors = manager.validate_integration_test(work_item)
@@ -215,7 +218,7 @@ None
             work_item = {
                 "id": "deployment_001",
                 "type": "deployment",
-                "title": "Production Release v2.0"
+                "title": "Production Release v2.0",
             }
 
             is_valid, errors = manager.validate_deployment(work_item)
@@ -259,7 +262,7 @@ Some scope
             work_item = {
                 "id": "deployment_002",
                 "type": "deployment",
-                "title": "Incomplete Deployment"
+                "title": "Incomplete Deployment",
             }
 
             is_valid, errors = manager.validate_deployment(work_item)
@@ -267,7 +270,12 @@ Some scope
             assert not is_valid, "Expected invalid spec"
             assert len(errors) > 0
             # Should have errors for missing required sections
-            assert any("Deployment Procedure" in str(e) or "Rollback Procedure" in str(e) or "Smoke Tests" in str(e) for e in errors)
+            assert any(
+                "Deployment Procedure" in str(e)
+                or "Rollback Procedure" in str(e)
+                or "Smoke Tests" in str(e)
+                for e in errors
+            )
 
             print(f"✓ Invalid spec detected with {len(errors)} errors")
             return True
@@ -319,31 +327,34 @@ None
 ## Estimated Effort
 1 session
 """
-        create_test_spec_file(specs_dir, "integration_test_runner", "integration_test", spec_content)
+        create_test_spec_file(
+            specs_dir, "integration_test_runner", "integration_test", spec_content
+        )
 
         original_dir = os.getcwd()
         try:
             os.chdir(tmpdir)
 
-            work_item = {
-                "id": "integration_test_runner",
-                "type": "integration_test"
-            }
+            work_item = {"id": "integration_test_runner", "type": "integration_test"}
 
             runner = IntegrationTestRunner(work_item)
 
             assert len(runner.test_scenarios) == 2
-            assert runner.test_scenarios[0]['name'] == "Scenario 1: Basic Test"
-            assert runner.test_scenarios[1]['name'] == "Scenario 2: Advanced Test"
+            assert runner.test_scenarios[0]["name"] == "Scenario 1: Basic Test"
+            assert runner.test_scenarios[1]["name"] == "Scenario 2: Advanced Test"
             # Environment requirements parsing is heuristic-based
             # Just verify it returns a dict with expected keys
             assert isinstance(runner.env_requirements, dict)
             assert "services_required" in runner.env_requirements
             assert "compose_file" in runner.env_requirements
-            assert runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
+            assert (
+                runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
+            )
 
             print(f"✓ Runner parsed {len(runner.test_scenarios)} test scenarios")
-            print(f"✓ Environment requirements structure: services_required={len(runner.env_requirements.get('services_required', []))}, compose_file={runner.env_requirements.get('compose_file')}")
+            print(
+                f"✓ Environment requirements structure: services_required={len(runner.env_requirements.get('services_required', []))}, compose_file={runner.env_requirements.get('compose_file')}"
+            )
             return True
         finally:
             os.chdir(original_dir)
@@ -363,13 +374,10 @@ def test_integration_test_runner_missing_spec():
         try:
             os.chdir(tmpdir)
 
-            work_item = {
-                "id": "nonexistent_test",
-                "type": "integration_test"
-            }
+            work_item = {"id": "nonexistent_test", "type": "integration_test"}
 
             try:
-                runner = IntegrationTestRunner(work_item)
+                IntegrationTestRunner(work_item)
                 print("✗ Should have raised ValueError for missing spec")
                 return False
             except ValueError as e:
@@ -409,6 +417,7 @@ def run_all_tests():
             failed += 1
             print(f"✗ {test.__name__} raised exception: {e}")
             import traceback
+
             traceback.print_exc()
 
     print("\n" + "=" * 80)
@@ -426,6 +435,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

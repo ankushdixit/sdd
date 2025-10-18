@@ -21,7 +21,7 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Tuple
 
 
 def run_command(cmd: str, cwd: str) -> Tuple[int, str, str]:
@@ -93,9 +93,9 @@ class Phase5Tester:
                     "milestone": None,
                     "sessions": [],
                     "created_at": "2025-01-15T10:00:00",
-                    "updated_at": "2025-01-15T10:00:00"
+                    "updated_at": "2025-01-15T10:00:00",
                 }
-            }
+            },
         }
 
         work_items_file = tracking_dir / "work_items.json"
@@ -137,7 +137,7 @@ Testing approach:
         status_data = {
             "current_work_item": "1",
             "session_start": "2025-01-15T10:00:00",
-            "last_update": "2025-01-15T10:00:00"
+            "last_update": "2025-01-15T10:00:00",
         }
 
         status_file = tracking_dir / "status_update.json"
@@ -186,8 +186,7 @@ Testing approach:
 
         # Test if script runs (just check it's valid Python)
         returncode, stdout, stderr = run_command(
-            f"python3 -m py_compile {script_path}",
-            cwd=str(self.test_dir)
+            f"python3 -m py_compile {script_path}", cwd=str(self.test_dir)
         )
 
         if returncode != 0:
@@ -214,7 +213,7 @@ Testing approach:
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Should fail validation
@@ -253,11 +252,14 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Should detect incomplete spec (missing required sections)
-        if "Spec file missing" not in stdout and "Missing required section" not in stdout:
+        if (
+            "Spec file missing" not in stdout
+            and "Missing required section" not in stdout
+        ):
             print_info(f"Output: {stdout}")
             # This is acceptable - validation may pass with warnings
             print_success("Validation handles incomplete spec")
@@ -280,7 +282,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Should detect missing spec file
@@ -311,7 +313,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Should pass git status check (clean working directory)
@@ -331,7 +333,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # The validation should still work - uncommitted changes in non-tracking files are OK
@@ -349,7 +351,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Check that quality gates are reported
@@ -358,8 +360,9 @@ Just an overview, missing other sections.
             return False
 
         # Should mention tests, linting, or formatting
-        has_quality_checks = any(keyword in stdout.lower()
-                                for keyword in ["test", "lint", "format"])
+        has_quality_checks = any(
+            keyword in stdout.lower() for keyword in ["test", "lint", "format"]
+        )
 
         if not has_quality_checks:
             print_failure("No quality check results reported")
@@ -374,20 +377,23 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Check for structured output with check marks or status indicators
-        has_status_indicators = ("✓" in stdout or "✗" in stdout or
-                                "PASS" in stdout or "FAIL" in stdout)
+        has_status_indicators = (
+            "✓" in stdout or "✗" in stdout or "PASS" in stdout or "FAIL" in stdout
+        )
 
         if not has_status_indicators:
             print_failure("Missing status indicators in output")
             return False
 
         # Should have some summary or conclusion
-        has_summary = any(keyword in stdout.lower()
-                         for keyword in ["ready", "complete", "summary", "fix"])
+        has_summary = any(
+            keyword in stdout.lower()
+            for keyword in ["ready", "complete", "summary", "fix"]
+        )
 
         if not has_summary:
             print_failure("Missing validation summary")
@@ -403,7 +409,7 @@ Just an overview, missing other sections.
         # Run validation (will likely fail due to quality gates)
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Exit code should be non-zero if validation fails
@@ -446,7 +452,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Error message should be specific about the spec file
@@ -475,7 +481,7 @@ Just an overview, missing other sections.
 
         returncode, stdout, stderr = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Spec validation should work (may pass or fail with quality gates)
@@ -496,12 +502,12 @@ Just an overview, missing other sections.
         # Run validation twice
         returncode1, stdout1, stderr1 = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         returncode2, stdout2, stderr2 = run_command(
             f"python3 {self.plugin_root}/scripts/session_validate.py",
-            cwd=str(self.test_dir)
+            cwd=str(self.test_dir),
         )
 
         # Results should be consistent (same exit code)
@@ -557,6 +563,7 @@ Just an overview, missing other sections.
             except Exception as e:
                 print_failure(f"Test raised exception: {e}")
                 import traceback
+
                 traceback.print_exc()
                 self.tests_failed += 1
 

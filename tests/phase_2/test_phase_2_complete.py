@@ -15,7 +15,6 @@ Tests all Phase 2 functionality:
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -95,9 +94,7 @@ class Phase2Tester:
         # Initialize git repo
         run_command("git init", cwd=str(self.test_dir))
         run_command('git config user.name "Test User"', cwd=str(self.test_dir))
-        run_command(
-            'git config user.email "test@example.com"', cwd=str(self.test_dir)
-        )
+        run_command('git config user.email "test@example.com"', cwd=str(self.test_dir))
         run_command("git add .", cwd=str(self.test_dir))
         run_command('git commit -m "Initial commit"', cwd=str(self.test_dir))
 
@@ -155,7 +152,14 @@ class Phase2Tester:
 
             # Verify it documents all 6 types
             types_content = types_file.read_text()
-            work_item_types = ["feature", "bug", "refactor", "security", "integration_test", "deployment"]
+            work_item_types = [
+                "feature",
+                "bug",
+                "refactor",
+                "security",
+                "integration_test",
+                "deployment",
+            ]
 
             for wtype in work_item_types:
                 if wtype not in types_content:
@@ -193,9 +197,7 @@ class Phase2Tester:
                 )
 
                 if returncode != 0:
-                    print_failure(
-                        f"Failed to create {wtype} work item: {title}"
-                    )
+                    print_failure(f"Failed to create {wtype} work item: {title}")
                     print_info(f"stderr: {stderr}")
                     return False
 
@@ -241,6 +243,7 @@ class Phase2Tester:
                 f"Exception during work item creation: {type(e).__name__}: {e}"
             )
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -291,6 +294,7 @@ class Phase2Tester:
         except Exception as e:
             print_failure(f"Exception during dependency test: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -367,6 +371,7 @@ class Phase2Tester:
         except Exception as e:
             print_failure(f"Exception during list test: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -428,6 +433,7 @@ class Phase2Tester:
         except Exception as e:
             print_failure(f"Exception during show test: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -503,6 +509,7 @@ class Phase2Tester:
         except Exception as e:
             print_failure(f"Exception during update test: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -564,8 +571,11 @@ class Phase2Tester:
             return True
 
         except Exception as e:
-            print_failure(f"Exception during next work item test: {type(e).__name__}: {e}")
+            print_failure(
+                f"Exception during next work item test: {type(e).__name__}: {e}"
+            )
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -628,6 +638,7 @@ class Phase2Tester:
         except Exception as e:
             print_failure(f"Exception during milestone test: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -662,8 +673,11 @@ class Phase2Tester:
                     return False
 
         except Exception as e:
-            print_failure(f"Exception during session status test: {type(e).__name__}: {e}")
+            print_failure(
+                f"Exception during session status test: {type(e).__name__}: {e}"
+            )
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -676,7 +690,10 @@ class Phase2Tester:
         tests = [
             ("2.1: Work Item Type Templates", self.test_work_item_type_templates),
             ("2.2: Work Item Creation (6 Types)", self.test_work_item_creation),
-            ("2.2b: Work Items with Dependencies", self.test_work_item_with_dependencies),
+            (
+                "2.2b: Work Items with Dependencies",
+                self.test_work_item_with_dependencies,
+            ),
             ("2.3: Work Item List with Filtering", self.test_work_item_list),
             ("2.4: Work Item Show (Details)", self.test_work_item_show),
             ("2.5: Work Item Update", self.test_work_item_update),
@@ -694,6 +711,7 @@ class Phase2Tester:
             except Exception as e:
                 print_failure(f"Test {test_name} raised exception: {e}")
                 import traceback
+
                 traceback.print_exc()
                 self.tests_failed += 1
 

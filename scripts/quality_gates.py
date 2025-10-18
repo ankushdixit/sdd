@@ -224,23 +224,51 @@ class QualityGates:
         if language == "python":
             # Run bandit
             try:
-                subprocess.run(
-                    ["bandit", "-r", ".", "-f", "json", "-o", "/tmp/bandit.json"],
-                    capture_output=True,
-                    timeout=60,
-                )
+                import tempfile
+                import os
 
-                if Path("/tmp/bandit.json").exists():
-                    with open("/tmp/bandit.json") as f:
-                        bandit_data = json.load(f)
-                    results["bandit"] = bandit_data
+                # Use secure temporary file instead of hardcoded /tmp path
+                fd, bandit_report_path = tempfile.mkstemp(suffix=".json")
+                os.close(fd)  # Close file descriptor, bandit will write to the path
 
-                    # Count by severity
-                    for issue in bandit_data.get("results", []):
-                        severity = issue.get("issue_severity", "LOW")
-                        results["by_severity"][severity] = (
-                            results["by_severity"].get(severity, 0) + 1
-                        )
+                try:
+                    subprocess.run(
+                        [
+                            "bandit",
+                            "-r",
+                            ".",
+                            "-f",
+                            "json",
+                            "-o",
+                            bandit_report_path,
+                        ],
+                        capture_output=True,
+                        timeout=60,
+                    )
+
+                    if Path(bandit_report_path).exists():
+                        try:
+                            with open(bandit_report_path) as f:
+                                content = f.read().strip()
+                                if content:  # Only parse if file has content
+                                    bandit_data = json.loads(content)
+                                    results["bandit"] = bandit_data
+
+                                    # Count by severity
+                                    for issue in bandit_data.get("results", []):
+                                        severity = issue.get("issue_severity", "LOW")
+                                        results["by_severity"][severity] = (
+                                            results["by_severity"].get(severity, 0) + 1
+                                        )
+                        except (json.JSONDecodeError, ValueError):
+                            # Invalid or empty JSON - skip
+                            pass
+                finally:
+                    # Clean up temporary file
+                    try:
+                        Path(bandit_report_path).unlink()
+                    except Exception:
+                        pass
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass  # bandit not available
 
@@ -503,7 +531,7 @@ class QualityGates:
         if validate_spec_file is None:
             return True, {
                 "status": "skipped",
-                "reason": "spec_validator module not available"
+                "reason": "spec_validator module not available",
             }
 
         work_item_id = work_item.get("id")
@@ -512,7 +540,7 @@ class QualityGates:
         if not work_item_id or not work_item_type:
             return False, {
                 "status": "failed",
-                "error": "Work item missing 'id' or 'type' field"
+                "error": "Work item missing 'id' or 'type' field",
             }
 
         # Validate spec file
@@ -521,14 +549,14 @@ class QualityGates:
         if is_valid:
             return True, {
                 "status": "passed",
-                "message": f"Spec file for '{work_item_id}' is complete"
+                "message": f"Spec file for '{work_item_id}' is complete",
             }
         else:
             return False, {
                 "status": "failed",
                 "errors": errors,
                 "message": f"Spec file for '{work_item_id}' is incomplete",
-                "suggestion": f"Edit .session/specs/{work_item_id}.md to add missing sections"
+                "suggestion": f"Edit .session/specs/{work_item_id}.md to add missing sections",
             }
 
     def verify_context7_libraries(self) -> Tuple[bool, dict]:
@@ -847,7 +875,7 @@ class QualityGates:
                 ["docker", "--version"], capture_output=True, timeout=5
             )
             results["docker_available"] = result.returncode == 0
-        except:
+        except Exception:
             results["docker_available"] = False
 
         # Check Docker Compose available
@@ -856,7 +884,7 @@ class QualityGates:
                 ["docker-compose", "--version"], capture_output=True, timeout=5
             )
             results["docker_compose_available"] = result.returncode == 0
-        except:
+        except Exception:
             results["docker_compose_available"] = False
 
         # Check compose file exists
@@ -931,9 +959,9 @@ class QualityGates:
         if config.get("sequence_diagrams", True):
             # Parse spec file to get test scenarios
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
                 scenarios = parsed_spec.get("test_scenarios", [])
-            except:
+            except Exception:
                 scenarios = []
 
             if scenarios:
@@ -941,8 +969,7 @@ class QualityGates:
                 has_sequence = False
                 for scenario in scenarios:
                     content = scenario.get("content", "")
-                    if ("```mermaid" in content or
-                        "sequenceDiagram" in content):
+                    if "```mermaid" in content or "sequenceDiagram" in content:
                         has_sequence = True
                         break
 
@@ -957,11 +984,11 @@ class QualityGates:
         if config.get("contract_documentation", True):
             # Parse spec file to get API contracts
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
                 api_contracts = parsed_spec.get("api_contracts", "")
                 # API contracts should be documented in the spec
                 has_contracts = api_contracts and len(api_contracts.strip()) > 20
-            except:
+            except Exception:
                 has_contracts = False
 
             results["checks"].append(
@@ -978,10 +1005,10 @@ class QualityGates:
         if config.get("performance_baseline_docs", True):
             # Parse spec file to get performance benchmarks
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
                 benchmarks = parsed_spec.get("performance_benchmarks", "")
                 has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
-            except:
+            except Exception:
                 has_benchmarks = False
 
             if has_benchmarks:
@@ -1000,11 +1027,11 @@ class QualityGates:
 
         # 5. Check for integration point documentation (using spec_parser)
         try:
-            parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+            parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
             scope = parsed_spec.get("scope", "")
             # Check if scope has meaningful content
             documented = scope and len(scope.strip()) > 20
-        except:
+        except Exception:
             documented = False
 
         results["checks"].append(

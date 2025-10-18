@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # Check if PyYAML is available
 try:
-    import yaml
+    import yaml  # noqa: F401
 
     YAML_AVAILABLE = True
 except ImportError:

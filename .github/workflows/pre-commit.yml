@@ -1,0 +1,40 @@
+name: Pre-commit Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  pre-commit:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Check for secrets
+      run: |
+        # Check for common secret patterns
+        ! grep -r "password\s*=\s*['\"].*['\"]" scripts/ tests/ || (echo "Found hardcoded password" && exit 1)
+        ! grep -r "api_key\s*=\s*['\"].*['\"]" scripts/ tests/ || (echo "Found hardcoded API key" && exit 1)
+        ! grep -r "secret\s*=\s*['\"].*['\"]" scripts/ tests/ || (echo "Found hardcoded secret" && exit 1)
+
+    - name: Check file sizes
+      run: |
+        # Check for large files (>1MB)
+        find . -type f -size +1M ! -path "./.git/*" -exec ls -lh {} \; | awk '{print $9, $5}' || true
+
+    - name: Check for debug statements
+      run: |
+        # Warn about debug statements (don't fail)
+        grep -rn "import pdb\|pdb.set_trace()\|breakpoint()" scripts/ tests/ || true
+
+    - name: Check Python syntax
+      run: |
+        python -m py_compile scripts/*.py sdd_cli.py

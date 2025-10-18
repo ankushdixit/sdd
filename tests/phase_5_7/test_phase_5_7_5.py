@@ -6,7 +6,6 @@ Tests the spec_validator module and its integration with briefing_generator and 
 """
 
 import sys
-import json
 from pathlib import Path
 import tempfile
 import shutil
@@ -21,11 +20,8 @@ from scripts.spec_validator import (
     check_required_sections,
     check_acceptance_criteria,
     check_test_scenarios,
-    check_smoke_tests,
     check_deployment_subsections,
-    check_rollback_subsections,
     get_validation_rules,
-    format_validation_report
 )
 from scripts.quality_gates import QualityGates
 
@@ -43,48 +39,59 @@ class TestSpecValidator:
         # Change to temp directory
         self.original_dir = Path.cwd()
         import os
+
         os.chdir(self.temp_dir)
 
     def teardown_method(self):
         """Cleanup test fixtures."""
         import os
+
         os.chdir(self.original_dir)
         shutil.rmtree(self.temp_dir)
 
     def create_spec_file(self, work_item_id: str, content: str):
         """Helper to create a spec file."""
         spec_path = self.specs_dir / f"{work_item_id}.md"
-        spec_path.write_text(content, encoding='utf-8')
+        spec_path.write_text(content, encoding="utf-8")
 
     def test_get_validation_rules_feature(self):
         """Test: get_validation_rules returns correct rules for feature."""
-        rules = get_validation_rules('feature')
+        rules = get_validation_rules("feature")
 
-        assert 'required_sections' in rules
-        assert 'Overview' in rules['required_sections']
-        assert 'Rationale' in rules['required_sections']
-        assert 'Acceptance Criteria' in rules['required_sections']
-        assert 'Implementation Details' in rules['required_sections']
-        assert 'Testing Strategy' in rules['required_sections']
-        assert rules['special_requirements']['acceptance_criteria_min_items'] == 3
+        assert "required_sections" in rules
+        assert "Overview" in rules["required_sections"]
+        assert "Rationale" in rules["required_sections"]
+        assert "Acceptance Criteria" in rules["required_sections"]
+        assert "Implementation Details" in rules["required_sections"]
+        assert "Testing Strategy" in rules["required_sections"]
+        assert rules["special_requirements"]["acceptance_criteria_min_items"] == 3
 
         print("✓ Test 1: get_validation_rules returns correct rules for feature")
 
     def test_get_validation_rules_deployment(self):
         """Test: get_validation_rules returns correct rules for deployment."""
-        rules = get_validation_rules('deployment')
+        rules = get_validation_rules("deployment")
 
-        assert 'required_sections' in rules
-        assert 'Deployment Scope' in rules['required_sections']
-        assert 'Deployment Procedure' in rules['required_sections']
-        assert 'Rollback Procedure' in rules['required_sections']
-        assert 'Smoke Tests' in rules['required_sections']
-        assert 'Acceptance Criteria' in rules['required_sections']
+        assert "required_sections" in rules
+        assert "Deployment Scope" in rules["required_sections"]
+        assert "Deployment Procedure" in rules["required_sections"]
+        assert "Rollback Procedure" in rules["required_sections"]
+        assert "Smoke Tests" in rules["required_sections"]
+        assert "Acceptance Criteria" in rules["required_sections"]
 
-        assert 'deployment_procedure_subsections' in rules['special_requirements']
-        assert 'Pre-Deployment Checklist' in rules['special_requirements']['deployment_procedure_subsections']
-        assert 'Deployment Steps' in rules['special_requirements']['deployment_procedure_subsections']
-        assert 'Post-Deployment Steps' in rules['special_requirements']['deployment_procedure_subsections']
+        assert "deployment_procedure_subsections" in rules["special_requirements"]
+        assert (
+            "Pre-Deployment Checklist"
+            in rules["special_requirements"]["deployment_procedure_subsections"]
+        )
+        assert (
+            "Deployment Steps"
+            in rules["special_requirements"]["deployment_procedure_subsections"]
+        )
+        assert (
+            "Post-Deployment Steps"
+            in rules["special_requirements"]["deployment_procedure_subsections"]
+        )
 
         print("✓ Test 2: get_validation_rules returns correct rules for deployment")
 
@@ -111,7 +118,7 @@ Implementation details here.
 Testing strategy here.
 """
 
-        errors = check_required_sections(spec_content, 'feature')
+        errors = check_required_sections(spec_content, "feature")
         assert len(errors) == 0
 
         print("✓ Test 3: check_required_sections passes for valid feature spec")
@@ -128,10 +135,10 @@ This is the overview section.
 This is the rationale.
 """
 
-        errors = check_required_sections(spec_content, 'feature')
+        errors = check_required_sections(spec_content, "feature")
         assert len(errors) > 0
-        assert any('Acceptance Criteria' in error for error in errors)
-        assert any('Implementation Details' in error for error in errors)
+        assert any("Acceptance Criteria" in error for error in errors)
+        assert any("Implementation Details" in error for error in errors)
 
         print("✓ Test 4: check_required_sections detects missing sections")
 
@@ -159,8 +166,8 @@ This is the rationale.
 
         error = check_acceptance_criteria(spec_content, min_items=3)
         assert error is not None
-        assert 'at least 3 items' in error
-        assert 'found 2' in error
+        assert "at least 3 items" in error
+        assert "found 2" in error
 
         print("✓ Test 6: check_acceptance_criteria fails with < 3 items")
 
@@ -199,7 +206,9 @@ Step 1
         errors = check_deployment_subsections(spec_content)
         assert len(errors) == 0
 
-        print("✓ Test 8: check_deployment_subsections passes with all required subsections")
+        print(
+            "✓ Test 8: check_deployment_subsections passes with all required subsections"
+        )
 
     def test_validate_spec_file_valid_feature(self):
         """Test: validate_spec_file passes for complete feature spec."""
@@ -227,7 +236,7 @@ How to test this.
 
         self.create_spec_file(work_item_id, spec_content)
 
-        is_valid, errors = validate_spec_file(work_item_id, 'feature')
+        is_valid, errors = validate_spec_file(work_item_id, "feature")
         assert is_valid
         assert len(errors) == 0
 
@@ -253,7 +262,7 @@ Steps here.
 
         self.create_spec_file(work_item_id, spec_content)
 
-        is_valid, errors = validate_spec_file(work_item_id, 'deployment')
+        is_valid, errors = validate_spec_file(work_item_id, "deployment")
         assert not is_valid
         assert len(errors) > 0
         # Should be missing: Post-Deployment Steps, Rollback Procedure, Smoke Tests, Acceptance Criteria
@@ -296,7 +305,9 @@ Strategy here.
         assert passed
         assert results["status"] == "passed"
 
-        print("✓ Test 11 (BONUS): QualityGates.validate_spec_completeness integration works")
+        print(
+            "✓ Test 11 (BONUS): QualityGates.validate_spec_completeness integration works"
+        )
 
 
 def run_all_tests():
@@ -342,6 +353,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

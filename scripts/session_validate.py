@@ -221,7 +221,10 @@ class SessionValidator:
         missing_sections = []
 
         # Common sections for all types
-        if not parsed_spec.get("acceptance_criteria") or len(parsed_spec.get("acceptance_criteria", [])) < 3:
+        if (
+            not parsed_spec.get("acceptance_criteria")
+            or len(parsed_spec.get("acceptance_criteria", [])) < 3
+        ):
             missing_sections.append("Acceptance Criteria (at least 3 items)")
 
         # Type-specific sections
@@ -240,7 +243,10 @@ class SessionValidator:
         elif work_type == "integration_test":
             if not parsed_spec.get("scope"):
                 missing_sections.append("Scope")
-            if not parsed_spec.get("test_scenarios") or len(parsed_spec.get("test_scenarios", [])) == 0:
+            if (
+                not parsed_spec.get("test_scenarios")
+                or len(parsed_spec.get("test_scenarios", [])) == 0
+            ):
                 missing_sections.append("Test Scenarios (at least 1)")
 
         elif work_type == "deployment":
@@ -314,11 +320,11 @@ class SessionValidator:
             # Show missing paths for work item criteria
             if not result["passed"] and check_name == "work_item_criteria":
                 if "missing_impl" in result and result["missing_impl"]:
-                    print(f"   Missing implementation paths:")
+                    print("   Missing implementation paths:")
                     for path in result["missing_impl"]:
                         print(f"      - {path}")
                 if "missing_tests" in result and result["missing_tests"]:
-                    print(f"   Missing test paths:")
+                    print("   Missing test paths:")
                     for path in result["missing_tests"]:
                         print(f"      - {path}")
 

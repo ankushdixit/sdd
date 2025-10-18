@@ -1,6 +1,7 @@
 # SDD (Session-Driven Development)
 
-[![Tests](https://img.shields.io/badge/tests-343%20passing-brightgreen)](https://github.com/ankushdixit/sdd/tree/main/tests)
+[![Tests](https://github.com/ankushdixit/sdd/workflows/Tests/badge.svg)](https://github.com/ankushdixit/sdd/actions?query=workflow%3ATests)
+[![codecov](https://codecov.io/gh/ankushdixit/sdd/branch/main/graph/badge.svg)](https://codecov.io/gh/ankushdixit/sdd)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/ankushdixit/sdd)

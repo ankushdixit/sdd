@@ -81,32 +81,47 @@ class IntegrationTestRunner:
             Dict with 'services_required' and 'compose_file' keys
         """
         if not env_text:
-            return {"services_required": [], "compose_file": "docker-compose.integration.yml"}
+            return {
+                "services_required": [],
+                "compose_file": "docker-compose.integration.yml",
+            }
 
         # Extract service names (look for lines with service names)
         services = []
         compose_file = "docker-compose.integration.yml"
 
-        for line in env_text.split('\n'):
+        for line in env_text.split("\n"):
             line = line.strip()
             # Look for service names (simple heuristic: lines with common service names)
-            if any(s in line.lower() for s in ['postgresql', 'postgres', 'redis', 'mongodb', 'mysql', 'nginx', 'kafka']):
+            if any(
+                s in line.lower()
+                for s in [
+                    "postgresql",
+                    "postgres",
+                    "redis",
+                    "mongodb",
+                    "mysql",
+                    "nginx",
+                    "kafka",
+                ]
+            ):
                 # Extract service name and version if present
                 parts = line.split()
                 if parts:
-                    services.append(parts[0].strip('-*•'))
+                    services.append(parts[0].strip("-*•"))
             # Look for compose file reference
-            if 'docker-compose' in line.lower() or 'compose' in line.lower():
+            if "docker-compose" in line.lower() or "compose" in line.lower():
                 # Try to extract filename
                 words = line.split()
                 for word in words:
-                    if 'docker-compose' in word or word.endswith('.yml') or word.endswith('.yaml'):
-                        compose_file = word.strip('`"\':')
+                    if (
+                        "docker-compose" in word
+                        or word.endswith(".yml")
+                        or word.endswith(".yaml")
+                    ):
+                        compose_file = word.strip("`\"':")
 
-        return {
-            "services_required": services,
-            "compose_file": compose_file
-        }
+        return {"services_required": services, "compose_file": compose_file}
 
     def setup_environment(self) -> Tuple[bool, str]:
         """
@@ -197,7 +212,7 @@ class IntegrationTestRunner:
                         return True
 
                 time.sleep(2)
-            except:
+            except Exception:
                 time.sleep(2)
 
         return False

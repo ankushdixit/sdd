@@ -22,7 +22,7 @@ class TestDocumentationUpdates:
 
         assert writing_specs_path.exists(), "docs/writing-specs.md should exist"
 
-        content = writing_specs_path.read_text(encoding='utf-8')
+        content = writing_specs_path.read_text(encoding="utf-8")
 
         # Check for key sections
         required_sections = [
@@ -40,24 +40,30 @@ class TestDocumentationUpdates:
             "## Good vs Bad Examples",
             "## Tips and Best Practices",
             "## Common Mistakes",
-            "## Validation Checklist"
+            "## Validation Checklist",
         ]
 
         for section in required_sections:
-            assert section in content, f"writing-specs.md should contain section: {section}"
+            assert section in content, (
+                f"writing-specs.md should contain section: {section}"
+            )
 
         # Check for key concepts
         key_concepts = [
             "single source of truth",
             "acceptance criteria",
             "validation",
-            "templates"
+            "templates",
         ]
 
         for concept in key_concepts:
-            assert concept.lower() in content.lower(), f"writing-specs.md should mention: {concept}"
+            assert concept.lower() in content.lower(), (
+                f"writing-specs.md should mention: {concept}"
+            )
 
-        print("✓ Test 1: docs/writing-specs.md exists and contains all required sections")
+        print(
+            "✓ Test 1: docs/writing-specs.md exists and contains all required sections"
+        )
 
     def test_session_driven_development_updated_with_spec_architecture(self):
         """Test: docs/session-driven-development.md includes spec architecture section."""
@@ -65,7 +71,7 @@ class TestDocumentationUpdates:
 
         assert sdd_doc_path.exists(), "docs/session-driven-development.md should exist"
 
-        content = sdd_doc_path.read_text(encoding='utf-8')
+        content = sdd_doc_path.read_text(encoding="utf-8")
 
         # Check for spec architecture section
         required_sections = [
@@ -76,11 +82,13 @@ class TestDocumentationUpdates:
             "#### Spec File Flow",
             "#### Spec Templates",
             "#### Spec Validation",
-            "#### Benefits"
+            "#### Benefits",
         ]
 
         for section in required_sections:
-            assert section in content, f"session-driven-development.md should contain: {section}"
+            assert section in content, (
+                f"session-driven-development.md should contain: {section}"
+            )
 
         # Check for key concepts (case-insensitive search)
         key_concepts = [
@@ -88,14 +96,18 @@ class TestDocumentationUpdates:
             "spec file",
             "work_items.json",
             "validation",
-            "Zero Context Loss"
+            "Zero Context Loss",
         ]
 
         content_lower = content.lower()
         for concept in key_concepts:
-            assert concept.lower() in content_lower, f"session-driven-development.md should mention: {concept}"
+            assert concept.lower() in content_lower, (
+                f"session-driven-development.md should mention: {concept}"
+            )
 
-        print("✓ Test 2: docs/session-driven-development.md updated with spec architecture")
+        print(
+            "✓ Test 2: docs/session-driven-development.md updated with spec architecture"
+        )
 
     def test_command_documentation_updated_for_spec_workflow(self):
         """Test: Command documentation emphasizes spec-first workflow."""
@@ -103,19 +115,29 @@ class TestDocumentationUpdates:
         start_cmd_path = project_root / ".claude" / "commands" / "start.md"
         assert start_cmd_path.exists(), ".claude/commands/start.md should exist"
 
-        start_content = start_cmd_path.read_text(encoding='utf-8')
+        start_content = start_cmd_path.read_text(encoding="utf-8")
         assert "spec file" in start_content.lower(), "start.md should mention spec file"
-        assert "source of truth" in start_content.lower(), "start.md should mention source of truth"
-        assert "Spec-First Architecture" in start_content, "start.md should have Spec-First Architecture section"
+        assert "source of truth" in start_content.lower(), (
+            "start.md should mention source of truth"
+        )
+        assert "Spec-First Architecture" in start_content, (
+            "start.md should have Spec-First Architecture section"
+        )
 
         # Check /work-new command
         work_new_cmd_path = project_root / ".claude" / "commands" / "work-new.md"
         assert work_new_cmd_path.exists(), ".claude/commands/work-new.md should exist"
 
-        work_new_content = work_new_cmd_path.read_text(encoding='utf-8')
-        assert "fill out the spec file" in work_new_content.lower(), "work-new.md should mention filling out spec file"
-        assert "Next Step: Fill Out the Spec File" in work_new_content, "work-new.md should have spec file section"
-        assert "writing-specs.md" in work_new_content, "work-new.md should reference writing-specs.md"
+        work_new_content = work_new_cmd_path.read_text(encoding="utf-8")
+        assert "fill out the spec file" in work_new_content.lower(), (
+            "work-new.md should mention filling out spec file"
+        )
+        assert "Next Step: Fill Out the Spec File" in work_new_content, (
+            "work-new.md should have spec file section"
+        )
+        assert "writing-specs.md" in work_new_content, (
+            "work-new.md should reference writing-specs.md"
+        )
 
         print("✓ Test 3: Command documentation updated for spec-first workflow")
 
@@ -151,6 +173,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

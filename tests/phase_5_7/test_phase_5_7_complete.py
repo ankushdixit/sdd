@@ -31,6 +31,7 @@ class TestPhase5_7Complete:
         self.temp_dir = tempfile.mkdtemp()
         self.original_dir = Path.cwd()
         import os
+
         os.chdir(self.temp_dir)
 
         # Create directory structure
@@ -46,13 +47,14 @@ class TestPhase5_7Complete:
     def teardown_method(self):
         """Cleanup test fixtures."""
         import os
+
         os.chdir(self.original_dir)
         shutil.rmtree(self.temp_dir)
 
     def create_spec_file(self, work_item_id: str, content: str):
         """Helper to create a spec file."""
         spec_path = self.specs_dir / f"{work_item_id}.md"
-        spec_path.write_text(content, encoding='utf-8')
+        spec_path.write_text(content, encoding="utf-8")
 
     def test_end_to_end_feature_workflow(self):
         """
@@ -116,7 +118,7 @@ Comprehensive testing strategy including:
             "type": work_item_type,
             "title": "Complete Workflow Test",
             "priority": "high",
-            "status": "not_started"
+            "status": "not_started",
         }
         learnings_data = {"learnings": []}
 
@@ -131,7 +133,9 @@ Comprehensive testing strategy including:
         assert passed, f"Quality gate should pass, results: {results}"
         assert results["status"] == "passed"
 
-        print("✓ Test 1: End-to-end feature workflow (create → validate → parse → brief → quality gate)")
+        print(
+            "✓ Test 1: End-to-end feature workflow (create → validate → parse → brief → quality gate)"
+        )
 
     def test_end_to_end_deployment_workflow(self):
         """
@@ -218,7 +222,7 @@ curl -X POST https://api.example.com/auth/login
             "type": work_item_type,
             "title": "API v2.5.0 Deployment",
             "priority": "critical",
-            "status": "not_started"
+            "status": "not_started",
         }
         learnings_data = {"learnings": []}
 
@@ -268,7 +272,7 @@ Just an overview, missing many required sections.
             "type": work_item_type,
             "title": "Incomplete Feature",
             "priority": "high",
-            "status": "not_started"
+            "status": "not_started",
         }
 
         gates = QualityGates()
@@ -283,12 +287,32 @@ Just an overview, missing many required sections.
         Test: Spec parser correctly handles all 6 work item types.
         """
         test_cases = [
-            ("feature", "Feature Spec", ["overview", "rationale", "acceptance_criteria"]),
+            (
+                "feature",
+                "Feature Spec",
+                ["overview", "rationale", "acceptance_criteria"],
+            ),
             ("bug", "Bug Spec", ["description", "root_cause_analysis", "fix_approach"]),
-            ("refactor", "Refactor Spec", ["overview", "current_state", "proposed_refactor"]),
-            ("security", "Security Spec", ["security_issue", "threat_model", "mitigation_strategy"]),
-            ("integration_test", "Integration Test Spec", ["scope", "test_scenarios", "environment_requirements"]),
-            ("deployment", "Deployment Spec", ["deployment_scope", "deployment_procedure", "rollback_procedure"])
+            (
+                "refactor",
+                "Refactor Spec",
+                ["overview", "current_state", "proposed_refactor"],
+            ),
+            (
+                "security",
+                "Security Spec",
+                ["security_issue", "threat_model", "mitigation_strategy"],
+            ),
+            (
+                "integration_test",
+                "Integration Test Spec",
+                ["scope", "test_scenarios", "environment_requirements"],
+            ),
+            (
+                "deployment",
+                "Deployment Spec",
+                ["deployment_scope", "deployment_procedure", "rollback_procedure"],
+            ),
         ]
 
         for work_item_type, title, expected_fields in test_cases:
@@ -394,7 +418,9 @@ Test
 
             for field in expected_fields:
                 assert field in parsed, f"{work_item_type} should have {field} field"
-                assert parsed[field] is not None, f"{work_item_type}.{field} should not be None"
+                assert parsed[field] is not None, (
+                    f"{work_item_type}.{field} should not be None"
+                )
 
         print("✓ Test 4: Spec parser correctly handles all 6 work item types")
 
@@ -440,13 +466,15 @@ Verify no deprecated fields.
                     "dependencies": [],
                     "milestone": None,
                     "created_at": "2025-10-18T12:00:00Z",
-                    "sessions": []
+                    "sessions": [],
                 }
             }
         }
 
         work_items_path = self.tracking_dir / "work_items.json"
-        work_items_path.write_text(json.dumps(work_item_data, indent=2), encoding='utf-8')
+        work_items_path.write_text(
+            json.dumps(work_item_data, indent=2), encoding="utf-8"
+        )
 
         # Verify no deprecated fields
         with open(work_items_path) as f:
@@ -454,9 +482,16 @@ Verify no deprecated fields.
 
         work_item = loaded_data["work_items"][work_item_id]
 
-        deprecated_fields = ["rationale", "acceptance_criteria", "implementation_paths", "test_paths"]
+        deprecated_fields = [
+            "rationale",
+            "acceptance_criteria",
+            "implementation_paths",
+            "test_paths",
+        ]
         for field in deprecated_fields:
-            assert field not in work_item, f"Deprecated field '{field}' should not be in work_items.json"
+            assert field not in work_item, (
+                f"Deprecated field '{field}' should not be in work_items.json"
+            )
 
         # Verify content comes from spec file
         loaded_spec = load_work_item_spec(work_item_id)
@@ -499,6 +534,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test_func.__name__} errored: {e}")
             import traceback
+
             traceback.print_exc()
             test_instance.teardown_method()
             failed += 1
@@ -510,6 +546,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

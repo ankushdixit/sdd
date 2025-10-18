@@ -76,7 +76,7 @@ def get_session_status():
             if len(lines) > 10:
                 print(f"  ... and {len(lines) - 10} more")
             print()
-    except:
+    except Exception:
         pass
 
     # Git branch
