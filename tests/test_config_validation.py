@@ -32,7 +32,7 @@ def schema_path(tmp_path):
 def full_schema_path(tmp_path):
     """Create full SDD config schema for testing."""
     # Load the actual schema from the repository
-    repo_schema = Path(".session/config.schema.json")
+    repo_schema = Path("templates/config.schema.json")
     if repo_schema.exists():
         schema_content = repo_schema.read_text()
         path = tmp_path / "config.schema.json"
