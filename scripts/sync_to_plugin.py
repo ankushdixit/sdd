@@ -20,7 +20,6 @@ import json
 import shutil
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
 
 
 class PluginSyncer:
@@ -59,7 +58,7 @@ class PluginSyncer:
         self.main_repo = main_repo.resolve()
         self.plugin_repo = plugin_repo.resolve()
         self.dry_run = dry_run
-        self.changes: List[str] = []
+        self.changes: list[str] = []
 
     def validate_repos(self) -> bool:
         """Validate that both repositories exist and have expected structure."""
@@ -94,7 +93,7 @@ class PluginSyncer:
         if not pyproject_path.exists():
             raise FileNotFoundError(f"pyproject.toml not found in {self.main_repo}")
 
-        with open(pyproject_path, "r") as f:
+        with open(pyproject_path) as f:
             for line in f:
                 if line.strip().startswith("version"):
                     # Extract version from line like: version = "0.5.7"
@@ -112,7 +111,7 @@ class PluginSyncer:
             self.changes.append(f"Update plugin.json version to {version}")
             return
 
-        with open(plugin_json_path, "r") as f:
+        with open(plugin_json_path) as f:
             plugin_data = json.load(f)
 
         old_version = plugin_data.get("version", "unknown")
@@ -129,8 +128,12 @@ class PluginSyncer:
     def sync_file(self, src: Path, dest: Path) -> None:
         """Sync a single file from source to destination."""
         if self.dry_run:
-            print(f"[DRY RUN] Would copy: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}")
-            self.changes.append(f"Copy {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}")
+            print(
+                f"[DRY RUN] Would copy: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
+            )
+            self.changes.append(
+                f"Copy {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
+            )
             return
 
         # Create parent directory if needed
@@ -138,17 +141,23 @@ class PluginSyncer:
 
         # Copy file
         shutil.copy2(src, dest)
-        print(f"✅ Copied: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}")
+        print(
+            f"✅ Copied: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
+        )
         self.changes.append(f"Copied {src.relative_to(self.main_repo)}")
 
     def sync_directory(self, src: Path, dest: Path) -> None:
         """Sync a directory from source to destination."""
         if self.dry_run:
-            print(f"[DRY RUN] Would sync directory: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}")
+            print(
+                f"[DRY RUN] Would sync directory: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
+            )
 
             # Count files to sync
             file_count = sum(1 for _ in src.rglob("*") if _.is_file())
-            self.changes.append(f"Sync directory {src.relative_to(self.main_repo)} ({file_count} files)")
+            self.changes.append(
+                f"Sync directory {src.relative_to(self.main_repo)} ({file_count} files)"
+            )
             return
 
         # Remove existing destination if it exists
@@ -161,7 +170,9 @@ class PluginSyncer:
         # Count files synced
         file_count = sum(1 for _ in dest.rglob("*") if _.is_file())
         print(f"✅ Synced directory: {src.relative_to(self.main_repo)} ({file_count} files)")
-        self.changes.append(f"Synced directory {src.relative_to(self.main_repo)} ({file_count} files)")
+        self.changes.append(
+            f"Synced directory {src.relative_to(self.main_repo)} ({file_count} files)"
+        )
 
     def sync_all_files(self) -> None:
         """Sync all files according to FILE_MAPPINGS."""
