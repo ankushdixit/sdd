@@ -318,6 +318,109 @@ graph TD
 /work-update WI-001 --priority high
 ```
 
+## Spec-First Workflow
+
+**The spec file is the single source of truth for work item content.**
+
+SDD implements a **spec-first architecture** (Phase 5.7) where work item specifications are the authoritative source for implementation details, acceptance criteria, and testing strategies.
+
+### Architecture Overview
+
+```
+.session/
+├── specs/
+│   ├── feature_xyz.md      ← Single source of truth (content)
+│   └── deployment_abc.md
+└── tracking/
+    └── work_items.json      ← Tracking only (metadata, status, dependencies)
+```
+
+### Key Concepts
+
+**Spec Files (`.session/specs/{work_item_id}.md`)**
+- **Content**: Implementation details, acceptance criteria, testing strategy
+- **Format**: Structured markdown with standardized sections
+- **Validation**: Checked for completeness before session starts
+- **Briefings**: Passed in full to Claude (no compression)
+
+**Work Items JSON (`work_items.json`)**
+- **Tracking**: ID, type, status, priority, dependencies, sessions
+- **Metadata Only**: No duplicate content (previously stored rationale, acceptance criteria)
+
+### Workflow
+
+1. **Create Work Item:**
+   ```bash
+   /work-new
+   # Creates .session/specs/{work_item_id}.md from template
+   # Creates tracking entry in work_items.json
+   ```
+
+2. **Fill Out Specification:**
+   - Open `.session/specs/{work_item_id}.md`
+   - Complete all required sections for the work item type
+   - Follow template guidance and inline comments
+   - See `docs/writing-specs.md` for best practices
+
+3. **Start Session:**
+   ```bash
+   /start {work_item_id}
+   # Loads full spec file into briefing
+   # Validates spec completeness
+   # Shows warnings if spec is incomplete
+   ```
+
+4. **Work on Implementation:**
+   - Claude receives complete spec content in briefing
+   - All acceptance criteria and implementation details available
+   - No context loss from compression or truncation
+
+5. **Complete Session:**
+   ```bash
+   /end
+   # Validates spec completeness as quality gate
+   # Generates commit message from spec rationale
+   ```
+
+### Spec Templates
+
+SDD provides comprehensive templates for 6 work item types:
+
+| Type | Template | Required Sections |
+|------|----------|-------------------|
+| **Feature** | `templates/feature_spec.md` | Overview, Rationale, Acceptance Criteria, Implementation Details, Testing Strategy |
+| **Bug** | `templates/bug_spec.md` | Description, Steps to Reproduce, Root Cause Analysis, Fix Approach |
+| **Refactor** | `templates/refactor_spec.md` | Overview, Current State, Proposed Refactor, Scope |
+| **Security** | `templates/security_spec.md` | Security Issue, Threat Model, Attack Vector, Mitigation Strategy, Compliance |
+| **Integration Test** | `templates/integration_test_spec.md` | Scope, Test Scenarios, Performance Benchmarks, Environment Requirements |
+| **Deployment** | `templates/deployment_spec.md` | Deployment Scope, Procedure, Rollback, Smoke Tests |
+
+### Validation
+
+Specs are automatically validated for:
+- ✅ Required sections present and non-empty
+- ✅ Minimum 3 acceptance criteria items
+- ✅ Required subsections (e.g., deployment procedure steps)
+- ✅ Proper structure and formatting
+
+**Validation occurs:**
+- During `/start` - Warning displayed in briefing if spec incomplete
+- During `/end` - Quality gate fails if spec incomplete
+- Manually: `python3 scripts/spec_validator.py {work_item_id} {type}`
+
+### Benefits
+
+- **Zero Context Loss**: Claude receives complete specifications, not truncated JSON fields
+- **Better Quality**: Comprehensive specs lead to better implementations
+- **Single Source of Truth**: No confusion about where content lives
+- **Validation**: Catch incomplete specs before starting work
+- **Templates**: Standardized structure for consistency
+
+For more information:
+- **Writing Specs**: `docs/writing-specs.md`
+- **Template Structure**: `docs/spec-template-structure.md`
+- **Session-Driven Development**: `docs/session-driven-development.md`
+
 ## Configuration
 
 Configure SDD via `.session/config.json` (created during `/init`):

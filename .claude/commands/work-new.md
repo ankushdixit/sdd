@@ -40,8 +40,24 @@ This provides a guided experience for creating work items.
 
 The script will:
 - Generate a unique work item ID
-- Create a specification file from the appropriate template
-- Update work_items.json tracking file
+- Create a specification file from the appropriate template at `.session/specs/{work_item_id}.md`
+- Update work_items.json tracking file (metadata only)
 - Display the created work item details and next steps
 
 Show all output to the user including the work item ID and specification file path.
+
+## Next Step: Fill Out the Spec File
+
+**IMPORTANT:** After creating the work item, you must fill out the specification file:
+
+1. Open `.session/specs/{work_item_id}.md` in your editor
+2. Follow the template structure and inline guidance comments
+3. Complete all required sections for the work item type
+4. Remove HTML comment instructions when done
+
+The spec file is the **single source of truth** for work item content. All implementation details, acceptance criteria, and testing strategies should be documented in the spec file, not in `work_items.json`.
+
+For guidance on writing effective specs, see:
+- `docs/writing-specs.md` - Best practices and examples
+- `docs/spec-template-structure.md` - Template structure reference
+- `templates/{type}_spec.md` - Template examples for each work item type

@@ -2,6 +2,8 @@
 """
 Complete current session with quality gates and summary generation.
 Enhanced with full tracking updates and git workflow.
+
+Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
 """
 
 import json
@@ -14,6 +16,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent))
 
 from quality_gates import QualityGates
+from spec_parser import parse_spec_file
 
 
 def load_status():
@@ -286,15 +289,33 @@ def complete_git_workflow(work_item_id, commit_message):
 
 
 def generate_commit_message(status, work_item):
-    """Generate standardized commit message."""
+    """
+    Generate standardized commit message.
+
+    Updated in Phase 5.7.3 to read rationale from spec file instead of
+    deprecated JSON field.
+    """
     session_num = status["current_session"]
     work_type = work_item["type"]
     title = work_item["title"]
+    work_id = work_item.get("id")
 
     message = f"Session {session_num:03d}: {work_type.title()} - {title}\n\n"
 
-    if work_item.get("rationale"):
-        message += f"{work_item['rationale']}\n\n"
+    # Get rationale from spec file
+    try:
+        parsed_spec = parse_spec_file(work_id)
+        rationale = parsed_spec.get("rationale")
+
+        if rationale and rationale.strip():
+            # Trim to first paragraph if too long
+            first_para = rationale.split('\n\n')[0]
+            if len(first_para) > 200:
+                first_para = first_para[:197] + "..."
+            message += f"{first_para}\n\n"
+    except Exception:
+        # If spec file not found or invalid, continue without rationale
+        pass
 
     if work_item["status"] == "completed":
         message += "✅ Work item completed\n"

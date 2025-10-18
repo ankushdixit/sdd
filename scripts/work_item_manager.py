@@ -14,6 +14,7 @@ from typing import Dict, List, Optional
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.file_ops import load_json, save_json
+from scripts import spec_parser
 
 
 class WorkItemManager:
@@ -314,10 +315,6 @@ class WorkItemManager:
             "milestone": "",
             "created_at": datetime.now().isoformat(),
             "sessions": [],
-            "rationale": "",
-            "acceptance_criteria": [],
-            "implementation_paths": [],
-            "test_paths": [],
         }
 
         # Add to data
@@ -328,66 +325,61 @@ class WorkItemManager:
 
     def validate_integration_test(self, work_item: dict) -> tuple[bool, list[str]]:
         """
-        Validate integration test work item.
+        Validate integration test work item by parsing spec file.
+
+        Updated in Phase 5.7.3 to use spec_parser instead of JSON fields.
 
         Returns:
             (is_valid: bool, errors: List[str])
         """
         errors = []
+        work_id = work_item.get("id")
 
-        # Required fields for integration tests
-        required_fields = [
-            "scope",
-            "test_scenarios",
-            "performance_benchmarks",
-            "api_contracts",
-            "environment_requirements",
-        ]
+        # Parse spec file
+        try:
+            parsed_spec = spec_parser.parse_spec_file(work_id)
+        except FileNotFoundError:
+            errors.append(f"Spec file not found: .session/specs/{work_id}.md")
+            return False, errors
+        except ValueError as e:
+            errors.append(f"Invalid spec file: {str(e)}")
+            return False, errors
 
-        for field in required_fields:
-            if not work_item.get(field):
-                errors.append(f"Missing required field for integration test: {field}")
+        # Validate required sections exist and are not empty
+        required_sections = {
+            "scope": "Scope",
+            "test_scenarios": "Test Scenarios",
+            "performance_benchmarks": "Performance Benchmarks",
+            "environment_requirements": "Environment Requirements",
+            "acceptance_criteria": "Acceptance Criteria",
+        }
 
-        # Validate test scenarios structure
-        scenarios = work_item.get("test_scenarios", [])
-        if not scenarios:
+        for field_name, section_name in required_sections.items():
+            value = parsed_spec.get(field_name)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                errors.append(f"Missing required section: {section_name}")
+            elif isinstance(value, list) and len(value) == 0:
+                errors.append(f"Section '{section_name}' is empty")
+
+        # Validate test scenarios - must have at least 1 scenario
+        test_scenarios = parsed_spec.get("test_scenarios", [])
+        if len(test_scenarios) == 0:
             errors.append("At least one test scenario required")
         else:
-            for i, scenario in enumerate(scenarios):
-                if not scenario.get("setup"):
-                    errors.append(f"Scenario {i + 1}: Missing setup section")
-                if not scenario.get("actions"):
-                    errors.append(f"Scenario {i + 1}: Missing actions section")
-                if not scenario.get("expected_results"):
-                    errors.append(f"Scenario {i + 1}: Missing expected results")
+            # Check that each scenario has content
+            for i, scenario in enumerate(test_scenarios):
+                if not scenario.get("content") or not scenario.get("content").strip():
+                    scenario_name = scenario.get("name", f"Scenario {i + 1}")
+                    errors.append(f"{scenario_name}: Missing scenario content")
 
-        # Validate performance benchmarks
-        benchmarks = work_item.get("performance_benchmarks", {})
-        if benchmarks:
-            if not benchmarks.get("response_time"):
-                errors.append(
-                    "Performance benchmarks missing response time requirements"
-                )
-            if not benchmarks.get("throughput"):
-                errors.append("Performance benchmarks missing throughput requirements")
+        # Validate acceptance criteria - should have at least 3 items (per spec validation rules)
+        acceptance_criteria = parsed_spec.get("acceptance_criteria", [])
+        if len(acceptance_criteria) < 3:
+            errors.append(
+                f"Acceptance criteria should have at least 3 items (found {len(acceptance_criteria)})"
+            )
 
-        # Validate API contracts
-        contracts = work_item.get("api_contracts", [])
-        if not contracts:
-            errors.append("Integration tests must specify API contracts")
-        else:
-            for contract in contracts:
-                if not contract.get("contract_file"):
-                    errors.append("API contract missing contract_file reference")
-                if not contract.get("version"):
-                    errors.append("API contract missing version")
-
-        # Validate environment requirements
-        env_reqs = work_item.get("environment_requirements", {})
-        if not env_reqs.get("services_required"):
-            errors.append("Must specify required services for integration test")
-
-        # Check for service dependencies
+        # Check for work item dependencies
         dependencies = work_item.get("dependencies", [])
         if not dependencies:
             errors.append(
@@ -398,61 +390,76 @@ class WorkItemManager:
 
     def validate_deployment(self, work_item: dict) -> tuple[bool, list[str]]:
         """
-        Validate deployment work item has all required fields.
+        Validate deployment work item by parsing spec file.
+
+        Updated in Phase 5.7.3 to use spec_parser instead of JSON fields.
 
         Returns:
             (is_valid, errors)
         """
         errors = []
-        spec = work_item.get("specification", "")
+        work_id = work_item.get("id")
 
-        # Required sections
-        required_sections = [
-            "deployment scope",
-            "deployment procedure",
-            "environment configuration",
-            "rollback procedure",
-            "smoke tests",
-        ]
+        # Parse spec file
+        try:
+            parsed_spec = spec_parser.parse_spec_file(work_id)
+        except FileNotFoundError:
+            errors.append(f"Spec file not found: .session/specs/{work_id}.md")
+            return False, errors
+        except ValueError as e:
+            errors.append(f"Invalid spec file: {str(e)}")
+            return False, errors
 
-        for section in required_sections:
-            if section.lower() not in spec.lower():
-                errors.append(f"Missing required section: {section}")
+        # Validate required sections exist and are not empty
+        required_sections = {
+            "deployment_scope": "Deployment Scope",
+            "deployment_procedure": "Deployment Procedure",
+            "environment_configuration": "Environment Configuration",
+            "rollback_procedure": "Rollback Procedure",
+            "smoke_tests": "Smoke Tests",
+            "acceptance_criteria": "Acceptance Criteria",
+        }
 
-        # Validate deployment procedure has steps
-        if "deployment procedure" in spec.lower():
-            if "pre-deployment steps" not in spec.lower():
-                errors.append("Missing pre-deployment steps")
-            # Check for "### Deployment Steps" or "### deployment steps" specifically
-            # (not "pre-deployment steps" or "post-deployment steps")
-            if not any(
-                line.strip().lower() in ["### deployment steps", "deployment steps"]
-                for line in spec.split("\n")
-            ):
+        for field_name, section_name in required_sections.items():
+            value = parsed_spec.get(field_name)
+            if value is None:
+                errors.append(f"Missing required section: {section_name}")
+            elif isinstance(value, str) and not value.strip():
+                errors.append(f"Section '{section_name}' is empty")
+            elif isinstance(value, list) and len(value) == 0:
+                errors.append(f"Section '{section_name}' is empty")
+            elif isinstance(value, dict) and not any(value.values()):
+                errors.append(f"Section '{section_name}' is empty")
+
+        # Validate deployment procedure subsections
+        deployment_proc = parsed_spec.get("deployment_procedure")
+        if deployment_proc:
+            if not deployment_proc.get("pre_deployment") or not deployment_proc.get("pre_deployment").strip():
+                errors.append("Missing pre-deployment checklist/steps")
+            if not deployment_proc.get("deployment_steps") or not deployment_proc.get("deployment_steps").strip():
                 errors.append("Missing deployment steps")
-            if "post-deployment steps" not in spec.lower():
+            if not deployment_proc.get("post_deployment") or not deployment_proc.get("post_deployment").strip():
                 errors.append("Missing post-deployment steps")
 
-        # Validate rollback procedure
-        if "rollback procedure" in spec.lower():
-            if "rollback triggers" not in spec.lower():
+        # Validate rollback procedure subsections
+        rollback_proc = parsed_spec.get("rollback_procedure")
+        if rollback_proc:
+            if not rollback_proc.get("triggers") or not rollback_proc.get("triggers").strip():
                 errors.append("Missing rollback triggers")
-            if "rollback steps" not in spec.lower():
+            if not rollback_proc.get("steps") or not rollback_proc.get("steps").strip():
                 errors.append("Missing rollback steps")
 
-        # Validate smoke tests defined
-        if "smoke tests" in spec.lower():
-            if (
-                "critical user flows" not in spec.lower()
-                and "health checks" not in spec.lower()
-            ):
-                errors.append(
-                    "Missing smoke test scenarios (critical user flows or health checks)"
-                )
+        # Validate smoke tests - must have at least 1 test
+        smoke_tests = parsed_spec.get("smoke_tests", [])
+        if len(smoke_tests) == 0:
+            errors.append("At least one smoke test required")
 
-        # Validate environment specified
-        if "target environment" not in spec.lower():
-            errors.append("Missing target environment specification")
+        # Validate acceptance criteria - should have at least 3 items
+        acceptance_criteria = parsed_spec.get("acceptance_criteria", [])
+        if len(acceptance_criteria) < 3:
+            errors.append(
+                f"Acceptance criteria should have at least 3 items (found {len(acceptance_criteria)})"
+            )
 
         return len(errors) == 0, errors
 
@@ -698,10 +705,10 @@ class WorkItemManager:
             print("Specification:")
             print("-" * 80)
             spec_content = spec_path.read_text()
-            # Show first 30 lines
-            lines = spec_content.split("\n")[:30]
+            # Show first 50 lines (increased to include Acceptance Criteria section)
+            lines = spec_content.split("\n")[:50]
             print("\n".join(lines))
-            if len(spec_content.split("\n")) > 30:
+            if len(spec_content.split("\n")) > 50:
                 print(
                     "\n[... see full specification in .session/specs/{}.md]".format(
                         work_id

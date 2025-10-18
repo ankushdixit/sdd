@@ -10,6 +10,14 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# Import spec validator for validation warnings
+try:
+    from spec_validator import validate_spec_file, format_validation_report
+except ImportError:
+    # Gracefully handle if spec_validator not available
+    validate_spec_file = None
+    format_validation_report = None
+
 
 def load_work_items():
     """Load work items from tracking file."""
@@ -164,10 +172,17 @@ def load_current_tree():
     """Load current project structure."""
     tree_file = Path(".session/tracking/tree.txt")
     if tree_file.exists():
-        # Return first 50 lines (preview)
-        lines = tree_file.read_text().split("\n")
-        return "\n".join(lines[:50])
+        # Return full tree
+        return tree_file.read_text()
     return "Tree not yet generated"
+
+
+def load_work_item_spec(work_item_id: str) -> str:
+    """Load work item specification file."""
+    spec_file = Path(".session/specs") / f"{work_item_id}.md"
+    if spec_file.exists():
+        return spec_file.read_text()
+    return f"Specification file not found: .session/specs/{work_item_id}.md"
 
 
 def validate_environment():
@@ -224,8 +239,16 @@ def generate_briefing(item_id, item, learnings_data):
     project_docs = load_project_docs()
     current_stack = load_current_stack()
     current_tree = load_current_tree()
+    work_item_spec = load_work_item_spec(item_id)
     env_checks = validate_environment()
     git_status = check_git_status()
+
+    # Validate spec completeness (Phase 5.7.5)
+    spec_validation_warning = None
+    if validate_spec_file is not None:
+        is_valid, errors = validate_spec_file(item_id, item["type"])
+        if not is_valid:
+            spec_validation_warning = format_validation_report(item_id, item["type"], errors)
 
     # Start briefing
     briefing = f"""# Session Briefing: {item["title"]}
@@ -252,29 +275,36 @@ def generate_briefing(item_id, item, learnings_data):
     # Project context section
     briefing += "\n## Project Context\n\n"
 
-    # Vision (if available)
+    # Vision (if available) - full content
     if "vision.md" in project_docs:
-        vision_preview = project_docs["vision.md"][:500]
-        briefing += f"### Vision\n{vision_preview}...\n\n"
+        briefing += f"### Vision\n{project_docs['vision.md']}\n\n"
 
-    # Architecture (if available)
+    # Architecture (if available) - full content
     if "architecture.md" in project_docs:
-        arch_preview = project_docs["architecture.md"][:500]
-        briefing += f"### Architecture\n{arch_preview}...\n\n"
+        briefing += f"### Architecture\n{project_docs['architecture.md']}\n\n"
 
     # Current stack
     briefing += f"### Current Stack\n```\n{current_stack}\n```\n\n"
 
-    # Project structure preview
-    briefing += f"### Project Structure (Preview)\n```\n{current_tree}\n```\n\n"
+    # Project structure - full tree
+    briefing += f"### Project Structure\n```\n{current_tree}\n```\n\n"
 
-    # Work item details
-    briefing += f"""## Work Item Details
+    # Spec validation warning (if spec is incomplete)
+    if spec_validation_warning:
+        briefing += f"""## ⚠️ Specification Validation Warning
 
-### Objective
-{item.get("rationale", "No rationale provided")}
+{spec_validation_warning}
 
-### Dependencies
+**Note:** Please review and complete the specification before proceeding with implementation.
+
+"""
+
+    # Work item specification - full content
+    briefing += f"""## Work Item Specification
+
+{work_item_spec}
+
+## Dependencies
 """
 
     # Show dependency status
@@ -308,17 +338,6 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
                 )
         briefing += "\n"
 
-    briefing += "## Implementation Checklist\n\n"
-
-    # Acceptance criteria become checklist
-    if item.get("acceptance_criteria"):
-        for criterion in item["acceptance_criteria"]:
-            briefing += f"- [ ] {criterion}\n"
-    else:
-        briefing += "- [ ] Implement functionality\n"
-        briefing += "- [ ] Write tests\n"
-        briefing += "- [ ] Update documentation\n"
-
     # Relevant learnings
     relevant_learnings = get_relevant_learnings(learnings_data, item)
     if relevant_learnings:
@@ -327,28 +346,6 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
             briefing += (
                 f"**{learning.get('category', 'general')}:** {learning['content']}\n\n"
             )
-
-    # Validation requirements
-    briefing += "\n## Validation Requirements\n\n"
-    criteria = item.get("validation_criteria", {})
-    if criteria.get("tests_pass", True):
-        briefing += "- Tests must pass\n"
-    if criteria.get("coverage_min"):
-        briefing += f"- Coverage >= {criteria['coverage_min']}%\n"
-    if criteria.get("linting_pass", True):
-        briefing += "- Linting must pass\n"
-    if criteria.get("documentation_required", False):
-        briefing += "- Documentation must be updated\n"
-
-    # Add integration test specific briefing
-    integration_briefing = generate_integration_test_briefing(item)
-    if integration_briefing:
-        briefing += integration_briefing
-
-    # Add deployment specific briefing
-    deployment_briefing = generate_deployment_briefing(item)
-    if deployment_briefing:
-        briefing += deployment_briefing
 
     return briefing
 
