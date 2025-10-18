@@ -195,7 +195,7 @@ def initialize_tracking_files():
     print("✓ Created config.json")
 
     # Copy config schema file
-    schema_source = Path(__file__).parent.parent / ".session" / "config.schema.json"
+    schema_source = Path(__file__).parent.parent / "templates" / "config.schema.json"
     schema_dest = session_dir / "config.schema.json"
 
     if schema_source.exists() and not schema_dest.exists():

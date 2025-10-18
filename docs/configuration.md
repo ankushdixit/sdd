@@ -390,7 +390,7 @@ pip install -r requirements.txt
 
 **Solution**: Re-run `/init` to recreate schema file, or copy from repository:
 ```bash
-cp .session/config.schema.json path/to/your/project/.session/
+cp templates/config.schema.json path/to/your/project/.session/
 ```
 
 ## Related Documentation

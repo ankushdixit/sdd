@@ -1786,7 +1786,7 @@ Add JSON schema validation for `.session/config.json` to catch configuration err
 
 **Step 1: Create JSON schema**
 
-Location: `/Users/ankushdixit/Projects/sdd/.session/config.schema.json`
+Location: `/Users/ankushdixit/Projects/sdd/templates/config.schema.json`
 
 ```json
 {
@@ -2183,7 +2183,7 @@ git checkout main
 git pull origin main
 git checkout -b feature/add-config-validation
 
-git add .session/config.schema.json scripts/config_validator.py
+git add templates/config.schema.json scripts/config_validator.py
 git add scripts/quality_gates.py scripts/session_init.py
 git add docs/configuration.md tests/test_config_validation.py
 git add requirements.txt
