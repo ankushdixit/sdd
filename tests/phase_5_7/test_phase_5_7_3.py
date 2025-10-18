@@ -368,7 +368,7 @@ def test_integration_test_runner_missing_spec():
             }
 
             try:
-                runner = IntegrationTestRunner(work_item)
+                IntegrationTestRunner(work_item)
                 print("✗ Should have raised ValueError for missing spec")
                 return False
             except ValueError as e:

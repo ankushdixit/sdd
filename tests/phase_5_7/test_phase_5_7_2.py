@@ -259,8 +259,8 @@ Requires Socket.IO library.
     assert "real-time notifications" in result['user_story']
     assert "immediate feedback" in result['rationale']
     assert len(result['acceptance_criteria']) == 3
-    assert result['acceptance_criteria'][0]['checked'] == False
-    assert result['acceptance_criteria'][2]['checked'] == True
+    assert not result['acceptance_criteria'][0]['checked']
+    assert result['acceptance_criteria'][2]['checked']
     assert result['implementation_details'] is not None
     assert "WebSockets" in result['implementation_details']['approach']
     assert len(result['implementation_details']['code_blocks']) == 1
