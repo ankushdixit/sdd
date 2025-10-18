@@ -7,6 +7,9 @@
 # YAML parsing for API contract validation
 PyYAML==6.0.1
 
+# Configuration validation
+jsonschema==4.20.0
+
 
 # ============================================================================
 # TESTING DEPENDENCIES (Required to run test suite)

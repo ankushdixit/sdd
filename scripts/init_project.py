@@ -194,6 +194,18 @@ def initialize_tracking_files():
     (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
     print("✓ Created config.json")
 
+    # Copy config schema file
+    schema_source = Path(__file__).parent.parent / ".session" / "config.schema.json"
+    schema_dest = session_dir / "config.schema.json"
+
+    if schema_source.exists() and not schema_dest.exists():
+        shutil.copy(schema_source, schema_dest)
+        print("✓ Created config.schema.json")
+    elif not schema_source.exists():
+        print(
+            "⚠️  config.schema.json not found in repository, skipping (validation will be disabled)"
+        )
+
     return True
 
 
