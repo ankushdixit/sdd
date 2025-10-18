@@ -1,0 +1,130 @@
+name: Sync to Claude Plugins Marketplace
+
+on:
+  # Trigger on push to main branch
+  push:
+    branches:
+      - main
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no changes will be made)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  sync:
+    name: Sync to claude-plugins repo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main SDD repository
+        uses: actions/checkout@v4
+        with:
+          path: sdd
+          fetch-depth: 0  # Get full history for proper versioning
+
+      - name: Checkout claude-plugins repository
+        uses: actions/checkout@v4
+        with:
+          repository: ankushdixit/claude-plugins
+          token: ${{ secrets.PLUGIN_REPO_TOKEN }}
+          path: claude-plugins
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run sync script
+        working-directory: sdd
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "Running in DRY RUN mode..."
+            python scripts/sync_to_plugin.py \
+              --main-repo . \
+              --plugin-repo ../claude-plugins \
+              --dry-run
+          else
+            echo "Running sync..."
+            python scripts/sync_to_plugin.py \
+              --main-repo . \
+              --plugin-repo ../claude-plugins
+          fi
+
+      - name: Check for changes
+        id: check_changes
+        working-directory: claude-plugins
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "Dry run mode - skipping commit check"
+          elif git diff --quiet && git diff --cached --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          fi
+
+      - name: Get version
+        id: get_version
+        working-directory: sdd
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        working-directory: claude-plugins
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          git add .
+
+          # Create commit message with details
+          cat > commit_msg.txt << 'EOF'
+          Sync from main SDD repo v${{ steps.get_version.outputs.version }}
+
+          Auto-synced from ankushdixit/sdd@${{ github.sha }}
+
+          Changes synced:
+          - sdd_cli.py
+          - scripts/
+          - templates/
+          - hooks/
+          - commands/
+          - plugin.json version update
+
+          This sync was automatically triggered by the sync-plugin workflow.
+          EOF
+
+          git commit -F commit_msg.txt
+          git push
+
+          echo "✅ Changes pushed to claude-plugins repository"
+
+      - name: Summary
+        run: |
+          echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Main SDD repo:** ankushdixit/sdd@${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target repo:** ankushdixit/claude-plugins" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry run:** ${{ github.event.inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changes committed:** ${{ steps.check_changes.outputs.changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.check_changes.outputs.changes }}" = "true" ]; then
+            echo "✅ Sync completed successfully and changes were pushed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "ℹ️ Dry run completed - no changes were made" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Sync completed but no changes were detected" >> $GITHUB_STEP_SUMMARY
+          fi
