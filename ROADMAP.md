@@ -1028,7 +1028,6 @@ The current system had a **dual storage problem**:
   - Removed integration/deployment special briefing functions
   - Pruned work_items.json fields: `rationale`, `acceptance_criteria`, `implementation_paths`, `test_paths`
   - Added deprecation notes to validators
-  - SPEC_FILE_INTEGRATION_NOTES.md documenting changes and limitations
 
 - [x] **5.7.2: Spec markdown parsing module** ✅ COMPLETE
   - `scripts/spec_parser.py` module created with 700+ lines
