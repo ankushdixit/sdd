@@ -476,21 +476,24 @@ def generate_deployment_briefing(work_item: dict) -> str:
 
     # Parse deployment scope
     briefing.append("\n**Deployment Scope:**")
-    # TODO: Parse from spec - for now show placeholder
+    # NOTE: Framework stub - Parse deployment scope from spec using spec_parser.py
+    # Extract "## Deployment Scope" section and parse Application/Environment/Version fields
     briefing.append("  Application: [parse from spec]")
     briefing.append("  Environment: [parse from spec]")
     briefing.append("  Version: [parse from spec]")
 
     # Parse deployment procedure
     briefing.append("\n**Deployment Procedure:**")
-    # TODO: Parse steps from spec
+    # NOTE: Framework stub - Parse deployment steps from spec using spec_parser.py
+    # Extract "## Deployment Steps" section and count pre/during/post steps
     briefing.append("  Pre-deployment: [X steps]")
     briefing.append("  Deployment: [Y steps]")
     briefing.append("  Post-deployment: [Z steps]")
 
     # Parse rollback procedure
     briefing.append("\n**Rollback Procedure:**")
-    # TODO: Parse from spec
+    # NOTE: Framework stub - Parse rollback details from spec using spec_parser.py
+    # Extract "## Rollback Procedure" section for triggers and time estimates
     has_rollback = "rollback procedure" in spec.lower()
     briefing.append(f"  Rollback triggers defined: {'Yes' if has_rollback else 'No'}")
     briefing.append("  Estimated rollback time: [X minutes]")
@@ -503,7 +506,9 @@ def generate_deployment_briefing(work_item: dict) -> str:
         sys.path.insert(0, str(Path(__file__).parent))
         from environment_validator import EnvironmentValidator
 
-        environment = "staging"  # TODO: Parse from spec
+        # NOTE: Framework stub - Parse target environment from spec using spec_parser.py
+        # Extract from "## Deployment Scope" or "## Environment" section
+        environment = "staging"  # Default fallback
         validator = EnvironmentValidator(environment)
         passed, results = validator.validate_all()
 
