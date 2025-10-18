@@ -239,9 +239,7 @@ class Phase2Tester:
             return True
 
         except Exception as e:
-            print_failure(
-                f"Exception during work item creation: {type(e).__name__}: {e}"
-            )
+            print_failure(f"Exception during work item creation: {type(e).__name__}: {e}")
             import traceback
 
             traceback.print_exc()
@@ -571,9 +569,7 @@ class Phase2Tester:
             return True
 
         except Exception as e:
-            print_failure(
-                f"Exception during next work item test: {type(e).__name__}: {e}"
-            )
+            print_failure(f"Exception during next work item test: {type(e).__name__}: {e}")
             import traceback
 
             traceback.print_exc()
@@ -673,9 +669,7 @@ class Phase2Tester:
                     return False
 
         except Exception as e:
-            print_failure(
-                f"Exception during session status test: {type(e).__name__}: {e}"
-            )
+            print_failure(f"Exception during session status test: {type(e).__name__}: {e}")
             import traceback
 
             traceback.print_exc()

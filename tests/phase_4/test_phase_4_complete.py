@@ -23,10 +23,9 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Tuple
 
 
-def run_command(cmd: str, cwd: str) -> Tuple[int, str, str]:
+def run_command(cmd: str, cwd: str) -> tuple[int, str, str]:
     """Run shell command and return (returncode, stdout, stderr)."""
     result = subprocess.run(
         cmd,
@@ -412,9 +411,7 @@ class Phase4Tester:
         learnings_file = self.test_dir / ".session" / "tracking" / "learnings.json"
         with open(learnings_file) as f:
             data_before = json.load(f)
-        initial_count = sum(
-            len(learnings) for learnings in data_before["categories"].values()
-        )
+        initial_count = sum(len(learnings) for learnings in data_before["categories"].values())
 
         # Run actual curation
         returncode, stdout, stderr = run_command(
@@ -433,9 +430,7 @@ class Phase4Tester:
         # Verify count decreased
         with open(learnings_file) as f:
             data_after = json.load(f)
-        final_count = sum(
-            len(learnings) for learnings in data_after["categories"].values()
-        )
+        final_count = sum(len(learnings) for learnings in data_after["categories"].values())
 
         if final_count >= initial_count:
             print_failure("Duplicate learnings were not merged")
@@ -504,9 +499,7 @@ class Phase4Tester:
         learnings_file = self.test_dir / ".session" / "tracking" / "learnings.json"
         with open(learnings_file) as f:
             data_before = json.load(f)
-        count_before = sum(
-            len(learnings) for learnings in data_before["categories"].values()
-        )
+        count_before = sum(len(learnings) for learnings in data_before["categories"].values())
 
         # Add a duplicate
         run_command(
@@ -534,9 +527,7 @@ class Phase4Tester:
         # Verify count didn't change (except for the one we just added)
         with open(learnings_file) as f:
             data_after = json.load(f)
-        count_after = sum(
-            len(learnings) for learnings in data_after["categories"].values()
-        )
+        count_after = sum(len(learnings) for learnings in data_after["categories"].values())
 
         # Should have one more than before (the one we added)
         if count_after != count_before + 1:

@@ -9,8 +9,8 @@ Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
 import json
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add scripts directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -263,9 +263,7 @@ def complete_git_workflow(work_item_id, commit_message):
 
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location(
-            "git_integration", git_module_path
-        )
+        spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
         git_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(git_module)
 
@@ -279,9 +277,7 @@ def complete_git_workflow(work_item_id, commit_message):
         should_merge = work_item["status"] == "completed"
 
         # Complete work item in git
-        result = workflow.complete_work_item(
-            work_item_id, commit_message, merge=should_merge
-        )
+        result = workflow.complete_work_item(work_item_id, commit_message, merge=should_merge)
 
         return result
     except Exception as e:
@@ -424,9 +420,7 @@ def generate_integration_test_summary(work_item: dict, gate_results: dict) -> st
 
             throughput = perf_results.get("load_test", {}).get("throughput", {})
             if throughput:
-                summary += (
-                    f"- Throughput: {throughput.get('requests_per_sec', 'N/A')} req/s\n"
-                )
+                summary += f"- Throughput: {throughput.get('requests_per_sec', 'N/A')} req/s\n"
 
             if perf_results.get("regression_detected"):
                 summary += "- ⚠️  Performance regression detected!\n"
@@ -532,9 +526,7 @@ def main():
     gate_results, all_passed, failed_gates = run_quality_gates(work_item)
 
     if not all_passed:
-        print(
-            "\n❌ Required quality gates failed. Fix issues before completing session."
-        )
+        print("\n❌ Required quality gates failed. Fix issues before completing session.")
         print(f"Failed gates: {', '.join(failed_gates)}")
         return 1
 

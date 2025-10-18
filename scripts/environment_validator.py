@@ -12,7 +12,6 @@ Validates:
 """
 
 import os
-from typing import List, Tuple
 
 
 class EnvironmentValidator:
@@ -23,7 +22,7 @@ class EnvironmentValidator:
         self.environment = environment
         self.validation_results = []
 
-    def validate_connectivity(self) -> Tuple[bool, dict]:
+    def validate_connectivity(self) -> tuple[bool, dict]:
         """
         Validate network connectivity to target environment.
 
@@ -41,7 +40,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_configuration(self, required_vars: List[str]) -> Tuple[bool, dict]:
+    def validate_configuration(self, required_vars: list[str]) -> tuple[bool, dict]:
         """
         Validate required environment variables and secrets.
 
@@ -66,7 +65,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_dependencies(self) -> Tuple[bool, dict]:
+    def validate_dependencies(self) -> tuple[bool, dict]:
         """
         Validate service dependencies are available.
 
@@ -85,7 +84,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_health_checks(self) -> Tuple[bool, dict]:
+    def validate_health_checks(self) -> tuple[bool, dict]:
         """
         Validate health check endpoints.
 
@@ -103,7 +102,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_monitoring(self) -> Tuple[bool, dict]:
+    def validate_monitoring(self) -> tuple[bool, dict]:
         """
         Validate monitoring system operational.
 
@@ -121,7 +120,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_infrastructure(self) -> Tuple[bool, dict]:
+    def validate_infrastructure(self) -> tuple[bool, dict]:
         """
         Validate infrastructure components.
 
@@ -140,7 +139,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_capacity(self) -> Tuple[bool, dict]:
+    def validate_capacity(self) -> tuple[bool, dict]:
         """
         Validate sufficient capacity for deployment.
 
@@ -159,7 +158,7 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_all(self, required_env_vars: List[str] = None) -> Tuple[bool, dict]:
+    def validate_all(self, required_env_vars: list[str] = None) -> tuple[bool, dict]:
         """
         Run all validation checks.
 

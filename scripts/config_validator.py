@@ -3,10 +3,10 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
-def validate_config(config_path: Path, schema_path: Path) -> Tuple[bool, List[str]]:
+def validate_config(config_path: Path, schema_path: Path) -> tuple[bool, list[str]]:
     """
     Validate configuration against JSON schema.
 
@@ -60,7 +60,7 @@ def _format_validation_error(error: Any) -> str:
     return f"Validation error at '{path}': {error.message}"
 
 
-def load_and_validate_config(config_path: Path, schema_path: Path) -> Dict[str, Any]:
+def load_and_validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
     """
     Load and validate configuration.
 
@@ -94,9 +94,7 @@ def main():
         print("\nValidate SDD configuration against JSON schema.")
         print("\nExample:")
         print("  python3 config_validator.py .session/config.json")
-        print(
-            "  python3 config_validator.py .session/config.json .session/config.schema.json"
-        )
+        print("  python3 config_validator.py .session/config.json .session/config.schema.json")
         sys.exit(1)
 
     config_path = Path(sys.argv[1])

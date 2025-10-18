@@ -6,15 +6,15 @@ Tests updated validators, runners, quality gates, and session tools
 that now use spec_parser instead of deprecated JSON fields.
 """
 
-import sys
-from pathlib import Path
-import tempfile
 import os
+import sys
+import tempfile
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.work_item_manager import WorkItemManager  # noqa: E402
 from scripts.integration_test_runner import IntegrationTestRunner  # noqa: E402
+from scripts.work_item_manager import WorkItemManager  # noqa: E402
 
 
 def create_test_spec_file(spec_dir, work_id, spec_type, content):
@@ -71,9 +71,7 @@ feature_001
 ## Estimated Effort
 2 sessions
 """
-        create_test_spec_file(
-            specs_dir, "integration_test_001", "integration_test", spec_content
-        )
+        create_test_spec_file(specs_dir, "integration_test_001", "integration_test", spec_content)
 
         original_dir = os.getcwd()
         try:
@@ -118,9 +116,7 @@ Some scope here.
 - [ ] First criterion
 - [ ] Second criterion
 """
-        create_test_spec_file(
-            specs_dir, "integration_test_002", "integration_test", spec_content
-        )
+        create_test_spec_file(specs_dir, "integration_test_002", "integration_test", spec_content)
 
         original_dir = os.getcwd()
         try:
@@ -347,9 +343,7 @@ None
             assert isinstance(runner.env_requirements, dict)
             assert "services_required" in runner.env_requirements
             assert "compose_file" in runner.env_requirements
-            assert (
-                runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
-            )
+            assert runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
 
             print(f"✓ Runner parsed {len(runner.test_scenarios)} test scenarios")
             print(

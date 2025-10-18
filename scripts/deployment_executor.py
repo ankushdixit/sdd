@@ -11,9 +11,8 @@ Provides automated deployment execution with:
 """
 
 import json
-from pathlib import Path
-from typing import List, Tuple
 from datetime import datetime
+from pathlib import Path
 
 
 class DeploymentExecutor:
@@ -58,7 +57,7 @@ class DeploymentExecutor:
             },
         }
 
-    def pre_deployment_validation(self) -> Tuple[bool, dict]:
+    def pre_deployment_validation(self) -> tuple[bool, dict]:
         """
         Run pre-deployment validation checks.
 
@@ -70,9 +69,7 @@ class DeploymentExecutor:
         # Check integration tests
         if self.config["pre_deployment_checks"].get("integration_tests"):
             tests_passed = self._check_integration_tests()
-            results["checks"].append(
-                {"name": "Integration Tests", "passed": tests_passed}
-            )
+            results["checks"].append({"name": "Integration Tests", "passed": tests_passed})
             if not tests_passed:
                 results["passed"] = False
 
@@ -86,16 +83,14 @@ class DeploymentExecutor:
         # Check environment readiness
         if self.config["pre_deployment_checks"].get("environment_validation"):
             env_ready = self._check_environment_readiness()
-            results["checks"].append(
-                {"name": "Environment Readiness", "passed": env_ready}
-            )
+            results["checks"].append({"name": "Environment Readiness", "passed": env_ready})
             if not env_ready:
                 results["passed"] = False
 
         self._log("Pre-deployment validation", results)
         return results["passed"], results
 
-    def execute_deployment(self, dry_run: bool = False) -> Tuple[bool, dict]:
+    def execute_deployment(self, dry_run: bool = False) -> tuple[bool, dict]:
         """
         Execute deployment procedure.
 
@@ -124,9 +119,7 @@ class DeploymentExecutor:
             else:
                 step_success = True  # Simulate success in dry run
 
-            results["steps"].append(
-                {"number": i, "description": step, "success": step_success}
-            )
+            results["steps"].append({"number": i, "description": step, "success": step_success})
 
             if not step_success:
                 results["success"] = False
@@ -137,7 +130,7 @@ class DeploymentExecutor:
         results["completed_at"] = datetime.now().isoformat()
         return results["success"], results
 
-    def run_smoke_tests(self) -> Tuple[bool, dict]:
+    def run_smoke_tests(self) -> tuple[bool, dict]:
         """
         Run smoke tests to verify deployment.
 
@@ -170,7 +163,7 @@ class DeploymentExecutor:
         self._log("Smoke tests completed", results)
         return results["passed"], results
 
-    def rollback(self) -> Tuple[bool, dict]:
+    def rollback(self) -> tuple[bool, dict]:
         """
         Execute rollback procedure.
 
@@ -193,9 +186,7 @@ class DeploymentExecutor:
 
             step_success = self._execute_rollback_step(step)
 
-            results["steps"].append(
-                {"number": i, "description": step, "success": step_success}
-            )
+            results["steps"].append({"number": i, "description": step, "success": step_success})
 
             if not step_success:
                 results["success"] = False
@@ -225,7 +216,7 @@ class DeploymentExecutor:
         # In production, this should instantiate EnvironmentValidator and call validate_all()
         return True
 
-    def _parse_deployment_steps(self) -> List[str]:
+    def _parse_deployment_steps(self) -> list[str]:
         """Parse deployment steps from work item specification."""
         # NOTE: Framework stub - Parse deployment steps from spec file
         # Use spec_parser.py to extract "## Deployment Steps" section
@@ -239,7 +230,7 @@ class DeploymentExecutor:
         # Should handle errors, logging, and timeouts appropriately
         return True
 
-    def _parse_smoke_tests(self) -> List[dict]:
+    def _parse_smoke_tests(self) -> list[dict]:
         """Parse smoke tests from work item specification."""
         # NOTE: Framework stub - Parse smoke test definitions from spec file
         # Use spec_parser.py to extract "## Smoke Tests" section
@@ -253,7 +244,7 @@ class DeploymentExecutor:
         # Common tests: HTTP endpoint checks, database queries, cache reads
         return True
 
-    def _parse_rollback_steps(self) -> List[str]:
+    def _parse_rollback_steps(self) -> list[str]:
         """Parse rollback steps from work item specification."""
         # NOTE: Framework stub - Parse rollback procedure from spec file
         # Use spec_parser.py to extract "## Rollback Procedure" section
@@ -276,7 +267,7 @@ class DeploymentExecutor:
         }
         self.deployment_log.append(log_entry)
 
-    def get_deployment_log(self) -> List[dict]:
+    def get_deployment_log(self) -> list[dict]:
         """Get deployment log."""
         return self.deployment_log
 

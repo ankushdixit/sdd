@@ -6,10 +6,10 @@ Tests the spec_parser.py module's ability to extract structured data
 from work item specification markdown files.
 """
 
-import sys
-from pathlib import Path
-import tempfile
 import os
+import sys
+import tempfile
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -264,9 +264,7 @@ Requires Socket.IO library.
     assert result["implementation_details"] is not None
     assert "WebSockets" in result["implementation_details"]["approach"]
     assert len(result["implementation_details"]["code_blocks"]) == 1
-    assert (
-        result["implementation_details"]["code_blocks"][0]["language"] == "typescript"
-    )
+    assert result["implementation_details"]["code_blocks"][0]["language"] == "typescript"
     assert "WebSocket" in result["testing_strategy"]
     assert "Socket.IO" in result["dependencies"]
     assert "2 sessions" in result["estimated_effort"]
@@ -535,9 +533,7 @@ None
 
     print("✓ Security spec parsed correctly")
     print(f"  Compliance items: {len(result['compliance'])}")
-    print(
-        f"  Security testing checklist: {len(result['security_testing']['checklist'])}"
-    )
+    print(f"  Security testing checklist: {len(result['security_testing']['checklist'])}")
     return True
 
 

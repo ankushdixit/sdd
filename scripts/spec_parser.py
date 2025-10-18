@@ -8,11 +8,11 @@ Extracts structured data from markdown for use by validators, runners, and quali
 Part of Phase 5.7.2: Spec File First Architecture
 """
 
-import re
 import json
+import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -121,7 +121,7 @@ def extract_subsection(section_content: str, subsection_name: str) -> Optional[s
     return "\n".join(subsection_content).strip()
 
 
-def extract_checklist(content: str) -> List[Dict[str, Any]]:
+def extract_checklist(content: str) -> list[dict[str, Any]]:
     """
     Extract checklist items from markdown.
 
@@ -151,7 +151,7 @@ def extract_checklist(content: str) -> List[Dict[str, Any]]:
     return checklist
 
 
-def extract_code_blocks(content: str) -> List[Dict[str, str]]:
+def extract_code_blocks(content: str) -> list[dict[str, str]]:
     """
     Extract all code blocks from content.
 
@@ -176,16 +176,14 @@ def extract_code_blocks(content: str) -> List[Dict[str, str]]:
     matches = re.finditer(pattern, content, flags=re.DOTALL)
 
     for match in matches:
-        language = (
-            match.group(1) or "text"
-        )  # Default to 'text' if no language specified
+        language = match.group(1) or "text"  # Default to 'text' if no language specified
         code = match.group(2).strip()
         code_blocks.append({"language": language, "code": code})
 
     return code_blocks
 
 
-def extract_list_items(content: str) -> List[str]:
+def extract_list_items(content: str) -> list[str]:
     """
     Extract bullet point or numbered list items from content.
 
@@ -213,7 +211,7 @@ def extract_list_items(content: str) -> List[str]:
 # ============================================================================
 
 
-def parse_feature_spec(content: str) -> Dict[str, Any]:
+def parse_feature_spec(content: str) -> dict[str, Any]:
     """
     Parse feature specification.
 
@@ -247,9 +245,7 @@ def parse_feature_spec(content: str) -> Dict[str, Any]:
     if impl_section:
         result["implementation_details"] = {
             "approach": extract_subsection(impl_section, "Approach"),
-            "components_affected": extract_subsection(
-                impl_section, "Components Affected"
-            ),
+            "components_affected": extract_subsection(impl_section, "Components Affected"),
             "api_changes": extract_subsection(impl_section, "API Changes"),
             "database_changes": extract_subsection(impl_section, "Database Changes"),
             "code_blocks": extract_code_blocks(impl_section),
@@ -262,9 +258,7 @@ def parse_feature_spec(content: str) -> Dict[str, Any]:
 
     # Documentation Updates - extract as checklist
     doc_section = parse_section(content, "Documentation Updates")
-    result["documentation_updates"] = (
-        extract_checklist(doc_section) if doc_section else []
-    )
+    result["documentation_updates"] = extract_checklist(doc_section) if doc_section else []
 
     # Dependencies
     result["dependencies"] = parse_section(content, "Dependencies")
@@ -275,7 +269,7 @@ def parse_feature_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_bug_spec(content: str) -> Dict[str, Any]:
+def parse_bug_spec(content: str) -> dict[str, Any]:
     """
     Parse bug specification.
 
@@ -334,7 +328,7 @@ def parse_bug_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_refactor_spec(content: str) -> Dict[str, Any]:
+def parse_refactor_spec(content: str) -> dict[str, Any]:
     """
     Parse refactor specification.
 
@@ -405,7 +399,7 @@ def parse_refactor_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_security_spec(content: str) -> Dict[str, Any]:
+def parse_security_spec(content: str) -> dict[str, Any]:
     """
     Parse security specification.
 
@@ -455,9 +449,7 @@ def parse_security_spec(content: str) -> Dict[str, Any]:
     testing_section = parse_section(content, "Security Testing")
     if testing_section:
         result["security_testing"] = {
-            "automated": extract_subsection(
-                testing_section, "Automated Security Testing"
-            ),
+            "automated": extract_subsection(testing_section, "Automated Security Testing"),
             "manual": extract_subsection(testing_section, "Manual Security Testing"),
             "test_cases": extract_subsection(testing_section, "Test Cases"),
             "checklist": extract_checklist(testing_section),
@@ -467,9 +459,7 @@ def parse_security_spec(content: str) -> Dict[str, Any]:
 
     # Compliance - extract as checklist
     compliance_section = parse_section(content, "Compliance")
-    result["compliance"] = (
-        extract_checklist(compliance_section) if compliance_section else []
-    )
+    result["compliance"] = extract_checklist(compliance_section) if compliance_section else []
 
     # Acceptance Criteria - extract as checklist
     ac_section = parse_section(content, "Acceptance Criteria")
@@ -488,7 +478,7 @@ def parse_security_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_integration_test_spec(content: str) -> Dict[str, Any]:
+def parse_integration_test_spec(content: str) -> dict[str, Any]:
     """
     Parse integration test specification.
 
@@ -555,9 +545,7 @@ def parse_integration_test_spec(content: str) -> Dict[str, Any]:
     result["api_contracts"] = parse_section(content, "API Contracts")
 
     # Environment Requirements
-    result["environment_requirements"] = parse_section(
-        content, "Environment Requirements"
-    )
+    result["environment_requirements"] = parse_section(content, "Environment Requirements")
 
     # Acceptance Criteria - extract as checklist
     ac_section = parse_section(content, "Acceptance Criteria")
@@ -572,7 +560,7 @@ def parse_integration_test_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_deployment_spec(content: str) -> Dict[str, Any]:
+def parse_deployment_spec(content: str) -> dict[str, Any]:
     """
     Parse deployment specification.
 
@@ -600,15 +588,9 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
     procedure_section = parse_section(content, "Deployment Procedure")
     if procedure_section:
         result["deployment_procedure"] = {
-            "pre_deployment": extract_subsection(
-                procedure_section, "Pre-Deployment Checklist"
-            ),
-            "deployment_steps": extract_subsection(
-                procedure_section, "Deployment Steps"
-            ),
-            "post_deployment": extract_subsection(
-                procedure_section, "Post-Deployment Steps"
-            ),
+            "pre_deployment": extract_subsection(procedure_section, "Pre-Deployment Checklist"),
+            "deployment_steps": extract_subsection(procedure_section, "Deployment Steps"),
+            "post_deployment": extract_subsection(procedure_section, "Post-Deployment Steps"),
             "code_blocks": extract_code_blocks(procedure_section),
             "checklist": extract_checklist(procedure_section),
         }
@@ -616,9 +598,7 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
         result["deployment_procedure"] = None
 
     # Environment Configuration
-    result["environment_configuration"] = parse_section(
-        content, "Environment Configuration"
-    )
+    result["environment_configuration"] = parse_section(content, "Environment Configuration")
 
     # Rollback Procedure with subsections
     rollback_section = parse_section(content, "Rollback Procedure")
@@ -658,9 +638,7 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
 
         # Save last test
         if current_test:
-            tests.append(
-                {"name": current_test, "content": "\n".join(current_content).strip()}
-            )
+            tests.append({"name": current_test, "content": "\n".join(current_content).strip()})
 
         result["smoke_tests"] = tests
     else:
@@ -670,9 +648,7 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
     result["monitoring"] = parse_section(content, "Monitoring & Alerting")
 
     # Post-Deployment Monitoring Period
-    result["monitoring_period"] = parse_section(
-        content, "Post-Deployment Monitoring Period"
-    )
+    result["monitoring_period"] = parse_section(content, "Post-Deployment Monitoring Period")
 
     # Acceptance Criteria - extract as checklist
     ac_section = parse_section(content, "Acceptance Criteria")
@@ -692,7 +668,7 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
 # ============================================================================
 
 
-def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
+def parse_spec_file(work_item_id: str) -> dict[str, Any]:
     """
     Parse a work item specification file.
 
@@ -715,7 +691,7 @@ def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
         logger.error("Spec file not found: %s", spec_path)
         raise FileNotFoundError(f"Spec file not found: {spec_path}")
 
-    with open(spec_path, "r", encoding="utf-8") as f:
+    with open(spec_path, encoding="utf-8") as f:
         content = f.read()
 
     # Determine work item type from first line (H1 heading)
@@ -727,9 +703,7 @@ def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
     # Extract type from "# Type: Name" pattern
     heading_match = re.match(r"#\s*(\w+):\s*(.+)", first_line)
     if not heading_match:
-        logger.error(
-            "Invalid spec file: H1 heading doesn't match pattern in %s", spec_path
-        )
+        logger.error("Invalid spec file: H1 heading doesn't match pattern in %s", spec_path)
         raise ValueError(
             f"Invalid spec file: H1 heading doesn't match 'Type: Name' pattern in {spec_path}"
         )

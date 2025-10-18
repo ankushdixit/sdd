@@ -9,8 +9,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 from scripts.briefing_generator import (  # noqa: E402
-    generate_integration_test_briefing,
     check_command_exists,
+    generate_integration_test_briefing,
 )
 from scripts.session_complete import generate_integration_test_summary  # noqa: E402
 
@@ -60,9 +60,7 @@ def test_integration_briefing():
             "response_time": {"p95": 500},
             "throughput": {"minimum": 100},
         },
-        "api_contracts": [
-            {"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}
-        ],
+        "api_contracts": [{"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}],
     }
 
     briefing = generate_integration_test_briefing(work_item)
@@ -271,9 +269,7 @@ def test_integration_summary():
         }
     }
 
-    summary_breaks = generate_integration_test_summary(
-        work_item, gate_results_with_breaks
-    )
+    summary_breaks = generate_integration_test_summary(work_item, gate_results_with_breaks)
     if "Breaking changes detected: 2" in summary_breaks:
         print("✅ PASS: Summary highlights breaking changes")
         tests_passed += 1
@@ -295,9 +291,7 @@ def test_integration_summary():
         }
     }
 
-    summary_regression = generate_integration_test_summary(
-        work_item, gate_results_regression
-    )
+    summary_regression = generate_integration_test_summary(work_item, gate_results_regression)
     if "Performance regression detected" in summary_regression:
         print("✅ PASS: Summary highlights performance regression")
         tests_passed += 1
@@ -384,9 +378,7 @@ def test_file_enhancements():
         tests_failed += 1
     print()
 
-    print(
-        f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed

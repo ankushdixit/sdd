@@ -10,10 +10,9 @@ Tracks:
 """
 
 import subprocess
-from pathlib import Path
-from typing import Tuple
-from datetime import datetime
 import sys
+from datetime import datetime
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -35,7 +34,7 @@ class PerformanceBenchmark:
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
         self.results = {}
 
-    def run_benchmarks(self, test_endpoint: str = None) -> Tuple[bool, dict]:
+    def run_benchmarks(self, test_endpoint: str = None) -> tuple[bool, dict]:
         """
         Run performance benchmarks.
 
@@ -48,9 +47,7 @@ class PerformanceBenchmark:
         print("Running performance benchmarks...")
 
         if test_endpoint is None:
-            test_endpoint = self.benchmarks.get(
-                "endpoint", "http://localhost:8000/health"
-            )
+            test_endpoint = self.benchmarks.get("endpoint", "http://localhost:8000/health")
 
         # Run load test
         load_test_results = self._run_load_test(test_endpoint)
@@ -152,8 +149,9 @@ class PerformanceBenchmark:
 
     def _run_simple_load_test(self, endpoint: str, duration: int) -> dict:
         """Fallback load test using Python requests."""
-        import requests
         import time
+
+        import requests
 
         latencies = []
         start_time = time.time()
@@ -191,9 +189,7 @@ class PerformanceBenchmark:
 
     def _measure_resource_usage(self) -> dict:
         """Measure CPU and memory usage of services."""
-        services = self.work_item.get("environment_requirements", {}).get(
-            "services_required", []
-        )
+        services = self.work_item.get("environment_requirements", {}).get("services_required", [])
 
         resource_usage = {}
 

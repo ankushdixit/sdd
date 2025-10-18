@@ -7,7 +7,11 @@ __pycache__/
 env/
 venv/
 .venv/
+
+# Package build artifacts
 *.egg-info/
+*.egg
+.eggs/
 dist/
 build/
 

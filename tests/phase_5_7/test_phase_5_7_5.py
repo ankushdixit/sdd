@@ -5,25 +5,25 @@ Test Suite for Phase 5.7.5: Spec File Validation System
 Tests the spec_validator module and its integration with briefing_generator and quality_gates.
 """
 
-import sys
-from pathlib import Path
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from scripts.spec_validator import (  # noqa: E402
-    validate_spec_file,
-    check_required_sections,
-    check_acceptance_criteria,
-    check_test_scenarios,
-    check_deployment_subsections,
-    get_validation_rules,
-)
 from scripts.quality_gates import QualityGates  # noqa: E402
+from scripts.spec_validator import (  # noqa: E402
+    check_acceptance_criteria,
+    check_deployment_subsections,
+    check_required_sections,
+    check_test_scenarios,
+    get_validation_rules,
+    validate_spec_file,
+)
 
 
 class TestSpecValidator:
@@ -85,8 +85,7 @@ class TestSpecValidator:
             in rules["special_requirements"]["deployment_procedure_subsections"]
         )
         assert (
-            "Deployment Steps"
-            in rules["special_requirements"]["deployment_procedure_subsections"]
+            "Deployment Steps" in rules["special_requirements"]["deployment_procedure_subsections"]
         )
         assert (
             "Post-Deployment Steps"
@@ -206,9 +205,7 @@ Step 1
         errors = check_deployment_subsections(spec_content)
         assert len(errors) == 0
 
-        print(
-            "✓ Test 8: check_deployment_subsections passes with all required subsections"
-        )
+        print("✓ Test 8: check_deployment_subsections passes with all required subsections")
 
     def test_validate_spec_file_valid_feature(self):
         """Test: validate_spec_file passes for complete feature spec."""
@@ -305,9 +302,7 @@ Strategy here.
         assert passed
         assert results["status"] == "passed"
 
-        print(
-            "✓ Test 11 (BONUS): QualityGates.validate_spec_completeness integration works"
-        )
+        print("✓ Test 11 (BONUS): QualityGates.validate_spec_completeness integration works")
 
 
 def run_all_tests():

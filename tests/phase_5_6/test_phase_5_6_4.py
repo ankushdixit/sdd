@@ -58,9 +58,7 @@ Metrics to monitor
     # Test 2: Integration tests gate exists
     print("Test 2: Integration tests gate works")
     passed, results = gates.run_deployment_gates(work_item)
-    integration_gate = next(
-        (g for g in results["gates"] if g["name"] == "Integration Tests"), None
-    )
+    integration_gate = next((g for g in results["gates"] if g["name"] == "Integration Tests"), None)
     if integration_gate:
         print("✅ PASS: Integration tests gate found")
         tests_passed += 1
@@ -73,9 +71,7 @@ Metrics to monitor
 
     # Test 3: Security scans gate exists
     print("Test 3: Security scans gate works")
-    security_gate = next(
-        (g for g in results["gates"] if g["name"] == "Security Scans"), None
-    )
+    security_gate = next((g for g in results["gates"] if g["name"] == "Security Scans"), None)
     if security_gate:
         print("✅ PASS: Security scans gate found")
         tests_passed += 1
@@ -88,9 +84,7 @@ Metrics to monitor
 
     # Test 4: Environment validation gate exists
     print("Test 4: Environment validation gate works")
-    env_gate = next(
-        (g for g in results["gates"] if g["name"] == "Environment Validation"), None
-    )
+    env_gate = next((g for g in results["gates"] if g["name"] == "Environment Validation"), None)
     if env_gate:
         print("✅ PASS: Environment validation gate found")
         tests_passed += 1
@@ -103,9 +97,7 @@ Metrics to monitor
 
     # Test 5: Deployment documentation gate exists
     print("Test 5: Deployment documentation gate works")
-    docs_gate = next(
-        (g for g in results["gates"] if g["name"] == "Deployment Documentation"), None
-    )
+    docs_gate = next((g for g in results["gates"] if g["name"] == "Deployment Documentation"), None)
     if docs_gate:
         print("✅ PASS: Deployment documentation gate found")
         tests_passed += 1
@@ -118,9 +110,7 @@ Metrics to monitor
 
     # Test 6: Rollback tested gate exists
     print("Test 6: Rollback tested gate works")
-    rollback_gate = next(
-        (g for g in results["gates"] if g["name"] == "Rollback Tested"), None
-    )
+    rollback_gate = next((g for g in results["gates"] if g["name"] == "Rollback Tested"), None)
     if rollback_gate:
         print("✅ PASS: Rollback tested gate found")
         tests_passed += 1
@@ -149,8 +139,7 @@ Metrics to monitor
     has_keys = all(key in results for key in required_keys)
 
     gate_has_structure = all(
-        all(k in gate for k in ["name", "required", "passed"])
-        for gate in results.get("gates", [])
+        all(k in gate for k in ["name", "required", "passed"]) for gate in results.get("gates", [])
     )
 
     if has_keys and gate_has_structure:

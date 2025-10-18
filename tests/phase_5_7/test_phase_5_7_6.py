@@ -44,9 +44,7 @@ class TestDocumentationUpdates:
         ]
 
         for section in required_sections:
-            assert section in content, (
-                f"writing-specs.md should contain section: {section}"
-            )
+            assert section in content, f"writing-specs.md should contain section: {section}"
 
         # Check for key concepts
         key_concepts = [
@@ -57,13 +55,9 @@ class TestDocumentationUpdates:
         ]
 
         for concept in key_concepts:
-            assert concept.lower() in content.lower(), (
-                f"writing-specs.md should mention: {concept}"
-            )
+            assert concept.lower() in content.lower(), f"writing-specs.md should mention: {concept}"
 
-        print(
-            "✓ Test 1: docs/writing-specs.md exists and contains all required sections"
-        )
+        print("✓ Test 1: docs/writing-specs.md exists and contains all required sections")
 
     def test_session_driven_development_updated_with_spec_architecture(self):
         """Test: docs/session-driven-development.md includes spec architecture section."""
@@ -86,9 +80,7 @@ class TestDocumentationUpdates:
         ]
 
         for section in required_sections:
-            assert section in content, (
-                f"session-driven-development.md should contain: {section}"
-            )
+            assert section in content, f"session-driven-development.md should contain: {section}"
 
         # Check for key concepts (case-insensitive search)
         key_concepts = [
@@ -105,9 +97,7 @@ class TestDocumentationUpdates:
                 f"session-driven-development.md should mention: {concept}"
             )
 
-        print(
-            "✓ Test 2: docs/session-driven-development.md updated with spec architecture"
-        )
+        print("✓ Test 2: docs/session-driven-development.md updated with spec architecture")
 
     def test_command_documentation_updated_for_spec_workflow(self):
         """Test: Command documentation emphasizes spec-first workflow."""
@@ -117,9 +107,7 @@ class TestDocumentationUpdates:
 
         start_content = start_cmd_path.read_text(encoding="utf-8")
         assert "spec file" in start_content.lower(), "start.md should mention spec file"
-        assert "source of truth" in start_content.lower(), (
-            "start.md should mention source of truth"
-        )
+        assert "source of truth" in start_content.lower(), "start.md should mention source of truth"
         assert "Spec-First Architecture" in start_content, (
             "start.md should have Spec-First Architecture section"
         )

@@ -10,17 +10,17 @@ Part of Phase 5.7.5: Spec File Validation System
 
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Optional
 
 from spec_parser import (
-    strip_html_comments,
-    parse_section,
-    extract_subsection,
     extract_checklist,
+    extract_subsection,
+    parse_section,
+    strip_html_comments,
 )
 
 
-def get_validation_rules(work_item_type: str) -> Dict[str, Any]:
+def get_validation_rules(work_item_type: str) -> dict[str, Any]:
     """
     Get validation rules for a specific work item type.
 
@@ -154,7 +154,7 @@ def get_validation_rules(work_item_type: str) -> Dict[str, Any]:
     )
 
 
-def check_required_sections(spec_content: str, work_item_type: str) -> List[str]:
+def check_required_sections(spec_content: str, work_item_type: str) -> list[str]:
     """
     Check if all required sections are present and non-empty.
 
@@ -226,9 +226,7 @@ def check_test_scenarios(spec_content: str, min_scenarios: int = 1) -> Optional[
         return None  # Will be caught by check_required_sections
 
     # Count H3 headings that match "Scenario N:" pattern
-    scenario_count = len(
-        re.findall(r"###\s+Scenario\s+\d+:", scenarios_section, re.IGNORECASE)
-    )
+    scenario_count = len(re.findall(r"###\s+Scenario\s+\d+:", scenarios_section, re.IGNORECASE))
 
     if scenario_count < min_scenarios:
         return f"Test Scenarios must have at least {min_scenarios} scenario(s) (found {scenario_count})"
@@ -254,19 +252,15 @@ def check_smoke_tests(spec_content: str, min_tests: int = 1) -> Optional[str]:
         return None  # Will be caught by check_required_sections
 
     # Count H3 headings that match "Test N:" pattern
-    test_count = len(
-        re.findall(r"###\s+Test\s+\d+:", smoke_tests_section, re.IGNORECASE)
-    )
+    test_count = len(re.findall(r"###\s+Test\s+\d+:", smoke_tests_section, re.IGNORECASE))
 
     if test_count < min_tests:
-        return (
-            f"Smoke Tests must have at least {min_tests} test(s) (found {test_count})"
-        )
+        return f"Smoke Tests must have at least {min_tests} test(s) (found {test_count})"
 
     return None
 
 
-def check_deployment_subsections(spec_content: str) -> List[str]:
+def check_deployment_subsections(spec_content: str) -> list[str]:
     """
     Check if Deployment Procedure has all required subsections.
 
@@ -292,18 +286,14 @@ def check_deployment_subsections(spec_content: str) -> List[str]:
     for subsection_name in required_subsections:
         subsection_content = extract_subsection(deployment_section, subsection_name)
         if subsection_content is None:
-            errors.append(
-                f"Deployment Procedure missing required subsection: '{subsection_name}'"
-            )
+            errors.append(f"Deployment Procedure missing required subsection: '{subsection_name}'")
         elif not subsection_content.strip():
-            errors.append(
-                f"Deployment Procedure subsection '{subsection_name}' is empty"
-            )
+            errors.append(f"Deployment Procedure subsection '{subsection_name}' is empty")
 
     return errors
 
 
-def check_rollback_subsections(spec_content: str) -> List[str]:
+def check_rollback_subsections(spec_content: str) -> list[str]:
     """
     Check if Rollback Procedure has all required subsections.
 
@@ -325,18 +315,14 @@ def check_rollback_subsections(spec_content: str) -> List[str]:
     for subsection_name in required_subsections:
         subsection_content = extract_subsection(rollback_section, subsection_name)
         if subsection_content is None:
-            errors.append(
-                f"Rollback Procedure missing required subsection: '{subsection_name}'"
-            )
+            errors.append(f"Rollback Procedure missing required subsection: '{subsection_name}'")
         elif not subsection_content.strip():
             errors.append(f"Rollback Procedure subsection '{subsection_name}' is empty")
 
     return errors
 
 
-def validate_spec_file(
-    work_item_id: str, work_item_type: str
-) -> Tuple[bool, List[str]]:
+def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, list[str]]:
     """
     Validate a work item specification file for completeness and correctness.
 
@@ -405,9 +391,7 @@ def validate_spec_file(
     return is_valid, errors
 
 
-def format_validation_report(
-    work_item_id: str, work_item_type: str, errors: List[str]
-) -> str:
+def format_validation_report(work_item_id: str, work_item_type: str, errors: list[str]) -> str:
     """
     Format validation errors into a human-readable report.
 
@@ -441,9 +425,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 3:
         print("Usage: python3 spec_validator.py <work_item_id> <work_item_type>")
-        print(
-            "Example: python3 spec_validator.py feature_websocket_notifications feature"
-        )
+        print("Example: python3 spec_validator.py feature_websocket_notifications feature")
         sys.exit(1)
 
     work_item_id = sys.argv[1]

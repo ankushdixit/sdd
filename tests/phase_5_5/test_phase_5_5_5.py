@@ -3,11 +3,12 @@
 Test script for Phase 5.5.5 - Integration Quality Gates
 """
 
-import sys
 import json
-from pathlib import Path
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
+
 import pytest
 
 # Add parent directory to path
@@ -70,9 +71,7 @@ def test_integration_quality_gate_methods():
         print("✅ PASS: Environment validation skipped for non-integration work items")
         tests_passed += 1
     else:
-        print(
-            "❌ FAIL: Should skip environment validation for non-integration work items"
-        )
+        print("❌ FAIL: Should skip environment validation for non-integration work items")
         tests_failed += 1
     print()
 
@@ -224,17 +223,13 @@ def test_environment_validation():
         tests_failed += 1
     print()
 
-    print(
-        f"Environment validation tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Environment validation tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
 
 
-@pytest.mark.skip(
-    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
-)
+@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
 def test_integration_gate_configuration():
     """Test integration quality gate configuration loading."""
     print("=" * 60)
@@ -392,9 +387,7 @@ def test_file_enhancements():
         tests_failed += 1
     print()
 
-    print(
-        f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"File enhancement tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed

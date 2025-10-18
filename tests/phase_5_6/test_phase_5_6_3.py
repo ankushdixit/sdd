@@ -3,8 +3,8 @@
 Test script for Phase 5.6.3 - Environment Validation System
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to path

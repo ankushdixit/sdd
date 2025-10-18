@@ -5,10 +5,10 @@ Enhanced with full project context loading.
 """
 
 import json
-import sys
 import subprocess
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 # Import spec validator for validation warnings
 try:
-    from spec_validator import validate_spec_file, format_validation_report
+    from spec_validator import format_validation_report, validate_spec_file
 except ImportError:
     # Gracefully handle if spec_validator not available
     validate_spec_file = None
@@ -133,9 +133,7 @@ def load_milestone_context(work_item):
 
     # Calculate progress
     items = data.get("work_items", {})
-    milestone_items = [
-        item for item in items.values() if item.get("milestone") == milestone_name
-    ]
+    milestone_items = [item for item in items.values() if item.get("milestone") == milestone_name]
 
     total = len(milestone_items)
     completed = sum(1 for item in milestone_items if item["status"] == "completed")
@@ -202,9 +200,7 @@ def validate_environment():
 
     # Check git
     try:
-        result = subprocess.run(
-            ["git", "--version"], capture_output=True, text=True, timeout=5
-        )
+        result = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
             checks.append(f"Git: {result.stdout.strip()}")
         else:
@@ -223,9 +219,7 @@ def check_git_status():
         if git_module_path.exists():
             import importlib.util
 
-            spec = importlib.util.spec_from_file_location(
-                "git_integration", git_module_path
-            )
+            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
             git_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(git_module)
 
@@ -256,9 +250,7 @@ def generate_briefing(item_id, item, learnings_data):
     if validate_spec_file is not None:
         is_valid, errors = validate_spec_file(item_id, item["type"])
         if not is_valid:
-            spec_validation_warning = format_validation_report(
-                item_id, item["type"], errors
-            )
+            spec_validation_warning = format_validation_report(item_id, item["type"], errors)
 
     # Start briefing
     briefing = f"""# Session Briefing: {item["title"]}
@@ -343,9 +335,7 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
         for related_item in milestone_context["milestone_items"]:
             if related_item["id"] != item.get("id"):
                 status_icon = "✓" if related_item["status"] == "completed" else "○"
-                briefing += (
-                    f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
-                )
+                briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
         briefing += "\n"
 
     # Relevant learnings
@@ -353,9 +343,7 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
     if relevant_learnings:
         briefing += "\n## Relevant Learnings\n\n"
         for learning in relevant_learnings:
-            briefing += (
-                f"**{learning.get('category', 'general')}:** {learning['content']}\n\n"
-            )
+            briefing += f"**{learning.get('category', 'general')}:** {learning['content']}\n\n"
 
     return briefing
 
@@ -405,9 +393,7 @@ def generate_integration_test_briefing(work_item: dict) -> str:
     if scenarios:
         briefing += f"**Test Scenarios ({len(scenarios)} total):**\n"
         for i, scenario in enumerate(scenarios[:5], 1):  # Show first 5
-            scenario_name = scenario.get(
-                "name", scenario.get("description", f"Scenario {i}")
-            )
+            scenario_name = scenario.get("name", scenario.get("description", f"Scenario {i}"))
             briefing += f"{i}. {scenario_name}\n"
 
         if len(scenarios) > 5:
@@ -446,14 +432,10 @@ def generate_integration_test_briefing(work_item: dict) -> str:
 
     # Check Docker Compose
     compose_available = check_command_exists("docker-compose")
-    briefing += (
-        f"- Docker Compose: {'✓ Available' if compose_available else '✗ Not found'}\n"
-    )
+    briefing += f"- Docker Compose: {'✓ Available' if compose_available else '✗ Not found'}\n"
 
     # Check compose file
-    compose_file = env_requirements.get(
-        "compose_file", "docker-compose.integration.yml"
-    )
+    compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
     compose_exists = Path(compose_file).exists()
     briefing += f"- Compose file ({compose_file}): {'✓ Found' if compose_exists else '✗ Missing'}\n"
 
@@ -520,9 +502,7 @@ def generate_deployment_briefing(work_item: dict) -> str:
         validator = EnvironmentValidator(environment)
         passed, results = validator.validate_all()
 
-        briefing.append(
-            f"  Environment validation: {'✓ PASSED' if passed else '✗ FAILED'}"
-        )
+        briefing.append(f"  Environment validation: {'✓ PASSED' if passed else '✗ FAILED'}")
         for validation in results.get("validations", []):
             status = "✓" if validation["passed"] else "✗"
             briefing.append(f"    {status} {validation['name']}")
@@ -581,9 +561,7 @@ def main():
         if git_module_path.exists():
             import importlib.util
 
-            spec = importlib.util.spec_from_file_location(
-                "git_integration", git_module_path
-            )
+            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
             git_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(git_module)
 

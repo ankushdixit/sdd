@@ -7,14 +7,14 @@ Handles creation, listing, showing, updating work items.
 
 import re
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.file_ops import load_json, save_json
 from scripts import spec_parser
+from scripts.file_ops import load_json, save_json
 from scripts.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -82,9 +82,7 @@ class WorkItemManager:
 
         # 8. Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dependencies)
-        logger.info(
-            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
-        )
+        logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
 
         # 9. Confirm
         print(f"\n{'=' * 50}")
@@ -157,9 +155,7 @@ class WorkItemManager:
 
         # Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dep_list)
-        logger.info(
-            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
-        )
+        logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
 
         # Confirm
         print(f"\n{'=' * 50}")
@@ -217,9 +213,7 @@ class WorkItemManager:
 
     def _prompt_priority(self) -> str:
         """Prompt for priority."""
-        priority = (
-            input("\nPriority (critical/high/medium/low) [high]: ").strip().lower()
-        )
+        priority = input("\nPriority (critical/high/medium/low) [high]: ").strip().lower()
         if not priority:
             priority = "high"
         if priority not in self.PRIORITIES:
@@ -227,7 +221,7 @@ class WorkItemManager:
             priority = "high"
         return priority
 
-    def _prompt_dependencies(self, work_type: str) -> List[str]:
+    def _prompt_dependencies(self, work_type: str) -> list[str]:
         """Prompt for dependencies."""
         required = work_type in ["integration_test", "deployment"]
 
@@ -319,7 +313,7 @@ class WorkItemManager:
         work_type: str,
         title: str,
         priority: str,
-        dependencies: List[str],
+        dependencies: list[str],
     ):
         """Add work item to work_items.json."""
         # Load existing data
@@ -406,9 +400,7 @@ class WorkItemManager:
         # Check for work item dependencies
         dependencies = work_item.get("dependencies", [])
         if not dependencies:
-            errors.append(
-                "Integration tests must have dependencies (component implementations)"
-            )
+            errors.append("Integration tests must have dependencies (component implementations)")
 
         return len(errors) == 0, errors
 
@@ -477,10 +469,7 @@ class WorkItemManager:
         # Validate rollback procedure subsections
         rollback_proc = parsed_spec.get("rollback_procedure")
         if rollback_proc:
-            if (
-                not rollback_proc.get("triggers")
-                or not rollback_proc.get("triggers").strip()
-            ):
+            if not rollback_proc.get("triggers") or not rollback_proc.get("triggers").strip():
                 errors.append("Missing rollback triggers")
             if not rollback_proc.get("steps") or not rollback_proc.get("steps").strip():
                 errors.append("Missing rollback steps")
@@ -504,7 +493,7 @@ class WorkItemManager:
         status_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
         milestone_filter: Optional[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """List work items with optional filtering."""
         if not self.work_items_file.exists():
             print("No work items found. Create one with /work-item create")
@@ -543,7 +532,7 @@ class WorkItemManager:
 
         return {"items": sorted_items, "count": len(sorted_items)}
 
-    def _is_blocked(self, item: Dict, all_items: Dict) -> bool:
+    def _is_blocked(self, item: dict, all_items: dict) -> bool:
         """Check if work item is blocked by dependencies."""
         if item["status"] != "not_started":
             return False
@@ -560,7 +549,7 @@ class WorkItemManager:
 
         return False
 
-    def _sort_items(self, items: Dict) -> List[Dict]:
+    def _sort_items(self, items: dict) -> list[dict]:
         """Sort items by priority, dependency status, and date."""
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
@@ -582,7 +571,7 @@ class WorkItemManager:
 
         return items_list
 
-    def _display_items(self, items: List[Dict]):
+    def _display_items(self, items: list[dict]):
         """Display items with color coding and indicators."""
         if not items:
             print("No work items found matching filters.")
@@ -642,9 +631,7 @@ class WorkItemManager:
                     status_str = f"(in progress, session {sessions})"
                 elif item["status"] == "completed":
                     sessions = len(item.get("sessions", []))
-                    status_str = (
-                        f"(completed, {sessions} session{'s' if sessions != 1 else ''})"
-                    )
+                    status_str = f"(completed, {sessions} session{'s' if sessions != 1 else ''})"
                 elif item.get("_ready"):
                     status_str = "(ready to start) ✓"
                 else:
@@ -663,7 +650,7 @@ class WorkItemManager:
         print("  ✓ Ready to start")
         print()
 
-    def _get_status_icon(self, item: Dict) -> str:
+    def _get_status_icon(self, item: dict) -> str:
         """Get status icon for work item."""
         if item["status"] == "completed":
             return "[✓]"
@@ -672,7 +659,7 @@ class WorkItemManager:
         else:
             return "[  ]"
 
-    def show_work_item(self, work_id: str) -> Optional[Dict]:
+    def show_work_item(self, work_id: str) -> Optional[dict]:
         """Display detailed information about a work item."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -745,11 +732,7 @@ class WorkItemManager:
             lines = spec_content.split("\n")[:50]
             print("\n".join(lines))
             if len(spec_content.split("\n")) > 50:
-                print(
-                    "\n[... see full specification in .session/specs/{}.md]".format(
-                        work_id
-                    )
-                )
+                print(f"\n[... see full specification in .session/specs/{work_id}.md]")
             print()
 
         # Next steps
@@ -886,9 +869,7 @@ class WorkItemManager:
         choice = input("Your choice: ").strip()
 
         if choice == "1":
-            status = input(
-                "New status (not_started/in_progress/blocked/completed): "
-            ).strip()
+            status = input("New status (not_started/in_progress/blocked/completed): ").strip()
             return self.update_work_item(work_id, status=status)
         elif choice == "2":
             priority = input("New priority (critical/high/medium/low): ").strip()
@@ -906,7 +887,7 @@ class WorkItemManager:
             print("Cancelled.")
             return False
 
-    def get_next_work_item(self) -> Optional[Dict]:
+    def get_next_work_item(self) -> Optional[dict]:
         """Find next work item to start."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -916,9 +897,7 @@ class WorkItemManager:
         items = data.get("work_items", {})
 
         # Filter to not_started items
-        not_started = {
-            wid: item for wid, item in items.items() if item["status"] == "not_started"
-        }
+        not_started = {wid: item for wid, item in items.items() if item["status"] == "not_started"}
 
         if not not_started:
             print("No work items available to start.")
@@ -1032,7 +1011,7 @@ class WorkItemManager:
         print(f"✓ Created milestone: {name}")
         return True
 
-    def get_milestone_progress(self, milestone_name: str) -> Dict:
+    def get_milestone_progress(self, milestone_name: str) -> dict:
         """Calculate milestone progress."""
         if not self.work_items_file.exists():
             return {"error": "No work items found"}
@@ -1056,12 +1035,8 @@ class WorkItemManager:
 
         total = len(milestone_items)
         completed = sum(1 for item in milestone_items if item["status"] == "completed")
-        in_progress = sum(
-            1 for item in milestone_items if item["status"] == "in_progress"
-        )
-        not_started = sum(
-            1 for item in milestone_items if item["status"] == "not_started"
-        )
+        in_progress = sum(1 for item in milestone_items if item["status"] == "in_progress")
+        not_started = sum(1 for item in milestone_items if item["status"] == "not_started")
         percent = int((completed / total) * 100) if total > 0 else 0
 
         return {
@@ -1118,12 +1093,8 @@ def main():
         help="Work item type (feature, bug, refactor, security, integration_test, deployment)",
     )
     parser.add_argument("--title", help="Work item title")
-    parser.add_argument(
-        "--priority", default="high", help="Priority (critical, high, medium, low)"
-    )
-    parser.add_argument(
-        "--dependencies", default="", help="Comma-separated dependency IDs"
-    )
+    parser.add_argument("--priority", default="high", help="Priority (critical, high, medium, low)")
+    parser.add_argument("--dependencies", default="", help="Comma-separated dependency IDs")
 
     args = parser.parse_args()
 

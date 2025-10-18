@@ -3,8 +3,8 @@
 Test script for Phase 5.5.3 - Performance Benchmarking System
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add parent directory to path
@@ -184,9 +184,7 @@ def test_performance_benchmark_class():
         print("✅ PASS: Requirements check failed correctly (throughput below minimum)")
         tests_passed += 1
     else:
-        print(
-            "❌ FAIL: Requirements check should have failed (throughput below minimum)"
-        )
+        print("❌ FAIL: Requirements check should have failed (throughput below minimum)")
         tests_failed += 1
     print()
 
@@ -226,9 +224,7 @@ def test_performance_benchmark_class():
     benchmark.baselines_file.write_text(json.dumps(baseline_data, indent=2))
 
     # Set current results with regression
-    benchmark.results = {
-        "load_test": {"latency": {"p50": 100, "p95": 500, "p99": 1100}}
-    }
+    benchmark.results = {"load_test": {"latency": {"p50": 100, "p95": 500, "p99": 1100}}}
     regression = benchmark._check_for_regression()
     if regression:
         print("✅ PASS: Regression detected correctly")
@@ -278,11 +274,7 @@ def test_performance_benchmark_class():
     }
 
     report = benchmark.generate_report()
-    if (
-        "Performance Benchmark Report" in report
-        and "PASSED" in report
-        and "p50: 80" in report
-    ):
+    if "Performance Benchmark Report" in report and "PASSED" in report and "p50: 80" in report:
         print("✅ PASS: Report generated correctly")
         tests_passed += 1
     else:
@@ -393,9 +385,7 @@ def test_file_structure():
     print()
 
     # Summary
-    print(
-        f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     if tests_failed == 0:

@@ -155,6 +155,37 @@ def calculate_dependency_depth(work_item_id: str, work_items: dict) -> int:
     pass
 ```
 
+### Import Patterns
+
+**IMPORTANT:** SDD uses a hybrid packaging approach (v0.5.7). Follow these import patterns:
+
+**For scripts importing other scripts:**
+```python
+from scripts.file_ops import load_json, save_json
+from scripts.work_item_manager import WorkItemManager
+from scripts.quality_gates import QualityGates
+```
+
+**For tests importing scripts:**
+```python
+from scripts.work_item_manager import WorkItemManager
+from scripts.session_manager import SessionManager
+```
+
+**DO NOT use relative imports:**
+```python
+# ❌ WRONG - Don't do this
+from .file_ops import load_json
+from ..scripts.work_item_manager import WorkItemManager
+```
+
+**Why this pattern?**
+- Current structure uses `scripts/` at root level with sys.path manipulation
+- This will be refactored to `from sdd.scripts.X` in Phase 5.8
+- Current pattern is documented and works reliably
+
+See [README.md Architecture Notes](#) and [ROADMAP.md Phase 5.8](#) for details about the planned package structure refactoring.
+
 ### Command Design
 
 For new slash commands:

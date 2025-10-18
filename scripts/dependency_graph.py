@@ -10,7 +10,7 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional, List, Set
+from typing import Optional
 
 
 class DependencyGraphVisualizer:
@@ -33,7 +33,7 @@ class DependencyGraphVisualizer:
         milestone_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
         include_completed: bool = False,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Load and filter work items from JSON file.
 
         Args:
@@ -61,16 +61,14 @@ class DependencyGraphVisualizer:
             work_items = [wi for wi in work_items if wi.get("status") == status_filter]
 
         if milestone_filter:
-            work_items = [
-                wi for wi in work_items if wi.get("milestone") == milestone_filter
-            ]
+            work_items = [wi for wi in work_items if wi.get("milestone") == milestone_filter]
 
         if type_filter:
             work_items = [wi for wi in work_items if wi.get("type") == type_filter]
 
         return work_items
 
-    def generate_dot(self, work_items: List[dict]) -> str:
+    def generate_dot(self, work_items: list[dict]) -> str:
         """Generate DOT format graph
 
         Args:
@@ -99,9 +97,7 @@ class DependencyGraphVisualizer:
 
             label = self._format_node_label(item)
 
-            lines.append(
-                f'  "{item["id"]}" [label="{label}", color="{color}", style="{style}"];'
-            )
+            lines.append(f'  "{item["id"]}" [label="{label}", color="{color}", style="{style}"];')
 
         lines.append("")
 
@@ -123,7 +119,7 @@ class DependencyGraphVisualizer:
         lines.append("}")
         return "\n".join(lines)
 
-    def generate_ascii(self, work_items: List[dict]) -> str:
+    def generate_ascii(self, work_items: list[dict]) -> str:
         """Generate ASCII art graph
 
         Args:
@@ -146,12 +142,8 @@ class DependencyGraphVisualizer:
             lines.append(f"Level {level_num}:")
             for item in level_items:
                 status_icon = self._get_status_icon(item)
-                critical_marker = (
-                    " [CRITICAL PATH]" if item["id"] in critical_items else ""
-                )
-                lines.append(
-                    f"  {status_icon} {item['id']}: {item['title']}{critical_marker}"
-                )
+                critical_marker = " [CRITICAL PATH]" if item["id"] in critical_items else ""
+                lines.append(f"  {status_icon} {item['id']}: {item['title']}{critical_marker}")
 
                 # Show dependencies
                 if item.get("dependencies"):
@@ -191,7 +183,7 @@ class DependencyGraphVisualizer:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
-    def get_bottlenecks(self, work_items: List[dict]) -> List[dict]:
+    def get_bottlenecks(self, work_items: list[dict]) -> list[dict]:
         """Identify bottleneck work items (items that block many others).
 
         Args:
@@ -223,7 +215,7 @@ class DependencyGraphVisualizer:
 
         return sorted(bottlenecks, key=lambda x: x["blocks"], reverse=True)
 
-    def get_neighborhood(self, work_items: List[dict], focus_id: str) -> List[dict]:
+    def get_neighborhood(self, work_items: list[dict], focus_id: str) -> list[dict]:
         """Get work items in neighborhood of focus item (dependencies and dependents).
 
         Args:
@@ -257,7 +249,7 @@ class DependencyGraphVisualizer:
 
         return [wi for wi in work_items if wi["id"] in neighborhood_ids]
 
-    def generate_stats(self, work_items: List[dict], critical_path: Set[str]) -> dict:
+    def generate_stats(self, work_items: list[dict], critical_path: set[str]) -> dict:
         """Generate graph statistics.
 
         Args:
@@ -269,12 +261,8 @@ class DependencyGraphVisualizer:
         """
         total = len(work_items)
         completed = len([wi for wi in work_items if wi.get("status") == "completed"])
-        in_progress = len(
-            [wi for wi in work_items if wi.get("status") == "in_progress"]
-        )
-        not_started = len(
-            [wi for wi in work_items if wi.get("status") == "not_started"]
-        )
+        in_progress = len([wi for wi in work_items if wi.get("status") == "in_progress"])
+        not_started = len([wi for wi in work_items if wi.get("status") == "not_started"])
 
         return {
             "total_items": total,
@@ -483,9 +471,7 @@ class DependencyGraphVisualizer:
 
         lines.append("")
         lines.append(f"Estimated remaining levels: {len(levels)}")
-        lines.append(
-            "Note: Timeline assumes items can be completed in parallel within each level"
-        )
+        lines.append("Note: Timeline assumes items can be completed in parallel within each level")
 
         return lines
 
@@ -520,12 +506,8 @@ def main():
     )
 
     # Special views
-    parser.add_argument(
-        "--critical-path", action="store_true", help="Show only critical path"
-    )
-    parser.add_argument(
-        "--bottlenecks", action="store_true", help="Show bottleneck analysis"
-    )
+    parser.add_argument("--critical-path", action="store_true", help="Show only critical path")
+    parser.add_argument("--bottlenecks", action="store_true", help="Show bottleneck analysis")
     parser.add_argument("--stats", action="store_true", help="Show graph statistics")
     parser.add_argument("--focus", help="Focus on neighborhood of specific work item")
 
@@ -586,9 +568,7 @@ def main():
         if bottlenecks:
             for bn in bottlenecks:
                 item = bn["item"]
-                print(
-                    f"{bn['id']} - {item.get('title', 'N/A')} (blocks {bn['blocks']} items)"
-                )
+                print(f"{bn['id']} - {item.get('title', 'N/A')} (blocks {bn['blocks']} items)")
         else:
             print("No bottlenecks found (no items block 2+ other items).")
         return 0
@@ -609,9 +589,7 @@ def main():
 
         elif args.format == "svg":
             dot_output = viz.generate_dot(work_items)
-            output_file = (
-                Path(args.output) if args.output else Path("dependency_graph.svg")
-            )
+            output_file = Path(args.output) if args.output else Path("dependency_graph.svg")
             if viz.generate_svg(dot_output, output_file):
                 print(f"SVG graph saved to {output_file}")
             else:

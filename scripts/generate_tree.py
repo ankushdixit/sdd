@@ -7,9 +7,8 @@ Tracks structural changes to the project with reasoning.
 
 import json
 import subprocess
-from pathlib import Path
 from datetime import datetime
-from typing import List, Dict
+from pathlib import Path
 
 
 class TreeGenerator:
@@ -18,9 +17,7 @@ class TreeGenerator:
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
-        self.updates_file = (
-            self.project_root / ".session" / "tracking" / "tree_updates.json"
-        )
+        self.updates_file = self.project_root / ".session" / "tracking" / "tree_updates.json"
 
         # Items to ignore
         self.ignore_patterns = [
@@ -87,9 +84,7 @@ class TreeGenerator:
             lines.append(prefix + connector + path.name)
 
             if path.is_dir():
-                children = sorted(
-                    path.iterdir(), key=lambda p: (not p.is_dir(), p.name)
-                )
+                children = sorted(path.iterdir(), key=lambda p: (not p.is_dir(), p.name))
                 children = [c for c in children if not should_ignore(c)]
 
                 for i, child in enumerate(children):
@@ -98,9 +93,7 @@ class TreeGenerator:
                     add_tree(child, prefix + extension, is_last_child)
 
         # Generate tree
-        children = sorted(
-            self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name)
-        )
+        children = sorted(self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name))
         children = [c for c in children if not should_ignore(c)]
 
         for i, child in enumerate(children):
@@ -108,7 +101,7 @@ class TreeGenerator:
 
         return "\n".join(lines)
 
-    def detect_changes(self, old_tree: str, new_tree: str) -> List[Dict]:
+    def detect_changes(self, old_tree: str, new_tree: str) -> list[dict]:
         """Detect structural changes between trees."""
         old_lines = set(old_tree.split("\n"))
         new_lines = set(new_tree.split("\n"))
@@ -178,9 +171,7 @@ class TreeGenerator:
 
         return changes
 
-    def _record_tree_update(
-        self, session_num: int, changes: List[Dict], reasoning: str
-    ):
+    def _record_tree_update(self, session_num: int, changes: list[dict], reasoning: str):
         """Record tree update in tree_updates.json."""
         updates = {"updates": []}
 
@@ -209,9 +200,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
     parser.add_argument("--session", type=int, help="Current session number")
-    parser.add_argument(
-        "--show-changes", action="store_true", help="Show changes from last run"
-    )
+    parser.add_argument("--show-changes", action="store_true", help="Show changes from last run")
     args = parser.parse_args()
 
     generator = TreeGenerator()

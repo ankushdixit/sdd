@@ -179,9 +179,7 @@ def test_full_sdd_config_valid(tmp_path, full_schema_path):
 def test_full_sdd_config_invalid_severity(tmp_path, full_schema_path):
     """Test validation fails with invalid severity value."""
     config = {
-        "quality_gates": {
-            "security": {"required": True, "severity": "invalid", "timeout": 120}
-        }
+        "quality_gates": {"security": {"required": True, "severity": "invalid", "timeout": 120}}
     }
     config_path = tmp_path / "config.json"
     config_path.write_text(json.dumps(config))
@@ -206,9 +204,7 @@ def test_full_sdd_config_invalid_threshold(tmp_path, full_schema_path):
     is_valid, errors = validate_config(config_path, full_schema_path)
 
     assert not is_valid
-    assert any(
-        "similarity_threshold" in error or "maximum" in error for error in errors
-    )
+    assert any("similarity_threshold" in error or "maximum" in error for error in errors)
 
 
 def test_full_sdd_config_invalid_timeout(tmp_path, full_schema_path):
