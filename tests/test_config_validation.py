@@ -8,7 +8,7 @@ import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.config_validator import ( # noqa: E402
+from scripts.config_validator import (  # noqa: E402
     load_and_validate_config,
     validate_config,
 )
@@ -206,7 +206,9 @@ def test_full_sdd_config_invalid_threshold(tmp_path, full_schema_path):
     is_valid, errors = validate_config(config_path, full_schema_path)
 
     assert not is_valid
-    assert any("similarity_threshold" in error or "maximum" in error for error in errors)
+    assert any(
+        "similarity_threshold" in error or "maximum" in error for error in errors
+    )
 
 
 def test_full_sdd_config_invalid_timeout(tmp_path, full_schema_path):

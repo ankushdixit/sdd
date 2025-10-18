@@ -6,7 +6,7 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.logging_config import get_logger, setup_logging # noqa: E402
+from scripts.logging_config import get_logger, setup_logging  # noqa: E402
 
 
 def test_setup_logging_default():

@@ -12,7 +12,7 @@ import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
-from scripts.quality_gates import QualityGates # noqa: E402
+from scripts.quality_gates import QualityGates  # noqa: E402
 
 
 def test_integration_quality_gate_methods():

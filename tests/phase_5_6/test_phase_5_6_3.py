@@ -9,7 +9,7 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.environment_validator import EnvironmentValidator # noqa: E402
+from scripts.environment_validator import EnvironmentValidator  # noqa: E402
 
 
 def test_environment_validator():
