@@ -94,9 +94,7 @@ def main():
         print("\nValidate SDD configuration against JSON schema.")
         print("\nExample:")
         print("  python3 config_validator.py .session/config.json")
-        print(
-            "  python3 config_validator.py .session/config.json .session/config.schema.json"
-        )
+        print("  python3 config_validator.py .session/config.json .session/config.schema.json")
         sys.exit(1)
 
     config_path = Path(sys.argv[1])

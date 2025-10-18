@@ -13,8 +13,8 @@ Detects:
 
 import json
 import re
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List
 
 
@@ -24,9 +24,7 @@ class StackGenerator:
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
         self.stack_file = self.project_root / ".session" / "tracking" / "stack.txt"
-        self.updates_file = (
-            self.project_root / ".session" / "tracking" / "stack_updates.json"
-        )
+        self.updates_file = self.project_root / ".session" / "tracking" / "stack_updates.json"
 
     def detect_languages(self) -> Dict[str, str]:
         """Detect programming languages from file extensions."""
@@ -250,19 +248,11 @@ class StackGenerator:
 
         changes = []
         for line in added:
-            if (
-                line.strip()
-                and not line.startswith("#")
-                and not line.startswith("Generated:")
-            ):
+            if line.strip() and not line.startswith("#") and not line.startswith("Generated:"):
                 changes.append({"type": "addition", "content": line.strip()})
 
         for line in removed:
-            if (
-                line.strip()
-                and not line.startswith("#")
-                and not line.startswith("Generated:")
-            ):
+            if line.strip() and not line.startswith("#") and not line.startswith("Generated:"):
                 changes.append({"type": "removal", "content": line.strip()})
 
         return changes
@@ -301,9 +291,7 @@ class StackGenerator:
 
         return changes
 
-    def _record_stack_update(
-        self, session_num: int, changes: List[Dict], reasoning: str
-    ):
+    def _record_stack_update(self, session_num: int, changes: List[Dict], reasoning: str):
         """Record stack update in stack_updates.json."""
         updates = {"updates": []}
 
@@ -329,9 +317,7 @@ def main():
     """CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Generate technology stack documentation"
-    )
+    parser = argparse.ArgumentParser(description="Generate technology stack documentation")
     parser.add_argument("--session", type=int, help="Current session number")
     args = parser.parse_args()
 

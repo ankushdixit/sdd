@@ -78,9 +78,7 @@ Metrics to monitor
         print("✅ PASS: Deployment briefing includes scope section")
         tests_passed += 1
     else:
-        print(
-            f"❌ FAIL: Deployment briefing missing scope. Briefing preview: {briefing[:200]}"
-        )
+        print(f"❌ FAIL: Deployment briefing missing scope. Briefing preview: {briefing[:200]}")
         tests_failed += 1
     print()
 
@@ -139,9 +137,7 @@ Metrics to monitor
         print("✅ PASS: Deployment summary includes execution results")
         tests_passed += 1
     else:
-        print(
-            f"❌ FAIL: Deployment summary missing execution results. Summary: {summary[:200]}"
-        )
+        print(f"❌ FAIL: Deployment summary missing execution results. Summary: {summary[:200]}")
         tests_failed += 1
     print()
 

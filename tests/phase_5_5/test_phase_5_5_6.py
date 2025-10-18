@@ -3,11 +3,11 @@
 Test script for Phase 5.5.6 - Integration Documentation Validation
 """
 
-import sys
 import json
-from pathlib import Path
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -132,12 +132,9 @@ def test_architecture_diagram_validation():
         passed, results = gates.validate_integration_documentation(work_item)
 
         has_arch_check = any(
-            c["name"] == "Integration architecture diagram"
-            for c in results.get("checks", [])
+            c["name"] == "Integration architecture diagram" for c in results.get("checks", [])
         )
-        if has_arch_check and "Integration architecture diagram" in results.get(
-            "missing", []
-        ):
+        if has_arch_check and "Integration architecture diagram" in results.get("missing", []):
             print("✅ PASS: Missing architecture diagram detected")
             tests_passed += 1
         else:
@@ -181,9 +178,7 @@ def test_architecture_diagram_validation():
     finally:
         shutil.rmtree(temp_dir)
 
-    print(
-        f"Architecture diagram tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Architecture diagram tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
@@ -318,9 +313,7 @@ sequenceDiagram
     finally:
         shutil.rmtree(temp_dir)
 
-    print(
-        f"Sequence diagram tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Sequence diagram tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
@@ -371,16 +364,12 @@ def test_api_contract_documentation():
 
         passed, results = gates.validate_integration_documentation(work_item)
 
-        missing_contracts = [
-            m for m in results.get("missing", []) if "contract" in m.lower()
-        ]
+        missing_contracts = [m for m in results.get("missing", []) if "contract" in m.lower()]
         if len(missing_contracts) == 2:
             print("✅ PASS: Missing contract files detected")
             tests_passed += 1
         else:
-            print(
-                f"❌ FAIL: Should detect 2 missing contracts, found {len(missing_contracts)}"
-            )
+            print(f"❌ FAIL: Should detect 2 missing contracts, found {len(missing_contracts)}")
             tests_failed += 1
         print()
 
@@ -401,11 +390,7 @@ def test_api_contract_documentation():
         os.chdir(original_dir)
 
         contract_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "API contracts documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "API contracts documented"),
             None,
         )
         if contract_check and contract_check["passed"]:
@@ -510,9 +495,7 @@ def test_performance_baseline_documentation():
     finally:
         shutil.rmtree(temp_dir)
 
-    print(
-        f"Performance baseline tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Performance baseline tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
@@ -558,11 +541,7 @@ def test_integration_points_documentation():
     passed, results = gates.validate_integration_documentation(work_item)
 
     points_check = next(
-        (
-            c
-            for c in results.get("checks", [])
-            if c["name"] == "Integration points documented"
-        ),
+        (c for c in results.get("checks", []) if c["name"] == "Integration points documented"),
         None,
     )
     if points_check and points_check["passed"]:
@@ -573,9 +552,7 @@ def test_integration_points_documentation():
         tests_failed += 1
     print()
 
-    print(
-        f"Integration points tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Integration points tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed

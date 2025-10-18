@@ -12,8 +12,8 @@ Handles:
 
 import json
 import subprocess
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 
@@ -22,9 +22,7 @@ class GitWorkflow:
 
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
-        self.work_items_file = (
-            self.project_root / ".session" / "tracking" / "work_items.json"
-        )
+        self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
 
     def check_git_status(self) -> Tuple[bool, str]:
         """Check if working directory is clean."""
@@ -69,9 +67,7 @@ class GitWorkflow:
 
         return None
 
-    def create_branch(
-        self, work_item_id: str, session_num: int
-    ) -> Tuple[bool, str, Optional[str]]:
+    def create_branch(self, work_item_id: str, session_num: int) -> Tuple[bool, str, Optional[str]]:
         """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
         # Capture parent branch BEFORE creating new branch
         parent_branch = self.get_current_branch()
@@ -118,9 +114,7 @@ class GitWorkflow:
         """Stage all changes and commit."""
         try:
             # Stage all changes
-            subprocess.run(
-                ["git", "add", "."], cwd=self.project_root, timeout=10, check=True
-            )
+            subprocess.run(["git", "add", "."], cwd=self.project_root, timeout=10, check=True)
 
             # Commit
             result = subprocess.run(
@@ -163,19 +157,14 @@ class GitWorkflow:
                 return True, "Pushed to remote"
             else:
                 # Check if it's just "no upstream" error
-                if (
-                    "no upstream" in result.stderr.lower()
-                    or "no remote" in result.stderr.lower()
-                ):
+                if "no upstream" in result.stderr.lower() or "no remote" in result.stderr.lower():
                     return True, "No remote configured (local only)"
                 return False, f"Push failed: {result.stderr}"
 
         except Exception as e:
             return False, f"Error pushing: {e}"
 
-    def merge_to_parent(
-        self, branch_name: str, parent_branch: str = "main"
-    ) -> Tuple[bool, str]:
+    def merge_to_parent(self, branch_name: str, parent_branch: str = "main") -> Tuple[bool, str]:
         """Merge branch to parent branch and delete branch."""
         try:
             # Checkout parent branch (not hardcoded main)
@@ -232,9 +221,7 @@ class GitWorkflow:
             }
         else:
             # Create new branch
-            success, branch_name, parent_branch = self.create_branch(
-                work_item_id, session_num
-            )
+            success, branch_name, parent_branch = self.create_branch(work_item_id, session_num)
 
             if success:
                 # Update work item with git info (including parent branch)
@@ -299,9 +286,7 @@ class GitWorkflow:
                 merge_msg = f"⚠️  {merge_msg} - Manual merge required"
         else:
             work_item["git"]["status"] = (
-                "ready_to_merge"
-                if work_item["status"] == "completed"
-                else "in_progress"
+                "ready_to_merge" if work_item["status"] == "completed" else "in_progress"
             )
 
         # Save updated work items

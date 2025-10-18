@@ -1216,6 +1216,148 @@ The current system had a **dual storage problem**:
 
 ---
 
+## Phase 5.8: Package Structure Refactoring (v0.5.8) - Python Best Practices
+
+**Goal:** Refactor to proper Python package structure, eliminating sys.path manipulation
+
+**Status:** 📅 Planned (Low Priority)
+
+**Priority:** LOW (nice-to-have, not blocking)
+
+**Target:** 1-2 weeks when resources available
+
+**Depends On:** None (can be done anytime after v0.5.7)
+
+### Current State (v0.5.7)
+
+**Hybrid Packaging Approach:**
+- ✅ Pip installable via `pip install -e .`
+- ✅ PyPI ready (can publish to PyPI)
+- ✅ CLI command `sdd` available after install
+- ⚠️ Scripts use sys.path manipulation (38 files)
+- ⚠️ Flat structure with `scripts/` at root
+
+**Why hybrid approach?**
+- Low risk: Maintains stability (102 passing tests)
+- Works now: Immediately distributable
+- Documented: Clear contributor guidelines
+
+### Planned Refactoring
+
+**Package Structure Changes:**
+```
+Current (v0.5.7):           Target (v0.5.8):
+sdd/                        sdd/
+├── sdd_cli.py              ├── pyproject.toml
+├── scripts/                ├── setup.py
+│   ├── work_item_...py     ├── sdd/
+│   ├── quality_gates.py    │   ├── __init__.py
+│   └── ...                 │   ├── cli.py (from sdd_cli.py)
+├── tests/                  │   └── scripts/
+└── pyproject.toml          │       ├── __init__.py
+                            │       ├── work_item_...py
+                            │       └── ...
+                            ├── tests/
+                            │   └── __init__.py
+                            └── ...
+```
+
+**Import Pattern Changes:**
+- Current: `from scripts.module_name import Class`
+- Target: `from sdd.scripts.module_name import Class`
+
+### Implementation Tasks
+
+**5.8.1: Package Structure Setup**
+- [ ] Create `sdd/` package directory
+- [ ] Move `sdd_cli.py` → `sdd/cli.py`
+- [ ] Move `scripts/` → `sdd/scripts/`
+- [ ] Add `__init__.py` files throughout
+- [ ] Update `pyproject.toml` for new structure
+
+**5.8.2: Import Refactoring (38 files)**
+- [ ] Remove all `sys.path.insert(0, ...)` statements
+- [ ] Update imports in `sdd/scripts/*.py` files
+- [ ] Update imports in `tests/*.py` files
+- [ ] Update CLI command routing table
+- [ ] Update slash command imports
+
+**5.8.3: Testing & Validation**
+- [ ] All 102+ tests pass after refactor
+- [ ] `pip install -e .` works with new structure
+- [ ] `sdd` command works correctly
+- [ ] All CI/CD checks pass (8 workflows)
+- [ ] Manual workflow testing
+
+**5.8.4: Documentation Updates**
+- [ ] Update README.md Architecture Notes
+- [ ] Update CONTRIBUTING.md import guidelines
+- [ ] Update installation instructions
+- [ ] Document migration for existing users
+
+### Success Criteria
+
+✅ Zero `sys.path.insert()` statements remain
+✅ All 102+ tests passing
+✅ `pip install -e .` works with new structure
+✅ `sdd` command works correctly
+✅ All CI/CD checks passing
+✅ Follows Python packaging best practices
+✅ Clear migration guide for contributors
+
+### Benefits
+
+**For Contributors:**
+- Standard Python package structure
+- Better IDE support (autocomplete, navigation)
+- Familiar import patterns
+- No sys.path confusion
+
+**For Users:**
+- No change to user experience
+- Same installation process
+- Same CLI commands
+- Transparent upgrade
+
+**For Maintainability:**
+- Cleaner codebase
+- Standard conventions
+- Easier to onboard contributors
+- PyPI distribution ready
+
+### Risk Assessment
+
+**Risk:** HIGH (touches 38+ files)
+
+**Mitigation:**
+- Comprehensive test suite catches regressions
+- Can rollback via git if issues arise
+- Incremental implementation in feature branch
+- Thorough testing before merge
+
+**Why Low Priority:**
+- Current hybrid approach works well
+- All functionality available now
+- Can defer until needed
+- Not blocking any features
+
+### Timeline
+
+**Estimated Effort:** 8-12 hours
+
+**Phases:**
+1. Structure setup: 2-3 hours
+2. Import refactoring: 4-6 hours
+3. Testing: 2-3 hours
+
+**When to schedule:**
+- After Phase 6 if starting Spec-Kit integration
+- When preparing for v1.0 release
+- When onboarding external contributors
+- When publishing to PyPI officially
+
+---
+
 ## Phase 6: Spec-Kit Integration (v0.6) - Specification-Driven
 
 **Goal:** Import work items from Spec-Kit specifications

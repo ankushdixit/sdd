@@ -5,8 +5,8 @@ Display current session status.
 
 import json
 import subprocess
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def get_session_status():
@@ -96,18 +96,14 @@ def get_session_status():
         if milestone:
             # Calculate progress (simplified)
             milestone_items = [
-                i
-                for i in data["work_items"].values()
-                if i.get("milestone") == milestone_name
+                i for i in data["work_items"].values() if i.get("milestone") == milestone_name
             ]
             total = len(milestone_items)
             completed = sum(1 for i in milestone_items if i["status"] == "completed")
             percent = int((completed / total) * 100) if total > 0 else 0
 
             in_prog = sum(1 for i in milestone_items if i["status"] == "in_progress")
-            not_started = sum(
-                1 for i in milestone_items if i["status"] == "not_started"
-            )
+            not_started = sum(1 for i in milestone_items if i["status"] == "not_started")
 
             print(f"Milestone: {milestone_name} ({percent}% complete)")
             print(f"  Related items: {in_prog} in progress, {not_started} not started")
@@ -116,9 +112,7 @@ def get_session_status():
     # Next items
     print("Next up:")
     items = data["work_items"]
-    not_started = [
-        (wid, i) for wid, i in items.items() if i["status"] == "not_started"
-    ][:3]
+    not_started = [(wid, i) for wid, i in items.items() if i["status"] == "not_started"][:3]
 
     priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
 

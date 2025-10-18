@@ -136,6 +136,30 @@ python3 sdd/sdd_cli.py learn-curate --dry-run
 
 ### Installation
 
+#### Option 1: Install as Python Package (Recommended)
+
+Install SDD as a Python package for the best experience:
+
+```bash
+# Clone the repository
+git clone https://github.com/ankushdixit/sdd.git
+cd sdd
+
+# Install in editable mode (allows you to modify and contribute)
+pip install -e .
+
+# With optional dependencies
+pip install -e ".[dev]"  # Includes test, quality, and viz tools
+
+# Verify installation
+sdd status
+pytest tests/ -v
+```
+
+After installation, the `sdd` command will be available globally, and Claude Code will automatically discover slash commands from `.claude/commands/`.
+
+#### Option 2: Traditional Clone & Configure
+
 Clone the repository into your project directory:
 
 ```bash
@@ -149,7 +173,7 @@ git clone https://github.com/ankushdixit/sdd.git
 cd sdd
 pip install -r requirements.txt
 
-# Make the CLI executable (recommended)
+# Make the CLI executable
 chmod +x sdd_cli.py
 cd ..
 
@@ -157,29 +181,6 @@ cd ..
 ```
 
 **That's it!** Claude Code will automatically discover the commands from the `.claude/commands/` directory and make them available as `/init`, `/start`, `/end`, etc.
-
-#### Install Options
-
-**Option 1: Install all dependencies (recommended)**
-```bash
-pip install -r requirements.txt
-```
-
-**Option 2: Install minimal dependencies (core + testing only)**
-```bash
-pip install PyYAML==6.0.1 pytest==8.2.2 pytest-cov==7.0.0
-```
-
-**Option 3: Install with optional quality tools**
-```bash
-# Install all dependencies including quality gates
-pip install -r requirements.txt
-
-# Verify installation
-pytest --version
-ruff --version
-bandit --version
-```
 
 #### Verify Installation
 
@@ -544,6 +545,42 @@ sdd/
 ├── README.md                 # This file
 └── [Development files...]    # Implementation plans, etc.
 ```
+
+## Architecture Notes
+
+### Hybrid Packaging Approach
+
+SDD currently uses a **hybrid packaging approach** that balances pragmatism with Python best practices:
+
+**Current Implementation (v0.5.7):**
+- ✅ **Pip installable**: `pip install -e .` works correctly
+- ✅ **PyPI ready**: Can be published to PyPI with current structure
+- ✅ **CLI command**: `sdd` command available after installation
+- ⚠️ **Import pattern**: Scripts use `sys.path` manipulation for imports
+- ⚠️ **Package structure**: Flat structure with `scripts/` at root level
+
+**Why this approach?**
+1. **Low risk**: Maintains stability of 102 passing tests
+2. **Works now**: Immediately pip-installable and distributable
+3. **Contributor-friendly**: Clear documentation of import patterns
+4. **Future-proof**: Proper refactoring planned for Phase 5.8
+
+**For Contributors:**
+When importing from other scripts, use this pattern:
+```python
+from scripts.module_name import ClassName
+```
+
+This pattern will be updated to proper relative imports in Phase 5.8 when the codebase is restructured to a standard `sdd/` package layout.
+
+**Planned Refactoring (Phase 5.8):**
+- 🔄 Move `scripts/` → `sdd/scripts/`
+- 🔄 Move `sdd_cli.py` → `sdd/cli.py`
+- 🔄 Remove all `sys.path` manipulation (38 files)
+- 🔄 Update imports to use `from sdd.scripts.X` pattern
+- 🔄 Full compliance with Python packaging standards
+
+See [ROADMAP.md Phase 5.8](#) for details.
 
 ## Development Status
 

@@ -11,9 +11,9 @@ Provides automated deployment execution with:
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
-from datetime import datetime
 
 
 class DeploymentExecutor:
@@ -70,9 +70,7 @@ class DeploymentExecutor:
         # Check integration tests
         if self.config["pre_deployment_checks"].get("integration_tests"):
             tests_passed = self._check_integration_tests()
-            results["checks"].append(
-                {"name": "Integration Tests", "passed": tests_passed}
-            )
+            results["checks"].append({"name": "Integration Tests", "passed": tests_passed})
             if not tests_passed:
                 results["passed"] = False
 
@@ -86,9 +84,7 @@ class DeploymentExecutor:
         # Check environment readiness
         if self.config["pre_deployment_checks"].get("environment_validation"):
             env_ready = self._check_environment_readiness()
-            results["checks"].append(
-                {"name": "Environment Readiness", "passed": env_ready}
-            )
+            results["checks"].append({"name": "Environment Readiness", "passed": env_ready})
             if not env_ready:
                 results["passed"] = False
 
@@ -124,9 +120,7 @@ class DeploymentExecutor:
             else:
                 step_success = True  # Simulate success in dry run
 
-            results["steps"].append(
-                {"number": i, "description": step, "success": step_success}
-            )
+            results["steps"].append({"number": i, "description": step, "success": step_success})
 
             if not step_success:
                 results["success"] = False
@@ -193,9 +187,7 @@ class DeploymentExecutor:
 
             step_success = self._execute_rollback_step(step)
 
-            results["steps"].append(
-                {"number": i, "description": step, "success": step_success}
-            )
+            results["steps"].append({"number": i, "description": step, "success": step_success})
 
             if not step_success:
                 results["success"] = False

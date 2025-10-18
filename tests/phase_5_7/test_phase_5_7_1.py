@@ -6,10 +6,10 @@ Tests that briefing generation includes full spec content, full project context,
 and validates spec completeness.
 """
 
-import sys
 import json
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
 
 # Add project root to path
@@ -19,9 +19,9 @@ sys.path.insert(0, str(project_root / "scripts"))
 
 from scripts.briefing_generator import (  # noqa: E402
     generate_briefing,
-    load_work_item_spec,
     load_current_tree,
     load_project_docs,
+    load_work_item_spec,
 )
 
 
@@ -105,10 +105,7 @@ How to test this feature.
         loaded_content = load_work_item_spec(work_item_id)
 
         # Should return informative message, not crash
-        assert (
-            "not found" in loaded_content.lower()
-            or "no specification" in loaded_content.lower()
-        )
+        assert "not found" in loaded_content.lower() or "no specification" in loaded_content.lower()
 
         print("✓ Test 2: load_work_item_spec handles missing file gracefully")
 
@@ -133,9 +130,7 @@ How to test this feature.
     def test_load_project_docs_returns_full_vision(self):
         """Test: load_project_docs returns full vision.md without 500-char limit."""
         # Create vision.md with more than 500 characters
-        vision_content = "Project Vision\n\n" + (
-            "This is a detailed vision statement. " * 50
-        )
+        vision_content = "Project Vision\n\n" + ("This is a detailed vision statement. " * 50)
         vision_path = self.docs_dir / "vision.md"
         vision_path.write_text(vision_content, encoding="utf-8")
 
@@ -147,9 +142,7 @@ How to test this feature.
         assert "Project Vision" in loaded_vision
         assert loaded_vision.count("detailed vision statement") >= 40
 
-        print(
-            "✓ Test 4: load_project_docs returns full vision.md without 500-char limit"
-        )
+        print("✓ Test 4: load_project_docs returns full vision.md without 500-char limit")
 
     def test_load_project_docs_returns_full_architecture(self):
         """Test: load_project_docs returns full architecture.md without 500-char limit."""
@@ -168,9 +161,7 @@ How to test this feature.
         assert "Project Architecture" in loaded_arch
         assert loaded_arch.count("architecture in detail") >= 40
 
-        print(
-            "✓ Test 5: load_project_docs returns full architecture.md without 500-char limit"
-        )
+        print("✓ Test 5: load_project_docs returns full architecture.md without 500-char limit")
 
     def test_generate_briefing_includes_full_spec(self):
         """Test: generate_briefing includes complete spec file content."""
@@ -251,10 +242,7 @@ Just an overview, missing other required sections.
         # Note: This will only work if spec_validator is importable
         # The warning section is optional based on import success
         if "⚠️ Specification Validation Warning" in briefing:
-            assert (
-                "Missing required section" in briefing
-                or "incomplete" in briefing.lower()
-            )
+            assert "Missing required section" in briefing or "incomplete" in briefing.lower()
             print(
                 "✓ Test 7: generate_briefing includes spec validation warning for incomplete specs"
             )
@@ -333,9 +321,7 @@ Testing strategy.
 
         # Write to work_items.json
         work_items_path = self.tracking_dir / "work_items.json"
-        work_items_path.write_text(
-            json.dumps(work_item_data, indent=2), encoding="utf-8"
-        )
+        work_items_path.write_text(json.dumps(work_item_data, indent=2), encoding="utf-8")
 
         # Read back
         with open(work_items_path) as f:
@@ -344,9 +330,7 @@ Testing strategy.
         work_item = loaded_data["work_items"]["test_item_001"]
 
         # Should NOT have content fields
-        assert "rationale" not in work_item, (
-            "work_items.json should not contain 'rationale' field"
-        )
+        assert "rationale" not in work_item, "work_items.json should not contain 'rationale' field"
         assert "acceptance_criteria" not in work_item, (
             "work_items.json should not contain 'acceptance_criteria' field"
         )

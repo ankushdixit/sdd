@@ -5,9 +5,9 @@ Test script for Phase 5.6.1 - Enhanced Deployment Work Item Type
 Updated for Phase 5.7 spec-first architecture.
 """
 
+import shutil
 import sys
 import tempfile
-import shutil
 from pathlib import Path
 
 # Add project root to path
@@ -92,9 +92,7 @@ class TestPhase5_6_1:
             print("✅ Template has all required sections!")
             return True
         else:
-            print(
-                f"❌ Template missing {len(required_sections) - sections_found} section(s)"
-            )
+            print(f"❌ Template missing {len(required_sections) - sections_found} section(s)")
             return False
 
     def test_valid_deployment(self):

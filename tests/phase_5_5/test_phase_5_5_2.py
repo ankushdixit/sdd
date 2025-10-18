@@ -5,6 +5,7 @@ Test script for Phase 5.5.2 - Integration Test Execution Framework
 
 import sys
 from pathlib import Path
+
 import pytest
 
 # Add project root to path
@@ -13,9 +14,7 @@ sys.path.insert(0, str(project_root))
 from scripts.integration_test_runner import IntegrationTestRunner  # noqa: E402
 
 
-@pytest.mark.skip(
-    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
-)
+@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
 def test_integration_test_runner_class():
     """Test IntegrationTestRunner class structure and methods."""
     print("=" * 60)
@@ -371,9 +370,7 @@ def test_file_structure():
     print()
 
     # Summary
-    print(
-        f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"\nFile structure tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     if tests_failed == 0:
@@ -384,9 +381,7 @@ def test_file_structure():
         return 1
 
 
-@pytest.mark.skip(
-    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
-)
+@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
 def test_docker_compose_support():
     """Test Docker Compose integration logic."""
     print("=" * 60)
@@ -425,12 +420,7 @@ def test_docker_compose_support():
     # Test 2: Multiple services configured
     print("Test 2: Multiple services configured")
     services = runner.env_requirements.get("services_required", [])
-    if (
-        len(services) == 3
-        and "db" in services
-        and "api" in services
-        and "cache" in services
-    ):
+    if len(services) == 3 and "db" in services and "api" in services and "cache" in services:
         print("✅ PASS: All services configured")
         tests_passed += 1
     else:
@@ -450,9 +440,7 @@ def test_docker_compose_support():
     print()
 
     # Summary
-    print(
-        f"\nDocker Compose tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"\nDocker Compose tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     if tests_failed == 0:

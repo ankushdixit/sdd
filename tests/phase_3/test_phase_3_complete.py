@@ -201,9 +201,7 @@ class Phase3Tester:
         print_info("Dependency structure:")
         print_info("  Level 0: feature_database_schema (completed)")
         print_info("  Level 1: feature_user_auth, feature_api_endpoints")
-        print_info(
-            "  Level 2: feature_user_profile, feature_social_login, bug_auth_timeout"
-        )
+        print_info("  Level 2: feature_user_profile, feature_social_login, bug_auth_timeout")
         print_info("  Level 3: security_penetration_test (blocked)")
 
         return True
@@ -242,9 +240,7 @@ class Phase3Tester:
         # Count the status icons to verify completed items aren't shown as nodes
         completed_count = stdout.count("● feature_database_schema:")
         if completed_count > 0:
-            print_failure(
-                "Completed items should be excluded by default as top-level nodes"
-            )
+            print_failure("Completed items should be excluded by default as top-level nodes")
             return False
 
         # But should include non-completed items
@@ -341,9 +337,7 @@ class Phase3Tester:
         # Should show not_started items as main nodes (with status icon at start of line)
         # Dependencies may still be mentioned, but won't be shown as main nodes
         if "◐ feature_user_auth:" in stdout:
-            print_failure(
-                "Should exclude in_progress items when filtering for not_started"
-            )
+            print_failure("Should exclude in_progress items when filtering for not_started")
             return False
 
         if "○ feature_api_endpoints:" not in stdout:
@@ -367,9 +361,7 @@ class Phase3Tester:
             return False
 
         if "○ feature_api_endpoints:" in stdout:
-            print_failure(
-                "Should exclude not_started items when filtering for in_progress"
-            )
+            print_failure("Should exclude not_started items when filtering for in_progress")
             return False
 
         print_success("in_progress filter works correctly")
@@ -607,15 +599,11 @@ class Phase3Tester:
         # That would be: feature_api_endpoints, feature_user_profile
 
         if "○ feature_api_endpoints:" not in stdout:
-            print_failure(
-                "Should include feature_api_endpoints (not_started, MVP v1.0, feature)"
-            )
+            print_failure("Should include feature_api_endpoints (not_started, MVP v1.0, feature)")
             return False
 
         if "○ feature_user_profile:" not in stdout:
-            print_failure(
-                "Should include feature_user_profile (not_started, MVP v1.0, feature)"
-            )
+            print_failure("Should include feature_user_profile (not_started, MVP v1.0, feature)")
             return False
 
         # Should exclude in_progress (as main nodes)

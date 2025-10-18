@@ -17,8 +17,8 @@ Examples:
     sdd_cli.py learn-search "authentication"
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # CRITICAL: Add plugin directory to Python path BEFORE any imports
@@ -28,7 +28,6 @@ sys.path.insert(0, str(PLUGIN_DIR))
 
 # Import logging configuration
 from scripts.logging_config import setup_logging  # noqa: E402
-
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)

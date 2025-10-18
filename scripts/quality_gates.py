@@ -12,8 +12,8 @@ Provides comprehensive validation including:
 Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
 """
 
-import subprocess
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import List, Tuple
@@ -76,9 +76,7 @@ class QualityGates:
                 return self._default_config()
         else:
             # Fallback to simple load without validation
-            logger.warning(
-                "Loading config without validation (schema or validator not available)"
-            )
+            logger.warning("Loading config without validation (schema or validator not available)")
             with open(config_path) as f:
                 config = json.load(f)
             return config.get("quality_gates", self._default_config())
@@ -161,9 +159,7 @@ class QualityGates:
 
         # Run tests
         try:
-            result = subprocess.run(
-                command.split(), capture_output=True, text=True, timeout=300
-            )
+            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=300)
 
             # pytest exit codes:
             # 0 = all tests passed
@@ -262,8 +258,8 @@ class QualityGates:
         if language == "python":
             # Run bandit
             try:
-                import tempfile
                 import os
+                import tempfile
 
                 # Use secure temporary file instead of hardcoded /tmp path
                 fd, bandit_report_path = tempfile.mkstemp(suffix=".json")
@@ -368,9 +364,7 @@ class QualityGates:
 
         return passed, results
 
-    def run_linting(
-        self, language: str = None, auto_fix: bool = None
-    ) -> Tuple[bool, dict]:
+    def run_linting(self, language: str = None, auto_fix: bool = None) -> Tuple[bool, dict]:
         """Run linting with optional auto-fix."""
         config = self.config.get("linting", {})
 
@@ -394,9 +388,7 @@ class QualityGates:
             command += " --fix"
 
         try:
-            result = subprocess.run(
-                command.split(), capture_output=True, text=True, timeout=120
-            )
+            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
 
             passed = result.returncode == 0
 
@@ -409,9 +401,7 @@ class QualityGates:
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             return True, {"status": "skipped", "reason": str(e)}
 
-    def run_formatting(
-        self, language: str = None, auto_fix: bool = None
-    ) -> Tuple[bool, dict]:
+    def run_formatting(self, language: str = None, auto_fix: bool = None) -> Tuple[bool, dict]:
         """Run code formatting."""
         config = self.config.get("formatting", {})
 
@@ -434,9 +424,7 @@ class QualityGates:
             command += " --check"
 
         try:
-            result = subprocess.run(
-                command.split(), capture_output=True, text=True, timeout=120
-            )
+            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
 
             passed = result.returncode == 0
 
@@ -460,9 +448,7 @@ class QualityGates:
         # Check CHANGELOG updated
         if config.get("check_changelog", True):
             changelog_updated = self._check_changelog_updated()
-            results["checks"].append(
-                {"name": "CHANGELOG updated", "passed": changelog_updated}
-            )
+            results["checks"].append({"name": "CHANGELOG updated", "passed": changelog_updated})
             if not changelog_updated:
                 results["passed"] = False
 
@@ -480,9 +466,7 @@ class QualityGates:
         # Check README current
         if config.get("check_readme", False):
             readme_current = self._check_readme_current(work_item)
-            results["checks"].append(
-                {"name": "README current", "passed": readme_current}
-            )
+            results["checks"].append({"name": "README current", "passed": readme_current})
             if not readme_current:
                 results["passed"] = False
 
@@ -510,9 +494,7 @@ class QualityGates:
                     text=True,
                     timeout=10,
                 )
-                return any(
-                    "CHANGELOG" in line.upper() for line in result.stdout.split("\n")
-                )
+                return any("CHANGELOG" in line.upper() for line in result.stdout.split("\n"))
             except Exception:
                 return True  # Skip check if git not available
 
@@ -756,9 +738,7 @@ class QualityGates:
             return True
 
         try:
-            result = subprocess.run(
-                ["grep", "-r", pattern, files], capture_output=True, timeout=30
-            )
+            result = subprocess.run(["grep", "-r", pattern, files], capture_output=True, timeout=30)
             # grep returns 0 if pattern found
             return result.returncode == 0
         except Exception:
@@ -774,9 +754,7 @@ class QualityGates:
         missing = []
 
         for gate_name, gate_config in self.config.items():
-            if gate_config.get("required", False) and not gate_config.get(
-                "enabled", False
-            ):
+            if gate_config.get("required", False) and not gate_config.get("enabled", False):
                 missing.append(gate_name)
 
         return len(missing) == 0, missing
@@ -846,9 +824,7 @@ class QualityGates:
                 print("  ✗ Integration tests failed")
                 return False, results
 
-            print(
-                f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)"
-            )
+            print(f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)")
 
             # 2. Run performance benchmarks
             if work_item.get("performance_benchmarks"):
@@ -911,26 +887,20 @@ class QualityGates:
 
         # Check Docker available
         try:
-            result = subprocess.run(
-                ["docker", "--version"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["docker", "--version"], capture_output=True, timeout=5)
             results["docker_available"] = result.returncode == 0
         except Exception:
             results["docker_available"] = False
 
         # Check Docker Compose available
         try:
-            result = subprocess.run(
-                ["docker-compose", "--version"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["docker-compose", "--version"], capture_output=True, timeout=5)
             results["docker_compose_available"] = result.returncode == 0
         except Exception:
             results["docker_compose_available"] = False
 
         # Check compose file exists
-        compose_file = env_requirements.get(
-            "compose_file", "docker-compose.integration.yml"
-        )
+        compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
         if not Path(compose_file).exists():
             results["missing_config"].append(compose_file)
 
@@ -1013,9 +983,7 @@ class QualityGates:
                         has_sequence = True
                         break
 
-                results["checks"].append(
-                    {"name": "Sequence diagrams", "passed": has_sequence}
-                )
+                results["checks"].append({"name": "Sequence diagrams", "passed": has_sequence})
 
                 if not has_sequence:
                     results["missing"].append("Sequence diagrams for test scenarios")
@@ -1074,9 +1042,7 @@ class QualityGates:
         except Exception:
             documented = False
 
-        results["checks"].append(
-            {"name": "Integration points documented", "passed": documented}
-        )
+        results["checks"].append({"name": "Integration points documented", "passed": documented})
 
         if not documented:
             results["missing"].append("Integration points documentation")
@@ -1087,9 +1053,7 @@ class QualityGates:
 
         # Pass if all required checks pass
         results["passed"] = len(results["missing"]) == 0
-        results["summary"] = (
-            f"{passed_checks}/{total_checks} documentation requirements met"
-        )
+        results["summary"] = f"{passed_checks}/{total_checks} documentation requirements met"
 
         return results["passed"], results
 

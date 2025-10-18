@@ -250,9 +250,7 @@ class LearningsCurator:
 
         # Score each category
         scores = {
-            "architecture_patterns": self._keyword_score(
-                content, architecture_keywords
-            ),
+            "architecture_patterns": self._keyword_score(content, architecture_keywords),
             "gotchas": self._keyword_score(content, gotcha_keywords),
             "best_practices": self._keyword_score(content, practice_keywords),
             "technical_debt": self._keyword_score(content, debt_keywords),
@@ -385,9 +383,7 @@ class LearningsCurator:
             target["merged_from"] = []
         target["merged_from"].append(source.get("learned_in", "unknown"))
 
-    def _archive_old_learnings(
-        self, learnings: dict, max_age_sessions: int = 50
-    ) -> int:
+    def _archive_old_learnings(self, learnings: dict, max_age_sessions: int = 50) -> int:
         """Archive old, unreferenced learnings"""
         archived_count = 0
         categories = learnings.get("categories", {})
@@ -400,9 +396,7 @@ class LearningsCurator:
 
             for i, learning in enumerate(category_learnings):
                 # Extract session number from learned_in field
-                session_num = self._extract_session_number(
-                    learning.get("learned_in", "")
-                )
+                session_num = self._extract_session_number(learning.get("learned_in", ""))
 
                 # Archive if too old
                 if session_num and current_session - session_num > max_age_sessions:
@@ -582,9 +576,7 @@ class LearningsCurator:
         except Exception:
             return []
 
-    def extract_from_code_comments(
-        self, changed_files: List[Path] = None
-    ) -> List[dict]:
+    def extract_from_code_comments(self, changed_files: List[Path] = None) -> List[dict]:
         """Extract learnings from inline code comments"""
         if changed_files is None:
             # Get recently changed files from git
@@ -913,11 +905,9 @@ class LearningsCurator:
                     learning_words = set(learning.get("content", "").lower().split())
                     overlap = len(target_words & learning_words)
                     total = len(target_words | learning_words)
-                    score = int((overlap / total * 100)) if total > 0 else 0
+                    score = int(overlap / total * 100) if total > 0 else 0
 
-                    similarities.append(
-                        (score, {**learning, "category": category_name})
-                    )
+                    similarities.append((score, {**learning, "category": category_name}))
 
         # Sort by score and return top N
         similarities.sort(reverse=True, key=lambda x: x[0])
@@ -959,9 +949,7 @@ class LearningsCurator:
                     session_counts[session_num] = session_counts.get(session_num, 0) + 1
 
         # Top tags
-        stats["top_tags"] = sorted(
-            tag_counts.items(), key=lambda x: x[1], reverse=True
-        )[:10]
+        stats["top_tags"] = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]
         stats["by_tag"] = tag_counts
         stats["by_session"] = session_counts
 
@@ -992,9 +980,7 @@ class LearningsCurator:
 
         # Sessions with most learnings
         if stats["by_session"]:
-            top_sessions = sorted(
-                stats["by_session"].items(), key=lambda x: x[1], reverse=True
-            )[:5]
+            top_sessions = sorted(stats["by_session"].items(), key=lambda x: x[1], reverse=True)[:5]
             print("\nSessions with Most Learnings:")
             print("-" * 40)
             for session_num, count in top_sessions:
@@ -1025,9 +1011,7 @@ class LearningsCurator:
         # Display recent sessions
         recent = sorted(by_session.keys(), reverse=True)[:sessions]
 
-        print(
-            f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n"
-        )
+        print(f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n")
 
         for session in recent:
             session_learnings = by_session[session]
@@ -1073,9 +1057,7 @@ def main():
 
     # Curate command
     curate_parser = subparsers.add_parser("curate", help="Run curation process")
-    curate_parser.add_argument(
-        "--dry-run", action="store_true", help="Show changes without saving"
-    )
+    curate_parser.add_argument("--dry-run", action="store_true", help="Show changes without saving")
 
     # Show learnings command
     show_parser = subparsers.add_parser("show-learnings", help="Show learnings")
@@ -1089,9 +1071,7 @@ def main():
 
     # Add learning command
     add_parser = subparsers.add_parser("add-learning", help="Add a new learning")
-    add_parser.add_argument(
-        "--content", type=str, required=True, help="Learning content"
-    )
+    add_parser.add_argument("--content", type=str, required=True, help="Learning content")
     add_parser.add_argument(
         "--category",
         type=str,
@@ -1137,9 +1117,7 @@ def main():
     if args.command == "curate":
         curator.curate(dry_run=args.dry_run)
     elif args.command == "show-learnings":
-        curator.show_learnings(
-            category=args.category, tag=args.tag, session=args.session
-        )
+        curator.show_learnings(category=args.category, tag=args.tag, session=args.session)
     elif args.command == "search":
         curator.search_learnings(args.query)
     elif args.command == "add-learning":

@@ -215,18 +215,14 @@ def run_initial_scans():
 
     # Run generate_stack.py
     try:
-        subprocess.run(
-            ["python", "scripts/generate_stack.py"], check=True, capture_output=True
-        )
+        subprocess.run(["python", "scripts/generate_stack.py"], check=True, capture_output=True)
         print("✓ Generated stack.txt")
     except subprocess.CalledProcessError:
         print("⚠️  Could not generate stack.txt (will be generated on first session)")
 
     # Run generate_tree.py
     try:
-        subprocess.run(
-            ["python", "scripts/generate_tree.py"], check=True, capture_output=True
-        )
+        subprocess.run(["python", "scripts/generate_tree.py"], check=True, capture_output=True)
         print("✓ Generated tree.txt")
     except subprocess.CalledProcessError:
         print("⚠️  Could not generate tree.txt (will be generated on first session)")

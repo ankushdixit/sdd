@@ -1,1 +1,91 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdd"
+version = "0.5.7"
+description = "Session-Driven Development - AI-augmented development workflow framework"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "SDD Contributors"}
+]
+keywords = ["development", "workflow", "ai", "session-driven", "productivity", "quality-gates"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+requires-python = ">=3.9"
+dependencies = []  # Core has no runtime dependencies (uses stdlib only)
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4.3,<8.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+]
+quality = [
+    "ruff>=0.1.6,<0.2.0",
+    "bandit>=1.7.5,<2.0.0",
+    "safety>=2.3.5,<3.0.0",
+]
+viz = [
+    "graphviz>=0.20.1,<0.21.0",
+]
+dev = [
+    "sdd[test,quality,viz]",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/sdd"
+Documentation = "https://github.com/yourusername/sdd/blob/main/README.md"
+Repository = "https://github.com/yourusername/sdd"
+Issues = "https://github.com/yourusername/sdd/issues"
+Changelog = "https://github.com/yourusername/sdd/blob/main/CHANGELOG.md"
+
+[project.scripts]
+sdd = "sdd_cli:main"
+
+[tool.setuptools]
+py-modules = ["sdd_cli"]
+packages = ["scripts", "templates"]
+
+[tool.setuptools.package-data]
+templates = ["*.md", "*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.coverage.run]
+source = ["scripts", "sdd_cli"]
+omit = ["tests/*", "templates/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

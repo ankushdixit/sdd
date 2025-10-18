@@ -10,10 +10,11 @@ Supports:
 """
 
 import json
-import yaml
+import sys
 from pathlib import Path
 from typing import List, Tuple
-import sys
+
+import yaml
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -64,9 +65,7 @@ class APIContractValidator:
             # Check for breaking changes if previous version exists
             previous_version = contract.get("previous_version")
             if previous_version:
-                breaking_changes = self._detect_breaking_changes(
-                    contract_file, previous_version
-                )
+                breaking_changes = self._detect_breaking_changes(contract_file, previous_version)
                 if breaking_changes:
                     self.results["breaking_changes"].extend(breaking_changes)
                     if not contract.get("allow_breaking_changes", False):
@@ -118,9 +117,7 @@ class APIContractValidator:
         print(f"  ✓ Contract valid: {contract_file}")
         return True
 
-    def _detect_breaking_changes(
-        self, current_file: str, previous_file: str
-    ) -> List[dict]:
+    def _detect_breaking_changes(self, current_file: str, previous_file: str) -> List[dict]:
         """
         Detect breaking changes between contract versions.
 
@@ -182,9 +179,7 @@ class APIContractValidator:
             with open(path) as f:
                 return json.load(f)
 
-    def _check_endpoint_changes(
-        self, path: str, previous: dict, current: dict
-    ) -> List[dict]:
+    def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> List[dict]:
         """Check for breaking changes in a specific endpoint."""
         changes = []
 

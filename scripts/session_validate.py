@@ -55,9 +55,7 @@ class SessionValidator:
             status_lines = [line for line in result.stdout.split("\n") if line.strip()]
 
             # Check for tracking file changes
-            tracking_changes = [
-                line for line in status_lines if ".session/tracking/" in line
-            ]
+            tracking_changes = [line for line in status_lines if ".session/tracking/" in line]
 
             if tracking_changes:
                 return {
@@ -86,9 +84,7 @@ class SessionValidator:
 
         return {
             "passed": all_passed,
-            "message": "All quality gates pass"
-            if all_passed
-            else "Some quality gates fail",
+            "message": "All quality gates pass" if all_passed else "Some quality gates fail",
             "gates": gates,
         }
 
@@ -304,9 +300,7 @@ class SessionValidator:
         # Display results
         for check_name, result in checks.items():
             status = "✓" if result["passed"] else "✗"
-            print(
-                f"{status} {check_name.replace('_', ' ').title()}: {result['message']}"
-            )
+            print(f"{status} {check_name.replace('_', ' ').title()}: {result['message']}")
 
             # Show details for failed checks
             if not result["passed"] and check_name == "quality_gates":

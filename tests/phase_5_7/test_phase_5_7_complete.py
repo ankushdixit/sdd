@@ -6,10 +6,10 @@ Comprehensive tests that verify the complete spec-first workflow from work item
 creation to session completion.
 """
 
-import sys
 import json
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
 
 # Add project root to path
@@ -17,10 +17,10 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from scripts.spec_parser import parse_spec_file  # noqa: E402
-from scripts.spec_validator import validate_spec_file  # noqa: E402
 from scripts.briefing_generator import generate_briefing, load_work_item_spec  # noqa: E402
 from scripts.quality_gates import QualityGates  # noqa: E402
+from scripts.spec_parser import parse_spec_file  # noqa: E402
+from scripts.spec_validator import validate_spec_file  # noqa: E402
 
 
 class TestPhase5_7Complete:
@@ -418,9 +418,7 @@ Test
 
             for field in expected_fields:
                 assert field in parsed, f"{work_item_type} should have {field} field"
-                assert parsed[field] is not None, (
-                    f"{work_item_type}.{field} should not be None"
-                )
+                assert parsed[field] is not None, f"{work_item_type}.{field} should not be None"
 
         print("✓ Test 4: Spec parser correctly handles all 6 work item types")
 
@@ -472,9 +470,7 @@ Verify no deprecated fields.
         }
 
         work_items_path = self.tracking_dir / "work_items.json"
-        work_items_path.write_text(
-            json.dumps(work_item_data, indent=2), encoding="utf-8"
-        )
+        work_items_path.write_text(json.dumps(work_item_data, indent=2), encoding="utf-8")
 
         # Verify no deprecated fields
         with open(work_items_path) as f:

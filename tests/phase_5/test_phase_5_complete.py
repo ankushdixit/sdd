@@ -256,10 +256,7 @@ Just an overview, missing other sections.
         )
 
         # Should detect incomplete spec (missing required sections)
-        if (
-            "Spec file missing" not in stdout
-            and "Missing required section" not in stdout
-        ):
+        if "Spec file missing" not in stdout and "Missing required section" not in stdout:
             print_info(f"Output: {stdout}")
             # This is acceptable - validation may pass with warnings
             print_success("Validation handles incomplete spec")
@@ -391,8 +388,7 @@ Just an overview, missing other sections.
 
         # Should have some summary or conclusion
         has_summary = any(
-            keyword in stdout.lower()
-            for keyword in ["ready", "complete", "summary", "fix"]
+            keyword in stdout.lower() for keyword in ["ready", "complete", "summary", "fix"]
         )
 
         if not has_summary:

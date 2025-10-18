@@ -12,13 +12,13 @@ Supports:
 Updated in Phase 5.7.3 to use spec_parser for reading test specifications.
 """
 
-import subprocess
 import json
-import time
+import subprocess
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Tuple
-from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -114,11 +114,7 @@ class IntegrationTestRunner:
                 # Try to extract filename
                 words = line.split()
                 for word in words:
-                    if (
-                        "docker-compose" in word
-                        or word.endswith(".yml")
-                        or word.endswith(".yaml")
-                    ):
+                    if "docker-compose" in word or word.endswith(".yml") or word.endswith(".yaml"):
                         compose_file = word.strip("`\"':")
 
         return {"services_required": services, "compose_file": compose_file}
@@ -133,9 +129,7 @@ class IntegrationTestRunner:
         print("Setting up integration test environment...")
 
         # Check if Docker Compose file exists
-        compose_file = self.env_requirements.get(
-            "compose_file", "docker-compose.integration.yml"
-        )
+        compose_file = self.env_requirements.get("compose_file", "docker-compose.integration.yml")
         if not Path(compose_file).exists():
             return False, f"Docker Compose file not found: {compose_file}"
 
@@ -366,9 +360,7 @@ class IntegrationTestRunner:
         """
         print("\nTearing down integration test environment...")
 
-        compose_file = self.env_requirements.get(
-            "compose_file", "docker-compose.integration.yml"
-        )
+        compose_file = self.env_requirements.get("compose_file", "docker-compose.integration.yml")
 
         try:
             # Stop and remove services

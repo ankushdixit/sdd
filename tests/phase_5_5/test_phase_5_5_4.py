@@ -3,11 +3,11 @@
 Test script for Phase 5.5.4 - API Contract Validation
 """
 
-import sys
 import json
-from pathlib import Path
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -40,9 +40,7 @@ def test_api_contract_validator_class():
         "id": "INTEG-001",
         "type": "integration_test",
         "title": "API Contract Test",
-        "api_contracts": [
-            {"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}
-        ],
+        "api_contracts": [{"contract_file": "contracts/api-v1.yaml", "version": "1.0.0"}],
     }
 
     try:
@@ -237,9 +235,7 @@ info:
         # Clean up temporary directory
         shutil.rmtree(temp_dir)
 
-    print(
-        f"Contract validation tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Contract validation tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
@@ -328,9 +324,7 @@ paths:
         work_item = {"id": "TEST-001", "api_contracts": []}
         validator = APIContractValidator(work_item)
 
-        changes = validator._detect_breaking_changes(
-            str(v2_removed_endpoint), str(v1_contract)
-        )
+        changes = validator._detect_breaking_changes(str(v2_removed_endpoint), str(v1_contract))
 
         removed_endpoint = any(
             c["type"] == "removed_endpoint" and "/posts" in c["path"] for c in changes
@@ -372,14 +366,10 @@ paths:
           description: Success
 """)
 
-        changes = validator._detect_breaking_changes(
-            str(v2_removed_method), str(v1_contract)
-        )
+        changes = validator._detect_breaking_changes(str(v2_removed_method), str(v1_contract))
 
         removed_method = any(
-            c["type"] == "removed_method"
-            and c["method"] == "POST"
-            and "/users" in c["path"]
+            c["type"] == "removed_method" and c["method"] == "POST" and "/users" in c["path"]
             for c in changes
         )
         if removed_method:
@@ -425,13 +415,10 @@ paths:
           description: Success
 """)
 
-        changes = validator._detect_breaking_changes(
-            str(v2_removed_param), str(v1_contract)
-        )
+        changes = validator._detect_breaking_changes(str(v2_removed_param), str(v1_contract))
 
         removed_param = any(
-            c["type"] == "removed_required_parameter" and c["parameter"] == "id"
-            for c in changes
+            c["type"] == "removed_required_parameter" and c["parameter"] == "id" for c in changes
         )
         if removed_param:
             print("✅ PASS: Removed required parameter detected")
@@ -486,13 +473,10 @@ paths:
           description: Success
 """)
 
-        changes = validator._detect_breaking_changes(
-            str(v2_added_param), str(v1_contract)
-        )
+        changes = validator._detect_breaking_changes(str(v2_added_param), str(v1_contract))
 
         added_param = any(
-            c["type"] == "added_required_parameter" and c["parameter"] == "email"
-            for c in changes
+            c["type"] == "added_required_parameter" and c["parameter"] == "email" for c in changes
         )
         if added_param:
             print("✅ PASS: Added required parameter detected")
@@ -553,9 +537,7 @@ paths:
           description: Success
 """)
 
-        changes = validator._detect_breaking_changes(
-            str(v2_compatible), str(v1_contract)
-        )
+        changes = validator._detect_breaking_changes(str(v2_compatible), str(v1_contract))
 
         if len(changes) == 0:
             print("✅ PASS: No breaking changes detected for backward compatible API")
@@ -569,9 +551,7 @@ paths:
         # Clean up temporary directory
         shutil.rmtree(temp_dir)
 
-    print(
-        f"Breaking change detection tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Breaking change detection tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed
@@ -641,9 +621,7 @@ def test_report_generation():
         tests_failed += 1
     print()
 
-    print(
-        f"Report generation tests: {tests_passed}/{tests_passed + tests_failed} passed"
-    )
+    print(f"Report generation tests: {tests_passed}/{tests_passed + tests_failed} passed")
     print()
 
     return tests_passed, tests_failed

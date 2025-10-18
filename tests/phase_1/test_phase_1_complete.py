@@ -219,9 +219,7 @@ class Phase1Tester:
             print_info(f"work_items_data: {work_items_data}")
             return False
         except Exception as e:
-            print_failure(
-                f"Exception during work item creation: {type(e).__name__}: {e}"
-            )
+            print_failure(f"Exception during work item creation: {type(e).__name__}: {e}")
             import traceback
 
             traceback.print_exc()
@@ -258,9 +256,7 @@ class Phase1Tester:
                 print_success(f"Briefing contains: {section}")
 
             # Verify git branch created
-            returncode, stdout, stderr = run_command(
-                "git branch", cwd=str(self.test_dir)
-            )
+            returncode, stdout, stderr = run_command("git branch", cwd=str(self.test_dir))
 
             if "session-001" not in stdout:
                 print_failure("Git session branch not created")
