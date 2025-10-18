@@ -18,6 +18,16 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+# Import config validator for schema validation
+try:
+    from scripts.config_validator import load_and_validate_config
+except ImportError:
+    # Fallback if running from different location
+    try:
+        from config_validator import load_and_validate_config
+    except ImportError:
+        load_and_validate_config = None
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts import spec_parser
@@ -40,14 +50,26 @@ class QualityGates:
         self.config = self._load_config(config_path)
 
     def _load_config(self, config_path: Path) -> dict:
-        """Load quality gate configuration."""
+        """Load quality gate configuration with validation."""
         if not config_path.exists():
             return self._default_config()
 
-        with open(config_path) as f:
-            config = json.load(f)
+        schema_path = config_path.parent / "config.schema.json"
 
-        return config.get("quality_gates", self._default_config())
+        # Try to validate if schema and validator available
+        if load_and_validate_config is not None and schema_path.exists():
+            try:
+                config = load_and_validate_config(config_path, schema_path)
+                return config.get("quality_gates", self._default_config())
+            except ValueError as e:
+                print(f"❌ {e}")
+                print("Using default configuration")
+                return self._default_config()
+        else:
+            # Fallback to simple load without validation
+            with open(config_path) as f:
+                config = json.load(f)
+            return config.get("quality_gates", self._default_config())
 
     def _default_config(self) -> dict:
         """Default quality gate configuration."""
