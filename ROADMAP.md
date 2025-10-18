@@ -2,6 +2,8 @@
 
 This roadmap outlines the phased development of the SDD (Session-Driven Development), a comprehensive Session-Driven Development system for AI-augmented software development.
 
+> **Note:** For user-friendly release notes, see [CHANGELOG.md](./CHANGELOG.md). This roadmap contains detailed technical implementation history.
+
 ---
 
 ## Phase 0: Foundation & Documentation (v0.0) - Complete
