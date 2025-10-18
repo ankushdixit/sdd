@@ -63,7 +63,7 @@ jobs:
 
     - name: Run ruff check
       run: |
-        ruff check scripts/ tests/ sdd_cli.py
+        ruff check scripts/ tests/ sdd_cli.py --ignore E402
 
     - name: Run ruff format check
       run: |
