@@ -727,7 +727,9 @@ def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
     # Extract type from "# Type: Name" pattern
     heading_match = re.match(r"#\s*(\w+):\s*(.+)", first_line)
     if not heading_match:
-        logger.error("Invalid spec file: H1 heading doesn't match pattern in %s", spec_path)
+        logger.error(
+            "Invalid spec file: H1 heading doesn't match pattern in %s", spec_path
+        )
         raise ValueError(
             f"Invalid spec file: H1 heading doesn't match 'Type: Name' pattern in {spec_path}"
         )

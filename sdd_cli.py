@@ -241,7 +241,10 @@ def main():
 
     # Check if command is provided
     if len(remaining) < 1:
-        print("Usage: sdd_cli.py [--verbose] [--log-file FILE] <command> [args...]", file=sys.stderr)
+        print(
+            "Usage: sdd_cli.py [--verbose] [--log-file FILE] <command> [args...]",
+            file=sys.stderr,
+        )
         print("\nGlobal flags:", file=sys.stderr)
         print("  --verbose, -v        Enable verbose (DEBUG) logging", file=sys.stderr)
         print("  --log-file FILE      Write logs to file", file=sys.stderr)

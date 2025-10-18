@@ -82,7 +82,9 @@ class WorkItemManager:
 
         # 8. Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dependencies)
-        logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
+        logger.info(
+            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
+        )
 
         # 9. Confirm
         print(f"\n{'=' * 50}")
@@ -155,7 +157,9 @@ class WorkItemManager:
 
         # Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dep_list)
-        logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
+        logger.info(
+            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
+        )
 
         # Confirm
         print(f"\n{'=' * 50}")

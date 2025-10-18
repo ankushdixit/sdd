@@ -76,7 +76,9 @@ class QualityGates:
                 return self._default_config()
         else:
             # Fallback to simple load without validation
-            logger.warning("Loading config without validation (schema or validator not available)")
+            logger.warning(
+                "Loading config without validation (schema or validator not available)"
+            )
             with open(config_path) as f:
                 config = json.load(f)
             return config.get("quality_gates", self._default_config())
