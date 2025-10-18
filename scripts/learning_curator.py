@@ -18,7 +18,6 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import List
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -489,7 +488,7 @@ class LearningsCurator:
             "similarity_threshold": 0.7,
         }
 
-    def extract_from_session_summary(self, session_file: Path) -> List[dict]:
+    def extract_from_session_summary(self, session_file: Path) -> list[dict]:
         """Extract learnings from session summary file"""
         if not session_file.exists():
             return []
@@ -532,7 +531,7 @@ class LearningsCurator:
 
         return learnings
 
-    def extract_from_git_commits(self, since_session: int = 0) -> List[dict]:
+    def extract_from_git_commits(self, since_session: int = 0) -> list[dict]:
         """Extract learnings from git commit messages"""
         try:
             # Get recent commits
@@ -576,7 +575,7 @@ class LearningsCurator:
         except Exception:
             return []
 
-    def extract_from_code_comments(self, changed_files: List[Path] = None) -> List[dict]:
+    def extract_from_code_comments(self, changed_files: list[Path] = None) -> list[dict]:
         """Extract learnings from inline code comments"""
         if changed_files is None:
             # Get recently changed files from git
@@ -872,7 +871,7 @@ class LearningsCurator:
 
                 print()
 
-    def get_related_learnings(self, learning_id: str, limit: int = 5) -> List[dict]:
+    def get_related_learnings(self, learning_id: str, limit: int = 5) -> list[dict]:
         """Get similar learnings using similarity algorithms"""
         learnings = self._load_learnings()
         categories = learnings.get("categories", {})

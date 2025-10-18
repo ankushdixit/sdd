@@ -15,7 +15,6 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
 class StackGenerator:
@@ -26,7 +25,7 @@ class StackGenerator:
         self.stack_file = self.project_root / ".session" / "tracking" / "stack.txt"
         self.updates_file = self.project_root / ".session" / "tracking" / "stack_updates.json"
 
-    def detect_languages(self) -> Dict[str, str]:
+    def detect_languages(self) -> dict[str, str]:
         """Detect programming languages from file extensions."""
         languages = {}
 
@@ -97,7 +96,7 @@ class StackGenerator:
 
         return ""
 
-    def detect_frameworks(self) -> Dict[str, List[str]]:
+    def detect_frameworks(self) -> dict[str, list[str]]:
         """Detect frameworks from imports and config files."""
         frameworks = {"backend": [], "frontend": [], "testing": [], "database": []}
 
@@ -149,7 +148,7 @@ class StackGenerator:
             return match.group(1)
         return ""
 
-    def detect_libraries(self) -> List[str]:
+    def detect_libraries(self) -> list[str]:
         """Detect libraries from dependency files."""
         libraries = []
 
@@ -166,7 +165,7 @@ class StackGenerator:
 
         return libraries[:20]  # Limit to top 20
 
-    def detect_mcp_servers(self) -> List[str]:
+    def detect_mcp_servers(self) -> list[str]:
         """Detect MCP servers in use."""
         mcp_servers = []
 
@@ -238,7 +237,7 @@ class StackGenerator:
 
         return "\n".join(lines)
 
-    def detect_changes(self, old_content: str, new_content: str) -> List[Dict]:
+    def detect_changes(self, old_content: str, new_content: str) -> list[dict]:
         """Detect changes between old and new stack."""
         old_lines = set(old_content.split("\n"))
         new_lines = set(new_content.split("\n"))
@@ -291,7 +290,7 @@ class StackGenerator:
 
         return changes
 
-    def _record_stack_update(self, session_num: int, changes: List[Dict], reasoning: str):
+    def _record_stack_update(self, session_num: int, changes: list[dict], reasoning: str):
         """Record stack update in stack_updates.json."""
         updates = {"updates": []}
 

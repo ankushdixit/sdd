@@ -9,7 +9,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -221,7 +221,7 @@ class WorkItemManager:
             priority = "high"
         return priority
 
-    def _prompt_dependencies(self, work_type: str) -> List[str]:
+    def _prompt_dependencies(self, work_type: str) -> list[str]:
         """Prompt for dependencies."""
         required = work_type in ["integration_test", "deployment"]
 
@@ -313,7 +313,7 @@ class WorkItemManager:
         work_type: str,
         title: str,
         priority: str,
-        dependencies: List[str],
+        dependencies: list[str],
     ):
         """Add work item to work_items.json."""
         # Load existing data
@@ -493,7 +493,7 @@ class WorkItemManager:
         status_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
         milestone_filter: Optional[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """List work items with optional filtering."""
         if not self.work_items_file.exists():
             print("No work items found. Create one with /work-item create")
@@ -532,7 +532,7 @@ class WorkItemManager:
 
         return {"items": sorted_items, "count": len(sorted_items)}
 
-    def _is_blocked(self, item: Dict, all_items: Dict) -> bool:
+    def _is_blocked(self, item: dict, all_items: dict) -> bool:
         """Check if work item is blocked by dependencies."""
         if item["status"] != "not_started":
             return False
@@ -549,7 +549,7 @@ class WorkItemManager:
 
         return False
 
-    def _sort_items(self, items: Dict) -> List[Dict]:
+    def _sort_items(self, items: dict) -> list[dict]:
         """Sort items by priority, dependency status, and date."""
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
@@ -571,7 +571,7 @@ class WorkItemManager:
 
         return items_list
 
-    def _display_items(self, items: List[Dict]):
+    def _display_items(self, items: list[dict]):
         """Display items with color coding and indicators."""
         if not items:
             print("No work items found matching filters.")
@@ -650,7 +650,7 @@ class WorkItemManager:
         print("  ✓ Ready to start")
         print()
 
-    def _get_status_icon(self, item: Dict) -> str:
+    def _get_status_icon(self, item: dict) -> str:
         """Get status icon for work item."""
         if item["status"] == "completed":
             return "[✓]"
@@ -659,7 +659,7 @@ class WorkItemManager:
         else:
             return "[  ]"
 
-    def show_work_item(self, work_id: str) -> Optional[Dict]:
+    def show_work_item(self, work_id: str) -> Optional[dict]:
         """Display detailed information about a work item."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -887,7 +887,7 @@ class WorkItemManager:
             print("Cancelled.")
             return False
 
-    def get_next_work_item(self) -> Optional[Dict]:
+    def get_next_work_item(self) -> Optional[dict]:
         """Find next work item to start."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -1011,7 +1011,7 @@ class WorkItemManager:
         print(f"✓ Created milestone: {name}")
         return True
 
-    def get_milestone_progress(self, milestone_name: str) -> Dict:
+    def get_milestone_progress(self, milestone_name: str) -> dict:
         """Calculate milestone progress."""
         if not self.work_items_file.exists():
             return {"error": "No work items found"}

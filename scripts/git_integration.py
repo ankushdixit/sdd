@@ -14,7 +14,7 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 
 class GitWorkflow:
@@ -24,7 +24,7 @@ class GitWorkflow:
         self.project_root = project_root or Path.cwd()
         self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
 
-    def check_git_status(self) -> Tuple[bool, str]:
+    def check_git_status(self) -> tuple[bool, str]:
         """Check if working directory is clean."""
         try:
             result = subprocess.run(
@@ -67,7 +67,7 @@ class GitWorkflow:
 
         return None
 
-    def create_branch(self, work_item_id: str, session_num: int) -> Tuple[bool, str, Optional[str]]:
+    def create_branch(self, work_item_id: str, session_num: int) -> tuple[bool, str, Optional[str]]:
         """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
         # Capture parent branch BEFORE creating new branch
         parent_branch = self.get_current_branch()
@@ -91,7 +91,7 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error creating branch: {e}"
 
-    def checkout_branch(self, branch_name: str) -> Tuple[bool, str]:
+    def checkout_branch(self, branch_name: str) -> tuple[bool, str]:
         """Checkout existing branch."""
         try:
             result = subprocess.run(
@@ -110,7 +110,7 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error checking out branch: {e}"
 
-    def commit_changes(self, message: str) -> Tuple[bool, str]:
+    def commit_changes(self, message: str) -> tuple[bool, str]:
         """Stage all changes and commit."""
         try:
             # Stage all changes
@@ -142,7 +142,7 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error committing: {e}"
 
-    def push_branch(self, branch_name: str) -> Tuple[bool, str]:
+    def push_branch(self, branch_name: str) -> tuple[bool, str]:
         """Push branch to remote."""
         try:
             result = subprocess.run(
@@ -164,7 +164,7 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error pushing: {e}"
 
-    def merge_to_parent(self, branch_name: str, parent_branch: str = "main") -> Tuple[bool, str]:
+    def merge_to_parent(self, branch_name: str, parent_branch: str = "main") -> tuple[bool, str]:
         """Merge branch to parent branch and delete branch."""
         try:
             # Checkout parent branch (not hardcoded main)
@@ -199,7 +199,7 @@ class GitWorkflow:
         except Exception as e:
             return False, f"Error merging: {e}"
 
-    def start_work_item(self, work_item_id: str, session_num: int) -> Dict:
+    def start_work_item(self, work_item_id: str, session_num: int) -> dict:
         """Start working on a work item (create or resume branch)."""
         # Load work items
         with open(self.work_items_file) as f:
@@ -248,7 +248,7 @@ class GitWorkflow:
 
     def complete_work_item(
         self, work_item_id: str, commit_message: str, merge: bool = False
-    ) -> Dict:
+    ) -> dict:
         """Complete work on a work item (commit, push, optionally merge)."""
         # Load work items
         with open(self.work_items_file) as f:

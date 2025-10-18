@@ -18,7 +18,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -119,7 +118,7 @@ class IntegrationTestRunner:
 
         return {"services_required": services, "compose_file": compose_file}
 
-    def setup_environment(self) -> Tuple[bool, str]:
+    def setup_environment(self) -> tuple[bool, str]:
         """
         Set up integration test environment.
 
@@ -231,7 +230,7 @@ class IntegrationTestRunner:
 
         return True
 
-    def run_tests(self, language: str = None) -> Tuple[bool, dict]:
+    def run_tests(self, language: str = None) -> tuple[bool, dict]:
         """
         Execute all integration test scenarios.
 
@@ -351,7 +350,7 @@ class IntegrationTestRunner:
             return "javascript"
         return "python"
 
-    def teardown_environment(self) -> Tuple[bool, str]:
+    def teardown_environment(self) -> tuple[bool, str]:
         """
         Tear down integration test environment.
 

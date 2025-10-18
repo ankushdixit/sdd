@@ -12,7 +12,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,7 +25,7 @@ class SessionValidator:
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
 
-    def check_git_status(self) -> Dict:
+    def check_git_status(self) -> dict:
         """Check git working directory status."""
         try:
             # Check if clean or has expected changes
@@ -72,7 +71,7 @@ class SessionValidator:
         except Exception as e:
             return {"passed": False, "message": f"Git check failed: {e}"}
 
-    def preview_quality_gates(self) -> Dict:
+    def preview_quality_gates(self) -> dict:
         """Preview quality gate results without making changes."""
         gates = {
             "tests": self._preview_tests(),
@@ -88,7 +87,7 @@ class SessionValidator:
             "gates": gates,
         }
 
-    def _preview_tests(self) -> Dict:
+    def _preview_tests(self) -> dict:
         """Preview test results."""
         try:
             result = subprocess.run(
@@ -114,7 +113,7 @@ class SessionValidator:
         except subprocess.TimeoutExpired:
             return {"passed": False, "message": "Tests timed out (>5 minutes)"}
 
-    def _preview_linting(self) -> Dict:
+    def _preview_linting(self) -> dict:
         """Preview linting results."""
         try:
             result = subprocess.run(
@@ -142,7 +141,7 @@ class SessionValidator:
         except subprocess.TimeoutExpired:
             return {"passed": False, "message": "Linting timed out"}
 
-    def _preview_formatting(self) -> Dict:
+    def _preview_formatting(self) -> dict:
         """Preview formatting check."""
         try:
             result = subprocess.run(
@@ -169,7 +168,7 @@ class SessionValidator:
         except FileNotFoundError:
             return {"passed": True, "message": "ruff not found (skipped)"}
 
-    def validate_work_item_criteria(self) -> Dict:
+    def validate_work_item_criteria(self) -> dict:
         """
         Check if work item spec is complete and valid.
 
@@ -260,7 +259,7 @@ class SessionValidator:
 
         return {"passed": True, "message": "Work item spec is complete"}
 
-    def check_tracking_updates(self) -> Dict:
+    def check_tracking_updates(self) -> dict:
         """Preview tracking file updates."""
         changes = {
             "stack": self._check_stack_changes(),
@@ -275,18 +274,18 @@ class SessionValidator:
             "changes": changes,
         }
 
-    def _check_stack_changes(self) -> Dict:
+    def _check_stack_changes(self) -> dict:
         """Check if stack has changed."""
         # This would run stack detection logic
         # For now, simplified
         return {"has_changes": False, "message": "No stack changes"}
 
-    def _check_tree_changes(self) -> Dict:
+    def _check_tree_changes(self) -> dict:
         """Check if tree structure has changed."""
         # This would run tree detection logic
         return {"has_changes": False, "message": "No structural changes"}
 
-    def validate(self) -> Dict:
+    def validate(self) -> dict:
         """Run all validation checks."""
         print("Running session validation...\n")
 

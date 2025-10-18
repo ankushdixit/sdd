@@ -13,7 +13,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -35,7 +34,7 @@ class PerformanceBenchmark:
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
         self.results = {}
 
-    def run_benchmarks(self, test_endpoint: str = None) -> Tuple[bool, dict]:
+    def run_benchmarks(self, test_endpoint: str = None) -> tuple[bool, dict]:
         """
         Run performance benchmarks.
 

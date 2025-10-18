@@ -10,7 +10,7 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import Optional
 
 
 class DependencyGraphVisualizer:
@@ -33,7 +33,7 @@ class DependencyGraphVisualizer:
         milestone_filter: Optional[str] = None,
         type_filter: Optional[str] = None,
         include_completed: bool = False,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Load and filter work items from JSON file.
 
         Args:
@@ -68,7 +68,7 @@ class DependencyGraphVisualizer:
 
         return work_items
 
-    def generate_dot(self, work_items: List[dict]) -> str:
+    def generate_dot(self, work_items: list[dict]) -> str:
         """Generate DOT format graph
 
         Args:
@@ -119,7 +119,7 @@ class DependencyGraphVisualizer:
         lines.append("}")
         return "\n".join(lines)
 
-    def generate_ascii(self, work_items: List[dict]) -> str:
+    def generate_ascii(self, work_items: list[dict]) -> str:
         """Generate ASCII art graph
 
         Args:
@@ -183,7 +183,7 @@ class DependencyGraphVisualizer:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
-    def get_bottlenecks(self, work_items: List[dict]) -> List[dict]:
+    def get_bottlenecks(self, work_items: list[dict]) -> list[dict]:
         """Identify bottleneck work items (items that block many others).
 
         Args:
@@ -215,7 +215,7 @@ class DependencyGraphVisualizer:
 
         return sorted(bottlenecks, key=lambda x: x["blocks"], reverse=True)
 
-    def get_neighborhood(self, work_items: List[dict], focus_id: str) -> List[dict]:
+    def get_neighborhood(self, work_items: list[dict], focus_id: str) -> list[dict]:
         """Get work items in neighborhood of focus item (dependencies and dependents).
 
         Args:
@@ -249,7 +249,7 @@ class DependencyGraphVisualizer:
 
         return [wi for wi in work_items if wi["id"] in neighborhood_ids]
 
-    def generate_stats(self, work_items: List[dict], critical_path: Set[str]) -> dict:
+    def generate_stats(self, work_items: list[dict], critical_path: set[str]) -> dict:
         """Generate graph statistics.
 
         Args:

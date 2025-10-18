@@ -24,10 +24,9 @@ import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 
 
-def run_command(cmd: str, cwd: str) -> Tuple[int, str, str]:
+def run_command(cmd: str, cwd: str) -> tuple[int, str, str]:
     """Run shell command and return (returncode, stdout, stderr)."""
     result = subprocess.run(
         cmd,

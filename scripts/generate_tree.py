@@ -9,7 +9,6 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
 class TreeGenerator:
@@ -102,7 +101,7 @@ class TreeGenerator:
 
         return "\n".join(lines)
 
-    def detect_changes(self, old_tree: str, new_tree: str) -> List[Dict]:
+    def detect_changes(self, old_tree: str, new_tree: str) -> list[dict]:
         """Detect structural changes between trees."""
         old_lines = set(old_tree.split("\n"))
         new_lines = set(new_tree.split("\n"))
@@ -172,7 +171,7 @@ class TreeGenerator:
 
         return changes
 
-    def _record_tree_update(self, session_num: int, changes: List[Dict], reasoning: str):
+    def _record_tree_update(self, session_num: int, changes: list[dict], reasoning: str):
         """Record tree update in tree_updates.json."""
         updates = {"updates": []}
 

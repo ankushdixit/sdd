@@ -12,7 +12,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -121,7 +121,7 @@ def extract_subsection(section_content: str, subsection_name: str) -> Optional[s
     return "\n".join(subsection_content).strip()
 
 
-def extract_checklist(content: str) -> List[Dict[str, Any]]:
+def extract_checklist(content: str) -> list[dict[str, Any]]:
     """
     Extract checklist items from markdown.
 
@@ -151,7 +151,7 @@ def extract_checklist(content: str) -> List[Dict[str, Any]]:
     return checklist
 
 
-def extract_code_blocks(content: str) -> List[Dict[str, str]]:
+def extract_code_blocks(content: str) -> list[dict[str, str]]:
     """
     Extract all code blocks from content.
 
@@ -183,7 +183,7 @@ def extract_code_blocks(content: str) -> List[Dict[str, str]]:
     return code_blocks
 
 
-def extract_list_items(content: str) -> List[str]:
+def extract_list_items(content: str) -> list[str]:
     """
     Extract bullet point or numbered list items from content.
 
@@ -211,7 +211,7 @@ def extract_list_items(content: str) -> List[str]:
 # ============================================================================
 
 
-def parse_feature_spec(content: str) -> Dict[str, Any]:
+def parse_feature_spec(content: str) -> dict[str, Any]:
     """
     Parse feature specification.
 
@@ -269,7 +269,7 @@ def parse_feature_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_bug_spec(content: str) -> Dict[str, Any]:
+def parse_bug_spec(content: str) -> dict[str, Any]:
     """
     Parse bug specification.
 
@@ -328,7 +328,7 @@ def parse_bug_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_refactor_spec(content: str) -> Dict[str, Any]:
+def parse_refactor_spec(content: str) -> dict[str, Any]:
     """
     Parse refactor specification.
 
@@ -399,7 +399,7 @@ def parse_refactor_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_security_spec(content: str) -> Dict[str, Any]:
+def parse_security_spec(content: str) -> dict[str, Any]:
     """
     Parse security specification.
 
@@ -478,7 +478,7 @@ def parse_security_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_integration_test_spec(content: str) -> Dict[str, Any]:
+def parse_integration_test_spec(content: str) -> dict[str, Any]:
     """
     Parse integration test specification.
 
@@ -560,7 +560,7 @@ def parse_integration_test_spec(content: str) -> Dict[str, Any]:
     return result
 
 
-def parse_deployment_spec(content: str) -> Dict[str, Any]:
+def parse_deployment_spec(content: str) -> dict[str, Any]:
     """
     Parse deployment specification.
 
@@ -668,7 +668,7 @@ def parse_deployment_spec(content: str) -> Dict[str, Any]:
 # ============================================================================
 
 
-def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
+def parse_spec_file(work_item_id: str) -> dict[str, Any]:
     """
     Parse a work item specification file.
 

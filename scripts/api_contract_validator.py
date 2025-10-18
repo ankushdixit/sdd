@@ -12,7 +12,6 @@ Supports:
 import json
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 import yaml
 
@@ -40,7 +39,7 @@ class APIContractValidator:
             "passed": False,
         }
 
-    def validate_contracts(self) -> Tuple[bool, dict]:
+    def validate_contracts(self) -> tuple[bool, dict]:
         """
         Validate all API contracts.
 
@@ -117,7 +116,7 @@ class APIContractValidator:
         print(f"  ✓ Contract valid: {contract_file}")
         return True
 
-    def _detect_breaking_changes(self, current_file: str, previous_file: str) -> List[dict]:
+    def _detect_breaking_changes(self, current_file: str, previous_file: str) -> list[dict]:
         """
         Detect breaking changes between contract versions.
 
@@ -179,7 +178,7 @@ class APIContractValidator:
             with open(path) as f:
                 return json.load(f)
 
-    def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> List[dict]:
+    def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> list[dict]:
         """Check for breaking changes in a specific endpoint."""
         changes = []
 
@@ -211,7 +210,7 @@ class APIContractValidator:
 
     def _check_parameter_changes(
         self, path: str, method: str, previous: dict, current: dict
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Check for breaking changes in endpoint parameters."""
         changes = []
 

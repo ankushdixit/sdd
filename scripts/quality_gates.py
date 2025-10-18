@@ -16,7 +16,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Import logging
 from scripts.logging_config import get_logger
@@ -132,7 +131,7 @@ class QualityGates:
             },
         }
 
-    def run_tests(self, language: str = None) -> Tuple[bool, dict]:
+    def run_tests(self, language: str = None) -> tuple[bool, dict]:
         """
         Run test suite with coverage.
 
@@ -237,7 +236,7 @@ class QualityGates:
 
         return None
 
-    def run_security_scan(self, language: str = None) -> Tuple[bool, dict]:
+    def run_security_scan(self, language: str = None) -> tuple[bool, dict]:
         """
         Run security vulnerability scanning.
 
@@ -364,7 +363,7 @@ class QualityGates:
 
         return passed, results
 
-    def run_linting(self, language: str = None, auto_fix: bool = None) -> Tuple[bool, dict]:
+    def run_linting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
         """Run linting with optional auto-fix."""
         config = self.config.get("linting", {})
 
@@ -401,7 +400,7 @@ class QualityGates:
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             return True, {"status": "skipped", "reason": str(e)}
 
-    def run_formatting(self, language: str = None, auto_fix: bool = None) -> Tuple[bool, dict]:
+    def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
         """Run code formatting."""
         config = self.config.get("formatting", {})
 
@@ -436,7 +435,7 @@ class QualityGates:
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             return True, {"status": "skipped", "reason": str(e)}
 
-    def validate_documentation(self, work_item: dict = None) -> Tuple[bool, dict]:
+    def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
         """Validate documentation requirements."""
         config = self.config.get("documentation", {})
 
@@ -531,7 +530,7 @@ class QualityGates:
         except Exception:
             return True  # Skip check if git not available
 
-    def validate_spec_completeness(self, work_item: dict) -> Tuple[bool, dict]:
+    def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict]:
         """
         Validate that the work item specification file is complete.
 
@@ -579,7 +578,7 @@ class QualityGates:
                 "suggestion": f"Edit .session/specs/{work_item_id}.md to add missing sections",
             }
 
-    def verify_context7_libraries(self) -> Tuple[bool, dict]:
+    def verify_context7_libraries(self) -> tuple[bool, dict]:
         """Verify important libraries via Context7 MCP."""
         config = self.config.get("context7", {})
 
@@ -620,7 +619,7 @@ class QualityGates:
 
         return passed, results
 
-    def _parse_libraries_from_stack(self) -> List[dict]:
+    def _parse_libraries_from_stack(self) -> list[dict]:
         """Parse libraries from stack.txt."""
         stack_file = Path(".session/tracking/stack.txt")
         libraries = []
@@ -668,7 +667,7 @@ class QualityGates:
         # Returns True by default to allow framework operation
         return True
 
-    def run_custom_validations(self, work_item: dict) -> Tuple[bool, dict]:
+    def run_custom_validations(self, work_item: dict) -> tuple[bool, dict]:
         """Run custom validation rules for work item."""
         results = {"validations": [], "passed": True}
 
@@ -744,7 +743,7 @@ class QualityGates:
         except Exception:
             return False
 
-    def check_required_gates(self) -> Tuple[bool, List[str]]:
+    def check_required_gates(self) -> tuple[bool, list[str]]:
         """
         Check if all required gates are configured.
 
@@ -759,7 +758,7 @@ class QualityGates:
 
         return len(missing) == 0, missing
 
-    def run_integration_tests(self, work_item: dict) -> Tuple[bool, dict]:
+    def run_integration_tests(self, work_item: dict) -> tuple[bool, dict]:
         """
         Run integration tests for integration test work items.
 
@@ -863,7 +862,7 @@ class QualityGates:
             # Always teardown environment
             runner.teardown_environment()
 
-    def validate_integration_environment(self, work_item: dict) -> Tuple[bool, dict]:
+    def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict]:
         """
         Validate integration test environment requirements.
 
@@ -919,7 +918,7 @@ class QualityGates:
 
         return results["passed"], results
 
-    def validate_integration_documentation(self, work_item: dict) -> Tuple[bool, dict]:
+    def validate_integration_documentation(self, work_item: dict) -> tuple[bool, dict]:
         """
         Validate integration test documentation requirements.
 
@@ -1129,7 +1128,7 @@ class QualityGates:
 
         return "\n".join(report)
 
-    def get_remediation_guidance(self, failed_gates: List[str]) -> str:
+    def get_remediation_guidance(self, failed_gates: list[str]) -> str:
         """Get remediation guidance for failed gates."""
         guidance = []
         guidance.append("\nREMEDIATION GUIDANCE:")
@@ -1178,7 +1177,7 @@ class QualityGates:
 
         return "\n".join(guidance)
 
-    def run_deployment_gates(self, work_item: dict) -> Tuple[bool, dict]:
+    def run_deployment_gates(self, work_item: dict) -> tuple[bool, dict]:
         """
         Run deployment-specific quality gates.
 

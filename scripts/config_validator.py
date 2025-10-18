@@ -3,10 +3,10 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
-def validate_config(config_path: Path, schema_path: Path) -> Tuple[bool, List[str]]:
+def validate_config(config_path: Path, schema_path: Path) -> tuple[bool, list[str]]:
     """
     Validate configuration against JSON schema.
 
@@ -60,7 +60,7 @@ def _format_validation_error(error: Any) -> str:
     return f"Validation error at '{path}': {error.message}"
 
 
-def load_and_validate_config(config_path: Path, schema_path: Path) -> Dict[str, Any]:
+def load_and_validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
     """
     Load and validate configuration.
 

@@ -10,7 +10,7 @@ Part of Phase 5.7.5: Spec File Validation System
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from spec_parser import (
     extract_checklist,
@@ -20,7 +20,7 @@ from spec_parser import (
 )
 
 
-def get_validation_rules(work_item_type: str) -> Dict[str, Any]:
+def get_validation_rules(work_item_type: str) -> dict[str, Any]:
     """
     Get validation rules for a specific work item type.
 
@@ -154,7 +154,7 @@ def get_validation_rules(work_item_type: str) -> Dict[str, Any]:
     )
 
 
-def check_required_sections(spec_content: str, work_item_type: str) -> List[str]:
+def check_required_sections(spec_content: str, work_item_type: str) -> list[str]:
     """
     Check if all required sections are present and non-empty.
 
@@ -260,7 +260,7 @@ def check_smoke_tests(spec_content: str, min_tests: int = 1) -> Optional[str]:
     return None
 
 
-def check_deployment_subsections(spec_content: str) -> List[str]:
+def check_deployment_subsections(spec_content: str) -> list[str]:
     """
     Check if Deployment Procedure has all required subsections.
 
@@ -293,7 +293,7 @@ def check_deployment_subsections(spec_content: str) -> List[str]:
     return errors
 
 
-def check_rollback_subsections(spec_content: str) -> List[str]:
+def check_rollback_subsections(spec_content: str) -> list[str]:
     """
     Check if Rollback Procedure has all required subsections.
 
@@ -322,7 +322,7 @@ def check_rollback_subsections(spec_content: str) -> List[str]:
     return errors
 
 
-def validate_spec_file(work_item_id: str, work_item_type: str) -> Tuple[bool, List[str]]:
+def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, list[str]]:
     """
     Validate a work item specification file for completeness and correctness.
 
@@ -391,7 +391,7 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> Tuple[bool, Li
     return is_valid, errors
 
 
-def format_validation_report(work_item_id: str, work_item_type: str, errors: List[str]) -> str:
+def format_validation_report(work_item_id: str, work_item_type: str, errors: list[str]) -> str:
     """
     Format validation errors into a human-readable report.
 
