@@ -1253,7 +1253,8 @@ class QualityGates:
 
             # Simple pattern matching for common environment declarations
             import re
-            env_match = re.search(r'environment[:\s]+(\w+)', spec.lower())
+
+            env_match = re.search(r"environment[:\s]+(\w+)", spec.lower())
             if env_match:
                 environment = env_match.group(1)
 
