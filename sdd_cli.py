@@ -27,7 +27,7 @@ PLUGIN_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(PLUGIN_DIR))
 
 # Import logging configuration
-from scripts.logging_config import setup_logging
+from scripts.logging_config import setup_logging  # noqa: E402
 
 
 # Command routing table

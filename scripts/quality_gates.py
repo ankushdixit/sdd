@@ -35,7 +35,7 @@ except ImportError:
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts import spec_parser
+from scripts import spec_parser  # noqa: E402
 
 # Import spec validator for spec completeness quality gate
 try:
