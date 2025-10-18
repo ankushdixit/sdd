@@ -145,13 +145,57 @@ cd /path/to/your/project
 # Clone sdd into your project
 git clone https://github.com/ankushdixit/sdd.git
 
+# Install Python dependencies
+cd sdd
+pip install -r requirements.txt
+
 # Make the CLI executable (recommended)
-chmod +x sdd/sdd_cli.py
+chmod +x sdd_cli.py
+cd ..
 
 # The .claude/commands/ directory will be automatically discovered by Claude Code
 ```
 
 **That's it!** Claude Code will automatically discover the commands from the `.claude/commands/` directory and make them available as `/init`, `/start`, `/end`, etc.
+
+#### Install Options
+
+**Option 1: Install all dependencies (recommended)**
+```bash
+pip install -r requirements.txt
+```
+
+**Option 2: Install minimal dependencies (core + testing only)**
+```bash
+pip install PyYAML==6.0.1 pytest==8.2.2 pytest-cov==7.0.0
+```
+
+**Option 3: Install with optional quality tools**
+```bash
+# Install all dependencies including quality gates
+pip install -r requirements.txt
+
+# Verify installation
+pytest --version
+ruff --version
+bandit --version
+```
+
+#### Verify Installation
+
+After installation, verify everything works:
+
+```bash
+# Run test suite
+cd sdd
+pytest tests/ -v
+
+# Check quality tools
+ruff check scripts/
+
+# Test CLI
+python3 sdd_cli.py --help
+```
 
 **Note:** All slash commands now route through `sdd_cli.py`, a universal CLI entry point that handles module imports correctly across different installation methods.
 
