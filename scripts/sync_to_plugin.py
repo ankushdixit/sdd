@@ -6,6 +6,9 @@ This script automates the process of syncing files from the main SDD repo
 to the claude-plugins marketplace repo, handling transformations and preserving
 plugin-specific files.
 
+Note: This script is automatically executed by GitHub Actions on every push to main.
+      See .github/workflows/sync-plugin.yml for the automation workflow.
+
 Usage:
     python scripts/sync_to_plugin.py [--main-repo PATH] [--plugin-repo PATH] [--dry-run]
 
