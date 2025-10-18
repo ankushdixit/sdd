@@ -561,10 +561,17 @@ sdd/
 | Phase 5 | v0.5 | Quality Gates | ✅ Complete |
 | Phase 5.5 | v0.5.5 | Integration Testing | ✅ Complete |
 | Phase 5.6 | v0.5.6 | Deployment Support | ✅ Complete |
+| Phase 5.7 | v0.5.7 | Spec-First Architecture | ✅ Complete |
+
+### Release History
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes and version history.
+
+**Current Version:** v0.5.7 (Phase 5.7 Complete - Spec-first Architecture)
 
 ### Test Coverage
 
-**Total: 343/343 tests passing (100%)**
+**Total: 392/392 tests passing (100%)**
 
 - Phase 1: 6/6 tests ✅
 - Phase 2: 9/9 tests ✅
@@ -573,6 +580,7 @@ sdd/
 - Phase 5: 12/12 tests ✅
 - Phase 5.5: 178/178 tests ✅
 - Phase 5.6: 65/65 tests ✅
+- Phase 5.7: 49/49 tests ✅
 - Phase 0: Manual validation ✅
 
 ### Upcoming Phases
