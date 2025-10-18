@@ -247,16 +247,22 @@ class QualityGates:
                     )
 
                     if Path(bandit_report_path).exists():
-                        with open(bandit_report_path) as f:
-                            bandit_data = json.load(f)
-                        results["bandit"] = bandit_data
+                        try:
+                            with open(bandit_report_path) as f:
+                                content = f.read().strip()
+                                if content:  # Only parse if file has content
+                                    bandit_data = json.loads(content)
+                                    results["bandit"] = bandit_data
 
-                        # Count by severity
-                        for issue in bandit_data.get("results", []):
-                            severity = issue.get("issue_severity", "LOW")
-                            results["by_severity"][severity] = (
-                                results["by_severity"].get(severity, 0) + 1
-                            )
+                                    # Count by severity
+                                    for issue in bandit_data.get("results", []):
+                                        severity = issue.get("issue_severity", "LOW")
+                                        results["by_severity"][severity] = (
+                                            results["by_severity"].get(severity, 0) + 1
+                                        )
+                        except (json.JSONDecodeError, ValueError):
+                            # Invalid or empty JSON - skip
+                            pass
                 finally:
                     # Clean up temporary file
                     try:
