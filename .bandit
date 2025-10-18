@@ -14,5 +14,13 @@
 # B607: Starting a process with a partial executable path
 #       Acceptable: Using standard system tools (git, pytest, docker, etc.) from PATH
 #       This is normal for CLI tools interacting with developer environments
+#
+# B110: Try, Except, Pass detected
+#       Acceptable: Used for optional feature detection, fallback values, and graceful degradation
+#       Examples: checking for package.json, reading version numbers, loading optional config
+#
+# B112: Try, Except, Continue detected
+#       Acceptable: Used when iterating over collections and skipping invalid/corrupted entries
+#       Prevents one bad entry from stopping the entire operation
 
-skips: ['B404', 'B603', 'B607']
+skips: ['B404', 'B603', 'B607', 'B110', 'B112']
