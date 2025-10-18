@@ -234,6 +234,15 @@ Users need immediate feedback.
 ### Approach
 Use WebSockets for bidirectional communication.
 
+### LLM/Processing Configuration
+
+**Type:** Deterministic (No LLM)
+
+**Processing Type:**
+- WebSocket message routing based on event type
+- JSON serialization/deserialization
+- Event queue management
+
 ### API Changes
 
 ```typescript
@@ -263,6 +272,10 @@ Requires Socket.IO library.
     assert result["acceptance_criteria"][2]["checked"]
     assert result["implementation_details"] is not None
     assert "WebSockets" in result["implementation_details"]["approach"]
+    assert result["implementation_details"]["llm_processing_config"] is not None
+    assert "Deterministic" in result["implementation_details"]["llm_processing_config"]
+    assert "No LLM" in result["implementation_details"]["llm_processing_config"]
+    assert "WebSocket message routing" in result["implementation_details"]["llm_processing_config"]
     assert len(result["implementation_details"]["code_blocks"]) == 1
     assert result["implementation_details"]["code_blocks"][0]["language"] == "typescript"
     assert "WebSocket" in result["testing_strategy"]
@@ -808,10 +821,173 @@ def test_parse_spec_file_errors():
     return True
 
 
-def test_missing_sections_return_none():
-    """Test 15: Missing sections return None gracefully"""
+def test_llm_processing_config_variations():
+    """Test 15: LLM/Processing Configuration subsection variations"""
     print("\n" + "=" * 60)
-    print("Test 15: Missing Sections Return None")
+    print("Test 15: LLM/Processing Configuration Variations")
+    print("=" * 60)
+
+    # Test 1: LLM-based configuration
+    llm_content = """# Feature: LLM-based Feature
+
+## Overview
+Test feature with LLM processing.
+
+## Acceptance Criteria
+- [ ] Test criterion
+
+## Implementation Details
+
+### Approach
+Use LLM for processing.
+
+### LLM/Processing Configuration
+
+**Type:** LLM-based (DSPy)
+
+**DSPy Signature:**
+```python
+class TestSignature(dspy.Signature):
+    \"\"\"Test signature.\"\"\"
+
+    input_field = dspy.InputField(desc="Input")
+    output_field = dspy.OutputField(desc="Output")
+```
+
+**LLM Provider:** Google AI Studio (Gemini 2.5 Flash)
+
+**LLM Usage:**
+- Processes input data
+- Generates structured output
+"""
+
+    result = spec_parser.parse_feature_spec(llm_content)
+    assert result["implementation_details"]["llm_processing_config"] is not None
+    assert "LLM-based" in result["implementation_details"]["llm_processing_config"]
+    assert "DSPy" in result["implementation_details"]["llm_processing_config"]
+    assert "Google AI Studio" in result["implementation_details"]["llm_processing_config"]
+    print("  ✓ LLM-based configuration parsed correctly")
+
+    # Test 2: Deterministic configuration
+    deterministic_content = """# Feature: Deterministic Feature
+
+## Overview
+Test feature with deterministic processing.
+
+## Acceptance Criteria
+- [ ] Test criterion
+
+## Implementation Details
+
+### Approach
+Use algorithms for processing.
+
+### LLM/Processing Configuration
+
+**Type:** Deterministic (No LLM)
+
+**Processing Type:**
+- Parse data using regex
+- Apply business rules
+- Transform output
+"""
+
+    result = spec_parser.parse_feature_spec(deterministic_content)
+    assert result["implementation_details"]["llm_processing_config"] is not None
+    assert "Deterministic" in result["implementation_details"]["llm_processing_config"]
+    assert "No LLM" in result["implementation_details"]["llm_processing_config"]
+    assert "regex" in result["implementation_details"]["llm_processing_config"]
+    print("  ✓ Deterministic configuration parsed correctly")
+
+    # Test 3: External API configuration
+    api_content = """# Feature: API Integration Feature
+
+## Overview
+Test feature with external API.
+
+## Acceptance Criteria
+- [ ] Test criterion
+
+## Implementation Details
+
+### Approach
+Integrate with external API.
+
+### LLM/Processing Configuration
+
+**Type:** External API Integration (No LLM)
+
+**API Provider:** ExternalService API
+
+**Processing Type:**
+- Make API calls to external service
+- Transform API responses
+- Handle rate limiting
+
+**Rate Limits:** 1000 requests/hour
+"""
+
+    result = spec_parser.parse_feature_spec(api_content)
+    assert result["implementation_details"]["llm_processing_config"] is not None
+    assert "External API Integration" in result["implementation_details"]["llm_processing_config"]
+    assert "ExternalService API" in result["implementation_details"]["llm_processing_config"]
+    assert "Rate Limits" in result["implementation_details"]["llm_processing_config"]
+    print("  ✓ External API configuration parsed correctly")
+
+    # Test 4: Not Applicable
+    na_content = """# Feature: Standard Feature
+
+## Overview
+Test feature without special processing.
+
+## Acceptance Criteria
+- [ ] Test criterion
+
+## Implementation Details
+
+### Approach
+Standard CRUD operations.
+
+### LLM/Processing Configuration
+
+Not Applicable - Standard application logic without LLM or special processing requirements.
+"""
+
+    result = spec_parser.parse_feature_spec(na_content)
+    assert result["implementation_details"]["llm_processing_config"] is not None
+    assert "Not Applicable" in result["implementation_details"]["llm_processing_config"]
+    print("  ✓ Not Applicable configuration parsed correctly")
+
+    # Test 5: Missing subsection (backward compatibility)
+    missing_content = """# Feature: Legacy Feature
+
+## Overview
+Test feature without LLM/Processing Configuration subsection.
+
+## Acceptance Criteria
+- [ ] Test criterion
+
+## Implementation Details
+
+### Approach
+Legacy approach without LLM config subsection.
+
+### Components Affected
+- Some component
+"""
+
+    result = spec_parser.parse_feature_spec(missing_content)
+    assert result["implementation_details"]["llm_processing_config"] is None
+    print("  ✓ Missing subsection returns None (backward compatible)")
+
+    print("✓ All LLM/Processing Configuration variations tested successfully")
+    return True
+
+
+def test_missing_sections_return_none():
+    """Test 16: Missing sections return None gracefully"""
+    print("\n" + "=" * 60)
+    print("Test 16: Missing Sections Return None")
     print("=" * 60)
 
     # Feature spec with minimal content
@@ -864,6 +1040,7 @@ def run_all_tests():
         test_parse_deployment_spec,
         test_parse_spec_file_feature,
         test_parse_spec_file_errors,
+        test_llm_processing_config_variations,
         test_missing_sections_return_none,
     ]
 

@@ -201,6 +201,93 @@ This feature enables real-time collaboration features like live updates,
 user presence, and instant alerts without polling.
 ```
 
+#### LLM/Processing Configuration Subsection
+
+**When to use:** For features involving LLM processing, complex algorithms, or external API integrations.
+
+**Location:** Under "Implementation Details" section in feature specs.
+
+**Purpose:** Document how the feature processes data, especially for:
+- LLM-based features (e.g., DSPy agents)
+- Features with non-trivial data processing
+- External API integrations
+- Distinguish deterministic vs. non-deterministic processing
+
+**Example (LLM-based Feature):**
+```markdown
+### LLM/Processing Configuration
+
+**Type:** LLM-based (DSPy)
+
+**DSPy Signature:**
+```python
+class NotificationClassifier(dspy.Signature):
+    """Classify notification urgency based on message content and context."""
+
+    message = dspy.InputField(desc="Notification message text")
+    context = dspy.InputField(desc="Additional context (user role, time, etc.)")
+    urgency = dspy.OutputField(desc="Urgency level: low, medium, high, critical")
+    suggested_action = dspy.OutputField(desc="Recommended user action")
+```
+
+**LLM Provider:** Google AI Studio (Gemini 2.5 Flash)
+
+**LLM Usage:**
+- Analyzes notification message content and context
+- Classifies urgency to determine delivery priority and UI treatment
+- Generates suggested actions for the user
+- Fallback to keyword-based classification if LLM unavailable or rate-limited
+- Caches classifications for identical messages (24h TTL)
+```
+
+**Example (Deterministic Feature):**
+```markdown
+### LLM/Processing Configuration
+
+**Type:** Deterministic (No LLM)
+
+**Processing Type:**
+- Parse CSV file line-by-line using streaming parser
+- Validate each row against JSON schema
+- Transform dates from MM/DD/YYYY to ISO 8601 format
+- Calculate running totals using reduce operations
+- Sort results by timestamp (descending) using merge sort
+- Batch insert into database (chunks of 1000 rows)
+```
+
+**Example (External API Integration):**
+```markdown
+### LLM/Processing Configuration
+
+**Type:** External API Integration (No LLM)
+
+**API Provider:** Stripe Payment API v2023-10-16
+
+**Processing Type:**
+- Create PaymentIntent via Stripe API
+- Transform Stripe response to internal Order format
+- Handle webhooks for async payment status updates
+- Retry failed requests with exponential backoff (3 attempts max)
+- Cache customer payment methods (Redis, 1h TTL)
+
+**Rate Limits:** 100 requests/second per API key
+**Error Handling:** Stripe webhook signature verification, idempotency keys for retries
+```
+
+**Example (Standard Feature):**
+```markdown
+### LLM/Processing Configuration
+
+Not Applicable - Standard CRUD operations without LLM or special processing requirements.
+```
+
+**Tips:**
+- Be specific about algorithms and data transformations
+- For LLM features, include the complete DSPy signature
+- Document fallback strategies for LLM failures
+- Include rate limits and caching strategies
+- Explain why LLM vs. deterministic approach was chosen
+
 ### Bug Specs
 
 **Focus:** What's broken, why it's broken, how to fix it
@@ -365,6 +452,16 @@ Use WebSockets for notifications. Store in database.
 - `client/NotificationManager.tsx` - Client-side WebSocket connection and UI
 - `database/migrations/005_notifications.sql` - Database schema
 - `server/middleware/auth.ts` - JWT validation for WS handshake
+
+### LLM/Processing Configuration
+
+**Type:** Deterministic (No LLM)
+
+**Processing Type:**
+- WebSocket event routing based on message type
+- JSON message serialization/deserialization
+- Connection state management with heartbeat protocol
+- Message queue with retry logic for failed deliveries
 
 ### API Changes
 
