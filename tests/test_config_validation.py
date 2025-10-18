@@ -8,7 +8,7 @@ import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.config_validator import (
+from scripts.config_validator import ( # noqa: E402
     load_and_validate_config,
     validate_config,
 )

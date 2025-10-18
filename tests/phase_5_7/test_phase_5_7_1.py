@@ -17,7 +17,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from scripts.briefing_generator import (
+from scripts.briefing_generator import ( # noqa: E402
     generate_briefing,
     load_work_item_spec,
     load_current_tree,

@@ -15,7 +15,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from scripts.spec_validator import (
+from scripts.spec_validator import ( # noqa: E402
     validate_spec_file,
     check_required_sections,
     check_acceptance_criteria,
@@ -23,7 +23,7 @@ from scripts.spec_validator import (
     check_deployment_subsections,
     get_validation_rules,
 )
-from scripts.quality_gates import QualityGates
+from scripts.quality_gates import QualityGates # noqa: E402
 
 
 class TestSpecValidator:

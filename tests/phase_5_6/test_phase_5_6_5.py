@@ -8,8 +8,8 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.briefing_generator import generate_deployment_briefing
-from scripts.session_complete import generate_deployment_summary
+from scripts.briefing_generator import generate_deployment_briefing # noqa: E402
+from scripts.session_complete import generate_deployment_summary # noqa: E402
 
 
 def test_enhanced_session_workflow():
