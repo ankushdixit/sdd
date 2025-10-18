@@ -355,7 +355,7 @@ def check_command_exists(command: str) -> bool:
     try:
         subprocess.run([command, "--version"], capture_output=True, timeout=5)
         return True
-    except:
+    except Exception:
         return False
 
 

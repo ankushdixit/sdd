@@ -847,7 +847,7 @@ class QualityGates:
                 ["docker", "--version"], capture_output=True, timeout=5
             )
             results["docker_available"] = result.returncode == 0
-        except:
+        except Exception:
             results["docker_available"] = False
 
         # Check Docker Compose available
@@ -856,7 +856,7 @@ class QualityGates:
                 ["docker-compose", "--version"], capture_output=True, timeout=5
             )
             results["docker_compose_available"] = result.returncode == 0
-        except:
+        except Exception:
             results["docker_compose_available"] = False
 
         # Check compose file exists
@@ -933,7 +933,7 @@ class QualityGates:
             try:
                 parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
                 scenarios = parsed_spec.get("test_scenarios", [])
-            except:
+            except Exception:
                 scenarios = []
 
             if scenarios:
@@ -961,7 +961,7 @@ class QualityGates:
                 api_contracts = parsed_spec.get("api_contracts", "")
                 # API contracts should be documented in the spec
                 has_contracts = api_contracts and len(api_contracts.strip()) > 20
-            except:
+            except Exception:
                 has_contracts = False
 
             results["checks"].append(
@@ -981,7 +981,7 @@ class QualityGates:
                 parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
                 benchmarks = parsed_spec.get("performance_benchmarks", "")
                 has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
-            except:
+            except Exception:
                 has_benchmarks = False
 
             if has_benchmarks:
@@ -1004,7 +1004,7 @@ class QualityGates:
             scope = parsed_spec.get("scope", "")
             # Check if scope has meaningful content
             documented = scope and len(scope.strip()) > 20
-        except:
+        except Exception:
             documented = False
 
         results["checks"].append(

@@ -185,7 +185,7 @@ def main():
     """Main entry point for CLI."""
     if len(sys.argv) < 2:
         print("Usage: sdd_cli.py <command> [args...]", file=sys.stderr)
-        print(f"\nAvailable commands:", file=sys.stderr)
+        print("\nAvailable commands:", file=sys.stderr)
         print("  Work Items:", file=sys.stderr)
         print("    work-list, work-next, work-show, work-update, work-new, work-graph", file=sys.stderr)
         print("  Sessions:", file=sys.stderr)

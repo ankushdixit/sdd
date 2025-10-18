@@ -168,7 +168,7 @@ class PerformanceBenchmark:
                 latency = (time.time() - req_start) * 1000  # Convert to ms
                 latencies.append(latency)
                 request_count += 1
-            except:
+            except Exception:
                 pass
 
         total_duration = time.time() - start_time

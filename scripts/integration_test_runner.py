@@ -197,7 +197,7 @@ class IntegrationTestRunner:
                         return True
 
                 time.sleep(2)
-            except:
+            except Exception:
                 time.sleep(2)
 
         return False

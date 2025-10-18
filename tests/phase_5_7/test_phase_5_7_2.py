@@ -836,8 +836,8 @@ Just an overview.
     assert result['estimated_effort'] is None  # Not present
 
     print("✓ Missing sections handled gracefully")
-    print(f"  Present sections: overview, acceptance_criteria")
-    print(f"  Missing sections return None or empty")
+    print("  Present sections: overview, acceptance_criteria")
+    print("  Missing sections return None or empty")
     return True
 
 

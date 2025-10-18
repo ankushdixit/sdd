@@ -314,11 +314,11 @@ class SessionValidator:
             # Show missing paths for work item criteria
             if not result["passed"] and check_name == "work_item_criteria":
                 if "missing_impl" in result and result["missing_impl"]:
-                    print(f"   Missing implementation paths:")
+                    print("   Missing implementation paths:")
                     for path in result["missing_impl"]:
                         print(f"      - {path}")
                 if "missing_tests" in result and result["missing_tests"]:
-                    print(f"   Missing test paths:")
+                    print("   Missing test paths:")
                     for path in result["missing_tests"]:
                         print(f"      - {path}")
 

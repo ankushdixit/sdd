@@ -6,7 +6,6 @@ Updated for Phase 5.7 spec-first architecture.
 """
 
 import sys
-import json
 import tempfile
 import shutil
 from pathlib import Path
@@ -242,7 +241,7 @@ def run_all_tests():
         print()
 
     print("=" * 60)
-    print(f"Test Summary")
+    print("Test Summary")
     print("=" * 60)
     print(f"Tests Passed: {passed}")
     print(f"Tests Failed: {failed}")

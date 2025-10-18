@@ -15,7 +15,6 @@ Tests all Phase 2 functionality:
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys

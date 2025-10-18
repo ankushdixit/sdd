@@ -11,7 +11,7 @@ Part of Phase 5.7.2: Spec File First Architecture
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 
 
 def strip_html_comments(content: str) -> str:

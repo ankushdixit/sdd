@@ -6,7 +6,6 @@ Tests the spec_validator module and its integration with briefing_generator and 
 """
 
 import sys
-import json
 from pathlib import Path
 import tempfile
 import shutil
@@ -21,11 +20,8 @@ from scripts.spec_validator import (
     check_required_sections,
     check_acceptance_criteria,
     check_test_scenarios,
-    check_smoke_tests,
     check_deployment_subsections,
-    check_rollback_subsections,
-    get_validation_rules,
-    format_validation_report
+    get_validation_rules
 )
 from scripts.quality_gates import QualityGates
 

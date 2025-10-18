@@ -253,7 +253,7 @@ def run_all_tests():
         print()
 
     print("=" * 60)
-    print(f"TEST SUMMARY")
+    print("TEST SUMMARY")
     print("=" * 60)
     print(f"Tests passed: {passed}")
     print(f"Tests failed: {failed}")
