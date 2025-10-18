@@ -472,7 +472,8 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
     summary.append("=" * 60)
 
     # Deployment execution results
-    # TODO: Parse from deployment_executor results
+    # NOTE: Framework stub - Parse actual results from deployment_executor
+    # When implemented, extract from DeploymentExecutor.get_deployment_log()
     summary.append("\n**Deployment Execution:**")
     summary.append("  Status: [Success/Failed]")
     summary.append("  Steps completed: [X/Y]")
@@ -492,7 +493,8 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
             summary.append(f"  {status}")
 
     # Rollback status (if applicable)
-    # TODO: Check if rollback was triggered
+    # NOTE: Framework stub - Check deployment results for rollback trigger
+    # When implemented, check DeploymentExecutor results for rollback_triggered flag
     rollback_triggered = False
     if rollback_triggered:
         summary.append("\n⚠️  ROLLBACK TRIGGERED")

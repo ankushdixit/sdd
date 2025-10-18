@@ -209,47 +209,62 @@ class DeploymentExecutor:
 
     def _check_integration_tests(self) -> bool:
         """Check if integration tests passed."""
-        # TODO: Integrate with quality_gates.py
+        # NOTE: Framework stub - Integrate with quality_gates.py for actual test execution
+        # In production, this should call QualityGates.run_tests() and check results
         return True
 
     def _check_security_scans(self) -> bool:
         """Check if security scans passed."""
-        # TODO: Integrate with quality_gates.py
+        # NOTE: Framework stub - Integrate with quality_gates.py for actual security scanning
+        # In production, this should call QualityGates.run_security_gate() and check results
         return True
 
     def _check_environment_readiness(self) -> bool:
         """Check if environment is ready."""
-        # TODO: Integrate with environment_validator.py
+        # NOTE: Framework stub - Integrate with environment_validator.py for actual validation
+        # In production, this should instantiate EnvironmentValidator and call validate_all()
         return True
 
     def _parse_deployment_steps(self) -> List[str]:
         """Parse deployment steps from work item specification."""
-        # TODO: Parse from work_item["specification"]
+        # NOTE: Framework stub - Parse deployment steps from spec file
+        # Use spec_parser.py to extract "## Deployment Steps" section
+        # and convert to structured list of commands/actions
         return []
 
     def _execute_deployment_step(self, step: str) -> bool:
         """Execute a single deployment step."""
-        # TODO: Implement based on step type
+        # NOTE: Framework stub - Implement project-specific deployment step execution
+        # Step types might include: shell commands, API calls, file operations, etc.
+        # Should handle errors, logging, and timeouts appropriately
         return True
 
     def _parse_smoke_tests(self) -> List[dict]:
         """Parse smoke tests from work item specification."""
-        # TODO: Parse from work_item["specification"]
+        # NOTE: Framework stub - Parse smoke test definitions from spec file
+        # Use spec_parser.py to extract "## Smoke Tests" section
+        # and convert to list of {name, command, expected_result} dicts
         return []
 
     def _execute_smoke_test(self, test: dict, timeout: int, retry_count: int) -> bool:
         """Execute a single smoke test with retries."""
-        # TODO: Implement smoke test execution
+        # NOTE: Framework stub - Implement project-specific smoke test execution
+        # Should execute test command, check result, handle retries and timeouts
+        # Common tests: HTTP endpoint checks, database queries, cache reads
         return True
 
     def _parse_rollback_steps(self) -> List[str]:
         """Parse rollback steps from work item specification."""
-        # TODO: Parse from work_item["specification"]
+        # NOTE: Framework stub - Parse rollback procedure from spec file
+        # Use spec_parser.py to extract "## Rollback Procedure" section
+        # and convert to ordered list of rollback commands/actions
         return []
 
     def _execute_rollback_step(self, step: str) -> bool:
         """Execute a single rollback step."""
-        # TODO: Implement based on step type
+        # NOTE: Framework stub - Implement project-specific rollback step execution
+        # Must be highly reliable since this runs during failure scenarios
+        # Should handle partial rollbacks and verification of rollback success
         return True
 
     def _log(self, event: str, data: dict):
@@ -275,7 +290,8 @@ def main():
         sys.exit(1)
 
     # Load work item
-    # TODO: Load from work_items.json
+    # NOTE: Framework stub - Should load work item by ID from work_items.json
+    # Use work_item_manager.WorkItemManager to load actual work item data
 
     executor = DeploymentExecutor(work_item={})
 
