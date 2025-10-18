@@ -90,8 +90,8 @@ jobs:
 
     - name: Run bandit security scan
       run: |
-        bandit -r scripts/ sdd_cli.py -f json -o bandit-report.json
-        bandit -r scripts/ sdd_cli.py
+        bandit -r scripts/ sdd_cli.py -c .bandit -f json -o bandit-report.json
+        bandit -r scripts/ sdd_cli.py -c .bandit
 
     - name: Run safety check
       run: |

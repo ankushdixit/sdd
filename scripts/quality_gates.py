@@ -224,23 +224,46 @@ class QualityGates:
         if language == "python":
             # Run bandit
             try:
-                subprocess.run(
-                    ["bandit", "-r", ".", "-f", "json", "-o", "/tmp/bandit.json"],
-                    capture_output=True,
-                    timeout=60,
-                )
+                import tempfile
 
-                if Path("/tmp/bandit.json").exists():
-                    with open("/tmp/bandit.json") as f:
-                        bandit_data = json.load(f)
-                    results["bandit"] = bandit_data
+                # Use secure temporary file instead of hardcoded /tmp path
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".json", delete=False
+                ) as tmp_file:
+                    bandit_report_path = tmp_file.name
 
-                    # Count by severity
-                    for issue in bandit_data.get("results", []):
-                        severity = issue.get("issue_severity", "LOW")
-                        results["by_severity"][severity] = (
-                            results["by_severity"].get(severity, 0) + 1
-                        )
+                try:
+                    subprocess.run(
+                        [
+                            "bandit",
+                            "-r",
+                            ".",
+                            "-f",
+                            "json",
+                            "-o",
+                            bandit_report_path,
+                        ],
+                        capture_output=True,
+                        timeout=60,
+                    )
+
+                    if Path(bandit_report_path).exists():
+                        with open(bandit_report_path) as f:
+                            bandit_data = json.load(f)
+                        results["bandit"] = bandit_data
+
+                        # Count by severity
+                        for issue in bandit_data.get("results", []):
+                            severity = issue.get("issue_severity", "LOW")
+                            results["by_severity"][severity] = (
+                                results["by_severity"].get(severity, 0) + 1
+                            )
+                finally:
+                    # Clean up temporary file
+                    try:
+                        Path(bandit_report_path).unlink()
+                    except Exception:
+                        pass
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass  # bandit not available
 
