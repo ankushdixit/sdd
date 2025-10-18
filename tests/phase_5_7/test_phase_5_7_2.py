@@ -60,9 +60,9 @@ This is the rationale section.
 ## Implementation Details
 This is implementation."""
 
-    overview = spec_parser.parse_section(content, 'Overview')
-    rationale = spec_parser.parse_section(content, 'Rationale')
-    missing = spec_parser.parse_section(content, 'NonExistent')
+    overview = spec_parser.parse_section(content, "Overview")
+    rationale = spec_parser.parse_section(content, "Rationale")
+    missing = spec_parser.parse_section(content, "NonExistent")
 
     assert overview == "This is the overview section.\nIt has multiple lines."
     assert rationale == "This is the rationale section."
@@ -91,9 +91,9 @@ Use WebSockets for real-time updates.
 ### API Changes
 New endpoints here."""
 
-    approach = spec_parser.extract_subsection(section_content, 'Approach')
-    components = spec_parser.extract_subsection(section_content, 'Components Affected')
-    missing = spec_parser.extract_subsection(section_content, 'NonExistent')
+    approach = spec_parser.extract_subsection(section_content, "Approach")
+    components = spec_parser.extract_subsection(section_content, "Components Affected")
+    missing = spec_parser.extract_subsection(section_content, "NonExistent")
 
     assert "WebSockets" in approach
     assert "Frontend" in components
@@ -255,19 +255,21 @@ Requires Socket.IO library.
 
     result = spec_parser.parse_feature_spec(content)
 
-    assert result['overview'] == "Add real-time notifications to the dashboard."
-    assert "real-time notifications" in result['user_story']
-    assert "immediate feedback" in result['rationale']
-    assert len(result['acceptance_criteria']) == 3
-    assert not result['acceptance_criteria'][0]['checked']
-    assert result['acceptance_criteria'][2]['checked']
-    assert result['implementation_details'] is not None
-    assert "WebSockets" in result['implementation_details']['approach']
-    assert len(result['implementation_details']['code_blocks']) == 1
-    assert result['implementation_details']['code_blocks'][0]['language'] == 'typescript'
-    assert "WebSocket" in result['testing_strategy']
-    assert "Socket.IO" in result['dependencies']
-    assert "2 sessions" in result['estimated_effort']
+    assert result["overview"] == "Add real-time notifications to the dashboard."
+    assert "real-time notifications" in result["user_story"]
+    assert "immediate feedback" in result["rationale"]
+    assert len(result["acceptance_criteria"]) == 3
+    assert not result["acceptance_criteria"][0]["checked"]
+    assert result["acceptance_criteria"][2]["checked"]
+    assert result["implementation_details"] is not None
+    assert "WebSockets" in result["implementation_details"]["approach"]
+    assert len(result["implementation_details"]["code_blocks"]) == 1
+    assert (
+        result["implementation_details"]["code_blocks"][0]["language"] == "typescript"
+    )
+    assert "WebSocket" in result["testing_strategy"]
+    assert "Socket.IO" in result["dependencies"]
+    assert "2 sessions" in result["estimated_effort"]
 
     print("✓ Feature spec parsed correctly")
     print(f"  Overview: {len(result['overview'])} chars")
@@ -330,21 +332,23 @@ None
 
     result = spec_parser.parse_bug_spec(content)
 
-    assert "logged out unexpectedly" in result['description']
-    assert "Wait 5 minutes" in result['steps_to_reproduce']
-    assert "remain active" in result['expected_behavior']
-    assert "logged out after 5 minutes" in result['actual_behavior']
-    assert "High" in result['impact']
-    assert result['root_cause_analysis'] is not None
-    assert "session management" in result['root_cause_analysis']['investigation']
-    assert "5 minutes instead of 30" in result['root_cause_analysis']['root_cause']
-    assert "Configuration error" in result['root_cause_analysis']['why_it_happened']
-    assert "30 minutes" in result['fix_approach']
-    assert "validation tests" in result['prevention']
+    assert "logged out unexpectedly" in result["description"]
+    assert "Wait 5 minutes" in result["steps_to_reproduce"]
+    assert "remain active" in result["expected_behavior"]
+    assert "logged out after 5 minutes" in result["actual_behavior"]
+    assert "High" in result["impact"]
+    assert result["root_cause_analysis"] is not None
+    assert "session management" in result["root_cause_analysis"]["investigation"]
+    assert "5 minutes instead of 30" in result["root_cause_analysis"]["root_cause"]
+    assert "Configuration error" in result["root_cause_analysis"]["why_it_happened"]
+    assert "30 minutes" in result["fix_approach"]
+    assert "validation tests" in result["prevention"]
 
     print("✓ Bug spec parsed correctly")
     print(f"  Description: {len(result['description'])} chars")
-    print(f"  Root cause analysis sections: {len([k for k, v in result['root_cause_analysis'].items() if v])}")
+    print(
+        f"  Root cause analysis sections: {len([k for k, v in result['root_cause_analysis'].items() if v])}"
+    )
     return True
 
 
@@ -417,20 +421,20 @@ Requires DI library installation.
 
     result = spec_parser.parse_refactor_spec(content)
 
-    assert "dependency injection" in result['overview']
-    assert "new` keyword" in result['current_state']
-    assert "Hard to test" in result['problems']
-    assert result['proposed_refactor'] is not None
-    assert "DI container" in result['proposed_refactor']['new_approach']
-    assert "Easier testing" in result['proposed_refactor']['benefits']
-    assert "complexity" in result['proposed_refactor']['trade_offs']
-    assert "Install DI library" in result['implementation_plan']
-    assert result['scope'] is not None
-    assert "User service" in result['scope']['in_scope']
-    assert "UI components" in result['scope']['out_of_scope']
-    assert "Medium" in result['risk_assessment']
-    assert len(result['success_criteria']) == 3
-    assert "Mock services" in result['testing_strategy']
+    assert "dependency injection" in result["overview"]
+    assert "new` keyword" in result["current_state"]
+    assert "Hard to test" in result["problems"]
+    assert result["proposed_refactor"] is not None
+    assert "DI container" in result["proposed_refactor"]["new_approach"]
+    assert "Easier testing" in result["proposed_refactor"]["benefits"]
+    assert "complexity" in result["proposed_refactor"]["trade_offs"]
+    assert "Install DI library" in result["implementation_plan"]
+    assert result["scope"] is not None
+    assert "User service" in result["scope"]["in_scope"]
+    assert "UI components" in result["scope"]["out_of_scope"]
+    assert "Medium" in result["risk_assessment"]
+    assert len(result["success_criteria"]) == 3
+    assert "Mock services" in result["testing_strategy"]
 
     print("✓ Refactor spec parsed correctly")
     print(f"  Success criteria: {len(result['success_criteria'])} items")
@@ -513,25 +517,27 @@ None
 
     result = spec_parser.parse_security_spec(content)
 
-    assert "SQL injection" in result['security_issue']
-    assert "8.5" in result['severity']
-    assert "User API" in result['affected_components']
-    assert result['threat_model'] is not None
-    assert "User database" in result['threat_model']['assets_at_risk']
-    assert "External attackers" in result['threat_model']['threat_actors']
-    assert "search parameter" in result['threat_model']['attack_scenarios']
-    assert "Unsanitized input" in result['attack_vector']
-    assert "parameterized queries" in result['mitigation_strategy']
-    assert result['security_testing'] is not None
-    assert "SQL injection scanners" in result['security_testing']['automated']
-    assert len(result['security_testing']['checklist']) == 3
-    assert len(result['compliance']) >= 2
-    assert len(result['acceptance_criteria']) == 2
-    assert len(result['post_deployment']) == 2
+    assert "SQL injection" in result["security_issue"]
+    assert "8.5" in result["severity"]
+    assert "User API" in result["affected_components"]
+    assert result["threat_model"] is not None
+    assert "User database" in result["threat_model"]["assets_at_risk"]
+    assert "External attackers" in result["threat_model"]["threat_actors"]
+    assert "search parameter" in result["threat_model"]["attack_scenarios"]
+    assert "Unsanitized input" in result["attack_vector"]
+    assert "parameterized queries" in result["mitigation_strategy"]
+    assert result["security_testing"] is not None
+    assert "SQL injection scanners" in result["security_testing"]["automated"]
+    assert len(result["security_testing"]["checklist"]) == 3
+    assert len(result["compliance"]) >= 2
+    assert len(result["acceptance_criteria"]) == 2
+    assert len(result["post_deployment"]) == 2
 
     print("✓ Security spec parsed correctly")
     print(f"  Compliance items: {len(result['compliance'])}")
-    print(f"  Security testing checklist: {len(result['security_testing']['checklist'])}")
+    print(
+        f"  Security testing checklist: {len(result['security_testing']['checklist'])}"
+    )
     return True
 
 
@@ -583,21 +589,21 @@ Requires order service deployment.
 
     result = spec_parser.parse_integration_test_spec(content)
 
-    assert "order processing workflow" in result['scope']
-    assert len(result['test_scenarios']) == 3
-    assert result['test_scenarios'][0]['name'] == "Scenario 1: Successful Order"
-    assert "confirmation" in result['test_scenarios'][0]['content']
-    assert result['test_scenarios'][1]['name'] == "Scenario 2: Payment Failure"
-    assert result['test_scenarios'][2]['name'] == "Scenario 3: Inventory Check"
-    assert "200ms" in result['performance_benchmarks']
-    assert "100 orders/second" in result['performance_benchmarks']
-    assert "Order API" in result['api_contracts']
-    assert "PostgreSQL" in result['environment_requirements']
-    assert len(result['acceptance_criteria']) == 3
+    assert "order processing workflow" in result["scope"]
+    assert len(result["test_scenarios"]) == 3
+    assert result["test_scenarios"][0]["name"] == "Scenario 1: Successful Order"
+    assert "confirmation" in result["test_scenarios"][0]["content"]
+    assert result["test_scenarios"][1]["name"] == "Scenario 2: Payment Failure"
+    assert result["test_scenarios"][2]["name"] == "Scenario 3: Inventory Check"
+    assert "200ms" in result["performance_benchmarks"]
+    assert "100 orders/second" in result["performance_benchmarks"]
+    assert "Order API" in result["api_contracts"]
+    assert "PostgreSQL" in result["environment_requirements"]
+    assert len(result["acceptance_criteria"]) == 3
 
     print("✓ Integration test spec parsed correctly")
     print(f"  Test scenarios: {len(result['test_scenarios'])}")
-    for scenario in result['test_scenarios']:
+    for scenario in result["test_scenarios"]:
         print(f"    - {scenario['name']}")
     return True
 
@@ -674,25 +680,25 @@ None
 
     result = spec_parser.parse_deployment_spec(content)
 
-    assert "Order API" in result['deployment_scope']
-    assert result['deployment_procedure'] is not None
-    assert "Backup database" in result['deployment_procedure']['pre_deployment']
-    assert "Pull latest code" in result['deployment_procedure']['deployment_steps']
-    assert "Run smoke tests" in result['deployment_procedure']['post_deployment']
-    assert "postgresql://" in result['environment_configuration']
-    assert result['rollback_procedure'] is not None
-    assert "Critical bugs" in result['rollback_procedure']['triggers']
-    assert "Revert to previous" in result['rollback_procedure']['steps']
-    assert len(result['smoke_tests']) == 2
-    assert result['smoke_tests'][0]['name'] == "Test 1: Health Check"
-    assert "/health" in result['smoke_tests'][0]['content']
-    assert "grafana" in result['monitoring']
-    assert "24 hours" in result['monitoring_period']
-    assert len(result['acceptance_criteria']) == 3
+    assert "Order API" in result["deployment_scope"]
+    assert result["deployment_procedure"] is not None
+    assert "Backup database" in result["deployment_procedure"]["pre_deployment"]
+    assert "Pull latest code" in result["deployment_procedure"]["deployment_steps"]
+    assert "Run smoke tests" in result["deployment_procedure"]["post_deployment"]
+    assert "postgresql://" in result["environment_configuration"]
+    assert result["rollback_procedure"] is not None
+    assert "Critical bugs" in result["rollback_procedure"]["triggers"]
+    assert "Revert to previous" in result["rollback_procedure"]["steps"]
+    assert len(result["smoke_tests"]) == 2
+    assert result["smoke_tests"][0]["name"] == "Test 1: Health Check"
+    assert "/health" in result["smoke_tests"][0]["content"]
+    assert "grafana" in result["monitoring"]
+    assert "24 hours" in result["monitoring_period"]
+    assert len(result["acceptance_criteria"]) == 3
 
     print("✓ Deployment spec parsed correctly")
     print(f"  Smoke tests: {len(result['smoke_tests'])}")
-    for test in result['smoke_tests']:
+    for test in result["smoke_tests"]:
         print(f"    - {test['name']}")
     return True
 
@@ -733,12 +739,12 @@ None
             os.chdir(tmpdir)
             result = spec_parser.parse_spec_file("feature_test")
 
-            assert result['_meta']['work_item_id'] == "feature_test"
-            assert result['_meta']['work_type'] == "feature"
-            assert result['_meta']['name'] == "Test Feature"
-            assert result['overview'] == "This is a test feature."
-            assert len(result['acceptance_criteria']) == 2
-            assert result['dependencies'] == "None"
+            assert result["_meta"]["work_item_id"] == "feature_test"
+            assert result["_meta"]["work_type"] == "feature"
+            assert result["_meta"]["name"] == "Test Feature"
+            assert result["overview"] == "This is a test feature."
+            assert len(result["acceptance_criteria"]) == 2
+            assert result["dependencies"] == "None"
 
             print("✓ Spec file parsed end-to-end successfully")
             print(f"  Work item ID: {result['_meta']['work_item_id']}")
@@ -825,15 +831,15 @@ Just an overview.
     result = spec_parser.parse_feature_spec(content)
 
     # Check that missing sections return None or empty
-    assert result['overview'] == "Just an overview."
-    assert result['user_story'] is None  # Not present
-    assert result['rationale'] is None  # Not present
-    assert len(result['acceptance_criteria']) == 1
-    assert result['implementation_details'] is None  # Not present
-    assert result['testing_strategy'] is None  # Not present
-    assert result['documentation_updates'] == []  # Empty list for missing checklist
-    assert result['dependencies'] is None  # Not present
-    assert result['estimated_effort'] is None  # Not present
+    assert result["overview"] == "Just an overview."
+    assert result["user_story"] is None  # Not present
+    assert result["rationale"] is None  # Not present
+    assert len(result["acceptance_criteria"]) == 1
+    assert result["implementation_details"] is None  # Not present
+    assert result["testing_strategy"] is None  # Not present
+    assert result["documentation_updates"] == []  # Empty list for missing checklist
+    assert result["dependencies"] is None  # Not present
+    assert result["estimated_effort"] is None  # Not present
 
     print("✓ Missing sections handled gracefully")
     print("  Present sections: overview, acceptance_criteria")
@@ -879,6 +885,7 @@ def run_all_tests():
             failed += 1
             print(f"✗ {test.__name__} raised exception: {e}")
             import traceback
+
             traceback.print_exc()
 
     print("\n" + "=" * 80)
@@ -893,6 +900,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

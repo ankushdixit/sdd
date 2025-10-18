@@ -78,7 +78,9 @@ class Phase1Tester:
         print_info("Setting up test project...")
 
         # Create minimal project structure
-        (self.test_dir / "README.md").write_text("# Test Project\n\nA test project for Phase 1 testing.")
+        (self.test_dir / "README.md").write_text(
+            "# Test Project\n\nA test project for Phase 1 testing."
+        )
 
         # Create a simple Python file
         (self.test_dir / "main.py").write_text('print("Hello, World!")\n')
@@ -103,8 +105,7 @@ class Phase1Tester:
         try:
             # Run /init
             returncode, stdout, stderr = run_command(
-                "python3 scripts/init_project.py",
-                cwd=str(self.test_dir)
+                "python3 scripts/init_project.py", cwd=str(self.test_dir)
             )
 
             if returncode != 0:
@@ -174,7 +175,7 @@ class Phase1Tester:
             # Create a feature work item
             returncode, stdout, stderr = run_command(
                 'python3 scripts/work_item_manager.py --type feature --title "Test Feature" --priority high',
-                cwd=str(self.test_dir)
+                cwd=str(self.test_dir),
             )
 
             if returncode != 0:
@@ -218,8 +219,11 @@ class Phase1Tester:
             print_info(f"work_items_data: {work_items_data}")
             return False
         except Exception as e:
-            print_failure(f"Exception during work item creation: {type(e).__name__}: {e}")
+            print_failure(
+                f"Exception during work item creation: {type(e).__name__}: {e}"
+            )
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -230,8 +234,7 @@ class Phase1Tester:
         try:
             # Run briefing generator
             returncode, stdout, stderr = run_command(
-                "python3 scripts/briefing_generator.py",
-                cwd=str(self.test_dir)
+                "python3 scripts/briefing_generator.py", cwd=str(self.test_dir)
             )
 
             if returncode != 0:
@@ -256,8 +259,7 @@ class Phase1Tester:
 
             # Verify git branch created
             returncode, stdout, stderr = run_command(
-                "git branch",
-                cwd=str(self.test_dir)
+                "git branch", cwd=str(self.test_dir)
             )
 
             if "session-001" not in stdout:
@@ -290,6 +292,7 @@ class Phase1Tester:
         except Exception as e:
             print_failure(f"Exception during session start: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -300,13 +303,15 @@ class Phase1Tester:
         try:
             # Run session validation
             returncode, stdout, stderr = run_command(
-                "python3 scripts/session_validate.py",
-                cwd=str(self.test_dir)
+                "python3 scripts/session_validate.py", cwd=str(self.test_dir)
             )
 
             # Validation might fail due to quality gates, which is expected
             # We're testing that it runs and provides output
-            if "Running session validation" not in stdout and "Running session validation" not in stderr:
+            if (
+                "Running session validation" not in stdout
+                and "Running session validation" not in stderr
+            ):
                 print_failure("Session validation did not run properly")
                 return False
 
@@ -340,8 +345,7 @@ class Phase1Tester:
 
             # Run stack update
             returncode, stdout, stderr = run_command(
-                "python3 scripts/generate_stack.py",
-                cwd=str(self.test_dir)
+                "python3 scripts/generate_stack.py", cwd=str(self.test_dir)
             )
 
             if returncode != 0:
@@ -351,8 +355,7 @@ class Phase1Tester:
 
             # Run tree update
             returncode, stdout, stderr = run_command(
-                "python3 scripts/generate_tree.py",
-                cwd=str(self.test_dir)
+                "python3 scripts/generate_tree.py", cwd=str(self.test_dir)
             )
 
             if returncode != 0:
@@ -380,8 +383,7 @@ class Phase1Tester:
         try:
             # Verify we're on a session branch
             returncode, stdout, stderr = run_command(
-                "git branch --show-current",
-                cwd=str(self.test_dir)
+                "git branch --show-current", cwd=str(self.test_dir)
             )
 
             current_branch = stdout.strip()
@@ -392,8 +394,7 @@ class Phase1Tester:
 
             # Verify git status shows changes
             returncode, stdout, stderr = run_command(
-                "git status --porcelain",
-                cwd=str(self.test_dir)
+                "git status --porcelain", cwd=str(self.test_dir)
             )
 
             if not stdout.strip():
@@ -438,7 +439,11 @@ class Phase1Tester:
         print(f"{RED}Tests Failed: {self.tests_failed}{RESET}")
         print(f"Total Tests: {self.tests_passed + self.tests_failed}\n")
 
-        success_rate = (self.tests_passed / (self.tests_passed + self.tests_failed)) * 100 if (self.tests_passed + self.tests_failed) > 0 else 0
+        success_rate = (
+            (self.tests_passed / (self.tests_passed + self.tests_failed)) * 100
+            if (self.tests_passed + self.tests_failed) > 0
+            else 0
+        )
         print(f"Success Rate: {success_rate:.1f}%\n")
 
         if self.tests_failed == 0:

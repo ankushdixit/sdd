@@ -110,7 +110,7 @@ class Phase4Tester:
         print_section("Test 1: Learning Capture (All Fields)")
 
         returncode, stdout, stderr = run_command(
-            f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+            f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
             f'--content "Test learning with all fields" '
             f'--category "best_practices" '
             f'--tags "testing,automation" '
@@ -154,7 +154,9 @@ class Phase4Tester:
         # Category is implicit from the storage location, not stored in the learning object
 
         if set(learning["tags"]) != {"testing", "automation"}:
-            print_failure(f"Tags mismatch: expected {{testing, automation}}, got {set(learning['tags'])}")
+            print_failure(
+                f"Tags mismatch: expected {{testing, automation}}, got {set(learning['tags'])}"
+            )
             return False
 
         print_success("Learning captured with all fields correctly")
@@ -167,7 +169,7 @@ class Phase4Tester:
         print_section("Test 2: Learning Capture (Minimal Fields)")
 
         returncode, stdout, stderr = run_command(
-            f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+            f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
             f'--content "Minimal learning test" '
             f'--category "gotchas" '
             f'--session "1"',
@@ -294,7 +296,7 @@ class Phase4Tester:
 
         # First, add a learning from session 2
         run_command(
-            f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+            f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
             f'--content "Session 2 learning" '
             f'--category "architecture_patterns" '
             f'--session "2"',
@@ -370,7 +372,7 @@ class Phase4Tester:
 
         # Add a very similar learning
         run_command(
-            f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+            f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
             f'--content "Test learning with all required fields" '
             f'--category "best_practices" '
             f'--tags "testing" '
@@ -410,7 +412,9 @@ class Phase4Tester:
         learnings_file = self.test_dir / ".session" / "tracking" / "learnings.json"
         with open(learnings_file) as f:
             data_before = json.load(f)
-        initial_count = sum(len(learnings) for learnings in data_before["categories"].values())
+        initial_count = sum(
+            len(learnings) for learnings in data_before["categories"].values()
+        )
 
         # Run actual curation
         returncode, stdout, stderr = run_command(
@@ -429,7 +433,9 @@ class Phase4Tester:
         # Verify count decreased
         with open(learnings_file) as f:
             data_after = json.load(f)
-        final_count = sum(len(learnings) for learnings in data_after["categories"].values())
+        final_count = sum(
+            len(learnings) for learnings in data_after["categories"].values()
+        )
 
         if final_count >= initial_count:
             print_failure("Duplicate learnings were not merged")
@@ -456,7 +462,7 @@ class Phase4Tester:
 
         for category in categories_to_test:
             returncode, stdout, stderr = run_command(
-                f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+                f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
                 f'--content "Learning for {category} category" '
                 f'--category "{category}" '
                 f'--session "1"',
@@ -477,7 +483,9 @@ class Phase4Tester:
             data = json.load(f)
 
         # Categories with at least one learning
-        found_categories = {cat for cat, learnings in data["categories"].items() if len(learnings) > 0}
+        found_categories = {
+            cat for cat, learnings in data["categories"].items() if len(learnings) > 0
+        }
         for category in categories_to_test:
             if category not in found_categories:
                 print_failure(f"Category not found in learnings: {category}")
@@ -496,11 +504,13 @@ class Phase4Tester:
         learnings_file = self.test_dir / ".session" / "tracking" / "learnings.json"
         with open(learnings_file) as f:
             data_before = json.load(f)
-        count_before = sum(len(learnings) for learnings in data_before["categories"].values())
+        count_before = sum(
+            len(learnings) for learnings in data_before["categories"].values()
+        )
 
         # Add a duplicate
         run_command(
-            f'python3 {self.plugin_root}/scripts/learning_curator.py add-learning '
+            f"python3 {self.plugin_root}/scripts/learning_curator.py add-learning "
             f'--content "Learning for architecture_patterns category" '
             f'--category "architecture_patterns" '
             f'--session "1"',
@@ -524,7 +534,9 @@ class Phase4Tester:
         # Verify count didn't change (except for the one we just added)
         with open(learnings_file) as f:
             data_after = json.load(f)
-        count_after = sum(len(learnings) for learnings in data_after["categories"].values())
+        count_after = sum(
+            len(learnings) for learnings in data_after["categories"].values()
+        )
 
         # Should have one more than before (the one we added)
         if count_after != count_before + 1:
@@ -582,7 +594,11 @@ class Phase4Tester:
             return False
 
         # Accept various empty result messages
-        if "Found 0 matching" not in stdout and "No learnings found" not in stdout and stdout.strip() == "":
+        if (
+            "Found 0 matching" not in stdout
+            and "No learnings found" not in stdout
+            and stdout.strip() == ""
+        ):
             print_failure(f"Search should return 0 results. Got: {stdout[:200]}")
             return False
 
@@ -637,6 +653,7 @@ class Phase4Tester:
             except Exception as e:
                 print_failure(f"Test raised exception: {e}")
                 import traceback
+
                 traceback.print_exc()
                 self.tests_failed += 1
 

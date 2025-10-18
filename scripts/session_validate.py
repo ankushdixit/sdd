@@ -221,7 +221,10 @@ class SessionValidator:
         missing_sections = []
 
         # Common sections for all types
-        if not parsed_spec.get("acceptance_criteria") or len(parsed_spec.get("acceptance_criteria", [])) < 3:
+        if (
+            not parsed_spec.get("acceptance_criteria")
+            or len(parsed_spec.get("acceptance_criteria", [])) < 3
+        ):
             missing_sections.append("Acceptance Criteria (at least 3 items)")
 
         # Type-specific sections
@@ -240,7 +243,10 @@ class SessionValidator:
         elif work_type == "integration_test":
             if not parsed_spec.get("scope"):
                 missing_sections.append("Scope")
-            if not parsed_spec.get("test_scenarios") or len(parsed_spec.get("test_scenarios", [])) == 0:
+            if (
+                not parsed_spec.get("test_scenarios")
+                or len(parsed_spec.get("test_scenarios", [])) == 0
+            ):
                 missing_sections.append("Test Scenarios (at least 1)")
 
         elif work_type == "deployment":

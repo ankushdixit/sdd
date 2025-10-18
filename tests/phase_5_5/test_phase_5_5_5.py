@@ -232,7 +232,9 @@ def test_environment_validation():
     return tests_passed, tests_failed
 
 
-@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
+@pytest.mark.skip(
+    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
+)
 def test_integration_gate_configuration():
     """Test integration quality gate configuration loading."""
     print("=" * 60)

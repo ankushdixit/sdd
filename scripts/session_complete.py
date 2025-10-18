@@ -309,7 +309,7 @@ def generate_commit_message(status, work_item):
 
         if rationale and rationale.strip():
             # Trim to first paragraph if too long
-            first_para = rationale.split('\n\n')[0]
+            first_para = rationale.split("\n\n")[0]
             if len(first_para) > 200:
                 first_para = first_para[:197] + "..."
             message += f"{first_para}\n\n"

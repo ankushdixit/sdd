@@ -248,7 +248,9 @@ def generate_briefing(item_id, item, learnings_data):
     if validate_spec_file is not None:
         is_valid, errors = validate_spec_file(item_id, item["type"])
         if not is_valid:
-            spec_validation_warning = format_validation_report(item_id, item["type"], errors)
+            spec_validation_warning = format_validation_report(
+                item_id, item["type"], errors
+            )
 
     # Start briefing
     briefing = f"""# Session Briefing: {item["title"]}

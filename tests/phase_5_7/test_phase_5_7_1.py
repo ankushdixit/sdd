@@ -21,7 +21,7 @@ from scripts.briefing_generator import (
     generate_briefing,
     load_work_item_spec,
     load_current_tree,
-    load_project_docs
+    load_project_docs,
 )
 
 
@@ -34,6 +34,7 @@ class TestBriefingIntegration:
         self.temp_dir = tempfile.mkdtemp()
         self.original_dir = Path.cwd()
         import os
+
         os.chdir(self.temp_dir)
 
         # Create .session directory structure
@@ -49,13 +50,14 @@ class TestBriefingIntegration:
     def teardown_method(self):
         """Cleanup test fixtures."""
         import os
+
         os.chdir(self.original_dir)
         shutil.rmtree(self.temp_dir)
 
     def create_spec_file(self, work_item_id: str, content: str):
         """Helper to create a spec file."""
         spec_path = self.specs_dir / f"{work_item_id}.md"
-        spec_path.write_text(content, encoding='utf-8')
+        spec_path.write_text(content, encoding="utf-8")
 
     def test_load_work_item_spec_returns_full_content(self):
         """Test: load_work_item_spec returns complete spec file content."""
@@ -103,7 +105,10 @@ How to test this feature.
         loaded_content = load_work_item_spec(work_item_id)
 
         # Should return informative message, not crash
-        assert "not found" in loaded_content.lower() or "no specification" in loaded_content.lower()
+        assert (
+            "not found" in loaded_content.lower()
+            or "no specification" in loaded_content.lower()
+        )
 
         print("✓ Test 2: load_work_item_spec handles missing file gracefully")
 
@@ -112,7 +117,7 @@ How to test this feature.
         # Create tree.txt with more than 50 lines
         tree_content = "\n".join([f"file_{i}.py" for i in range(100)])
         tree_path = self.tracking_dir / "tree.txt"
-        tree_path.write_text(tree_content, encoding='utf-8')
+        tree_path.write_text(tree_content, encoding="utf-8")
 
         loaded_tree = load_current_tree()
 
@@ -120,7 +125,7 @@ How to test this feature.
         assert "file_0.py" in loaded_tree
         assert "file_50.py" in loaded_tree
         assert "file_99.py" in loaded_tree
-        line_count = len(loaded_tree.split('\n'))
+        line_count = len(loaded_tree.split("\n"))
         assert line_count >= 100, f"Expected >= 100 lines, got {line_count}"
 
         print("✓ Test 3: load_current_tree returns full tree without 50-line limit")
@@ -128,9 +133,11 @@ How to test this feature.
     def test_load_project_docs_returns_full_vision(self):
         """Test: load_project_docs returns full vision.md without 500-char limit."""
         # Create vision.md with more than 500 characters
-        vision_content = "Project Vision\n\n" + ("This is a detailed vision statement. " * 50)
+        vision_content = "Project Vision\n\n" + (
+            "This is a detailed vision statement. " * 50
+        )
         vision_path = self.docs_dir / "vision.md"
-        vision_path.write_text(vision_content, encoding='utf-8')
+        vision_path.write_text(vision_content, encoding="utf-8")
 
         project_docs = load_project_docs()
 
@@ -140,14 +147,18 @@ How to test this feature.
         assert "Project Vision" in loaded_vision
         assert loaded_vision.count("detailed vision statement") >= 40
 
-        print("✓ Test 4: load_project_docs returns full vision.md without 500-char limit")
+        print(
+            "✓ Test 4: load_project_docs returns full vision.md without 500-char limit"
+        )
 
     def test_load_project_docs_returns_full_architecture(self):
         """Test: load_project_docs returns full architecture.md without 500-char limit."""
         # Create architecture.md with more than 500 characters
-        arch_content = "Project Architecture\n\n" + ("This describes the architecture in detail. " * 50)
+        arch_content = "Project Architecture\n\n" + (
+            "This describes the architecture in detail. " * 50
+        )
         arch_path = self.docs_dir / "architecture.md"
-        arch_path.write_text(arch_content, encoding='utf-8')
+        arch_path.write_text(arch_content, encoding="utf-8")
 
         project_docs = load_project_docs()
 
@@ -157,7 +168,9 @@ How to test this feature.
         assert "Project Architecture" in loaded_arch
         assert loaded_arch.count("architecture in detail") >= 40
 
-        print("✓ Test 5: load_project_docs returns full architecture.md without 500-char limit")
+        print(
+            "✓ Test 5: load_project_docs returns full architecture.md without 500-char limit"
+        )
 
     def test_generate_briefing_includes_full_spec(self):
         """Test: generate_briefing includes complete spec file content."""
@@ -190,7 +203,7 @@ Testing approach.
             "type": "feature",
             "title": "Test Feature",
             "priority": "high",
-            "status": "not_started"
+            "status": "not_started",
         }
 
         # Create empty learnings
@@ -227,7 +240,7 @@ Just an overview, missing other required sections.
             "type": "feature",
             "title": "Incomplete Feature",
             "priority": "high",
-            "status": "not_started"
+            "status": "not_started",
         }
 
         learnings_data = {"learnings": []}
@@ -238,10 +251,17 @@ Just an overview, missing other required sections.
         # Note: This will only work if spec_validator is importable
         # The warning section is optional based on import success
         if "⚠️ Specification Validation Warning" in briefing:
-            assert "Missing required section" in briefing or "incomplete" in briefing.lower()
-            print("✓ Test 7: generate_briefing includes spec validation warning for incomplete specs")
+            assert (
+                "Missing required section" in briefing
+                or "incomplete" in briefing.lower()
+            )
+            print(
+                "✓ Test 7: generate_briefing includes spec validation warning for incomplete specs"
+            )
         else:
-            print("✓ Test 7: generate_briefing (spec validation warning skipped - validator not available)")
+            print(
+                "✓ Test 7: generate_briefing (spec validation warning skipped - validator not available)"
+            )
 
     def test_briefing_structure_has_no_duplicate_sections(self):
         """Test: Briefing doesn't have duplicate sections (Implementation Checklist, Validation Requirements removed)."""
@@ -273,7 +293,7 @@ Testing strategy.
             "type": "feature",
             "title": "Test Feature",
             "priority": "high",
-            "status": "not_started"
+            "status": "not_started",
         }
 
         learnings_data = {"learnings": []}
@@ -306,14 +326,16 @@ Testing strategy.
                     "dependencies": [],
                     "milestone": None,
                     "created_at": "2025-10-18T12:00:00Z",
-                    "sessions": []
+                    "sessions": [],
                 }
             }
         }
 
         # Write to work_items.json
         work_items_path = self.tracking_dir / "work_items.json"
-        work_items_path.write_text(json.dumps(work_item_data, indent=2), encoding='utf-8')
+        work_items_path.write_text(
+            json.dumps(work_item_data, indent=2), encoding="utf-8"
+        )
 
         # Read back
         with open(work_items_path) as f:
@@ -322,10 +344,18 @@ Testing strategy.
         work_item = loaded_data["work_items"]["test_item_001"]
 
         # Should NOT have content fields
-        assert "rationale" not in work_item, "work_items.json should not contain 'rationale' field"
-        assert "acceptance_criteria" not in work_item, "work_items.json should not contain 'acceptance_criteria' field"
-        assert "implementation_paths" not in work_item, "work_items.json should not contain 'implementation_paths' field"
-        assert "test_paths" not in work_item, "work_items.json should not contain 'test_paths' field"
+        assert "rationale" not in work_item, (
+            "work_items.json should not contain 'rationale' field"
+        )
+        assert "acceptance_criteria" not in work_item, (
+            "work_items.json should not contain 'acceptance_criteria' field"
+        )
+        assert "implementation_paths" not in work_item, (
+            "work_items.json should not contain 'implementation_paths' field"
+        )
+        assert "test_paths" not in work_item, (
+            "work_items.json should not contain 'test_paths' field"
+        )
 
         # Should have tracking fields
         assert "id" in work_item
@@ -378,6 +408,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

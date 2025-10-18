@@ -434,17 +434,29 @@ class WorkItemManager:
         # Validate deployment procedure subsections
         deployment_proc = parsed_spec.get("deployment_procedure")
         if deployment_proc:
-            if not deployment_proc.get("pre_deployment") or not deployment_proc.get("pre_deployment").strip():
+            if (
+                not deployment_proc.get("pre_deployment")
+                or not deployment_proc.get("pre_deployment").strip()
+            ):
                 errors.append("Missing pre-deployment checklist/steps")
-            if not deployment_proc.get("deployment_steps") or not deployment_proc.get("deployment_steps").strip():
+            if (
+                not deployment_proc.get("deployment_steps")
+                or not deployment_proc.get("deployment_steps").strip()
+            ):
                 errors.append("Missing deployment steps")
-            if not deployment_proc.get("post_deployment") or not deployment_proc.get("post_deployment").strip():
+            if (
+                not deployment_proc.get("post_deployment")
+                or not deployment_proc.get("post_deployment").strip()
+            ):
                 errors.append("Missing post-deployment steps")
 
         # Validate rollback procedure subsections
         rollback_proc = parsed_spec.get("rollback_procedure")
         if rollback_proc:
-            if not rollback_proc.get("triggers") or not rollback_proc.get("triggers").strip():
+            if (
+                not rollback_proc.get("triggers")
+                or not rollback_proc.get("triggers").strip()
+            ):
                 errors.append("Missing rollback triggers")
             if not rollback_proc.get("steps") or not rollback_proc.get("steps").strip():
                 errors.append("Missing rollback steps")
@@ -735,9 +747,7 @@ class WorkItemManager:
 
         print(f"- Update fields: /work-update {work_id}")
         if item.get("milestone"):
-            print(
-                f"- View related items: /work-list --milestone {item['milestone']}"
-            )
+            print(f"- View related items: /work-list --milestone {item['milestone']}")
         print()
 
         return item

@@ -13,7 +13,9 @@ sys.path.insert(0, str(project_root))
 from scripts.integration_test_runner import IntegrationTestRunner
 
 
-@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
+@pytest.mark.skip(
+    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
+)
 def test_integration_test_runner_class():
     """Test IntegrationTestRunner class structure and methods."""
     print("=" * 60)
@@ -382,7 +384,9 @@ def test_file_structure():
         return 1
 
 
-@pytest.mark.skip(reason="Requires spec files (Phase 5.7 update) - needs test data setup")
+@pytest.mark.skip(
+    reason="Requires spec files (Phase 5.7 update) - needs test data setup"
+)
 def test_docker_compose_support():
     """Test Docker Compose integration logic."""
     print("=" * 60)

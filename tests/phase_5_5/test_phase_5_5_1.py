@@ -26,6 +26,7 @@ class TestPhase5_5_1:
         self.temp_dir = tempfile.mkdtemp()
         self.original_dir = Path.cwd()
         import os
+
         os.chdir(self.temp_dir)
 
         # Create directory structure
@@ -39,13 +40,14 @@ class TestPhase5_5_1:
     def teardown_method(self):
         """Cleanup test fixtures."""
         import os
+
         os.chdir(self.original_dir)
         shutil.rmtree(self.temp_dir)
 
     def create_spec_file(self, work_item_id: str, content: str):
         """Helper to create a spec file."""
         spec_path = self.specs_dir / f"{work_item_id}.md"
-        spec_path.write_text(content, encoding='utf-8')
+        spec_path.write_text(content, encoding="utf-8")
 
     def test_integration_test_template(self):
         """Test: Integration test template has all required sections."""
@@ -88,7 +90,9 @@ class TestPhase5_5_1:
             print("✅ Template has all required sections!")
             return True
         else:
-            print(f"❌ Template missing {len(required_sections) - sections_found} section(s)")
+            print(
+                f"❌ Template missing {len(required_sections) - sections_found} section(s)"
+            )
             return False
 
     def test_valid_integration_test(self):
@@ -165,7 +169,10 @@ Test the integration between Service A and Service B API.
             "id": work_item_id,
             "type": "integration_test",
             "title": "Test Service A to B Integration",
-            "dependencies": ["FEAT-001", "FEAT-002"]  # Integration tests need component dependencies
+            "dependencies": [
+                "FEAT-001",
+                "FEAT-002",
+            ],  # Integration tests need component dependencies
         }
 
         is_valid, errors = manager.validate_integration_test(work_item)
@@ -193,7 +200,7 @@ Just a scope, missing other sections.
         work_item = {
             "id": work_item_id,
             "type": "integration_test",
-            "title": "Incomplete Test"
+            "title": "Incomplete Test",
         }
 
         is_valid, errors = manager.validate_integration_test(work_item)
@@ -235,6 +242,7 @@ def run_all_tests():
         except Exception as e:
             print(f"❌ {test_func.__name__} errored: {e}")
             import traceback
+
             traceback.print_exc()
             test_instance.teardown_method()
             failed += 1
@@ -258,6 +266,6 @@ def run_all_tests():
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
