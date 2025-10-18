@@ -225,12 +225,11 @@ class QualityGates:
             # Run bandit
             try:
                 import tempfile
+                import os
 
                 # Use secure temporary file instead of hardcoded /tmp path
-                with tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".json", delete=False
-                ) as tmp_file:
-                    bandit_report_path = tmp_file.name
+                fd, bandit_report_path = tempfile.mkstemp(suffix=".json")
+                os.close(fd)  # Close file descriptor, bandit will write to the path
 
                 try:
                     subprocess.run(
