@@ -966,6 +966,254 @@ SDD (Session-Driven Development)/
 
 ---
 
+## Phase 5.7: Spec File First Architecture (v0.5.7) - Single Source of Truth
+
+**Goal:** Make `.session/specs/{work_item_id}.md` the single source of truth for work item content
+
+**Status:** ✅ COMPLETE
+
+**Completed:** 18th October 2025
+
+**Priority:** HIGH
+
+**Depends On:** Phase 5.6 (✅ Complete)
+
+### Accomplishments
+
+**All 7 Sections Implemented:**
+1. ✅ Section 5.7.1: Spec file integration to briefings
+2. ✅ Section 5.7.2: Spec markdown parsing module
+3. ✅ Section 5.7.3: Update validators & runners
+4. ✅ Section 5.7.4: Enhanced spec templates
+5. ✅ Section 5.7.5: Spec file validation system
+6. ✅ Section 5.7.6: Documentation updates
+7. ✅ Section 5.7.7: Comprehensive testing
+
+**Critical Implementation:**
+- ✅ Spec-first architecture: Eliminated dual storage problem by making spec files the single source of truth
+- ✅ Full context loading: Removed all compression (50-line tree limit, 500-char doc limits) - Claude now receives complete context
+- ✅ Spec parser module: Created comprehensive markdown parser for all 6 work item types with 700+ lines
+- ✅ Spec validator: Validates required sections, acceptance criteria count, deployment subsections
+- ✅ Quality gate integration: Added spec_completeness gate to prevent incomplete specs from passing validation
+- ✅ Comprehensive documentation: Created writing-specs.md guide (500+ lines) and updated all command docs
+
+**Statistics:**
+- 8 files created (spec_validator.py, writing-specs.md, 6 test files)
+- 12 files enhanced (briefing_generator.py, quality_gates.py, templates, docs, commands)
+- ~3,200 lines added total
+- 470 lines: spec_validator.py
+- 700+ lines: spec_parser.py (from 5.7.2)
+- 500+ lines: docs/writing-specs.md
+- 49 tests across 6 test files, all passing
+
+### Motivation
+
+The current system had a **dual storage problem**:
+- Developers filled out detailed spec files in `.session/specs/`
+- System read minimal fields from `work_items.json`
+- **Result:** Claude only saw empty/minimal content, not the rich specifications
+
+**Phase 5.7 solved this** by making spec files the authoritative source, ensuring Claude receives complete implementation context.
+
+### Features
+
+- [x] **5.7.1: Spec file integration to briefings** ✅ COMPLETE
+  - `load_work_item_spec()` function in briefing_generator.py
+  - Full spec content included in briefings
+  - Removed 50-line limit on tree.txt (now full)
+  - Removed 500-char limit on vision.md and architecture.md (now full)
+  - Removed duplicate sections: Implementation Checklist, Validation Requirements
+  - Removed integration/deployment special briefing functions
+  - Pruned work_items.json fields: `rationale`, `acceptance_criteria`, `implementation_paths`, `test_paths`
+  - Added deprecation notes to validators
+  - SPEC_FILE_INTEGRATION_NOTES.md documenting changes and limitations
+
+- [x] **5.7.2: Spec markdown parsing module** ✅ COMPLETE
+  - `scripts/spec_parser.py` module created with 700+ lines
+  - Core parsing functions: `strip_html_comments()`, `parse_section()`, `extract_subsection()`, `extract_checklist()`, `extract_code_blocks()`, `extract_list_items()`
+  - Work-item-specific parsers for all 6 types: `parse_feature_spec()`, `parse_bug_spec()`, `parse_refactor_spec()`, `parse_security_spec()`, `parse_integration_test_spec()`, `parse_deployment_spec()`
+  - `parse_spec_file(work_item_id)` main entry point with error handling
+  - Parses all sections for each work item type with proper subsection support
+  - Handles missing sections gracefully (returns None or empty)
+  - Handles malformed markdown with best-effort parsing
+  - Extracts checklists with checked/unchecked state
+  - Extracts code blocks with language identifiers
+  - CLI interface for testing: `python3 scripts/spec_parser.py <work_item_id>`
+  - Comprehensive test suite: 15 tests with 100% pass rate in `tests/phase_5_7/test_phase_5_7_2.py`
+
+- [x] **5.7.3: Update validators & runners** ✅ COMPLETE
+  - `work_item_manager.py`:
+    - Rewrote `validate_integration_test()` to use spec_parser (validates all required sections)
+    - Rewrote `validate_deployment()` to use spec_parser (validates deployment procedure, rollback, smoke tests)
+  - `integration_test_runner.py`:
+    - Updated `__init__()` to parse spec file for test scenarios
+    - Implemented `_parse_environment_requirements()` to extract services and compose file from spec
+  - `quality_gates.py`:
+    - Updated integration test quality gates to use parsed spec data for scenarios, contracts, benchmarks
+    - Updated sequence diagram checks to parse spec content using spec_parser
+  - `session_validate.py`:
+    - Updated `validate_work_item_criteria()` to check spec file completeness
+    - Validates required sections based on work item type
+  - `session_complete.py`:
+    - Updated `generate_commit_message()` to read rationale from parsed spec
+  - Comprehensive test suite: 6 tests with 100% pass rate in `tests/phase_5_7/test_phase_5_7_3.py`
+
+- [x] **5.7.4: Enhanced spec templates** ✅ COMPLETE
+  - Updated `templates/feature_spec.md`:
+    - Added clear section markers (standardized headings)
+    - Added comprehensive examples (WebSocket notifications feature)
+    - Added inline HTML comments for guidance
+    - Added code examples for API changes, database schema
+  - Updated `templates/bug_spec.md`:
+    - Added detailed reproduction steps example (mobile session timeout)
+    - Added comprehensive root cause analysis template
+    - Added investigation process documentation
+    - Added prevention strategies section
+  - Updated `templates/refactor_spec.md`:
+    - Added before/after code examples (dependency injection refactor)
+    - Added benefits, trade-offs, and migration strategy
+    - Added risk assessment and success criteria
+  - Updated `templates/security_spec.md`:
+    - Added threat model template (assets, actors, attack scenarios)
+    - Added CVSS scoring and impact assessment
+    - Added compliance checklist (OWASP, CWE, PCI DSS, GDPR)
+    - Added security testing section with test cases
+  - Updated `templates/integration_test_spec.md`:
+    - Added detailed test scenario examples (order processing)
+    - Added mermaid sequence diagram templates
+    - Added performance benchmarks with load test configuration
+    - Added environment requirements with docker-compose
+  - Updated `templates/deployment_spec.md`:
+    - Added comprehensive deployment procedure (blue-green deployment)
+    - Added detailed rollback procedure with commands
+    - Added smoke tests with bash examples
+    - Added monitoring & alerting section
+  - Created `docs/spec-template-structure.md`:
+    - Complete documentation of template conventions
+    - Parsing guidelines for spec_parser.py implementation
+    - Section naming conventions and validation rules
+    - Example parsed output structures
+
+- [x] **5.7.5: Spec file validation system** ✅ COMPLETE
+  - `scripts/spec_validator.py` module (470 lines)
+  - `validate_spec_file(work_item_id, work_item_type)` → (valid, errors)
+  - `get_validation_rules()` for all 6 work item types with required sections
+  - Check required sections present by work item type
+  - Check sections not empty
+  - Check acceptance criteria has minimum items (3 for most types)
+  - Check deployment subsections (Pre-Deployment, Deployment Steps, Post-Deployment)
+  - Check rollback subsections (Triggers, Steps)
+  - Warn on `/start` if spec incomplete (integrated in briefing_generator.py)
+  - Quality gate: `spec_completeness` in quality_gates.py (enabled and required by default)
+  - Detailed error messages with suggestions
+  - CLI interface for manual validation
+  - 11 tests in test_phase_5_7_5.py
+
+- [x] **5.7.6: Documentation updates** ✅ COMPLETE
+  - Updated `.claude/commands/start.md`:
+    - Added "Spec-First Architecture" section
+    - Emphasize spec file is source of truth
+    - Document spec validation warnings
+  - Updated `.claude/commands/work-new.md`:
+    - Added "Next Step: Fill Out the Spec File" section
+    - Link to spec writing guide
+    - Emphasize spec file completion importance
+  - Updated main README.md:
+    - Added comprehensive "Spec-First Workflow" section (100+ lines)
+    - Architecture overview with diagram
+    - Workflow steps (create → fill → start → implement → complete)
+    - Spec templates table for all 6 types
+    - Validation information
+    - Benefits explanation
+  - Created `docs/writing-specs.md` (500+ lines):
+    - Complete guide for writing effective specs
+    - Work item type guides for all 6 types
+    - Good vs bad examples with code snippets
+    - Tips and best practices
+    - Common mistakes to avoid
+    - Validation checklist
+  - Updated `docs/session-driven-development.md`:
+    - Added "Spec File Architecture (Phase 5.7)" section
+    - Architecture overview and separation of concerns
+    - Why spec-first explanation
+    - Spec file flow diagram
+    - Benefits documentation
+  - 3 tests in test_phase_5_7_6.py
+
+- [x] **5.7.7: Comprehensive testing** ✅ COMPLETE
+  - Created `tests/phase_5_7/` directory with 6 test files
+  - `test_phase_5_7_1.py`: Briefing integration tests (9 tests passing)
+    - load_work_item_spec returns full content without truncation
+    - load_current_tree returns full tree without 50-line limit
+    - load_project_docs returns full vision/architecture without 500-char limits
+    - Briefing includes full spec content
+    - Briefing includes spec validation warnings for incomplete specs
+    - Briefing structure has no duplicate sections
+    - work_items.json has no content fields (pure tracking)
+  - `test_phase_5_7_2.py`: Spec parser tests (15 tests passing)
+    - Parse all 6 work item types correctly
+    - Extract sections, subsections, checklists, code blocks
+    - Handle missing sections gracefully
+    - Handle malformed markdown
+    - End-to-end spec file parsing
+  - `test_phase_5_7_3.py`: Updated validators tests (6 tests passing)
+    - validate_integration_test() uses spec_parser
+    - validate_deployment() uses spec_parser
+    - IntegrationTestRunner parses spec files
+    - Quality gates use parsed spec data
+  - `test_phase_5_7_5.py`: Spec validation tests (11 tests passing)
+    - Validation rules for all work item types
+    - Required sections validation
+    - Acceptance criteria count validation
+    - Deployment/rollback subsection validation
+    - Quality gate integration
+  - `test_phase_5_7_6.py`: Documentation tests (3 tests passing)
+    - docs/writing-specs.md exists and complete
+    - docs/session-driven-development.md updated
+    - Command documentation updated
+  - `test_phase_5_7_complete.py`: End-to-end integration (5 tests passing)
+    - Complete feature workflow (create → validate → parse → brief → quality gate)
+    - Complete deployment workflow with subsections
+    - Incomplete spec fails validation
+    - All 6 work item types parse correctly
+    - System uses spec files, no deprecated JSON fields
+
+### Lessons Learned
+
+1. **Dual Storage Creates Confusion:** Having content in both spec files and JSON led to developers documenting in specs but system reading empty JSON fields - single source of truth eliminates this
+2. **Full Context Matters:** Removing compression on project docs (50-line tree limit, 500-char doc limits) ensures Claude has complete information for better implementation decisions
+3. **Spec Validation Essential:** Validating specs before session start catches incomplete specs early, preventing implementation based on insufficient requirements
+4. **Template Structure Critical:** Standardized section names and markdown structure enable reliable parsing across all 6 work item types
+5. **Documentation Drives Adoption:** Comprehensive writing guide (docs/writing-specs.md) with examples reduces friction for new users
+6. **End-to-End Testing Validates Architecture:** 49 tests across integration, unit, and E2E levels ensured spec-first architecture works seamlessly
+7. **Quality Gates Enforce Standards:** Making spec_completeness a required quality gate ensures all work items have complete specifications before completion
+
+### Success Criteria
+
+✅ Spec files are single source of truth for content (5.7.1 complete)
+✅ Claude receives full, uncompressed context in briefings (5.7.1 complete)
+✅ work_items.json contains only tracking data, no content (5.7.1 complete)
+✅ Spec parser extracts structured data from markdown (5.7.2 complete)
+✅ All validators/runners read from spec files (5.7.3 complete)
+✅ Templates are clear, comprehensive, and parseable (5.7.4 complete)
+✅ Spec validation catches incomplete/malformed specs (5.7.5 complete)
+✅ Documentation clearly explains spec-first workflow (5.7.6 complete)
+✅ Comprehensive test coverage (49 tests across 6 test files, all passing) (5.7.7 complete)
+
+### Comprehensive Testing
+
+✅ 49 tests across 6 test files (100% passing)
+
+**Test Coverage by Section:**
+- ✅ Section 5.7.1: 9/9 tests passed (test_phase_5_7_1.py - briefing integration)
+- ✅ Section 5.7.2: 15/15 tests passed (test_phase_5_7_2.py - spec parser)
+- ✅ Section 5.7.3: 6/6 tests passed (test_phase_5_7_3.py - validators & runners)
+- ✅ Section 5.7.5: 11/11 tests passed (test_phase_5_7_5.py - spec validator)
+- ✅ Section 5.7.6: 3/3 tests passed (test_phase_5_7_6.py - documentation)
+- ✅ Section 5.7.7: 5/5 tests passed (test_phase_5_7_complete.py - end-to-end integration)
+
+---
+
 ## Phase 6: Spec-Kit Integration (v0.6) - Specification-Driven
 
 **Goal:** Import work items from Spec-Kit specifications

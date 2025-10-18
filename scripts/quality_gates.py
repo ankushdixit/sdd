@@ -8,12 +8,25 @@ Provides comprehensive validation including:
 - Security scanning
 - Documentation validation
 - Custom validation rules
+
+Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
 """
 
 import subprocess
 import json
+import sys
 from pathlib import Path
 from typing import List, Tuple
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts import spec_parser
+
+# Import spec validator for spec completeness quality gate
+try:
+    from scripts.spec_validator import validate_spec_file
+except ImportError:
+    validate_spec_file = None
 
 
 class QualityGates:
@@ -80,6 +93,10 @@ class QualityGates:
                 "check_changelog": True,
                 "check_docstrings": True,
                 "check_readme": False,
+            },
+            "spec_completeness": {
+                "enabled": True,
+                "required": True,
             },
         }
 
@@ -465,6 +482,54 @@ class QualityGates:
             return any("README" in f.upper() for f in changed_files)
         except Exception:
             return True  # Skip check if git not available
+
+    def validate_spec_completeness(self, work_item: dict) -> Tuple[bool, dict]:
+        """
+        Validate that the work item specification file is complete.
+
+        Part of Phase 5.7.5: Spec File Validation System
+
+        Args:
+            work_item: Work item dictionary with 'id' and 'type' fields
+
+        Returns:
+            Tuple of (passed, results)
+        """
+        config = self.config.get("spec_completeness", {})
+
+        if not config.get("enabled", True):
+            return True, {"status": "skipped"}
+
+        if validate_spec_file is None:
+            return True, {
+                "status": "skipped",
+                "reason": "spec_validator module not available"
+            }
+
+        work_item_id = work_item.get("id")
+        work_item_type = work_item.get("type")
+
+        if not work_item_id or not work_item_type:
+            return False, {
+                "status": "failed",
+                "error": "Work item missing 'id' or 'type' field"
+            }
+
+        # Validate spec file
+        is_valid, errors = validate_spec_file(work_item_id, work_item_type)
+
+        if is_valid:
+            return True, {
+                "status": "passed",
+                "message": f"Spec file for '{work_item_id}' is complete"
+            }
+        else:
+            return False, {
+                "status": "failed",
+                "errors": errors,
+                "message": f"Spec file for '{work_item_id}' is incomplete",
+                "suggestion": f"Edit .session/specs/{work_item_id}.md to add missing sections"
+            }
 
     def verify_context7_libraries(self) -> Tuple[bool, dict]:
         """Verify important libraries via Context7 MCP."""
@@ -862,26 +927,24 @@ class QualityGates:
             if not diagram_found:
                 results["missing"].append("Integration architecture diagram")
 
-        # 2. Check for sequence diagrams
+        # 2. Check for sequence diagrams (using spec_parser)
         if config.get("sequence_diagrams", True):
-            scenarios = work_item.get("test_scenarios", [])
+            # Parse spec file to get test scenarios
+            try:
+                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                scenarios = parsed_spec.get("test_scenarios", [])
+            except:
+                scenarios = []
 
             if scenarios:
-                # Check if sequence diagrams documented in spec file
-                spec_file = Path(".session/specs") / f"{work_item.get('id')}.md"
+                # Check if any scenario content contains sequence diagrams
                 has_sequence = False
-
-                if spec_file.exists():
-                    with open(spec_file) as f:
-                        spec_content = f.read()
-
-                    # Look for sequence diagram indicators
-                    has_sequence = (
-                        "```mermaid" in spec_content
-                        or "sequenceDiagram" in spec_content
-                        or "## Sequence Diagram" in spec_content
-                        or "### Scenario" in spec_content  # Basic indicator
-                    )
+                for scenario in scenarios:
+                    content = scenario.get("content", "")
+                    if ("```mermaid" in content or
+                        "sequenceDiagram" in content):
+                        has_sequence = True
+                        break
 
                 results["checks"].append(
                     {"name": "Sequence diagrams", "passed": has_sequence}
@@ -890,31 +953,38 @@ class QualityGates:
                 if not has_sequence:
                     results["missing"].append("Sequence diagrams for test scenarios")
 
-        # 3. Check for API contract documentation
+        # 3. Check for API contract documentation (using spec_parser)
         if config.get("contract_documentation", True):
-            contracts = work_item.get("api_contracts", [])
+            # Parse spec file to get API contracts
+            try:
+                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                api_contracts = parsed_spec.get("api_contracts", "")
+                # API contracts should be documented in the spec
+                has_contracts = api_contracts and len(api_contracts.strip()) > 20
+            except:
+                has_contracts = False
 
-            if contracts:
-                all_contracts_documented = True
+            results["checks"].append(
+                {
+                    "name": "API contracts documented",
+                    "passed": has_contracts,
+                }
+            )
 
-                for contract in contracts:
-                    contract_file = contract.get("contract_file")
-                    if not contract_file or not Path(contract_file).exists():
-                        all_contracts_documented = False
-                        results["missing"].append(f"API contract: {contract_file}")
+            if not has_contracts:
+                results["missing"].append("API contract documentation")
 
-                results["checks"].append(
-                    {
-                        "name": "API contracts documented",
-                        "passed": all_contracts_documented,
-                    }
-                )
-
-        # 4. Check for performance baseline documentation
+        # 4. Check for performance baseline documentation (using spec_parser)
         if config.get("performance_baseline_docs", True):
-            benchmarks = work_item.get("performance_benchmarks")
+            # Parse spec file to get performance benchmarks
+            try:
+                parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+                benchmarks = parsed_spec.get("performance_benchmarks", "")
+                has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
+            except:
+                has_benchmarks = False
 
-            if benchmarks:
+            if has_benchmarks:
                 baseline_file = Path(".session/tracking/performance_baselines.json")
                 baseline_exists = baseline_file.exists()
 
@@ -928,10 +998,14 @@ class QualityGates:
                 if not baseline_exists:
                     results["missing"].append("Performance baseline documentation")
 
-        # 5. Check for integration point documentation
-        scope = work_item.get("scope", "")
-        # Check if scope has meaningful content
-        documented = len(scope) > 20  # More than just placeholder text
+        # 5. Check for integration point documentation (using spec_parser)
+        try:
+            parsed_spec = spec_parser.parse_spec_file(work_item.get('id'))
+            scope = parsed_spec.get("scope", "")
+            # Check if scope has meaningful content
+            documented = scope and len(scope.strip()) > 20
+        except:
+            documented = False
 
         results["checks"].append(
             {"name": "Integration points documented", "passed": documented}

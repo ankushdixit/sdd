@@ -4,12 +4,19 @@ Session validation - pre-flight check before completion.
 
 Validates all conditions required for successful /end without
 actually making any changes.
+
+Updated in Phase 5.7.3 to use spec_parser for checking work item completeness.
 """
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Dict
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts import spec_parser
 
 
 class SessionValidator:
@@ -167,7 +174,12 @@ class SessionValidator:
             return {"passed": True, "message": "ruff not found (skipped)"}
 
     def validate_work_item_criteria(self) -> Dict:
-        """Check if work item acceptance criteria are met."""
+        """
+        Check if work item spec is complete and valid.
+
+        Updated in Phase 5.7.3 to check spec file completeness instead of
+        deprecated implementation_paths and test_paths fields.
+        """
         # Load current work item
         status_file = self.session_dir / "tracking" / "status_update.json"
         if not status_file.exists():
@@ -185,23 +197,66 @@ class SessionValidator:
             work_items_data = json.load(f)
 
         work_item = work_items_data["work_items"][status["current_work_item"]]
+        work_id = work_item.get("id")
 
-        # Check paths exist
-        impl_paths = work_item.get("implementation_paths", [])
-        test_paths = work_item.get("test_paths", [])
-
-        missing_impl = [p for p in impl_paths if not Path(p).exists()]
-        missing_tests = [p for p in test_paths if not Path(p).exists()]
-
-        if missing_impl or missing_tests:
+        # Check spec file exists and is valid
+        spec_file = self.session_dir / "specs" / f"{work_id}.md"
+        if not spec_file.exists():
             return {
                 "passed": False,
-                "message": "Required paths missing",
-                "missing_impl": missing_impl,
-                "missing_tests": missing_tests,
+                "message": f"Spec file missing: {spec_file}",
             }
 
-        return {"passed": True, "message": "Work item criteria met"}
+        # Parse spec file
+        try:
+            parsed_spec = spec_parser.parse_spec_file(work_id)
+        except Exception as e:
+            return {
+                "passed": False,
+                "message": f"Spec file invalid: {str(e)}",
+            }
+
+        # Check that spec has required sections based on work item type
+        work_type = work_item.get("type")
+        missing_sections = []
+
+        # Common sections for all types
+        if not parsed_spec.get("acceptance_criteria") or len(parsed_spec.get("acceptance_criteria", [])) < 3:
+            missing_sections.append("Acceptance Criteria (at least 3 items)")
+
+        # Type-specific sections
+        if work_type == "feature":
+            if not parsed_spec.get("overview"):
+                missing_sections.append("Overview")
+            if not parsed_spec.get("implementation_details"):
+                missing_sections.append("Implementation Details")
+
+        elif work_type == "bug":
+            if not parsed_spec.get("description"):
+                missing_sections.append("Description")
+            if not parsed_spec.get("fix_approach"):
+                missing_sections.append("Fix Approach")
+
+        elif work_type == "integration_test":
+            if not parsed_spec.get("scope"):
+                missing_sections.append("Scope")
+            if not parsed_spec.get("test_scenarios") or len(parsed_spec.get("test_scenarios", [])) == 0:
+                missing_sections.append("Test Scenarios (at least 1)")
+
+        elif work_type == "deployment":
+            if not parsed_spec.get("deployment_scope"):
+                missing_sections.append("Deployment Scope")
+            if not parsed_spec.get("deployment_procedure"):
+                missing_sections.append("Deployment Procedure")
+
+        if missing_sections:
+            return {
+                "passed": False,
+                "message": "Spec file incomplete",
+                "missing_sections": missing_sections,
+            }
+
+        return {"passed": True, "message": "Work item spec is complete"}
 
     def check_tracking_updates(self) -> Dict:
         """Preview tracking file updates."""

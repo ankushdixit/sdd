@@ -173,6 +173,118 @@ Auto-generated file that Claude Code reads automatically. Contains:
 ```markdown
 # Project Instructions for Claude Code
 
+### Spec File Architecture (Phase 5.7)
+
+**The spec file is the single source of truth for work item content.**
+
+Starting in Phase 5.7, SDD implements a spec-first architecture where all work item implementation details, acceptance criteria, and testing strategies are documented in markdown specification files, not in JSON tracking files.
+
+#### Architecture Overview
+
+```
+.session/
+├── specs/
+│   ├── feature_xyz.md           ← Content (single source of truth)
+│   ├── bug_abc.md
+│   └── deployment_123.md
+└── tracking/
+    └── work_items.json           ← Tracking only (metadata, status, dependencies)
+```
+
+#### Separation of Concerns
+
+**Spec Files** (`.session/specs/{work_item_id}.md`):
+- **Purpose**: Complete implementation specifications
+- **Content**: Overview, rationale, acceptance criteria, implementation details, testing strategy
+- **Format**: Structured markdown with standardized sections
+- **Workflow**: Read and passed in full to Claude during briefings (no compression)
+- **Validation**: Checked for completeness before sessions start
+
+**Work Items JSON** (`work_items.json`):
+- **Purpose**: Work item tracking and coordination
+- **Content**: ID, type, status, priority, dependencies, milestone, sessions
+- **Format**: JSON for programmatic access
+- **Workflow**: Updated by SDD automation (status changes, session tracking)
+- **Pruned Fields**: No longer stores content fields (rationale, acceptance_criteria, etc.)
+
+#### Why Spec-First?
+
+**The Problem (Pre-Phase 5.7):**
+- Developers wrote detailed specs in markdown files
+- System read minimal JSON fields (`rationale`, `acceptance_criteria`) from `work_items.json`
+- **Result**: Claude only saw empty/minimal content in briefings, not the rich specifications
+
+**The Solution (Phase 5.7+):**
+- Spec files are the authoritative source
+- Briefings include **full spec content** (no truncation, no compression)
+- `work_items.json` reduced to pure tracking/metadata
+- **Result**: Claude receives complete context for perfect implementations
+
+#### Spec File Flow
+
+```
+1. Create Work Item
+   ↓
+   /work-new → Creates .session/specs/{work_item_id}.md from template
+   ↓
+2. Fill Out Specification
+   ↓
+   Developer edits spec file with complete implementation details
+   ↓
+3. Start Session
+   ↓
+   /start → Loads full spec into briefing + validates completeness
+   ↓
+4. Claude Implements
+   ↓
+   Full spec content available (acceptance criteria, implementation plan)
+   ↓
+5. End Session
+   ↓
+   /end → Validates spec completeness as quality gate
+```
+
+#### Spec Templates
+
+SDD provides 6 work item type templates:
+
+| Type | Template | Required Sections |
+|------|----------|-------------------|
+| **Feature** | `templates/feature_spec.md` | Overview, Rationale, Acceptance Criteria, Implementation Details, Testing Strategy |
+| **Bug** | `templates/bug_spec.md` | Description, Steps to Reproduce, Root Cause Analysis, Fix Approach |
+| **Refactor** | `templates/refactor_spec.md` | Overview, Current State, Proposed Refactor, Scope |
+| **Security** | `templates/security_spec.md` | Security Issue, Threat Model, Attack Vector, Mitigation Strategy, Compliance |
+| **Integration Test** | `templates/integration_test_spec.md` | Scope, Test Scenarios, Performance Benchmarks, Environment Requirements |
+| **Deployment** | `templates/deployment_spec.md` | Deployment Scope, Procedure, Rollback, Smoke Tests |
+
+#### Spec Validation
+
+Specs are automatically validated for:
+- ✅ All required sections present and non-empty
+- ✅ Minimum acceptance criteria items (3 for most types)
+- ✅ Required subsections (e.g., deployment steps)
+- ✅ Proper markdown structure
+
+**Validation occurs at:**
+1. **Session start** (`/start`): Warning displayed in briefing if spec incomplete
+2. **Session end** (`/end`): Quality gate fails if spec incomplete
+3. **Manual**: `python3 scripts/spec_validator.py {work_item_id} {type}`
+
+#### Benefits
+
+- **Zero Context Loss**: Full specs passed to Claude, not truncated JSON
+- **Better Quality**: Comprehensive specs → better implementations
+- **Single Source of Truth**: No confusion about where content lives
+- **Validation**: Catch incomplete specs before starting work
+- **Templates**: Standardized structure ensures consistency
+
+**For more information:**
+- Writing specs: `docs/writing-specs.md`
+- Template structure: `docs/spec-template-structure.md`
+- Validation rules: See `docs/spec-template-structure.md#validation-rules`
+
+---
+
 ## Session Protocol
 
 ### Starting a Session
