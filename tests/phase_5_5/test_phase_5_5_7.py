@@ -8,11 +8,11 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
-from scripts.briefing_generator import (
+from scripts.briefing_generator import (  # noqa: E402
     generate_integration_test_briefing,
     check_command_exists,
 )
-from scripts.session_complete import generate_integration_test_summary
+from scripts.session_complete import generate_integration_test_summary  # noqa: E402
 
 
 def test_integration_briefing():

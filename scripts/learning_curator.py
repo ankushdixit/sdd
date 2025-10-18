@@ -20,6 +20,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class LearningsCurator:
     """Curates project learnings"""
@@ -33,6 +39,7 @@ class LearningsCurator:
 
     def curate(self, dry_run: bool = False) -> None:
         """Curate learnings"""
+        logger.info("Starting learning curation (dry_run=%s)", dry_run)
         print("\n=== Learning Curation ===\n")
 
         # Load existing learnings
@@ -40,14 +47,17 @@ class LearningsCurator:
 
         # Statistics
         initial_count = self._count_all_learnings(learnings)
+        logger.info("Initial learnings count: %d", initial_count)
         print(f"Initial learnings: {initial_count}\n")
 
         # Categorize uncategorized learnings
         categorized = self._categorize_learnings(learnings)
+        logger.info("Categorized %d learnings", categorized)
         print(f"✓ Categorized {categorized} learnings")
 
         # Merge similar learnings
         merged = self._merge_similar_learnings(learnings)
+        logger.info("Merged %d similar learnings", merged)
         print(f"✓ Merged {merged} duplicate learnings")
 
         # Archive old learnings

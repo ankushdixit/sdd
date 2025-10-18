@@ -10,6 +10,12 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 # Import spec validator for validation warnings
 try:
     from spec_validator import validate_spec_file, format_validation_report
@@ -22,7 +28,9 @@ except ImportError:
 def load_work_items():
     """Load work items from tracking file."""
     work_items_file = Path(".session/tracking/work_items.json")
+    logger.debug("Loading work items from: %s", work_items_file)
     if not work_items_file.exists():
+        logger.warning("Work items file not found: %s", work_items_file)
         return {"work_items": {}}
     with open(work_items_file) as f:
         return json.load(f)
@@ -528,9 +536,12 @@ def generate_deployment_briefing(work_item: dict) -> str:
 
 def main():
     """Main entry point."""
+    logger.info("Starting session briefing generation")
+
     # Ensure .session directory exists
     session_dir = Path(".session")
     if not session_dir.exists():
+        logger.error(".session directory not found")
         print("Error: .session directory not found. Run project initialization first.")
         return 1
 
@@ -542,9 +553,11 @@ def main():
     item_id, item = get_next_work_item(work_items_data)
 
     if not item_id:
+        logger.warning("No available work items found")
         print("No available work items. All dependencies must be satisfied first.")
         return 1
 
+    logger.info("Generating briefing for work item: %s", item_id)
     # Generate briefing
     briefing = generate_briefing(item_id, item, learnings_data)
 

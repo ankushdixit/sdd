@@ -15,6 +15,9 @@ from typing import Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.file_ops import load_json, save_json
 from scripts import spec_parser
+from scripts.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class WorkItemManager:
@@ -40,16 +43,19 @@ class WorkItemManager:
 
     def create_work_item(self) -> Optional[str]:
         """Interactive work item creation."""
+        logger.info("Starting interactive work item creation")
         print("Creating new work item...\n")
 
         # 1. Select type
         work_type = self._prompt_type()
         if not work_type:
+            logger.debug("Work item creation cancelled - no type selected")
             return None
 
         # 2. Get title
         title = self._prompt_title()
         if not title:
+            logger.debug("Work item creation cancelled - no title provided")
             return None
 
         # 3. Get priority
@@ -60,19 +66,25 @@ class WorkItemManager:
 
         # 5. Generate ID
         work_id = self._generate_id(work_type, title)
+        logger.debug("Generated work item ID: %s", work_id)
 
         # 6. Check for duplicates
         if self._work_item_exists(work_id):
+            logger.error("Work item %s already exists", work_id)
             print(f"❌ Error: Work item {work_id} already exists")
             return None
 
         # 7. Create specification file
         spec_created = self._create_spec_file(work_id, work_type, title)
         if not spec_created:
+            logger.warning("Could not create specification file for %s", work_id)
             print("⚠️  Warning: Could not create specification file")
 
         # 8. Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dependencies)
+        logger.info(
+            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
+        )
 
         # 9. Confirm
         print(f"\n{'=' * 50}")
@@ -100,14 +112,18 @@ class WorkItemManager:
         self, work_type: str, title: str, priority: str = "high", dependencies: str = ""
     ) -> Optional[str]:
         """Create work item from command-line arguments (non-interactive)."""
+        logger.info("Creating work item from args: type=%s, title=%s", work_type, title)
+
         # Validate work type
         if work_type not in self.WORK_ITEM_TYPES:
+            logger.error("Invalid work item type: %s", work_type)
             print(f"❌ Error: Invalid work item type '{work_type}'")
             print(f"Valid types: {', '.join(self.WORK_ITEM_TYPES)}")
             return None
 
         # Validate priority
         if priority not in self.PRIORITIES:
+            logger.warning("Invalid priority '%s', using 'high'", priority)
             print(f"⚠️  Invalid priority '{priority}', using 'high'")
             priority = "high"
 
@@ -115,27 +131,35 @@ class WorkItemManager:
         dep_list = []
         if dependencies:
             dep_list = [d.strip() for d in dependencies.split(",") if d.strip()]
+            logger.debug("Parsed dependencies: %s", dep_list)
             # Validate dependencies exist
             work_items_data = load_json(self.work_items_file)
             for dep_id in dep_list:
                 if dep_id not in work_items_data.get("work_items", {}):
+                    logger.warning("Dependency '%s' does not exist", dep_id)
                     print(f"⚠️  Warning: Dependency '{dep_id}' does not exist")
 
         # Generate ID
         work_id = self._generate_id(work_type, title)
+        logger.debug("Generated work item ID: %s", work_id)
 
         # Check for duplicates
         if self._work_item_exists(work_id):
+            logger.error("Work item %s already exists", work_id)
             print(f"❌ Error: Work item {work_id} already exists")
             return None
 
         # Create specification file
         spec_created = self._create_spec_file(work_id, work_type, title)
         if not spec_created:
+            logger.warning("Could not create specification file for %s", work_id)
             print("⚠️  Warning: Could not create specification file")
 
         # Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dep_list)
+        logger.info(
+            "Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority
+        )
 
         # Confirm
         print(f"\n{'=' * 50}")

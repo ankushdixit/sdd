@@ -13,8 +13,8 @@ import os
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.work_item_manager import WorkItemManager
-from scripts.integration_test_runner import IntegrationTestRunner
+from scripts.work_item_manager import WorkItemManager  # noqa: E402
+from scripts.integration_test_runner import IntegrationTestRunner  # noqa: E402
 
 
 def create_test_spec_file(spec_dir, work_id, spec_type, content):

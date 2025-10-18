@@ -17,10 +17,10 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from scripts.spec_parser import parse_spec_file
-from scripts.spec_validator import validate_spec_file
-from scripts.briefing_generator import generate_briefing, load_work_item_spec
-from scripts.quality_gates import QualityGates
+from scripts.spec_parser import parse_spec_file  # noqa: E402
+from scripts.spec_validator import validate_spec_file  # noqa: E402
+from scripts.briefing_generator import generate_briefing, load_work_item_spec  # noqa: E402
+from scripts.quality_gates import QualityGates  # noqa: E402
 
 
 class TestPhase5_7Complete:

@@ -10,8 +10,15 @@ Part of Phase 5.7.2: Spec File First Architecture
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def strip_html_comments(content: str) -> str:
@@ -699,10 +706,13 @@ def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
         FileNotFoundError: If spec file doesn't exist
         ValueError: If work item type cannot be determined
     """
+    logger.debug("Parsing spec file for work item: %s", work_item_id)
+
     # Load spec file
     spec_path = Path(f".session/specs/{work_item_id}.md")
 
     if not spec_path.exists():
+        logger.error("Spec file not found: %s", spec_path)
         raise FileNotFoundError(f"Spec file not found: {spec_path}")
 
     with open(spec_path, "r", encoding="utf-8") as f:
@@ -711,17 +721,22 @@ def parse_spec_file(work_item_id: str) -> Dict[str, Any]:
     # Determine work item type from first line (H1 heading)
     first_line = content.split("\n")[0].strip()
     if not first_line.startswith("# "):
+        logger.error("Invalid spec file: Missing H1 heading in %s", spec_path)
         raise ValueError(f"Invalid spec file: Missing H1 heading in {spec_path}")
 
     # Extract type from "# Type: Name" pattern
     heading_match = re.match(r"#\s*(\w+):\s*(.+)", first_line)
     if not heading_match:
+        logger.error(
+            "Invalid spec file: H1 heading doesn't match pattern in %s", spec_path
+        )
         raise ValueError(
             f"Invalid spec file: H1 heading doesn't match 'Type: Name' pattern in {spec_path}"
         )
 
     work_type = heading_match.group(1).lower()
     work_name = heading_match.group(2).strip()
+    logger.debug("Detected work type: %s, name: %s", work_type, work_name)
 
     # Parse based on work item type
     parsers = {

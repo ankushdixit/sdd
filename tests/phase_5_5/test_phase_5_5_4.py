@@ -21,7 +21,7 @@ except ImportError:
     YAML_AVAILABLE = False
     print("⚠️  PyYAML not available - some tests will be skipped")
 
-from scripts.api_contract_validator import APIContractValidator
+from scripts.api_contract_validator import APIContractValidator  # noqa: E402
 
 
 def test_api_contract_validator_class():

@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.quality_gates import QualityGates
+from scripts.quality_gates import QualityGates  # noqa: E402
 
 
 def test_deployment_quality_gates():
