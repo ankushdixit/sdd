@@ -18,6 +18,11 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+# Import logging
+from scripts.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 # Import config validator for schema validation
 try:
     from scripts.config_validator import load_and_validate_config
@@ -52,21 +57,26 @@ class QualityGates:
     def _load_config(self, config_path: Path) -> dict:
         """Load quality gate configuration with validation."""
         if not config_path.exists():
+            logger.debug("Config file not found, using defaults: %s", config_path)
             return self._default_config()
 
+        logger.debug("Loading quality gates config from: %s", config_path)
         schema_path = config_path.parent / "config.schema.json"
 
         # Try to validate if schema and validator available
         if load_and_validate_config is not None and schema_path.exists():
             try:
                 config = load_and_validate_config(config_path, schema_path)
+                logger.info("Quality gates config loaded and validated successfully")
                 return config.get("quality_gates", self._default_config())
             except ValueError as e:
+                logger.error("Config validation failed: %s", e)
                 print(f"❌ {e}")
                 print("Using default configuration")
                 return self._default_config()
         else:
             # Fallback to simple load without validation
+            logger.warning("Loading config without validation (schema or validator not available)")
             with open(config_path) as f:
                 config = json.load(f)
             return config.get("quality_gates", self._default_config())
@@ -129,18 +139,22 @@ class QualityGates:
         Returns:
             (passed: bool, results: dict)
         """
+        logger.info("Running test quality gate")
         config = self.config.get("test_execution", {})
 
         if not config.get("enabled", True):
+            logger.debug("Test execution is disabled")
             return True, {"status": "skipped", "reason": "disabled"}
 
         # Detect language if not provided
         if language is None:
             language = self._detect_language()
+            logger.debug("Detected language: %s", language)
 
         # Get test command for language
         command = config.get("commands", {}).get(language)
         if not command:
+            logger.warning("No test command configured for language: %s", language)
             return True, {"status": "skipped", "reason": f"no command for {language}"}
 
         # Run tests

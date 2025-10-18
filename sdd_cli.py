@@ -26,6 +26,9 @@ from pathlib import Path
 PLUGIN_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(PLUGIN_DIR))
 
+# Import logging configuration
+from scripts.logging_config import setup_logging
+
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
@@ -211,8 +214,37 @@ def route_command(command_name, args):
 
 def main():
     """Main entry point for CLI."""
-    if len(sys.argv) < 2:
-        print("Usage: sdd_cli.py <command> [args...]", file=sys.stderr)
+    # Parse global flags first
+    parser = argparse.ArgumentParser(
+        description="Session-Driven Development CLI",
+        add_help=False,  # Don't show help yet, let commands handle it
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose (DEBUG) logging",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        help="Write logs to file",
+    )
+
+    # Parse known args (global flags) and leave rest for command routing
+    args, remaining = parser.parse_known_args()
+
+    # Setup logging based on global flags
+    log_level = "DEBUG" if args.verbose else "INFO"
+    log_file = Path(args.log_file) if args.log_file else None
+    setup_logging(level=log_level, log_file=log_file)
+
+    # Check if command is provided
+    if len(remaining) < 1:
+        print("Usage: sdd_cli.py [--verbose] [--log-file FILE] <command> [args...]", file=sys.stderr)
+        print("\nGlobal flags:", file=sys.stderr)
+        print("  --verbose, -v        Enable verbose (DEBUG) logging", file=sys.stderr)
+        print("  --log-file FILE      Write logs to file", file=sys.stderr)
         print("\nAvailable commands:", file=sys.stderr)
         print("  Work Items:", file=sys.stderr)
         print(
@@ -227,10 +259,10 @@ def main():
         print("    init", file=sys.stderr)
         return 1
 
-    command = sys.argv[1]
-    args = sys.argv[2:]
+    command = remaining[0]
+    command_args = remaining[1:]
 
-    exit_code = route_command(command, args)
+    exit_code = route_command(command, command_args)
     return exit_code
 
 
