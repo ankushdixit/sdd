@@ -75,7 +75,10 @@ target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
-ignore = ["E501"]  # Line too long (handled by formatter)
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "N801",  # Class name should use CapWords convention (test classes use descriptive names)
+]
 
 [tool.coverage.run]
 source = ["scripts", "sdd_cli"]
