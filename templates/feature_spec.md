@@ -61,6 +61,69 @@ Why is this feature important? What problem does it solve?
 **Example:**
 > We'll implement WebSocket connections using Socket.IO for bidirectional communication. The server will emit events when tasks are updated, and the client will listen for these events and update the UI. We'll use a notification queue on the backend to handle high-volume scenarios and ensure delivery.
 
+### LLM/Processing Configuration
+
+<!-- For LLM-based features: Document DSPy signatures, LLM provider, and usage patterns
+     For deterministic features: Describe processing type and algorithms
+     For external API features: Document API integration details
+     If not applicable: State "Not Applicable" -->
+
+**For LLM-based features:**
+
+```markdown
+**Type:** LLM-based (DSPy)
+
+**DSPy Signature:**
+```python
+class ExampleSignature(dspy.Signature):
+    """Description of what this signature does."""
+
+    input_field = dspy.InputField(desc="Description of input")
+    output_field = dspy.OutputField(desc="Description of output")
+```
+
+**LLM Provider:** Google AI Studio (Gemini 2.5 Flash)
+
+**LLM Usage:**
+- Analyzes input data to extract key information
+- Generates structured output based on learned patterns
+- Fallback to rule-based processing if LLM unavailable
+```
+
+**For deterministic/non-LLM features:**
+
+```markdown
+**Type:** Deterministic (No LLM)
+
+**Processing Type:**
+- Parse input data using regex patterns
+- Transform data through validation pipeline
+- Apply business logic rules to generate output
+- Use algorithm X for data aggregation
+```
+
+**For external API integration:**
+
+```markdown
+**Type:** External API Integration (No LLM)
+
+**API Provider:** [Provider name]
+
+**Processing Type:**
+- Make API calls to external service
+- Transform API responses to internal format
+- Handle rate limiting and retries
+- Cache results for performance
+
+**Rate Limits:** [Details if applicable]
+```
+
+**If not applicable:**
+
+```markdown
+Not Applicable - Standard application logic without LLM or special processing requirements.
+```
+
 ### Components Affected
 
 <!-- List all files, modules, or systems that will be modified -->

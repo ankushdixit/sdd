@@ -68,7 +68,7 @@ These sections appear in multiple templates with consistent naming:
 | Section | Subsections | Content |
 |---------|-------------|---------|
 | `## User Story` | None | "As a ... I want ... so that ..." |
-| `## Implementation Details` | `### Approach`, `### Components Affected`, `### API Changes`, `### Database Changes` | Code blocks, lists |
+| `## Implementation Details` | `### Approach`, `### LLM/Processing Configuration`, `### Components Affected`, `### API Changes`, `### Database Changes` | Code blocks, lists |
 | `## Documentation Updates` | None | Checklist |
 
 #### Bug Template
@@ -340,6 +340,69 @@ def extract_code_blocks(content: str) -> List[Dict[str, str]]:
     # Match ```language\n...\n``` pattern
     # Return list of code blocks with language and content
 ```
+
+---
+
+## Special Subsections
+
+### LLM/Processing Configuration (Feature Template)
+
+The `### LLM/Processing Configuration` subsection within "Implementation Details" documents how a feature processes data, particularly when LLM-based processing, deterministic algorithms, or external API integrations are involved.
+
+**Usage Patterns:**
+
+1. **LLM-based Features** - For features using LLMs (e.g., DSPy framework):
+   ```markdown
+   **Type:** LLM-based (DSPy)
+
+   **DSPy Signature:**
+   ```python
+   class ExampleSignature(dspy.Signature):
+       """Description."""
+       input_field = dspy.InputField(desc="...")
+       output_field = dspy.OutputField(desc="...")
+   ```
+
+   **LLM Provider:** Google AI Studio (Gemini 2.5 Flash)
+
+   **LLM Usage:**
+   - How the LLM is used
+   - Fallback strategy
+   ```
+
+2. **Deterministic Features** - For features using traditional algorithms:
+   ```markdown
+   **Type:** Deterministic (No LLM)
+
+   **Processing Type:**
+   - Algorithm details
+   - Data transformations
+   ```
+
+3. **External API Integrations** - For features calling external services:
+   ```markdown
+   **Type:** External API Integration (No LLM)
+
+   **API Provider:** [Name]
+   **Processing Type:**
+   - API call patterns
+   - Response handling
+
+   **Rate Limits:** [Details]
+   ```
+
+4. **Standard Features** - For typical application logic:
+   ```markdown
+   Not Applicable - Standard application logic without LLM or special processing requirements.
+   ```
+
+**When to Use:**
+- Feature involves LLM processing (especially DSPy-based agents)
+- Feature uses non-trivial data processing algorithms
+- Feature integrates with external APIs
+- Otherwise: state "Not Applicable"
+
+**Parser Field:** `implementation_details.llm_processing_config`
 
 ---
 

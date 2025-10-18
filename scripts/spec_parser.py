@@ -245,6 +245,9 @@ def parse_feature_spec(content: str) -> dict[str, Any]:
     if impl_section:
         result["implementation_details"] = {
             "approach": extract_subsection(impl_section, "Approach"),
+            "llm_processing_config": extract_subsection(
+                impl_section, "LLM/Processing Configuration"
+            ),
             "components_affected": extract_subsection(impl_section, "Components Affected"),
             "api_changes": extract_subsection(impl_section, "API Changes"),
             "database_changes": extract_subsection(impl_section, "Database Changes"),
