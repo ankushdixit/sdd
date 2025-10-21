@@ -210,6 +210,49 @@ def load_work_item_spec(work_item) -> str:
     return f"Specification file not found: {spec_file}"
 
 
+def shift_heading_levels(markdown_content: str, shift: int) -> str:
+    """Shift all markdown heading levels by a specified amount.
+
+    Args:
+        markdown_content: The markdown text to process
+        shift: Number of levels to shift (positive = deeper, e.g., H1 → H3 if shift=2)
+
+    Returns:
+        Modified markdown with shifted heading levels
+
+    Example:
+        shift_heading_levels("# Title\n## Section", 2)
+        Returns: "### Title\n#### Section"
+    """
+    if not markdown_content or shift <= 0:
+        return markdown_content
+
+    lines = markdown_content.split("\n")
+    result = []
+
+    for line in lines:
+        # Check if line starts with heading marker
+        if line.startswith("#"):
+            # Count existing heading level
+            heading_level = 0
+            for char in line:
+                if char == "#":
+                    heading_level += 1
+                else:
+                    break
+
+            # Calculate new level (cap at 6 for markdown)
+            new_level = min(heading_level + shift, 6)
+
+            # Reconstruct line with new heading level
+            rest_of_line = line[heading_level:]
+            result.append("#" * new_level + rest_of_line)
+        else:
+            result.append(line)
+
+    return "\n".join(result)
+
+
 def validate_environment():
     """Validate development environment."""
     checks = []
@@ -296,13 +339,15 @@ def generate_briefing(item_id, item, learnings_data):
     # Project context section
     briefing += "\n## Project Context\n\n"
 
-    # Vision (if available) - full content in markdown code block to avoid heading conflicts
+    # Vision (if available) - shift headings to maintain hierarchy under H3
     if "vision.md" in project_docs:
-        briefing += f"### Vision\n```markdown\n{project_docs['vision.md']}\n```\n\n"
+        shifted_vision = shift_heading_levels(project_docs["vision.md"], 3)
+        briefing += f"### Vision\n\n{shifted_vision}\n\n"
 
-    # Architecture (if available) - full content in markdown code block to avoid heading conflicts
+    # Architecture (if available) - shift headings to maintain hierarchy under H3
     if "architecture.md" in project_docs:
-        briefing += f"### Architecture\n```markdown\n{project_docs['architecture.md']}\n```\n\n"
+        shifted_arch = shift_heading_levels(project_docs["architecture.md"], 3)
+        briefing += f"### Architecture\n\n{shifted_arch}\n\n"
 
     # Current stack
     briefing += f"### Current Stack\n```\n{current_stack}\n```\n\n"
@@ -320,12 +365,11 @@ def generate_briefing(item_id, item, learnings_data):
 
 """
 
-    # Work item specification - full content in markdown code block to avoid heading conflicts
+    # Work item specification - shift headings to maintain hierarchy under H2
+    shifted_spec = shift_heading_levels(work_item_spec, 2)
     briefing += f"""## Work Item Specification
 
-```markdown
-{work_item_spec}
-```
+{shifted_spec}
 
 ## Dependencies
 """
