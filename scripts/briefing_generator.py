@@ -183,12 +183,31 @@ def load_current_tree():
     return "Tree not yet generated"
 
 
-def load_work_item_spec(work_item_id: str) -> str:
-    """Load work item specification file."""
-    spec_file = Path(".session/specs") / f"{work_item_id}.md"
+def load_work_item_spec(work_item) -> str:
+    """Load work item specification file.
+
+    Args:
+        work_item: Either a work item dict with 'spec_file' and 'id' fields,
+                  or a string work_item_id (for backwards compatibility)
+    """
+    # Handle backwards compatibility: accept both dict and string
+    if isinstance(work_item, str):
+        # Legacy call with just work_item_id string
+        work_item_id = work_item
+        spec_file = Path(".session/specs") / f"{work_item_id}.md"
+    else:
+        # New call with work item dict
+        # Use spec_file from work item if available, otherwise fallback to ID-based pattern
+        spec_file_path = work_item.get("spec_file")
+        if spec_file_path:
+            spec_file = Path(spec_file_path)
+        else:
+            # Fallback to legacy pattern for backwards compatibility
+            spec_file = Path(".session/specs") / f"{work_item['id']}.md"
+
     if spec_file.exists():
         return spec_file.read_text()
-    return f"Specification file not found: .session/specs/{work_item_id}.md"
+    return f"Specification file not found: {spec_file}"
 
 
 def validate_environment():
@@ -241,7 +260,7 @@ def generate_briefing(item_id, item, learnings_data):
     project_docs = load_project_docs()
     current_stack = load_current_stack()
     current_tree = load_current_tree()
-    work_item_spec = load_work_item_spec(item_id)
+    work_item_spec = load_work_item_spec(item)
     env_checks = validate_environment()
     git_status = check_git_status()
 
