@@ -674,6 +674,9 @@ def main():
             with open(work_items_file, "w") as f:
                 json.dump(work_items_data, f, indent=2)
 
+            # Notify that status has been updated
+            print(f"✓ Work item status updated: {item_id} → in_progress\n")
+
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
     with open(briefing_file, "w") as f:
         f.write(briefing)

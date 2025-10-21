@@ -100,6 +100,20 @@ def parse_work_show_args(args):
     return parser.parse_args(args)
 
 
+def parse_work_update_args(args):
+    """Parse arguments for work-update command."""
+    parser = argparse.ArgumentParser(description="Update work item fields")
+    parser.add_argument("work_id", help="Work item ID")
+    parser.add_argument(
+        "--status", help="Update status (not_started/in_progress/blocked/completed)"
+    )
+    parser.add_argument("--priority", help="Update priority (critical/high/medium/low)")
+    parser.add_argument("--milestone", help="Update milestone")
+    parser.add_argument("--add-dependency", help="Add dependency by ID")
+    parser.add_argument("--remove-dependency", help="Remove dependency by ID")
+    return parser.parse_args(args)
+
+
 def route_command(command_name, args):
     """
     Route command to appropriate script/function.
@@ -169,12 +183,39 @@ def route_command(command_name, args):
             elif command_name == "work-new":
                 result = method()
             elif command_name == "work-update":
-                # Interactive mode - expects work_id as first arg
-                if args:
-                    result = method(args[0])
+                # Parse arguments
+                parsed = parse_work_update_args(args)
+
+                # Check if any flags are provided (non-interactive mode)
+                has_flags = any(
+                    [
+                        parsed.status,
+                        parsed.priority,
+                        parsed.milestone,
+                        parsed.add_dependency,
+                        parsed.remove_dependency,
+                    ]
+                )
+
+                if has_flags:
+                    # Non-interactive mode: use update_work_item with kwargs
+                    non_interactive_method = getattr(instance, "update_work_item")
+                    kwargs = {}
+                    if parsed.status:
+                        kwargs["status"] = parsed.status
+                    if parsed.priority:
+                        kwargs["priority"] = parsed.priority
+                    if parsed.milestone:
+                        kwargs["milestone"] = parsed.milestone
+                    if parsed.add_dependency:
+                        kwargs["add_dependency"] = parsed.add_dependency
+                    if parsed.remove_dependency:
+                        kwargs["remove_dependency"] = parsed.remove_dependency
+
+                    result = non_interactive_method(parsed.work_id, **kwargs)
                 else:
-                    print("Error: work-update requires a work item ID", file=sys.stderr)
-                    return 1
+                    # Interactive mode: use update_work_item_interactive
+                    result = method(parsed.work_id)
             else:
                 result = method()
 
