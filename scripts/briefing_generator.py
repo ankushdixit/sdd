@@ -296,13 +296,13 @@ def generate_briefing(item_id, item, learnings_data):
     # Project context section
     briefing += "\n## Project Context\n\n"
 
-    # Vision (if available) - full content
+    # Vision (if available) - full content in markdown code block to avoid heading conflicts
     if "vision.md" in project_docs:
-        briefing += f"### Vision\n{project_docs['vision.md']}\n\n"
+        briefing += f"### Vision\n```markdown\n{project_docs['vision.md']}\n```\n\n"
 
-    # Architecture (if available) - full content
+    # Architecture (if available) - full content in markdown code block to avoid heading conflicts
     if "architecture.md" in project_docs:
-        briefing += f"### Architecture\n{project_docs['architecture.md']}\n\n"
+        briefing += f"### Architecture\n```markdown\n{project_docs['architecture.md']}\n```\n\n"
 
     # Current stack
     briefing += f"### Current Stack\n```\n{current_stack}\n```\n\n"
@@ -320,10 +320,12 @@ def generate_briefing(item_id, item, learnings_data):
 
 """
 
-    # Work item specification - full content
+    # Work item specification - full content in markdown code block to avoid heading conflicts
     briefing += f"""## Work Item Specification
 
+```markdown
 {work_item_spec}
+```
 
 ## Dependencies
 """
