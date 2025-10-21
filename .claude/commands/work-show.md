@@ -8,7 +8,7 @@ argument-hint: <work_item_id>
 Display detailed information for a specific work item by running:
 
 ```bash
-python3 scripts/../sdd_cli.py work-show "$@"
+sdd work-show "$@"
 ```
 
 The work item ID is provided in `$ARGUMENTS` and passed through `"$@"`.

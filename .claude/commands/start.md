@@ -8,7 +8,7 @@ argument-hint: [work_item_id]
 Generate a comprehensive session briefing by running:
 
 ```bash
-python3 scripts/../sdd_cli.py start "$@"
+sdd start "$@"
 ```
 
 If the user provided a work item ID in `$ARGUMENTS`, it will be passed through `"$@"`. If no ID is provided, the script will automatically find the next available work item.

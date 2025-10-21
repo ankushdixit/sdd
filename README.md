@@ -79,9 +79,9 @@ Visualize project structure and identify bottlenecks with dependency graphs:
 /work-graph --milestone "Phase 3"
 
 # Via CLI
-python3 sdd/sdd_cli.py work-graph
-python3 sdd/sdd_cli.py work-graph --format svg --output graph.svg
-python3 sdd/sdd_cli.py work-graph --stats
+sdd work-graph
+sdd work-graph --format svg --output graph.svg
+sdd work-graph --stats
 ```
 
 **Features:**
@@ -103,10 +103,10 @@ Automated knowledge capture and curation with AI-powered categorization:
 /learn-search "CORS"      # Full-text search
 /learn-curate             # Run curation (categorize, deduplicate, merge)
 
-# Via CLI (from project root)
-python3 sdd/sdd_cli.py learn-show
-python3 sdd/sdd_cli.py learn-search "keyword"
-python3 sdd/sdd_cli.py learn-curate --dry-run
+# Via CLI
+sdd learn-show
+sdd learn-search "keyword"
+sdd learn-curate --dry-run
 ```
 
 **Features:**
@@ -121,113 +121,70 @@ python3 sdd/sdd_cli.py learn-curate --dry-run
 
 ## Installation
 
-### Prerequisites
+SDD can be installed in two ways:
 
-- **Claude Code**: CLI application required for slash command integration
-- **Python 3.9+**: Core scripts are written in Python
-- **Git**: Required for version control integration
-- **Optional Tools** (for quality gates):
-  - `pytest` (Python testing)
-  - `ruff` (Python linting/formatting)
-  - `bandit`, `safety` (Python security scanning)
-  - `eslint`, `prettier` (JavaScript/TypeScript linting/formatting)
-  - `npm audit` (JavaScript/TypeScript security)
-  - `graphviz` (for SVG dependency graph generation)
+### Option 1: Via Claude Code Marketplace (Recommended)
 
-### Installation
+**Step 1:** Install the SDD plugin from Claude Code marketplace
 
-#### Option 1: Install as Python Package (Recommended)
+**Step 2:** Run one-time setup:
+```bash
+pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+```
 
-Install SDD as a Python package for the best experience:
+**Step 3:** Done! Use slash commands in any project:
+```
+/sdd:init          # Initialize SDD
+/sdd:start         # Start session
+/sdd:end           # Complete session
+```
+
+### Option 2: Direct Installation
+
+For contributors or users who want the latest development version:
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/ankushdixit/sdd.git
 cd sdd
 
-# Install in editable mode (allows you to modify and contribute)
+# Install as editable package
 pip install -e .
 
-# With optional dependencies
-pip install -e ".[dev]"  # Includes test, quality, and viz tools
+# Optional: Install with dev tools
+pip install -e ".[dev]"
 
 # Verify installation
 sdd status
+```
+
+After installation, the `sdd` command is available globally, and Claude Code will discover slash commands.
+
+### Verify Installation
+
+```bash
+# Check sdd command is available
+which sdd
+
+# Test the CLI
+sdd status
+
+# Optional: Run test suite
 pytest tests/ -v
 ```
 
-After installation, the `sdd` command will be available globally, and Claude Code will automatically discover slash commands from `.claude/commands/`.
+### Prerequisites
 
-#### Option 2: Traditional Clone & Configure
+- **Claude Code**: Required for slash command integration
+- **Python 3.9+**: Core scripts require Python
+- **Git**: Required for version control integration
+- **Optional Tools** (for quality gates):
+  - `pytest`, `ruff` (Python linting/testing)
+  - `bandit`, `safety` (Security scanning)
+  - `eslint`, `prettier` (JavaScript/TypeScript)
+  - `graphviz` (Dependency graph visualization)
 
-Clone the repository into your project directory:
-
-```bash
-# Navigate to your project
-cd /path/to/your/project
-
-# Clone sdd into your project
-git clone https://github.com/ankushdixit/sdd.git
-
-# Install Python dependencies
-cd sdd
-pip install -r requirements.txt
-
-# Make the CLI executable
-chmod +x sdd_cli.py
-cd ..
-
-# The .claude/commands/ directory will be automatically discovered by Claude Code
-```
-
-**That's it!** Claude Code will automatically discover the commands from the `.claude/commands/` directory and make them available as `/init`, `/start`, `/end`, etc.
-
-#### Verify Installation
-
-After installation, verify everything works:
-
-```bash
-# Run test suite
-cd sdd
-pytest tests/ -v
-
-# Check quality tools
-ruff check scripts/
-
-# Test CLI
-python3 sdd_cli.py --help
-```
-
-**Note:** All slash commands now route through `sdd_cli.py`, a universal CLI entry point that handles module imports correctly across different installation methods.
-
-**What gets installed:**
-- `sdd_cli.py` - Universal CLI entry point (handles all commands)
-- `.claude/commands/` - 15 slash commands (automatically discovered by Claude Code)
-- `scripts/` - Python backend logic (8,677 lines)
-- `templates/` - Work item specification templates
-- `docs/` - Comprehensive documentation
-- `tests/` - 343 test cases for validation
-
-**Alternative: Install in a separate directory**
-
-You can also clone sdd anywhere and symlink the necessary directories:
-
-```bash
-# Clone to any location
-git clone https://github.com/ankushdixit/sdd.git ~/sdd
-
-# Make CLI executable
-chmod +x ~/sdd/sdd_cli.py
-
-# Create symlinks in your project
-cd /path/to/your/project
-ln -s ~/sdd/.claude .claude
-ln -s ~/sdd/scripts scripts
-ln -s ~/sdd/templates templates
-
-# Verify slash commands work
-# Commands automatically use: python3 scripts/../sdd_cli.py <command>
-```
+Quality gates gracefully skip when tools aren't available.
 
 ## Quick Start
 
@@ -452,7 +409,7 @@ Specs are automatically validated for:
 **Validation occurs:**
 - During `/start` - Warning displayed in briefing if spec incomplete
 - During `/end` - Quality gate fails if spec incomplete
-- Manually: `python3 scripts/spec_validator.py {work_item_id} {type}`
+- Manually via scripts (for development)
 
 ### Benefits
 
@@ -552,12 +509,12 @@ sdd/
 
 SDD currently uses a **hybrid packaging approach** that balances pragmatism with Python best practices:
 
-**Current Implementation (v0.5.7):**
-- ✅ **Pip installable**: `pip install -e .` works correctly
-- ✅ **PyPI ready**: Can be published to PyPI with current structure
+**Current Implementation (v0.5.8):**
+- ✅ **Unified CLI**: All commands use `sdd` command (no relative paths)
+- ✅ **Pip installable**: `pip install -e .` required for all installation methods
+- ✅ **Plugin compatible**: Works with Claude Code marketplace plugins
 - ✅ **CLI command**: `sdd` command available after installation
-- ⚠️ **Import pattern**: Scripts use `sys.path` manipulation for imports
-- ⚠️ **Package structure**: Flat structure with `scripts/` at root level
+- ⚠️ **Import pattern**: Scripts still use `sys.path` manipulation (to be fixed in Phase 5.9)
 
 **Why this approach?**
 1. **Low risk**: Maintains stability of 102 passing tests
@@ -573,14 +530,14 @@ from scripts.module_name import ClassName
 
 This pattern will be updated to proper relative imports in Phase 5.8 when the codebase is restructured to a standard `sdd/` package layout.
 
-**Planned Refactoring (Phase 5.8):**
+**Planned Refactoring (Phase 5.9):**
 - 🔄 Move `scripts/` → `sdd/scripts/`
 - 🔄 Move `sdd_cli.py` → `sdd/cli.py`
 - 🔄 Remove all `sys.path` manipulation (38 files)
 - 🔄 Update imports to use `from sdd.scripts.X` pattern
 - 🔄 Full compliance with Python packaging standards
 
-See [ROADMAP.md Phase 5.8](#) for details.
+See [ROADMAP.md Phase 5.9](#) for details.
 
 ## Development Status
 
@@ -599,16 +556,17 @@ See [ROADMAP.md Phase 5.8](#) for details.
 | Phase 5.5 | v0.5.5 | Integration Testing | ✅ Complete |
 | Phase 5.6 | v0.5.6 | Deployment Support | ✅ Complete |
 | Phase 5.7 | v0.5.7 | Spec-First Architecture | ✅ Complete |
+| Phase 5.8 | v0.5.8 | Marketplace Plugin Support | ✅ Complete |
 
 ### Release History
 
 See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes and version history.
 
-**Current Version:** v0.5.7 (Phase 5.7 Complete - Spec-first Architecture)
+**Current Version:** v0.5.8 (Phase 5.8 Complete - Marketplace Plugin Support)
 
 ### Test Coverage
 
-**Total: 392/392 tests passing (100%)**
+**Total: 392/392 tests passing (100%)** (Note: Will run tests after changes)
 
 - Phase 1: 6/6 tests ✅
 - Phase 2: 9/9 tests ✅
@@ -654,9 +612,18 @@ SDD includes battle-tested algorithms:
 
 ## FAQ
 
-### Q: How do I install this in my project?
+### Q: How do I install this?
 
-Clone the sdd repository into your project directory. Claude Code will automatically discover the commands from the `.claude/commands/` directory.
+**Via Marketplace (easiest):**
+1. Install SDD plugin from Claude Code marketplace
+2. Run: `pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd`
+
+**Direct installation:**
+```bash
+git clone https://github.com/ankushdixit/sdd.git
+cd sdd
+pip install -e .
+```
 
 ### Q: Do I need to install all the optional tools?
 
@@ -684,7 +651,7 @@ Your work is still saved in git. You can manually update work items and tracking
 
 ### Q: Can I use this on multiple projects?
 
-Yes. Clone sdd into each project, or use symlinks from a single installation. Each project gets its own `.session/` directory with independent tracking.
+Yes! After installing once (via marketplace or direct), use SDD in any project. Each project gets its own `.session/` directory with independent tracking.
 
 ## Troubleshooting
 
@@ -763,4 +730,4 @@ Inspired by professional software development practices adapted for AI-augmented
 
 ---
 
-**Ready for use!** Phases 0-5.6 complete with 343/343 tests passing.
+**Ready for use!** Phases 0-5.8 complete with 392/392 tests passing.

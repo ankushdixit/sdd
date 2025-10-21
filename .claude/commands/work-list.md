@@ -10,7 +10,7 @@ List all work items, optionally filtered by status, type, or milestone.
 Run the following command:
 
 ```bash
-python3 scripts/../sdd_cli.py work-list "$@"
+sdd work-list "$@"
 ```
 
 The CLI will automatically parse and handle filters from `$ARGUMENTS`:

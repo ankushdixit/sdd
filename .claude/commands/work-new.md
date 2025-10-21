@@ -27,7 +27,7 @@ Guide the user through creating a new work item by asking for the following info
 Once you have all the information, create the work item by running:
 
 ```bash
-python3 scripts/../sdd_cli.py work-new
+sdd work-new
 ```
 
 The CLI will interactively prompt the user for:

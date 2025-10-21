@@ -7,7 +7,7 @@ description: Complete the current development session with quality gates and sum
 Complete the current session by running validation and generating summary:
 
 ```bash
-python3 scripts/../sdd_cli.py end
+sdd end
 ```
 
 This script validates quality gates:

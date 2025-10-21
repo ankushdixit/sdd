@@ -12,7 +12,7 @@ View captured learnings with optional filtering.
 Parse $ARGUMENTS for filters and run the show-learnings command:
 
 ```bash
-python3 scripts/../sdd_cli.py learn-show "$@"
+sdd learn-show "$@"
 ```
 
 ### Filter Options
@@ -33,27 +33,27 @@ python3 scripts/../sdd_cli.py learn-show "$@"
 
 Show all learnings:
 ```bash
-python3 scripts/../sdd_cli.py learn-show
+sdd learn-show
 ```
 
 Show only gotchas:
 ```bash
-python3 scripts/../sdd_cli.py learn-show --category gotchas
+sdd learn-show --category gotchas
 ```
 
 Show learnings tagged with "fastapi":
 ```bash
-python3 scripts/../sdd_cli.py learn-show --tag fastapi
+sdd learn-show --tag fastapi
 ```
 
 Show learnings from session 5:
 ```bash
-python3 scripts/../sdd_cli.py learn-show --session 5
+sdd learn-show --session 5
 ```
 
 Combine filters (gotchas from session 5):
 ```bash
-python3 scripts/../sdd_cli.py learn-show --category gotchas --session 5
+sdd learn-show --category gotchas --session 5
 ```
 
 ## Display Format

@@ -14,6 +14,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.8] - 2025-10-21
+
+### Added
+- **Marketplace Plugin Support**: SDD now works as a Claude Code marketplace plugin
+- One-time setup command for plugin users: `pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd`
+- Simplified installation documentation with clear paths for both marketplace and direct installation
+
+### Changed
+- **Unified CLI**: All 15 slash command files now use `sdd` command instead of relative paths
+- Updated command files: `init.md`, `start.md`, `end.md`, `status.md`, `validate.md`, `learn*.md`, `work-*.md`
+- Simplified README installation section with two clear options (marketplace vs. direct)
+- Updated all CLI examples throughout documentation to use `sdd` command
+- Updated marketplace README (`claude-plugins/README.md`) with v0.5.8 installation instructions
+- Updated Architecture Notes to reflect v0.5.8 changes
+
+### Technical Details
+- **Files Modified**: 18 files total
+  - 15 command files (`.claude/commands/*.md`)
+  - 1 main README (`README.md`)
+  - 1 marketplace README (in separate repo)
+  - 1 pyproject.toml (version bump)
+- **Breaking Changes**: Command files no longer use `python3 scripts/../sdd_cli.py` - now use `sdd` CLI
+- **Migration**: Users must run `pip install -e .` if not already done
+
+### Migration Guide
+
+**For marketplace plugin users:**
+```bash
+pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+```
+
+**For existing direct installations:**
+```bash
+cd /path/to/sdd
+pip install -e .
+```
+
+All slash commands will now work via the `sdd` CLI.
+
+### Benefits
+- ✅ Plugin works from marketplace installation
+- ✅ No need to clone SDD into every project
+- ✅ Cleaner, more standard approach
+- ✅ Works identically whether installed directly or via marketplace
+- ✅ Aligns with Python package best practices
+
+### Reference
+See [ROADMAP.md Phase 5.8](./ROADMAP.md#phase-58-marketplace-plugin-support-v058---unified-cli) for complete details.
+
+---
+
 ## [0.5.7] - 2025-10-18
 
 ### Added

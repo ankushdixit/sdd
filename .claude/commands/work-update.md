@@ -12,7 +12,7 @@ Update fields of an existing work item. This command supports two modes:
 When only the work item ID is provided, start an interactive update session:
 
 ```bash
-python3 scripts/../sdd_cli.py work-update "$@"
+sdd work-update "$@"
 ```
 
 The script will prompt the user to choose what to update:
