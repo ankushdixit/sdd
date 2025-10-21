@@ -320,7 +320,6 @@ def generate_commit_message(status, work_item):
     session_num = status["current_session"]
     work_type = work_item["type"]
     title = work_item["title"]
-    work_id = work_item.get("id")
 
     message = f"Session {session_num:03d}: {work_type.title()} - {title}\n\n"
 

@@ -95,9 +95,8 @@ class WorkItemManager:
         if dependencies:
             print(f"Dependencies: {', '.join(dependencies)}")
 
-        if spec_created:
-            spec_path = self.specs_dir / f"{work_id}.md"
-            print(f"\nSpecification saved to: {spec_path}")
+        if spec_file:
+            print(f"\nSpecification saved to: {spec_file}")
 
         print("\nNext steps:")
         print(f"1. Edit specification: .session/specs/{work_id}.md")
@@ -168,9 +167,8 @@ class WorkItemManager:
         if dep_list:
             print(f"Dependencies: {', '.join(dep_list)}")
 
-        if spec_created:
-            spec_path = self.specs_dir / f"{work_id}.md"
-            print(f"\nSpecification saved to: {spec_path}")
+        if spec_file:
+            print(f"\nSpecification saved to: {spec_file}")
 
         print("\nNext steps:")
         print(f"1. Edit specification: .session/specs/{work_id}.md")
