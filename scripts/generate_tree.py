@@ -21,20 +21,38 @@ class TreeGenerator:
 
         # Items to ignore
         self.ignore_patterns = [
+            # Version control
             ".git",
+            # Python
             "__pycache__",
             "*.pyc",
             ".pytest_cache",
             ".venv",
             "venv",
-            "node_modules",
-            ".DS_Store",
             "*.egg-info",
             ".mypy_cache",
             ".ruff_cache",
+            # JavaScript/TypeScript
+            "node_modules",
+            ".next",
+            ".turbo",
+            "out",
+            "build",
+            "dist",
+            ".vercel",
+            "*.tsbuildinfo",
+            # Test coverage
+            "coverage",
+            ".nyc_output",
+            # Caches
+            ".cache",
+            # OS
+            ".DS_Store",
+            # Temp/logs
             "*.log",
             "*.tmp",
             "*.backup",
+            # SDD
             ".session",
         ]
 
