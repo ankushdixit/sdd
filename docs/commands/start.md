@@ -74,4 +74,16 @@ The command markdown instructs Claude to:
 1. Run script: `python scripts/briefing_generator.py`
 2. Read generated briefing
 3. Update work item status
-4. Begin work
+4. Begin implementation immediately following strict guidelines
+
+**Implementation Guidelines:**
+
+Claude must:
+- Follow the spec strictly without adding features
+- Only implement what is explicitly in acceptance criteria
+- Ask for clarification if anything is unclear or ambiguous
+- Ensure every acceptance criterion is met
+- Respect all validation criteria (testing, documentation, quality)
+- Stay focused and not deviate from the spec
+
+The specification defines the exact scope and boundaries of the work.
