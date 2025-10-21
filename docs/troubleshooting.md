@@ -212,6 +212,92 @@ git branch -m session-XXX-US-X-X session-XXX-US-X-X-old
 
 ---
 
+### Next.js Initialization Conflicts with `.session/` Directory
+
+**Symptom:** When trying to initialize a Next.js project with `create-next-app`, you get an error:
+```
+Error: The directory contains files that could conflict:
+  .session/
+Either try using a new directory name, or remove the files listed above.
+```
+
+**Cause:** The SDD framework creates a `.session/` directory for tracking work items, learnings, and session state. Tools like `create-next-app` detect this as a conflict because they expect an empty directory.
+
+**Solutions:**
+
+**Option 1: Initialize in Parent Directory (Recommended)**
+```bash
+# If you're in the SDD project directory, initialize Next.js in the current directory
+# using the --force flag (use with caution)
+npx create-next-app@latest . --typescript --tailwind --app --use-npm
+# When prompted about conflicts, confirm to proceed
+```
+
+**Option 2: Manual Setup**
+```bash
+# Instead of using create-next-app, manually set up Next.js
+npm install next@latest react@latest react-dom@latest
+npm install --save-dev typescript @types/react @types/node
+npm install --save-dev tailwindcss postcss autoprefixer
+
+# Create necessary config files manually
+npx tailwindcss init -p
+
+# Create directory structure
+mkdir -p app
+```
+
+**Option 3: Temporary Workaround**
+```bash
+# Temporarily rename .session directory
+mv .session .session.tmp
+
+# Run create-next-app
+npx create-next-app@latest . --typescript --tailwind --app --use-npm
+
+# Restore .session directory
+mv .session.tmp .session
+```
+
+**Note:** The `.session/` directory is essential for SDD to function. Do not delete it or add it to `.gitignore` if you're using Session-Driven Development workflow.
+
+---
+
+### `work-update` Command Fails with EOFError
+
+**Symptom:** Running `sdd work-update US-0-1 --status in_progress` fails with:
+```
+EOFError: EOF when reading a line
+```
+
+**Cause:** Prior to version 0.5.10, the `work-update` command always used interactive mode, even when flags were provided. This caused it to prompt for user input, which fails when Claude runs it non-interactively.
+
+**Solution:**
+
+**For SDD v0.5.10+:** This is fixed! The `work-update` command now supports both interactive and non-interactive modes:
+
+```bash
+# Non-interactive mode (with flags)
+sdd work-update US-0-1 --status completed
+sdd work-update US-0-1 --priority high
+sdd work-update US-0-1 --milestone "MVP"
+sdd work-update US-0-1 --add-dependency US-0-2
+sdd work-update US-0-1 --remove-dependency US-0-3
+
+# Interactive mode (no flags)
+sdd work-update US-0-1
+# Prompts: What would you like to update?
+```
+
+**For older versions:** Upgrade to the latest version or avoid using `work-update` in non-interactive contexts.
+
+**Important for Claude Code Users:**
+- The `/sdd:start` command automatically updates the work item status to `in_progress`
+- You do NOT need to manually run `sdd work-update US-0-1 --status in_progress` after starting a session
+- The briefing will show: `✓ Work item status updated: US-0-1 → in_progress`
+
+---
+
 ## Getting Help
 
 If you encounter issues not covered here:
