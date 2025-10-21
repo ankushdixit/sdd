@@ -335,9 +335,7 @@ def main():
     args = parser.parse_args()
 
     generator = StackGenerator()
-    changes = generator.update_stack(
-        session_num=args.session, non_interactive=args.non_interactive
-    )
+    changes = generator.update_stack(session_num=args.session, non_interactive=args.non_interactive)
 
     if changes:
         print(f"\n✓ Stack updated with {len(changes)} changes")
