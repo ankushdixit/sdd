@@ -61,28 +61,28 @@ def run_quality_gates(work_item=None):
     # Run linting
     passed, linting_results = gates.run_linting()
     all_results["linting"] = linting_results
-    if not passed and gates.config.get("linting", {}).get("required", False):
+    if not passed and gates.config.get("linting", {}).get("required", True):
         all_passed = False
         failed_gates.append("linting")
 
     # Run formatting
     passed, formatting_results = gates.run_formatting()
     all_results["formatting"] = formatting_results
-    if not passed and gates.config.get("formatting", {}).get("required", False):
+    if not passed and gates.config.get("formatting", {}).get("required", True):
         all_passed = False
         failed_gates.append("formatting")
 
     # Validate documentation
     passed, doc_results = gates.validate_documentation(work_item)
     all_results["documentation"] = doc_results
-    if not passed and gates.config.get("documentation", {}).get("required", False):
+    if not passed and gates.config.get("documentation", {}).get("required", True):
         all_passed = False
         failed_gates.append("documentation")
 
     # Verify Context7 libraries
     passed, context7_results = gates.verify_context7_libraries()
     all_results["context7"] = context7_results
-    if not passed and gates.config.get("context7", {}).get("required", False):
+    if not passed and gates.config.get("context7", {}).get("required", True):
         all_passed = False
         failed_gates.append("context7")
 
@@ -113,30 +113,56 @@ def update_all_tracking(session_num):
     # Update stack
     try:
         result = subprocess.run(
-            ["python", "scripts/generate_stack.py", "--session", str(session_num)],
+            [
+                "python",
+                "scripts/generate_stack.py",
+                "--session",
+                str(session_num),
+                "--non-interactive",
+            ],
             capture_output=True,
             text=True,
             timeout=30,
         )
         if result.returncode == 0:
             print("✓ Stack updated")
+            # Print output if there were changes
+            if result.stdout.strip():
+                for line in result.stdout.strip().split("\n"):
+                    if line.strip():
+                        print(f"  {line}")
         else:
-            print("⚠️  Stack update skipped")
+            print(f"⚠️  Stack update failed (exit code {result.returncode})")
+            if result.stderr:
+                print(f"  Error: {result.stderr}")
     except Exception as e:
         print(f"⚠️  Stack update failed: {e}")
 
     # Update tree
     try:
         result = subprocess.run(
-            ["python", "scripts/generate_tree.py", "--session", str(session_num)],
+            [
+                "python",
+                "scripts/generate_tree.py",
+                "--session",
+                str(session_num),
+                "--non-interactive",
+            ],
             capture_output=True,
             text=True,
             timeout=30,
         )
         if result.returncode == 0:
             print("✓ Tree updated")
+            # Print output if there were changes
+            if result.stdout.strip():
+                for line in result.stdout.strip().split("\n"):
+                    if line.strip():
+                        print(f"  {line}")
         else:
-            print("⚠️  Tree update skipped")
+            print(f"⚠️  Tree update failed (exit code {result.returncode})")
+            if result.stderr:
+                print(f"  Error: {result.stderr}")
     except Exception as e:
         print(f"⚠️  Tree update failed: {e}")
 
@@ -300,7 +326,7 @@ def generate_commit_message(status, work_item):
 
     # Get rationale from spec file
     try:
-        parsed_spec = parse_spec_file(work_id)
+        parsed_spec = parse_spec_file(work_item)
         rationale = parsed_spec.get("rationale")
 
         if rationale and rationale.strip():

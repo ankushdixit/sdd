@@ -75,13 +75,13 @@ class WorkItemManager:
             return None
 
         # 7. Create specification file
-        spec_created = self._create_spec_file(work_id, work_type, title)
-        if not spec_created:
+        spec_file = self._create_spec_file(work_id, work_type, title)
+        if not spec_file:
             logger.warning("Could not create specification file for %s", work_id)
             print("⚠️  Warning: Could not create specification file")
 
         # 8. Add to work_items.json
-        self._add_to_tracking(work_id, work_type, title, priority, dependencies)
+        self._add_to_tracking(work_id, work_type, title, priority, dependencies, spec_file)
         logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
 
         # 9. Confirm
@@ -148,13 +148,13 @@ class WorkItemManager:
             return None
 
         # Create specification file
-        spec_created = self._create_spec_file(work_id, work_type, title)
-        if not spec_created:
+        spec_file = self._create_spec_file(work_id, work_type, title)
+        if not spec_file:
             logger.warning("Could not create specification file for %s", work_id)
             print("⚠️  Warning: Could not create specification file")
 
         # Add to work_items.json
-        self._add_to_tracking(work_id, work_type, title, priority, dep_list)
+        self._add_to_tracking(work_id, work_type, title, priority, dep_list, spec_file)
         logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
 
         # Confirm
@@ -273,15 +273,19 @@ class WorkItemManager:
         data = load_json(self.work_items_file)
         return work_id in data.get("work_items", {})
 
-    def _create_spec_file(self, work_id: str, work_type: str, title: str) -> bool:
-        """Create specification file from template."""
+    def _create_spec_file(self, work_id: str, work_type: str, title: str) -> str:
+        """Create specification file from template.
+
+        Returns:
+            str: Relative path to the created spec file, or empty string if failed
+        """
         # Ensure specs directory exists
         self.specs_dir.mkdir(parents=True, exist_ok=True)
 
         # Load template
         template_file = self.templates_dir / f"{work_type}_spec.md"
         if not template_file.exists():
-            return False
+            return ""
 
         template_content = template_file.read_text()
 
@@ -305,7 +309,8 @@ class WorkItemManager:
         spec_path = self.specs_dir / f"{work_id}.md"
         spec_path.write_text(spec_content)
 
-        return True
+        # Return relative path from project root
+        return f".session/specs/{work_id}.md"
 
     def _add_to_tracking(
         self,
@@ -314,6 +319,7 @@ class WorkItemManager:
         title: str,
         priority: str,
         dependencies: list[str],
+        spec_file: str = "",
     ):
         """Add work item to work_items.json."""
         # Load existing data
@@ -331,6 +337,7 @@ class WorkItemManager:
             "priority": priority,
             "dependencies": dependencies,
             "milestone": "",
+            "spec_file": spec_file,
             "created_at": datetime.now().isoformat(),
             "sessions": [],
         }

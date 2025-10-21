@@ -126,8 +126,13 @@ class TreeGenerator:
 
         return changes
 
-    def update_tree(self, session_num: int = None):
-        """Generate/update tree.txt and detect changes."""
+    def update_tree(self, session_num: int = None, non_interactive: bool = False):
+        """Generate/update tree.txt and detect changes.
+
+        Args:
+            session_num: Current session number
+            non_interactive: If True, skip interactive reasoning prompts
+        """
         # Generate new tree
         new_tree = self.generate_tree()
 
@@ -151,7 +156,7 @@ class TreeGenerator:
         self.tree_file.parent.mkdir(parents=True, exist_ok=True)
         self.tree_file.write_text(new_tree)
 
-        # If significant changes detected, prompt for reasoning
+        # If significant changes detected, prompt for reasoning (unless non-interactive)
         if significant_changes and session_num:
             print(f"\n{'=' * 50}")
             print("Structural Changes Detected")
@@ -163,8 +168,12 @@ class TreeGenerator:
             if len(significant_changes) > 10:
                 print(f"  ... and {len(significant_changes) - 10} more changes")
 
-            print("\nPlease provide reasoning for these structural changes:")
-            reasoning = input("> ")
+            if non_interactive:
+                reasoning = "Automated update during session completion"
+                print("\n(Non-interactive mode: recording changes without manual reasoning)")
+            else:
+                print("\nPlease provide reasoning for these structural changes:")
+                reasoning = input("> ")
 
             # Update tree_updates.json
             self._record_tree_update(session_num, significant_changes, reasoning)
@@ -201,6 +210,11 @@ def main():
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
     parser.add_argument("--session", type=int, help="Current session number")
     parser.add_argument("--show-changes", action="store_true", help="Show changes from last run")
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Skip interactive prompts (use automated reasoning)",
+    )
     args = parser.parse_args()
 
     generator = TreeGenerator()
@@ -216,7 +230,9 @@ def main():
         else:
             print("No tree updates recorded yet")
     else:
-        changes = generator.update_tree(session_num=args.session)
+        changes = generator.update_tree(
+            session_num=args.session, non_interactive=args.non_interactive
+        )
 
         if changes:
             print(f"\n✓ Tree updated with {len(changes)} changes")

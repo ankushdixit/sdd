@@ -671,12 +671,13 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
 # ============================================================================
 
 
-def parse_spec_file(work_item_id: str) -> dict[str, Any]:
+def parse_spec_file(work_item) -> dict[str, Any]:
     """
     Parse a work item specification file.
 
     Args:
-        work_item_id: Work item ID (e.g., 'feature_001', 'bug_042')
+        work_item: Either a work item dict with 'spec_file' and 'id' fields,
+                  or a string work_item_id (for backwards compatibility)
 
     Returns:
         Parsed specification as structured dict, or error dict if failed
@@ -685,10 +686,24 @@ def parse_spec_file(work_item_id: str) -> dict[str, Any]:
         FileNotFoundError: If spec file doesn't exist
         ValueError: If work item type cannot be determined
     """
-    logger.debug("Parsing spec file for work item: %s", work_item_id)
-
-    # Load spec file
-    spec_path = Path(f".session/specs/{work_item_id}.md")
+    # Handle backwards compatibility: accept both dict and string
+    if isinstance(work_item, str):
+        # Legacy call with just work_item_id string
+        work_item_id = work_item
+        spec_path = Path(f".session/specs/{work_item_id}.md")
+        logger.debug("Parsing spec file for work item (legacy): %s", work_item_id)
+    else:
+        # New call with work item dict
+        work_item_id = work_item.get("id")
+        # Use spec_file from work item if available, otherwise fallback to ID-based pattern
+        spec_file_path = work_item.get("spec_file")
+        if spec_file_path:
+            spec_path = Path(spec_file_path)
+            logger.debug("Parsing spec file from work_item.spec_file: %s", spec_path)
+        else:
+            # Fallback to legacy pattern for backwards compatibility
+            spec_path = Path(f".session/specs/{work_item_id}.md")
+            logger.debug("Parsing spec file (fallback to ID pattern): %s", spec_path)
 
     if not spec_path.exists():
         logger.error("Spec file not found: %s", spec_path)

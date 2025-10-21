@@ -256,8 +256,13 @@ class StackGenerator:
 
         return changes
 
-    def update_stack(self, session_num: int = None):
-        """Generate/update stack.txt and detect changes."""
+    def update_stack(self, session_num: int = None, non_interactive: bool = False):
+        """Generate/update stack.txt and detect changes.
+
+        Args:
+            session_num: Current session number
+            non_interactive: If True, skip interactive reasoning prompts
+        """
         # Generate new stack content
         new_content = self.generate_stack_txt()
 
@@ -273,7 +278,7 @@ class StackGenerator:
         self.stack_file.parent.mkdir(parents=True, exist_ok=True)
         self.stack_file.write_text(new_content)
 
-        # If changes detected, prompt for reasoning
+        # If changes detected, prompt for reasoning (unless non-interactive)
         if changes and session_num:
             print(f"\n{'=' * 50}")
             print("Stack Changes Detected")
@@ -282,8 +287,12 @@ class StackGenerator:
             for change in changes:
                 print(f"  {change['type'].upper()}: {change['content']}")
 
-            print("\nPlease provide reasoning for these changes:")
-            reasoning = input("> ")
+            if non_interactive:
+                reasoning = "Automated update during session completion"
+                print("\n(Non-interactive mode: recording changes without manual reasoning)")
+            else:
+                print("\nPlease provide reasoning for these changes:")
+                reasoning = input("> ")
 
             # Update stack_updates.json
             self._record_stack_update(session_num, changes, reasoning)
@@ -318,10 +327,17 @@ def main():
 
     parser = argparse.ArgumentParser(description="Generate technology stack documentation")
     parser.add_argument("--session", type=int, help="Current session number")
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Skip interactive prompts (use automated reasoning)",
+    )
     args = parser.parse_args()
 
     generator = StackGenerator()
-    changes = generator.update_stack(session_num=args.session)
+    changes = generator.update_stack(
+        session_num=args.session, non_interactive=args.non_interactive
+    )
 
     if changes:
         print(f"\n✓ Stack updated with {len(changes)} changes")
