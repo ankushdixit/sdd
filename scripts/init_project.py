@@ -190,6 +190,14 @@ def initialize_tracking_files():
                 "performance_baseline_docs": True,
             },
         },
+        "git_workflow": {
+            "mode": "pr",
+            "auto_push": True,
+            "auto_create_pr": True,
+            "delete_branch_after_merge": True,
+            "pr_title_template": "{type}: {title}",
+            "pr_body_template": "## Summary\n\n{description}\n\n## Work Item\n- ID: {work_item_id}\n- Type: {type}\n- Session: {session_num}\n\n## Changes\n{commit_messages}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+        },
     }
     (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
     print("✓ Created config.json")

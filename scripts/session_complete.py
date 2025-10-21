@@ -279,8 +279,8 @@ def extract_learnings_from_session():
     return learnings
 
 
-def complete_git_workflow(work_item_id, commit_message):
-    """Complete git workflow (commit, push, optionally merge)."""
+def complete_git_workflow(work_item_id, commit_message, session_num):
+    """Complete git workflow (commit, push, optionally merge or create PR)."""
     try:
         # Import git workflow dynamically
         git_module_path = Path(__file__).parent / "git_integration.py"
@@ -302,8 +302,10 @@ def complete_git_workflow(work_item_id, commit_message):
         work_item = data["work_items"][work_item_id]
         should_merge = work_item["status"] == "completed"
 
-        # Complete work item in git
-        result = workflow.complete_work_item(work_item_id, commit_message, merge=should_merge)
+        # Complete work item in git (with session_num for PR creation)
+        result = workflow.complete_work_item(
+            work_item_id, commit_message, merge=should_merge, session_num=session_num
+        )
 
         return result
     except Exception as e:
@@ -598,9 +600,9 @@ def main():
     # Generate commit message
     commit_message = generate_commit_message(status, work_item)
 
-    # Complete git workflow (commit, push, optionally merge)
+    # Complete git workflow (commit, push, optionally merge or create PR)
     print("\nCompleting git workflow...")
-    git_result = complete_git_workflow(work_item_id, commit_message)
+    git_result = complete_git_workflow(work_item_id, commit_message, session_num)
 
     if git_result.get("success"):
         print(f"✓ Git: {git_result.get('message', 'Success')}")
