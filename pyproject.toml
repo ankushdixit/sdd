@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdd"
-version = "0.5.7"
+version = "0.5.8"
 description = "Session-Driven Development - AI-augmented development workflow framework"
 readme = "README.md"
 license = {text = "MIT"}

@@ -1215,7 +1215,78 @@ The current system had a **dual storage problem**:
 
 ---
 
-## Phase 5.8: Package Structure Refactoring (v0.5.8) - Python Best Practices
+## Phase 5.8: Marketplace Plugin Support (v0.5.8) - Unified CLI
+
+**Goal:** Enable SDD to work as a Claude Code marketplace plugin with simple setup
+
+**Status:** ✅ Complete (2025-10-21)
+
+**Priority:** HIGH (enables marketplace distribution)
+
+**Depends On:** Phase 5.7 (Complete)
+
+### Accomplishments
+
+1. ✅ Updated all 15 command files to use `sdd` CLI
+2. ✅ Simplified installation documentation with clear paths
+3. ✅ Plugin works standalone with one-time setup: `pip install -e ~/.claude/plugins/.../sdd`
+4. ✅ Updated marketplace README with v0.5.8 installation instructions
+5. ✅ Maintained backward compatibility with direct installation
+
+### Changes Made
+
+**Command Files:**
+- Changed from `python3 scripts/../sdd_cli.py` to `sdd` command
+- Updated 15 files: `init.md`, `start.md`, `end.md`, `status.md`, `validate.md`, `learn*.md`, `work-*.md`
+- Cleaner, more maintainable syntax
+- Works identically for both installation methods
+
+**Documentation:**
+- Simplified main README (removed confusing options)
+- Updated marketplace README (`claude-plugins/README.md`)
+- Updated all CLI examples to use `sdd` command
+- Clear installation path for both methods
+
+**Plugin Architecture:**
+- Plugin remains self-contained (includes scripts, templates)
+- sync_to_plugin.py continues to work unchanged
+- One-time setup enables `sdd` command from plugin
+
+### Installation Methods
+
+**Method 1: Marketplace Plugin**
+```bash
+# After installing plugin from marketplace:
+pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+```
+
+**Method 2: Direct Installation**
+```bash
+git clone https://github.com/ankushdixit/sdd.git
+cd sdd
+pip install -e .
+```
+
+Both methods result in identical functionality.
+
+### Benefits
+
+- ✅ Plugin works from marketplace installation
+- ✅ No need to clone SDD into every project
+- ✅ Cleaner, more standard approach
+- ✅ Works identically whether installed directly or via marketplace
+- ✅ Aligns with Python package best practices
+
+### Statistics
+
+- **Files Modified**: 18 files total (15 commands + 3 docs)
+- **Test Coverage**: 392/392 tests passing (100%)
+- **Time to Complete**: 1-2 hours
+- **Breaking Changes**: Requires `pip install -e .` for all users
+
+---
+
+## Phase 5.9: Package Structure Refactoring (v0.5.9) - Python Best Practices
 
 **Goal:** Refactor to proper Python package structure, eliminating sys.path manipulation
 
@@ -1227,17 +1298,18 @@ The current system had a **dual storage problem**:
 
 **Depends On:** None (can be done anytime after v0.5.7)
 
-### Current State (v0.5.7)
+### Current State (v0.5.8)
 
 **Hybrid Packaging Approach:**
 - ✅ Pip installable via `pip install -e .`
 - ✅ PyPI ready (can publish to PyPI)
 - ✅ CLI command `sdd` available after install
+- ✅ Unified CLI (all commands use `sdd`)
 - ⚠️ Scripts use sys.path manipulation (38 files)
 - ⚠️ Flat structure with `scripts/` at root
 
 **Why hybrid approach?**
-- Low risk: Maintains stability (102 passing tests)
+- Low risk: Maintains stability (392 passing tests)
 - Works now: Immediately distributable
 - Documented: Clear contributor guidelines
 
@@ -1245,7 +1317,7 @@ The current system had a **dual storage problem**:
 
 **Package Structure Changes:**
 ```
-Current (v0.5.7):           Target (v0.5.8):
+Current (v0.5.8):           Target (v0.5.9):
 sdd/                        sdd/
 ├── sdd_cli.py              ├── pyproject.toml
 ├── scripts/                ├── setup.py
@@ -1267,28 +1339,27 @@ sdd/                        sdd/
 
 ### Implementation Tasks
 
-**5.8.1: Package Structure Setup**
+**5.9.1: Package Structure Setup**
 - [ ] Create `sdd/` package directory
 - [ ] Move `sdd_cli.py` → `sdd/cli.py`
 - [ ] Move `scripts/` → `sdd/scripts/`
 - [ ] Add `__init__.py` files throughout
 - [ ] Update `pyproject.toml` for new structure
 
-**5.8.2: Import Refactoring (38 files)**
+**5.9.2: Import Refactoring (38 files)**
 - [ ] Remove all `sys.path.insert(0, ...)` statements
 - [ ] Update imports in `sdd/scripts/*.py` files
 - [ ] Update imports in `tests/*.py` files
 - [ ] Update CLI command routing table
-- [ ] Update slash command imports
 
-**5.8.3: Testing & Validation**
-- [ ] All 102+ tests pass after refactor
+**5.9.3: Testing & Validation**
+- [ ] All 392+ tests pass after refactor
 - [ ] `pip install -e .` works with new structure
 - [ ] `sdd` command works correctly
 - [ ] All CI/CD checks pass (8 workflows)
 - [ ] Manual workflow testing
 
-**5.8.4: Documentation Updates**
+**5.9.4: Documentation Updates**
 - [ ] Update README.md Architecture Notes
 - [ ] Update CONTRIBUTING.md import guidelines
 - [ ] Update installation instructions
@@ -1357,7 +1428,35 @@ sdd/                        sdd/
 
 ---
 
-## Phase 6: Spec-Kit Integration (v0.6) - Specification-Driven
+## Phase 6.0: PyPI Publishing (v0.6.0) - Public Distribution
+
+**Goal:** Publish SDD to PyPI for easy installation
+
+**Status:** 📅 Planned
+
+**Priority:** MEDIUM
+
+**Depends On:** Phase 5.8 (Complete)
+
+### Tasks
+
+- [ ] Prepare package for PyPI distribution
+- [ ] Create PyPI account and verify
+- [ ] Test upload to TestPyPI
+- [ ] Publish to PyPI: `pip install sdd`
+- [ ] Update marketplace plugin to be lightweight (commands only)
+- [ ] Update documentation: "pip install sdd + marketplace plugin"
+
+### Benefits
+
+- ✅ Even simpler installation: `pip install sdd`
+- ✅ Version management through PyPI
+- ✅ Lightweight plugin (just commands)
+- ✅ Automatic updates via pip
+
+---
+
+## Phase 7: Spec-Kit Integration (v0.7) - Specification-Driven
 
 **Goal:** Import work items from Spec-Kit specifications
 
@@ -1401,7 +1500,7 @@ sdd/                        sdd/
 
 ---
 
-## Phase 7: Advanced Features (v0.7+) - Polish
+## Phase 8: Advanced Features (v0.8+) - Polish
 
 **Goal:** Polish and advanced capabilities
 
@@ -1515,7 +1614,7 @@ The following features are **NOT included** in the current scope:
 
 ## Implementation Priority Order
 
-**Phases 1-5.6 are CORE** - Must be implemented for plugin to be useful:
+**Phases 1-5.8 are CORE** - Must be implemented for plugin to be useful:
 
 1. **Phase 1** (Core Plugin) - Foundation with tracking and git
 2. **Phase 2** (Work Items) - Task management
@@ -1524,11 +1623,15 @@ The following features are **NOT included** in the current scope:
 5. **Phase 5** (Quality Gates) - Maintaining quality and security
 6. **Phase 5.5** (Integration Testing) - System validation
 7. **Phase 5.6** (Deployment) - Launch support
+8. **Phase 5.7** (Spec-First Architecture) - Single source of truth
+9. **Phase 5.8** (Marketplace Plugin Support) - Unified CLI
 
-**Phases 6-7 are ENHANCEMENTS** - Implement based on needs:
+**Phases 5.9, 6.0, 7-8 are ENHANCEMENTS** - Implement based on needs:
 
-8. **Phase 6** (Spec-Kit) - Specification-driven workflow
-9. **Phase 7** (Advanced) - Polish and nice-to-haves
+10. **Phase 5.9** (Package Refactoring) - Python best practices
+11. **Phase 6.0** (PyPI Publishing) - Public distribution
+12. **Phase 7** (Spec-Kit) - Specification-driven workflow
+13. **Phase 8** (Advanced) - Polish and nice-to-haves
 
 ---
 
@@ -1536,7 +1639,7 @@ The following features are **NOT included** in the current scope:
 
 Plugin is **production-ready** when:
 
-✅ Phase 1-5.6 complete
+✅ Phase 1-5.8 complete
 ✅ Used successfully on 3+ different projects
 ✅ 20+ sessions completed without issues
 ✅ Zero context loss between sessions
@@ -1569,11 +1672,15 @@ Milestones:
 - **v0.5** - Quality gates enforced (Phase 5 complete) ✅
 - **v0.5.5** - Integration testing support (Phase 5.5 complete) ✅
 - **v0.5.6** - Deployment support (Phase 5.6 complete) ✅
-- **v0.6** - Spec-kit integration working (Phase 6)
-- **v0.7+** - Advanced features (Phase 7)
+- **v0.5.7** - Spec-first architecture (Phase 5.7 complete) ✅
+- **v0.5.8** - Marketplace plugin support (Phase 5.8 complete) ✅
+- **v0.5.9** - Package refactoring (Phase 5.9) - Optional
+- **v0.6.0** - PyPI publishing (Phase 6.0) - Optional
+- **v0.7** - Spec-kit integration working (Phase 7)
+- **v0.8+** - Advanced features (Phase 8)
 - **v1.0** - Battle-tested on real projects
 
-**Current Status:** v0.5.6 - Production-ready for personal and open-source use
+**Current Status:** v0.5.8 - Production-ready for personal and open-source use
 
 ---
 

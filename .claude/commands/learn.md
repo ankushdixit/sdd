@@ -26,7 +26,7 @@ Ask the user for learning details conversationally:
 Get the current session number from status_update.json, then run:
 
 ```bash
-python3 scripts/../sdd_cli.py learn add-learning \
+sdd learn add-learning \
   --content "{{content}}" \
   --category "{{category}}" \
   --tags "{{tags}}" \
@@ -59,7 +59,7 @@ Questions:
 
 Command:
 ```bash
-python3 scripts/../sdd_cli.py learn add-learning \
+sdd learn add-learning \
   --content "FastAPI middleware order matters for CORS - app.add_middleware() calls must be in reverse order of execution" \
   --category "gotchas" \
   --tags "fastapi,cors,middleware" \

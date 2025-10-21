@@ -21,7 +21,7 @@ The curation process:
 ### Normal Curation (Save Changes)
 
 ```bash
-python3 scripts/../sdd_cli.py learn-curate
+sdd learn-curate
 ```
 
 This will:
@@ -32,7 +32,7 @@ This will:
 ### Dry-Run Mode (Preview Only)
 
 ```bash
-python3 scripts/../sdd_cli.py learn-curate --dry-run
+sdd learn-curate --dry-run
 ```
 
 This will:

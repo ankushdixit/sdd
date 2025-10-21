@@ -33,34 +33,34 @@ Run the appropriate command based on user input:
 
 **Basic usage:**
 ```bash
-python3 scripts/../sdd_cli.py work-graph
+sdd work-graph
 ```
 
 **With format:**
 ```bash
-python3 scripts/../sdd_cli.py work-graph --format dot
-python3 scripts/../sdd_cli.py work-graph --format svg --output graph.svg
+sdd work-graph --format dot
+sdd work-graph --format svg --output graph.svg
 ```
 
 **With filters:**
 ```bash
-python3 scripts/../sdd_cli.py work-graph --status not_started
-python3 scripts/../sdd_cli.py work-graph --milestone "Phase 3"
-python3 scripts/../sdd_cli.py work-graph --type feature
-python3 scripts/../sdd_cli.py work-graph --include-completed
+sdd work-graph --status not_started
+sdd work-graph --milestone "Phase 3"
+sdd work-graph --type feature
+sdd work-graph --include-completed
 ```
 
 **Special views:**
 ```bash
-python3 scripts/../sdd_cli.py work-graph --critical-path
-python3 scripts/../sdd_cli.py work-graph --bottlenecks
-python3 scripts/../sdd_cli.py work-graph --stats
-python3 scripts/../sdd_cli.py work-graph --focus feature_add_authentication
+sdd work-graph --critical-path
+sdd work-graph --bottlenecks
+sdd work-graph --stats
+sdd work-graph --focus feature_add_authentication
 ```
 
 **Combined filters:**
 ```bash
-python3 scripts/../sdd_cli.py work-graph --status not_started --milestone "Phase 3" --format svg --output phase3.svg
+sdd work-graph --status not_started --milestone "Phase 3" --format svg --output phase3.svg
 ```
 
 ## Output
@@ -82,37 +82,37 @@ Display the output to the user and explain key insights:
 
 ### Example 1: Basic ASCII Graph
 ```bash
-python3 scripts/../sdd_cli.py work-graph
+sdd work-graph
 ```
 Shows all incomplete work items with dependencies in terminal-friendly format.
 
 ### Example 2: Critical Path Only
 ```bash
-python3 scripts/../sdd_cli.py work-graph --critical-path
+sdd work-graph --critical-path
 ```
 Shows only items on the critical path (longest dependency chain).
 
 ### Example 3: Bottleneck Analysis
 ```bash
-python3 scripts/../sdd_cli.py work-graph --bottlenecks
+sdd work-graph --bottlenecks
 ```
 Lists items that block 2+ other items, sorted by impact.
 
 ### Example 4: Milestone Planning
 ```bash
-python3 scripts/../sdd_cli.py work-graph --milestone "Phase 3" --format svg --output phase3_dependencies.svg
+sdd work-graph --milestone "Phase 3" --format svg --output phase3_dependencies.svg
 ```
 Generate visual graph of Phase 3 dependencies for documentation.
 
 ### Example 5: Focus on Specific Item
 ```bash
-python3 scripts/../sdd_cli.py work-graph --focus feature_oauth
+sdd work-graph --focus feature_oauth
 ```
 Show only feature_oauth and its dependency neighborhood (dependencies + dependents).
 
 ### Example 6: Statistics
 ```bash
-python3 scripts/../sdd_cli.py work-graph --stats
+sdd work-graph --stats
 ```
 Show completion statistics and critical path length without rendering full graph.
 
