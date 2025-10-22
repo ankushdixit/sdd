@@ -968,7 +968,7 @@ class QualityGates:
         if config.get("sequence_diagrams", True):
             # Parse spec file to get test scenarios
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
+                parsed_spec = spec_parser.parse_spec_file(work_item)
                 scenarios = parsed_spec.get("test_scenarios", [])
             except Exception:
                 scenarios = []
@@ -991,7 +991,7 @@ class QualityGates:
         if config.get("contract_documentation", True):
             # Parse spec file to get API contracts
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
+                parsed_spec = spec_parser.parse_spec_file(work_item)
                 api_contracts = parsed_spec.get("api_contracts", "")
                 # API contracts should be documented in the spec
                 has_contracts = api_contracts and len(api_contracts.strip()) > 20
@@ -1012,7 +1012,7 @@ class QualityGates:
         if config.get("performance_baseline_docs", True):
             # Parse spec file to get performance benchmarks
             try:
-                parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
+                parsed_spec = spec_parser.parse_spec_file(work_item)
                 benchmarks = parsed_spec.get("performance_benchmarks", "")
                 has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
             except Exception:

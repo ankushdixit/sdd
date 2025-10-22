@@ -195,16 +195,18 @@ class SessionValidator:
         work_id = work_item.get("id")
 
         # Check spec file exists and is valid
-        spec_file = self.session_dir / "specs" / f"{work_id}.md"
+        # Use spec_file from work item configuration (supports custom filenames)
+        spec_file_path = work_item.get("spec_file", f".session/specs/{work_id}.md")
+        spec_file = self.project_root / spec_file_path
         if not spec_file.exists():
             return {
                 "passed": False,
                 "message": f"Spec file missing: {spec_file}",
             }
 
-        # Parse spec file
+        # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
-            parsed_spec = spec_parser.parse_spec_file(work_id)
+            parsed_spec = spec_parser.parse_spec_file(work_item)
         except Exception as e:
             return {
                 "passed": False,

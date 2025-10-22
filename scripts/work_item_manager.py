@@ -99,7 +99,7 @@ class WorkItemManager:
             print(f"\nSpecification saved to: {spec_file}")
 
         print("\nNext steps:")
-        print(f"1. Edit specification: .session/specs/{work_id}.md")
+        print(f"1. Edit specification: {spec_file}")
         print("2. Start working: /start")
         print()
 
@@ -171,7 +171,7 @@ class WorkItemManager:
             print(f"\nSpecification saved to: {spec_file}")
 
         print("\nNext steps:")
-        print(f"1. Edit specification: .session/specs/{work_id}.md")
+        print(f"1. Edit specification: {spec_file}")
         print("2. Start working: /start")
         print()
 
@@ -358,11 +358,12 @@ class WorkItemManager:
         errors = []
         work_id = work_item.get("id")
 
-        # Parse spec file
+        # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
-            parsed_spec = spec_parser.parse_spec_file(work_id)
+            parsed_spec = spec_parser.parse_spec_file(work_item)
         except FileNotFoundError:
-            errors.append(f"Spec file not found: .session/specs/{work_id}.md")
+            spec_file = work_item.get("spec_file", f".session/specs/{work_id}.md")
+            errors.append(f"Spec file not found: {spec_file}")
             return False, errors
         except ValueError as e:
             errors.append(f"Invalid spec file: {str(e)}")
@@ -421,11 +422,12 @@ class WorkItemManager:
         errors = []
         work_id = work_item.get("id")
 
-        # Parse spec file
+        # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
-            parsed_spec = spec_parser.parse_spec_file(work_id)
+            parsed_spec = spec_parser.parse_spec_file(work_item)
         except FileNotFoundError:
-            errors.append(f"Spec file not found: .session/specs/{work_id}.md")
+            spec_file = work_item.get("spec_file", f".session/specs/{work_id}.md")
+            errors.append(f"Spec file not found: {spec_file}")
             return False, errors
         except ValueError as e:
             errors.append(f"Invalid spec file: {str(e)}")
@@ -727,8 +729,9 @@ class WorkItemManager:
             print(f"Commits: {len(commits)}")
             print()
 
-        # Specification
-        spec_path = self.specs_dir / f"{work_id}.md"
+        # Specification - use spec_file from work item config
+        spec_file_path = item.get("spec_file", f".session/specs/{work_id}.md")
+        spec_path = Path(spec_file_path)
         if spec_path.exists():
             print("Specification:")
             print("-" * 80)
@@ -737,7 +740,7 @@ class WorkItemManager:
             lines = spec_content.split("\n")[:50]
             print("\n".join(lines))
             if len(spec_content.split("\n")) > 50:
-                print(f"\n[... see full specification in .session/specs/{work_id}.md]")
+                print(f"\n[... see full specification in {spec_file_path}]")
             print()
 
         # Next steps

@@ -44,8 +44,9 @@ class IntegrationTestRunner:
             raise ValueError("Work item must have 'id' field")
 
         # Parse spec file to get test scenarios and environment requirements
+        # Pass full work_item dict to support custom spec filenames
         try:
-            parsed_spec = spec_parser.parse_spec_file(work_id)
+            parsed_spec = spec_parser.parse_spec_file(work_item)
         except FileNotFoundError:
             raise ValueError(f"Spec file not found for work item: {work_id}")
         except Exception as e:
