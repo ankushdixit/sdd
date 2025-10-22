@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auto git initialization** in `sdd init` - automatically initializes git repository if not present
 - **Pre-flight commit check** in `sdd end` - validates all changes are committed before running quality gates
 - **CHANGELOG workflow improvements** - git hooks with reminders + smarter branch-level detection
+- **OS-specific files in .gitignore** - macOS (.DS_Store, ._*, .Spotlight-V100, .Trashes), Windows (Thumbs.db, Desktop.ini, $RECYCLE.BIN/), and Linux (*~) patterns automatically added during `sdd init`
 - Git prepare-commit-msg hook installed during `sdd init` with CHANGELOG and LEARNING reminders
 - Git repository check with default branch set to 'main'
 - Clear, actionable error messages with step-by-step guidance for uncommitted changes
 - Interactive override option for advanced users (allows bypassing pre-flight check)
+- Test coverage file `coverage.json` now gitignored by default
 
 ### Changed
 - `scripts/init_project.py`: Added `check_or_init_git()` and `install_git_hooks()` functions called during initialization
@@ -36,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhancement #1**: Git auto-init (40 lines added to init_project.py)
 - **Enhancement #2**: CHANGELOG workflow improvements (git hook template + smarter checking)
 - **Enhancement #3**: Pre-flight commit check (75 lines added to session_complete.py)
-- **Files Modified**: 3 files (`scripts/init_project.py`, `scripts/quality_gates.py`, new `templates/git-hooks/prepare-commit-msg`)
+- **Enhancement #4**: OS-specific gitignore patterns (35 lines added to init_project.py, comprehensive test coverage)
+- **Files Modified**: 4 files (`scripts/init_project.py`, `scripts/quality_gates.py`, new `templates/git-hooks/prepare-commit-msg`, new `tests/test_gitignore_os_patterns.py`)
 - **Focus**: Developer experience improvements from E2E testing insights
 
 ### Planned
