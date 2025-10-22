@@ -10,13 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Auto git initialization** in `sdd init` - automatically initializes git repository if not present
 - **Pre-flight commit check** in `sdd end` - validates all changes are committed before running quality gates
+- **CHANGELOG workflow improvements** - git hooks with reminders + smarter branch-level detection
+- Git prepare-commit-msg hook installed during `sdd init` with CHANGELOG and LEARNING reminders
 - Git repository check with default branch set to 'main'
 - Clear, actionable error messages with step-by-step guidance for uncommitted changes
 - Interactive override option for advanced users (allows bypassing pre-flight check)
 
 ### Changed
-- `scripts/init_project.py`: Added `check_or_init_git()` function called during initialization
+- `scripts/init_project.py`: Added `check_or_init_git()` and `install_git_hooks()` functions called during initialization
 - `scripts/session_complete.py`: Added `check_uncommitted_changes()` function called before quality gates
+- `scripts/quality_gates.py`: Updated `_check_changelog_updated()` to check branch commits instead of working directory
+- CHANGELOG validation now checks `git log main..HEAD` for CHANGELOG.md updates (smarter detection)
+- Error messages for CHANGELOG failures now include actionable examples with proper formatting
 - Improved developer experience by eliminating manual `git init` step
 - Fail-fast approach prevents wasting time on quality gates when changes aren't committed
 
@@ -24,15 +29,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UX Issue**: Users no longer need to manually run `git init` before `sdd init`
 - **UX Issue**: Clear guidance when `/sdd:end` fails due to uncommitted changes
 - **UX Issue**: Pre-flight check runs before expensive quality gates, saving time
+- **UX Issue**: CHANGELOG reminders now appear automatically in commit message editor
+- **UX Issue**: CHANGELOG check now correctly detects updates anywhere in branch history
 
 ### Technical Details
 - **Enhancement #1**: Git auto-init (40 lines added to init_project.py)
+- **Enhancement #2**: CHANGELOG workflow improvements (git hook template + smarter checking)
 - **Enhancement #3**: Pre-flight commit check (75 lines added to session_complete.py)
-- **Files Modified**: 2 files (`scripts/init_project.py`, `scripts/session_complete.py`)
+- **Files Modified**: 3 files (`scripts/init_project.py`, `scripts/quality_gates.py`, new `templates/git-hooks/prepare-commit-msg`)
 - **Focus**: Developer experience improvements from E2E testing insights
 
 ### Planned
-- **Enhancement #2**: CHANGELOG workflow improvements (git hooks + smarter checking)
 - Spec-Kit integration (Phase 6)
 - Advanced features and polish (Phase 7)
 - Package distribution via PyPI
