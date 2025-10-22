@@ -48,6 +48,42 @@ def check_or_init_git(project_root: Path = None) -> bool:
         return False
 
 
+def install_git_hooks(project_root: Path = None) -> bool:
+    """Install git hooks from templates."""
+    if project_root is None:
+        project_root = Path.cwd()
+
+    git_hooks_dir = project_root / ".git" / "hooks"
+
+    # Check if .git/hooks exists
+    if not git_hooks_dir.exists():
+        print("⚠️  .git/hooks directory not found - git may not be initialized")
+        return False
+
+    # Get template directory
+    template_dir = Path(__file__).parent.parent / "templates" / "git-hooks"
+
+    # Install prepare-commit-msg hook
+    hook_template = template_dir / "prepare-commit-msg"
+    hook_dest = git_hooks_dir / "prepare-commit-msg"
+
+    if hook_template.exists():
+        try:
+            shutil.copy(hook_template, hook_dest)
+            # Make executable (chmod +x)
+            import stat
+
+            hook_dest.chmod(hook_dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            print("✓ Installed git prepare-commit-msg hook")
+            return True
+        except Exception as e:
+            print(f"⚠️  Failed to install git hook: {e}")
+            return False
+    else:
+        print(f"⚠️  Hook template not found: {hook_template}")
+        return False
+
+
 def detect_project_type() -> str:
     """Detect project type from existing files."""
     if Path("package.json").exists():
@@ -551,37 +587,40 @@ def init_project():
 
     # 2. Check or initialize git repository
     check_or_init_git()
+
+    # 3. Install git hooks
+    install_git_hooks()
     print()
 
-    # 3. Detect project type
+    # 4. Detect project type
     project_type = detect_project_type()
     print(f"\n📦 Project type: {project_type}\n")
 
-    # 4. Ensure package manager file (create/update)
+    # 5. Ensure package manager file (create/update)
     ensure_package_manager_file(project_type)
 
-    # 5. Ensure all config files (create from templates)
+    # 6. Ensure all config files (create from templates)
     print()
     ensure_config_files(project_type)
 
-    # 6. Install dependencies
+    # 7. Install dependencies
     print()
     install_dependencies(project_type)
 
-    # 7. Create smoke tests
+    # 8. Create smoke tests
     print()
     create_smoke_tests(project_type)
 
-    # 8. Create .session structure
+    # 9. Create .session structure
     create_session_structure()
 
-    # 9. Initialize tracking files
+    # 10. Initialize tracking files
     initialize_tracking_files()
 
-    # 10. Generate project context (stack/tree)
+    # 11. Generate project context (stack/tree)
     run_initial_scans()
 
-    # 11. Update .gitignore
+    # 12. Update .gitignore
     print()
     ensure_gitignore_entries()
 
@@ -591,6 +630,7 @@ def init_project():
     print("=" * 60)
 
     print("\n📦 What was created/updated:")
+    print("  ✓ Git hooks (prepare-commit-msg with CHANGELOG/LEARNING reminders)")
     print("  ✓ Config files (.eslintrc, .prettierrc, jest.config, etc.)")
     print("  ✓ Dependencies installed")
     print("  ✓ Smoke tests created")

@@ -492,29 +492,39 @@ class QualityGates:
         return results["passed"], results
 
     def _check_changelog_updated(self) -> bool:
-        """Check if CHANGELOG was updated in this session."""
+        """Check if CHANGELOG was updated in the current branch."""
         try:
+            # Get the current branch name
             result = subprocess.run(
-                ["git", "diff", "--name-only", "HEAD~1..HEAD"],
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            current_branch = result.stdout.strip()
+
+            # Don't check if we're on main/master
+            if current_branch in ["main", "master"]:
+                logger.debug("On main/master branch, skipping CHANGELOG check")
+                return True
+
+            # Check if CHANGELOG.md was modified in any commit on this branch
+            result = subprocess.run(
+                ["git", "log", "--name-only", "--pretty=format:", "main..HEAD"],
                 capture_output=True,
                 text=True,
                 timeout=10,
             )
 
-            changed_files = result.stdout.strip().split("\n")
-            return any("CHANGELOG" in f.upper() for f in changed_files)
-        except Exception:
-            # If git diff fails, check if any CHANGELOG file was modified
-            try:
-                result = subprocess.run(
-                    ["git", "status", "--short"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                return any("CHANGELOG" in line.upper() for line in result.stdout.split("\n"))
-            except Exception:
-                return True  # Skip check if git not available
+            if "CHANGELOG.md" in result.stdout:
+                logger.debug("CHANGELOG updated in branch")
+                return True
+            else:
+                logger.debug("CHANGELOG not updated in branch")
+                return False
+        except Exception as e:
+            logger.debug(f"Could not check CHANGELOG: {e}")
+            return True  # Skip check if git not available
 
     def _check_python_docstrings(self) -> bool:
         """Check if Python functions have docstrings."""
@@ -1188,7 +1198,17 @@ class QualityGates:
 
             elif gate == "documentation":
                 guidance.append("\n• Documentation Issues:")
-                guidance.append("  - Update CHANGELOG with session changes")
+                guidance.append("  Update CHANGELOG.md with your changes:")
+                guidance.append("")
+                guidance.append("  ## [Unreleased]")
+                guidance.append("  ### Added")
+                guidance.append("  - Feature: User authentication with JWT")
+                guidance.append("  - Tests: Comprehensive auth endpoint tests")
+                guidance.append("")
+                guidance.append("  Then commit:")
+                guidance.append("    git add CHANGELOG.md")
+                guidance.append("    git commit -m 'docs: Update CHANGELOG'")
+                guidance.append("")
                 guidance.append("  - Add docstrings to new functions")
                 guidance.append("  - Update README if needed")
 
