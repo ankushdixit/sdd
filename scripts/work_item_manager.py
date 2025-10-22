@@ -50,9 +50,11 @@ class WorkItemManager:
             logger.error("Cannot run interactive mode in non-interactive environment")
             print("❌ Error: Cannot run interactive work item creation in non-interactive mode")
             print("\nPlease use command-line arguments instead:")
-            print("  sdd work-new --type <type> --title <title> [--priority <priority>] [--dependencies <deps>]")
+            print(
+                "  sdd work-new --type <type> --title <title> [--priority <priority>] [--dependencies <deps>]"
+            )
             print("\nExample:")
-            print("  sdd work-new --type feature --title \"Implement calculator\" --priority high")
+            print('  sdd work-new --type feature --title "Implement calculator" --priority high')
             return None
 
         print("Creating new work item...\n")
@@ -380,9 +382,15 @@ class WorkItemManager:
 
         work_items = data.get("work_items", {})
         data["metadata"]["total_items"] = len(work_items)
-        data["metadata"]["completed"] = sum(1 for item in work_items.values() if item["status"] == "completed")
-        data["metadata"]["in_progress"] = sum(1 for item in work_items.values() if item["status"] == "in_progress")
-        data["metadata"]["blocked"] = sum(1 for item in work_items.values() if item["status"] == "blocked")
+        data["metadata"]["completed"] = sum(
+            1 for item in work_items.values() if item["status"] == "completed"
+        )
+        data["metadata"]["in_progress"] = sum(
+            1 for item in work_items.values() if item["status"] == "in_progress"
+        )
+        data["metadata"]["blocked"] = sum(
+            1 for item in work_items.values() if item["status"] == "blocked"
+        )
         data["metadata"]["last_updated"] = datetime.now().isoformat()
 
         # Save atomically

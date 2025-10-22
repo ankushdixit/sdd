@@ -115,9 +115,7 @@ def parse_work_new_args(args):
         default="high",
         help="Priority (critical, high, medium, low). Default: high",
     )
-    parser.add_argument(
-        "--dependencies", "-d", default="", help="Comma-separated dependency IDs"
-    )
+    parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")
     return parser.parse_args(args)
 
 
