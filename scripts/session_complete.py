@@ -111,12 +111,15 @@ def update_all_tracking(session_num):
     """Update stack, tree, and other tracking files."""
     print("\nUpdating tracking files...")
 
+    # Get SDD installation directory for absolute path resolution
+    script_dir = Path(__file__).parent
+
     # Update stack
     try:
         result = subprocess.run(
             [
                 "python",
-                "scripts/generate_stack.py",
+                str(script_dir / "generate_stack.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
@@ -144,7 +147,7 @@ def update_all_tracking(session_num):
         result = subprocess.run(
             [
                 "python",
-                "scripts/generate_tree.py",
+                str(script_dir / "generate_tree.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
