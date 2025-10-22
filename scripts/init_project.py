@@ -546,6 +546,7 @@ def ensure_gitignore_entries():
         ".session/briefings/",
         ".session/history/",
         "coverage/",
+        "coverage.json",
         "node_modules/",
         "dist/",
         "venv/",
