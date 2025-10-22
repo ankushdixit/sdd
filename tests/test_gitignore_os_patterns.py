@@ -9,7 +9,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import pytest
 
+
+@pytest.mark.skipif(
+    subprocess.run(["which", "sdd"], capture_output=True).returncode != 0,
+    reason="sdd command not available (not installed)",
+)
 def test_gitignore_os_patterns():
     """Test that sdd init adds OS-specific patterns to .gitignore."""
     # Create a temporary directory for testing
