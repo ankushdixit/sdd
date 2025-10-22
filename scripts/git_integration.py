@@ -411,7 +411,13 @@ class GitWorkflow:
             try:
                 # Get commits for this branch since it was created
                 result = subprocess.run(
-                    ["git", "log", "--format=%h", branch_name, f"^{work_item['git'].get('parent_branch', 'main')}"],
+                    [
+                        "git",
+                        "log",
+                        "--format=%h",
+                        branch_name,
+                        f"^{work_item['git'].get('parent_branch', 'main')}",
+                    ],
                     capture_output=True,
                     text=True,
                     cwd=self.project_root,
@@ -432,7 +438,10 @@ class GitWorkflow:
                     else:
                         return {"success": False, "message": "No commits found for this work item"}
                 else:
-                    return {"success": False, "message": f"Failed to retrieve commits: {commit_sha}"}
+                    return {
+                        "success": False,
+                        "message": f"Failed to retrieve commits: {commit_sha}",
+                    }
             except Exception as e:
                 return {"success": False, "message": f"Failed to retrieve commits: {e}"}
         elif not success:

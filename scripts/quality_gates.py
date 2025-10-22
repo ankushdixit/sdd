@@ -401,7 +401,10 @@ class QualityGates:
             # If gate is required but tool not found, treat as failure
             is_required = config.get("required", False)
             if is_required:
-                return False, {"status": "failed", "reason": f"Required linting tool not found: {str(e)}"}
+                return False, {
+                    "status": "failed",
+                    "reason": f"Required linting tool not found: {str(e)}",
+                }
             return True, {"status": "skipped", "reason": str(e)}
 
     def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
@@ -440,7 +443,10 @@ class QualityGates:
             # If gate is required but tool not found, treat as failure
             is_required = config.get("required", False)
             if is_required:
-                return False, {"status": "failed", "reason": f"Required formatting tool not found: {str(e)}"}
+                return False, {
+                    "status": "failed",
+                    "reason": f"Required formatting tool not found: {str(e)}",
+                }
             return True, {"status": "skipped", "reason": str(e)}
 
     def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
