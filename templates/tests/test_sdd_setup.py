@@ -1,6 +1,6 @@
 """SDD Project Setup Validation Tests"""
-from pathlib import Path
 import json
+from pathlib import Path
 
 
 def test_project_structure():

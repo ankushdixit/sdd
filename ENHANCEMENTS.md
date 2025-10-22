@@ -375,3 +375,188 @@ For each enhancement:
 - CHANGELOG reminders appear during normal workflow
 - Error messages provide actionable next steps
 - No regressions in existing functionality
+
+---
+
+## Enhancement #4: Add OS-Specific Files to Initial .gitignore
+
+**Status:** 🔵 IDENTIFIED
+
+### Problem
+OS-specific files like `.DS_Store` (macOS) are not included in the initial `.gitignore` created during `sdd init`. This leads to:
+1. These files being accidentally committed during the first session
+2. Users having to manually add them to `.gitignore` mid-session
+3. Extra commits to remove them from tracking
+
+### Current Experience
+```bash
+# During first session
+git add -A
+git commit -m "..."
+# .DS_Store gets committed
+
+# Later, user has to:
+# 1. Add .DS_Store to .gitignore
+# 2. git rm --cached .DS_Store
+# 3. Make another commit
+```
+
+### Proposed Solution
+Update the `.gitignore` template in `templates/gitignore_template.txt` to include common OS-specific files:
+
+```gitignore
+# SDD-related patterns
+.session/briefings/
+.session/history/
+coverage/
+node_modules/
+dist/
+venv/
+.venv/
+*.pyc
+__pycache__/
+
+# OS-specific files
+.DS_Store           # macOS
+.DS_Store?          # macOS
+._*                 # macOS resource forks
+.Spotlight-V100     # macOS
+.Trashes            # macOS
+Thumbs.db           # Windows
+ehthumbs.db         # Windows
+Desktop.ini         # Windows
+$RECYCLE.BIN/       # Windows
+*~                  # Linux backup files
+```
+
+### Benefits
+- Cleaner git history from the start
+- No accidental commits of OS files
+- Follows industry best practices
+- Works across all major operating systems
+- One less thing for users to worry about
+
+### Implementation Tasks
+- [ ] Update `templates/gitignore_template.txt` with OS-specific patterns
+- [ ] Add comments explaining each pattern group
+- [ ] Test on macOS, Windows, and Linux
+- [ ] Verify patterns are correct and comprehensive
+- [ ] Update initialization tests
+
+---
+
+## Enhancement #5: Create Initial Commit on Main During sdd init
+
+**Status:** 🔵 IDENTIFIED
+
+### Problem
+When `sdd init` creates a git repository, it doesn't create an initial commit on the main branch. This causes issues:
+1. Documentation quality gate fails on first session (no main branch to compare against)
+2. Users must manually create a main branch before `/sdd:end` works
+3. Violates standard git workflow expectations
+
+### Current Experience
+```bash
+sdd init
+# Git initialized but no commits
+
+sdd start work-item-1
+# ... make changes ...
+
+sdd end
+# ❌ Documentation: FAILED - no main branch exists
+# User has to manually: git branch main <commit-hash>
+```
+
+### Proposed Solution
+After creating all initialization files, create an initial commit on the main branch:
+
+```python
+# In scripts/init_workflow.py
+
+def create_initial_commit(project_root: Path):
+    """Create initial commit after project initialization."""
+    try:
+        # Stage all initialized files
+        subprocess.run(
+            ["git", "add", "-A"],
+            cwd=project_root,
+            check=True,
+            capture_output=True
+        )
+
+        # Create initial commit
+        commit_message = """chore: Initialize project with Session-Driven Development
+
+Project initialized with SDD framework including:
+- Project structure and configuration files
+- Quality gates and testing setup
+- Session tracking infrastructure
+- Documentation templates
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"""
+
+        subprocess.run(
+            ["git", "commit", "-m", commit_message],
+            cwd=project_root,
+            check=True,
+            capture_output=True
+        )
+
+        print("✓ Created initial commit on main branch")
+        return True
+
+    except Exception as e:
+        print(f"⚠️  Failed to create initial commit: {e}")
+        print("You may need to commit manually before starting sessions")
+        return False
+
+# Call this at the end of init_project():
+def init_project():
+    # ... existing init code ...
+
+    # Create initial commit (after all files are created)
+    create_initial_commit(project_root)
+
+    print("\n✅ SDD Initialized Successfully!")
+```
+
+### Benefits
+- Establishes proper main branch baseline immediately
+- Documentation quality gates work on first session
+- Follows standard git workflow conventions
+- No manual intervention needed
+- Clean project history from the start
+
+### Implementation Tasks
+- [ ] Add `create_initial_commit()` function to `scripts/init_workflow.py`
+- [ ] Call it after all initialization files are created
+- [ ] Include comprehensive commit message listing what was initialized
+- [ ] Handle errors gracefully (warn but don't fail init)
+- [ ] Update tests to verify initial commit exists
+- [ ] Test with both new repos and existing repos
+- [ ] Update documentation to reflect automatic initial commit
+
+---
+
+## Updated Implementation Plan
+
+### Phase 1: Quick Wins (Estimated: 1 session)
+1. Enhancement #1: Git auto-init ✅ IMPLEMENTED
+2. Enhancement #3: Pre-flight commit check ✅ IMPLEMENTED
+3. **Enhancement #4: Add .DS_Store to .gitignore** (NEW)
+4. **Enhancement #5: Create initial commit on main** (NEW)
+
+### Phase 2: CHANGELOG Workflow (Estimated: 1-2 sessions)
+1. Enhancement #2: Git hooks + smarter checking ✅ IMPLEMENTED
+
+### Testing Strategy
+For each enhancement:
+- Unit tests for new functions
+- Integration test with full SDD workflow
+- Test both interactive and non-interactive modes
+- Verify error messages are clear and helpful
+- **Test on macOS, Windows, and Linux** (for #4)
+- **Test with new and existing git repos** (for #5)
