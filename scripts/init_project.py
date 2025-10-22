@@ -131,8 +131,8 @@ def initialize_tracking_files():
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff check .",
-                    "javascript": "npx eslint .",
-                    "typescript": "npx eslint .",
+                    "javascript": "npx eslint . --ext .js,.jsx",
+                    "typescript": "npx eslint . --ext .ts,.tsx",
                 },
             },
             "formatting": {

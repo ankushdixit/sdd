@@ -263,18 +263,27 @@ def auto_extract_learnings(session_num):
 
 def extract_learnings_from_session():
     """Extract learnings from work done in session (manual input)."""
+    # Skip manual input in non-interactive mode (e.g., when run by Claude Code)
+    if not sys.stdin.isatty():
+        print("\nSkipping manual learning extraction (non-interactive mode)")
+        return []
+
     print("\nCapture additional learnings manually...")
     print("(Type each learning, or 'done' to finish, or 'skip' to skip):")
 
     learnings = []
     while True:
-        learning = input("> ")
-        if learning.lower() == "done":
+        try:
+            learning = input("> ")
+            if learning.lower() == "done":
+                break
+            if learning.lower() == "skip":
+                return []
+            if learning:
+                learnings.append(learning)
+        except EOFError:
+            # Handle EOF gracefully in case stdin is closed
             break
-        if learning.lower() == "skip":
-            return []
-        if learning:
-            learnings.append(learning)
 
     return learnings
 
@@ -580,7 +589,16 @@ def main():
     print(
         f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
     )
-    is_complete = input("> ").lower() == "y"
+
+    # In non-interactive mode, assume work item is not complete by default
+    if not sys.stdin.isatty():
+        print("> (non-interactive mode: defaulting to 'n')")
+        is_complete = False
+    else:
+        try:
+            is_complete = input("> ").lower() == "y"
+        except EOFError:
+            is_complete = False
 
     # Track changes for update_history
     changes = []
@@ -616,6 +634,20 @@ def main():
         work_items_data["work_items"][work_item_id]["update_history"].append(
             {"timestamp": datetime.now().isoformat(), "changes": changes}
         )
+
+    # Update metadata counters
+    work_items = work_items_data.get("work_items", {})
+    work_items_data["metadata"]["total_items"] = len(work_items)
+    work_items_data["metadata"]["completed"] = sum(
+        1 for item in work_items.values() if item["status"] == "completed"
+    )
+    work_items_data["metadata"]["in_progress"] = sum(
+        1 for item in work_items.values() if item["status"] == "in_progress"
+    )
+    work_items_data["metadata"]["blocked"] = sum(
+        1 for item in work_items.values() if item["status"] == "blocked"
+    )
+    work_items_data["metadata"]["last_updated"] = datetime.now().isoformat()
 
     # Save updated work items
     with open(".session/tracking/work_items.json", "w") as f:

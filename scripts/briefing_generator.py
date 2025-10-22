@@ -133,7 +133,11 @@ def load_milestone_context(work_item):
 
     # Calculate progress
     items = data.get("work_items", {})
-    milestone_items = [item for item in items.values() if item.get("milestone") == milestone_name]
+    milestone_items = [
+        {**item, "id": item_id}
+        for item_id, item in items.items()
+        if item.get("milestone") == milestone_name
+    ]
 
     total = len(milestone_items)
     completed = sum(1 for item in milestone_items if item["status"] == "completed")
@@ -398,7 +402,7 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
         briefing += "\nRelated work items in this milestone:\n"
         # Show other items in same milestone
         for related_item in milestone_context["milestone_items"]:
-            if related_item["id"] != item.get("id"):
+            if related_item["id"] != item_id:
                 status_icon = "✓" if related_item["status"] == "completed" else "○"
                 briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
         briefing += "\n"
@@ -669,11 +673,17 @@ def main():
                 {"session_num": session_num, "started_at": datetime.now().isoformat()}
             )
 
-            # Update metadata
+            # Update metadata counters
+            work_items = work_items_data.get("work_items", {})
+            work_items_data["metadata"]["total_items"] = len(work_items)
+            work_items_data["metadata"]["completed"] = sum(
+                1 for item in work_items.values() if item["status"] == "completed"
+            )
             work_items_data["metadata"]["in_progress"] = sum(
-                1
-                for item in work_items_data["work_items"].values()
-                if item["status"] == "in_progress"
+                1 for item in work_items.values() if item["status"] == "in_progress"
+            )
+            work_items_data["metadata"]["blocked"] = sum(
+                1 for item in work_items.values() if item["status"] == "blocked"
             )
             work_items_data["metadata"]["last_updated"] = datetime.now().isoformat()
 
