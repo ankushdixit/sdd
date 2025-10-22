@@ -124,9 +124,7 @@ class SessionValidator:
         if fmt_config.get("enabled", True):
             fmt_passed, fmt_results = self.quality_gates.run_formatting(auto_fix=auto_fix)
             if fmt_config.get("required", False):
-                message = (
-                    "All files properly formatted" if fmt_passed else "Files need formatting"
-                )
+                message = "All files properly formatted" if fmt_passed else "Files need formatting"
                 if auto_fix and fmt_results.get("formatted"):
                     message = "Files auto-formatted"
                 gates["formatting"] = {
@@ -321,9 +319,7 @@ class SessionValidator:
 
 def main():
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Validate session readiness for completion"
-    )
+    parser = argparse.ArgumentParser(description="Validate session readiness for completion")
     parser.add_argument(
         "--fix",
         action="store_true",
