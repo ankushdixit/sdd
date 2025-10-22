@@ -4,26 +4,31 @@ description: Complete the current development session with quality gates and sum
 
 # Session End
 
-Before completing the session, **generate learnings** from the work done:
+Before completing the session, **capture learnings** from the work done:
 
 ## Step 1: Generate Learnings
 
-Review the session work and create 2-5 key learnings. Write them to `.session/temp_learnings.txt` (one learning per line). Consider:
-- Technical insights discovered during implementation
-- Gotchas or edge cases encountered
-- Best practices or patterns that worked well
-- Architecture decisions and their rationale
-- Performance or security considerations
-- Things to remember for future work
+Review the session work and create 2-5 key learnings. You have two ways to capture learnings:
 
-Example learnings:
-```
-TypeScript ESLint requires --ext flags when using glob patterns
-Metadata counters need explicit updates after status changes
-Non-interactive scripts should check sys.stdin.isatty() before using input()
+### Option A: Commit Message LEARNING Tags (Recommended)
+
+Include `LEARNING:` annotations in your commit messages. These will be automatically extracted during session completion:
+
+```bash
+git commit -m "Implement calculator add function
+
+Added TypeScript add function with comprehensive tests.
+
+LEARNING: TypeScript number type handles both integers and decimals seamlessly
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
-Write the learnings file:
+### Option B: Temporary Learnings File
+
+Write learnings to `.session/temp_learnings.txt` (one learning per line):
+
 ```bash
 cat > .session/temp_learnings.txt << 'EOF'
 [Learning 1]
@@ -31,6 +36,14 @@ cat > .session/temp_learnings.txt << 'EOF'
 [Learning 3]
 EOF
 ```
+
+**What makes a good learning:**
+- Technical insights discovered during implementation
+- Gotchas or edge cases encountered
+- Best practices or patterns that worked well
+- Architecture decisions and their rationale
+- Performance or security considerations
+- Things to remember for future work
 
 ## Step 2: Complete Session
 

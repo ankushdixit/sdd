@@ -10,12 +10,18 @@ Run the validation script to check quality standards:
 sdd validate
 ```
 
+To automatically fix linting and formatting issues:
+
+```bash
+sdd validate --fix
+```
+
 The validation checks:
 - **Tests**: All test suites pass
-- **Linting**: Code passes ruff linting rules
-- **Type Checking**: Type hints are valid (if type checking is configured)
+- **Linting**: Code passes linting rules (auto-fixable with --fix)
+- **Formatting**: Code is properly formatted (auto-fixable with --fix)
 - **Code Coverage**: Meets minimum coverage threshold
 - **Git Status**: Working directory is clean or has expected changes
 - **Acceptance Criteria**: Work item requirements are met
 
-Display the validation results to the user with a clear pass/fail status for each check. If any checks fail, show the specific errors and suggest how to fix them. This command allows checking quality during development without ending the session.
+Display the validation results to the user with a clear pass/fail status for each check. If linting or formatting fail, suggest using `sdd validate --fix` to automatically fix the issues. This command allows checking quality during development without ending the session.
