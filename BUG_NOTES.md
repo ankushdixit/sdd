@@ -367,7 +367,7 @@ Also need to verify that other operations that change work items also update met
 
 ## Bug #18: Learning Extraction Fails with Multi-Paragraph Commits
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED (fix/bug-18-19-learning-work-completion)
 
 **Issue:** The learning extraction from git commits fails when commit messages have multiple paragraphs. The `LEARNING:` tag is not found even when present.
 
@@ -413,7 +413,7 @@ for match in re.finditer(commit_pattern, result.stdout, re.DOTALL):
 
 ## Bug #19: Non-Interactive Work Completion Always Defaults to 'n'
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED (fix/bug-18-19-learning-work-completion)
 
 **Issue:** When running `sdd end` in non-interactive mode (Claude Code), work items are never marked as completed automatically, even when all acceptance criteria are met.
 
