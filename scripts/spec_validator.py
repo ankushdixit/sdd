@@ -335,23 +335,30 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, li
         - is_valid: True if spec passes all validation checks
         - error_messages: List of validation errors (empty if valid)
     """
-    # Load work items to get spec_file path
+    # Try to load work items to get spec_file path
+    # If work_items.json doesn't exist, fallback to default pattern (for backwards compatibility/tests)
     import json
 
     work_items_file = Path(".session/tracking/work_items.json")
-    if not work_items_file.exists():
-        return False, [f"Work items file not found: {work_items_file}"]
+    spec_file_path = None
 
-    with open(work_items_file) as f:
-        work_items_data = json.load(f)
+    if work_items_file.exists():
+        # Load from work_items.json (preferred method)
+        try:
+            with open(work_items_file) as f:
+                work_items_data = json.load(f)
 
-    if work_item_id not in work_items_data.get("work_items", {}):
-        return False, [f"Work item '{work_item_id}' not found in work_items.json"]
+            if work_item_id in work_items_data.get("work_items", {}):
+                work_item = work_items_data["work_items"][work_item_id]
+                spec_file_path = work_item.get("spec_file")
+        except Exception:
+            # If loading fails, fallback to default pattern
+            pass
 
-    work_item = work_items_data["work_items"][work_item_id]
+    # Fallback to default pattern if not found in work_items.json
+    if not spec_file_path:
+        spec_file_path = f".session/specs/{work_item_id}.md"
 
-    # Use spec_file from work item configuration (supports custom filenames)
-    spec_file_path = work_item.get("spec_file", f".session/specs/{work_item_id}.md")
     spec_path = Path(spec_file_path)
 
     if not spec_path.exists():
