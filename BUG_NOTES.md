@@ -152,7 +152,7 @@ Add a `validate_project_setup()` function to `init_project.py` that runs before 
 
 ---
 
-## Bug #11: work-new Command Requires Interactive Input
+## Bug #11: work-new Command Requires Interactive Input ✅ FIXED
 
 **Issue:** `sdd work-new` only works in interactive mode, requiring user to respond to prompts. This fails when run by Claude Code or in automated workflows with `EOFError`.
 
@@ -167,44 +167,47 @@ Add a `validate_project_setup()` function to `init_project.py` that runs before 
 - CI/CD pipelines cannot create work items
 - Users must manually create work items or directly edit JSON files
 
-**Expected Behavior:**
-Add non-interactive support via command-line arguments:
+**Fix Applied:**
 
+1. **Updated `scripts/work_item_manager.py`:**
+   - Added `sys.stdin.isatty()` check at the start of `create_work_item()` (line 49)
+   - Added EOFError exception handling around all `input()` calls (lines 61-96)
+   - Provided helpful error messages directing users to command-line arguments
+   - Also updated `update_work_item_interactive()` with same protections (line 884)
+
+2. **Updated `sdd_cli.py`:**
+   - Added `parse_work_new_args()` function to parse command-line arguments (lines 103-121)
+   - Supports both long and short flags: `--type/-t`, `--title/-T`, `--priority/-p`, `--dependencies/-d`
+   - Updated routing logic to detect arguments and call appropriate method (lines 204-220)
+   - If arguments provided: calls `create_work_item_from_args()` (non-interactive)
+   - If no arguments: calls `create_work_item()` (interactive with proper error handling)
+
+**Non-Interactive Usage:**
 ```bash
-# Non-interactive work item creation
-sdd work-new --type feature --title "Implement calculator" --priority high --dependencies "FT-001,FT-002"
+# Full form
+sdd work-new --type feature --title "Implement calculator" --priority high --dependencies "dep1,dep2"
 
-# Or short form
-sdd work-new -t feature -T "Implement calculator" -p high -d "FT-001,FT-002"
+# Short form
+sdd work-new -t feature -T "Implement calculator" -p high -d "dep1,dep2"
+
+# Minimal (priority defaults to 'high')
+sdd work-new --type bug --title "Fix login issue"
 ```
 
-**Suggested Fix:**
-1. Add argparse support to `create_work_item()` method
-2. Check for command-line arguments first, fall back to interactive prompts
-3. Add `sys.stdin.isatty()` check before using `input()`
-4. Handle `EOFError` gracefully in interactive mode
-5. Support both interactive and non-interactive modes seamlessly
-
-Example implementation:
-```python
-def create_work_item(self, work_type=None, title=None, priority=None, dependencies=None):
-    # If args provided, use them (non-interactive)
-    if all([work_type, title]):
-        return self.create_work_item_from_args(work_type, title, priority, dependencies)
-
-    # Otherwise use interactive mode (with EOFError handling)
-    if not sys.stdin.isatty():
-        raise RuntimeError("Cannot run interactive mode in non-interactive environment")
-
-    # ... existing interactive code with try/except EOFError
-```
+**Testing:**
+Verified that:
+- ✅ Non-interactive mode works with both long and short flags
+- ✅ Dependencies are parsed correctly from comma-separated list
+- ✅ Interactive mode detects non-tty environment and provides helpful error
+- ✅ EOFError is handled gracefully with informative messages
+- ✅ Both modes coexist seamlessly
 
 **Related Issues:**
-- Similar to Bug #9 (session end requiring interactive input)
-- Both block Claude Code automation
-- Both need command-line argument support
+- Similar to Bug #9 (session end requiring interactive input) - both now fixed
+- Both blocked Claude Code automation
+- Both now support command-line argument mode
 
-**Priority:** High (blocks automation and Claude Code usage)
+**Priority:** High (blocks automation and Claude Code usage) - **RESOLVED**
 
 ---
 

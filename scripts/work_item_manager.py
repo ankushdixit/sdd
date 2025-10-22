@@ -44,25 +44,56 @@ class WorkItemManager:
     def create_work_item(self) -> Optional[str]:
         """Interactive work item creation."""
         logger.info("Starting interactive work item creation")
+
+        # Check if running in non-interactive environment
+        if not sys.stdin.isatty():
+            logger.error("Cannot run interactive mode in non-interactive environment")
+            print("❌ Error: Cannot run interactive work item creation in non-interactive mode")
+            print("\nPlease use command-line arguments instead:")
+            print("  sdd work-new --type <type> --title <title> [--priority <priority>] [--dependencies <deps>]")
+            print("\nExample:")
+            print("  sdd work-new --type feature --title \"Implement calculator\" --priority high")
+            return None
+
         print("Creating new work item...\n")
 
         # 1. Select type
-        work_type = self._prompt_type()
-        if not work_type:
-            logger.debug("Work item creation cancelled - no type selected")
+        try:
+            work_type = self._prompt_type()
+            if not work_type:
+                logger.debug("Work item creation cancelled - no type selected")
+                return None
+        except EOFError:
+            logger.warning("EOFError during type selection")
+            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
             return None
 
         # 2. Get title
-        title = self._prompt_title()
-        if not title:
-            logger.debug("Work item creation cancelled - no title provided")
+        try:
+            title = self._prompt_title()
+            if not title:
+                logger.debug("Work item creation cancelled - no title provided")
+                return None
+        except EOFError:
+            logger.warning("EOFError during title input")
+            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
             return None
 
         # 3. Get priority
-        priority = self._prompt_priority()
+        try:
+            priority = self._prompt_priority()
+        except EOFError:
+            logger.warning("EOFError during priority input, using default 'high'")
+            print("\n⚠️  Input unavailable, using default priority 'high'")
+            priority = "high"
 
         # 4. Get dependencies
-        dependencies = self._prompt_dependencies(work_type)
+        try:
+            dependencies = self._prompt_dependencies(work_type)
+        except EOFError:
+            logger.warning("EOFError during dependencies input, using no dependencies")
+            print("\n⚠️  Input unavailable, no dependencies will be added")
+            dependencies = []
 
         # 5. Generate ID
         work_id = self._generate_id(work_type, title)
@@ -849,6 +880,16 @@ class WorkItemManager:
             print("No work items found.")
             return False
 
+        # Check if running in non-interactive environment
+        if not sys.stdin.isatty():
+            logger.error("Cannot run interactive update in non-interactive environment")
+            print("❌ Error: Cannot run interactive work item update in non-interactive mode")
+            print("\nPlease use command-line arguments instead:")
+            print("  sdd work-update <work_id> --status <status>")
+            print("  sdd work-update <work_id> --priority <priority>")
+            print("  sdd work-update <work_id> --milestone <milestone>")
+            return False
+
         data = load_json(self.work_items_file)
         items = data.get("work_items", {})
 
@@ -874,25 +915,30 @@ class WorkItemManager:
         print("6. Cancel")
         print()
 
-        choice = input("Your choice: ").strip()
+        try:
+            choice = input("Your choice: ").strip()
 
-        if choice == "1":
-            status = input("New status (not_started/in_progress/blocked/completed): ").strip()
-            return self.update_work_item(work_id, status=status)
-        elif choice == "2":
-            priority = input("New priority (critical/high/medium/low): ").strip()
-            return self.update_work_item(work_id, priority=priority)
-        elif choice == "3":
-            milestone = input("Milestone name: ").strip()
-            return self.update_work_item(work_id, milestone=milestone)
-        elif choice == "4":
-            dep = input("Dependency ID to add: ").strip()
-            return self.update_work_item(work_id, add_dependency=dep)
-        elif choice == "5":
-            dep = input("Dependency ID to remove: ").strip()
-            return self.update_work_item(work_id, remove_dependency=dep)
-        else:
-            print("Cancelled.")
+            if choice == "1":
+                status = input("New status (not_started/in_progress/blocked/completed): ").strip()
+                return self.update_work_item(work_id, status=status)
+            elif choice == "2":
+                priority = input("New priority (critical/high/medium/low): ").strip()
+                return self.update_work_item(work_id, priority=priority)
+            elif choice == "3":
+                milestone = input("Milestone name: ").strip()
+                return self.update_work_item(work_id, milestone=milestone)
+            elif choice == "4":
+                dep = input("Dependency ID to add: ").strip()
+                return self.update_work_item(work_id, add_dependency=dep)
+            elif choice == "5":
+                dep = input("Dependency ID to remove: ").strip()
+                return self.update_work_item(work_id, remove_dependency=dep)
+            else:
+                print("Cancelled.")
+                return False
+        except EOFError:
+            logger.warning("EOFError during interactive update")
+            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
             return False
 
     def get_next_work_item(self) -> Optional[dict]:
