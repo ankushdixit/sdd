@@ -6,6 +6,7 @@ Enhanced with full tracking updates and git workflow.
 Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
 """
 
+import argparse
 import json
 import subprocess
 import sys
@@ -261,8 +262,29 @@ def auto_extract_learnings(session_num):
         return 0
 
 
-def extract_learnings_from_session():
-    """Extract learnings from work done in session (manual input)."""
+def extract_learnings_from_session(learnings_file=None):
+    """Extract learnings from work done in session (manual input or file).
+
+    Args:
+        learnings_file: Path to file containing learnings (one per line)
+    """
+    # If learnings file provided, read from it
+    if learnings_file:
+        try:
+            learnings_path = Path(learnings_file)
+            if learnings_path.exists():
+                print(f"\nReading learnings from {learnings_file}...")
+                with open(learnings_path) as f:
+                    learnings = [line.strip() for line in f if line.strip()]
+                print(f"✓ Loaded {len(learnings)} learnings from file")
+                # Clean up temp file
+                learnings_path.unlink()
+                return learnings
+            else:
+                print(f"⚠️  Learnings file not found: {learnings_file}")
+        except Exception as e:
+            print(f"⚠️  Failed to read learnings file: {e}")
+
     # Skip manual input in non-interactive mode (e.g., when run by Claude Code)
     if not sys.stdin.isatty():
         print("\nSkipping manual learning extraction (non-interactive mode)")
@@ -544,6 +566,25 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
 
 def main():
     """Enhanced main entry point with full tracking updates."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Complete SDD session")
+    parser.add_argument(
+        "--learnings-file",
+        type=str,
+        help="Path to file containing learnings (one per line)",
+    )
+    parser.add_argument(
+        "--complete",
+        action="store_true",
+        help="Mark work item as complete",
+    )
+    parser.add_argument(
+        "--incomplete",
+        action="store_true",
+        help="Keep work item as in-progress",
+    )
+    args = parser.parse_args()
+
     # Load current status
     status = load_status()
     if not status:
@@ -577,24 +618,63 @@ def main():
     # Auto-extract learnings from session artifacts
     auto_extract_learnings(session_num)
 
-    # Extract learnings manually
-    learnings = extract_learnings_from_session()
+    # Extract learnings manually or from file
+    learnings = extract_learnings_from_session(args.learnings_file)
 
     # Process learnings with learning_curator if available
     if learnings:
-        print("\nProcessing learnings...")
-        # Learning curation will be handled by learning_curator.py
+        print(f"\nProcessing {len(learnings)} learnings...")
+        try:
+            from learning_curator import LearningsCurator
 
-    # Ask about work item completion status
-    print(
-        f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
-    )
+            curator = LearningsCurator()
+            added_count = 0
+            for learning in learnings:
+                # Convert string to dict format expected by curator
+                # Curator will auto-generate 'id' and auto-categorize
+                learning_dict = {
+                    "content": learning,
+                    "learned_in": f"session_{session_num:03d}",
+                    "timestamp": datetime.now().isoformat(),
+                    "source": "temp_file" if args.learnings_file else "manual",
+                }
 
-    # In non-interactive mode, assume work item is not complete by default
-    if not sys.stdin.isatty():
+                if curator.add_learning_if_new(learning_dict):
+                    added_count += 1
+                    print(f"  ✓ Added: {learning}")
+                else:
+                    print(f"  ⊘ Duplicate: {learning}")
+
+            if added_count > 0:
+                print(f"\n✓ Added {added_count} new learning(s) to learnings.json")
+            else:
+                print("\n⊘ No new learnings added (all were duplicates)")
+        except Exception as e:
+            print(f"⚠️  Failed to process learnings: {e}")
+
+    # Determine work item completion status
+    if args.complete:
+        print(
+            f"\n✓ Marking work item '{work_items_data['work_items'][work_item_id]['title']}' as complete (--complete flag)"
+        )
+        is_complete = True
+    elif args.incomplete:
+        print(
+            f"\n✓ Keeping work item '{work_items_data['work_items'][work_item_id]['title']}' as in-progress (--incomplete flag)"
+        )
+        is_complete = False
+    elif not sys.stdin.isatty():
+        # In non-interactive mode without flags, default to incomplete
+        print(
+            f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
+        )
         print("> (non-interactive mode: defaulting to 'n')")
         is_complete = False
     else:
+        # Interactive mode - ask user
+        print(
+            f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
+        )
         try:
             is_complete = input("> ").lower() == "y"
         except EOFError:
