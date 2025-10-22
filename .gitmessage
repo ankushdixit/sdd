@@ -1,0 +1,17 @@
+# <type>: <subject> (max 50 characters)
+
+# <body> (wrap at 72 characters)
+
+
+# Optional learning (will be auto-extracted during /sdd:end):
+# LEARNING: <your learning here>
+#
+# Examples:
+# LEARNING: TypeScript number type handles both integers and decimals seamlessly
+# LEARNING: FastAPI middleware order matters for CORS - add_middleware calls must be in reverse order
+# LEARNING: Always use parameterized queries to prevent SQL injection
+
+
+# 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+#
+# Co-Authored-By: Claude <noreply@anthropic.com>
