@@ -570,8 +570,16 @@ class LearningsCurator:
             learning_pattern = r"LEARNING:\s*(.+?)(?=\n|$)"
 
             # Parse commit messages
-            commits = result.stdout.split("\n\n")
-            for commit_block in commits:
+            # Split by commit hash pattern (40-char hex at line start followed by |||)
+            # This preserves multi-paragraph commit messages
+            commits_raw = result.stdout.strip()
+            if not commits_raw:
+                return []
+
+            # Each commit starts with hash|||, split on newline followed by hash pattern
+            commit_blocks = re.split(r"\n(?=[a-f0-9]{40}\|\|\|)", commits_raw)
+
+            for commit_block in commit_blocks:
                 if "|||" not in commit_block:
                     continue
 

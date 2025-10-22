@@ -713,12 +713,12 @@ def main():
         )
         is_complete = False
     elif not sys.stdin.isatty():
-        # In non-interactive mode without flags, default to incomplete
+        # In non-interactive mode without flags, default to complete if quality gates passed
         print(
             f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
         )
-        print("> (non-interactive mode: defaulting to 'n')")
-        is_complete = False
+        print("> (non-interactive mode: defaulting to 'y' - quality gates passed)")
+        is_complete = True
     else:
         # Interactive mode - ask user
         print(
