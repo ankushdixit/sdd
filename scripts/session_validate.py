@@ -16,6 +16,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts import spec_parser
+from scripts.quality_gates import QualityGates
 
 
 class SessionValidator:
@@ -24,6 +25,7 @@ class SessionValidator:
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
+        self.quality_gates = QualityGates(self.session_dir / "config.json")
 
     def check_git_status(self) -> dict:
         """Check git working directory status."""
@@ -73,11 +75,58 @@ class SessionValidator:
 
     def preview_quality_gates(self) -> dict:
         """Preview quality gate results without making changes."""
-        gates = {
-            "tests": self._preview_tests(),
-            "linting": self._preview_linting(),
-            "formatting": self._preview_formatting(),
-        }
+        gates = {}
+
+        # Use QualityGates to run tests (respects config)
+        test_config = self.quality_gates.config.get("test_execution", {})
+        if test_config.get("enabled", True):
+            test_passed, test_results = self.quality_gates.run_tests()
+            # Check if tests are required
+            if test_config.get("required", True):
+                gates["tests"] = {
+                    "passed": test_passed,
+                    "message": test_results.get(
+                        "reason", "Tests pass" if test_passed else "Tests fail"
+                    ),
+                }
+            else:
+                # If not required, always mark as passed but include status info
+                gates["tests"] = {
+                    "passed": True,
+                    "message": f"Tests {test_results.get('status', 'unknown')} (not required)",
+                }
+
+        # Use QualityGates for linting (respects config)
+        lint_config = self.quality_gates.config.get("linting", {})
+        if lint_config.get("enabled", True):
+            lint_passed, lint_results = self.quality_gates.run_linting(auto_fix=False)
+            if lint_config.get("required", False):
+                gates["linting"] = {
+                    "passed": lint_passed,
+                    "message": "No linting issues" if lint_passed else "Linting issues found",
+                }
+            else:
+                gates["linting"] = {
+                    "passed": True,
+                    "message": f"Linting {lint_results.get('status', 'unknown')} (not required)",
+                }
+
+        # Use QualityGates for formatting (respects config)
+        fmt_config = self.quality_gates.config.get("formatting", {})
+        if fmt_config.get("enabled", True):
+            fmt_passed, fmt_results = self.quality_gates.run_formatting(auto_fix=False)
+            if fmt_config.get("required", False):
+                gates["formatting"] = {
+                    "passed": fmt_passed,
+                    "message": "All files properly formatted"
+                    if fmt_passed
+                    else "Files need formatting",
+                }
+            else:
+                gates["formatting"] = {
+                    "passed": True,
+                    "message": f"Formatting {fmt_results.get('status', 'unknown')} (not required)",
+                }
 
         all_passed = all(g["passed"] for g in gates.values())
 
@@ -86,87 +135,6 @@ class SessionValidator:
             "message": "All quality gates pass" if all_passed else "Some quality gates fail",
             "gates": gates,
         }
-
-    def _preview_tests(self) -> dict:
-        """Preview test results."""
-        try:
-            result = subprocess.run(
-                ["pytest", "-v", "--tb=short"],
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-
-            # Parse output for counts
-            output = result.stdout + result.stderr
-
-            passed = result.returncode == 0
-
-            return {
-                "passed": passed,
-                "message": "Tests pass" if passed else "Tests fail",
-                "output_preview": output[-500:] if not passed else None,
-            }
-
-        except FileNotFoundError:
-            return {"passed": True, "message": "pytest not found (skipped)"}
-        except subprocess.TimeoutExpired:
-            return {"passed": False, "message": "Tests timed out (>5 minutes)"}
-
-    def _preview_linting(self) -> dict:
-        """Preview linting results."""
-        try:
-            result = subprocess.run(
-                ["ruff", "check", "."], capture_output=True, text=True, timeout=60
-            )
-
-            passed = result.returncode == 0
-
-            if not passed:
-                # Parse issues
-                issues = result.stdout.strip().split("\n")
-                issue_count = len([i for i in issues if i.strip()])
-
-                return {
-                    "passed": False,
-                    "message": f"{issue_count} linting issues found",
-                    "issues": issues[:10],  # First 10 issues
-                    "fixable": "--fix" in result.stderr or "fixable" in result.stdout,
-                }
-
-            return {"passed": True, "message": "No linting issues"}
-
-        except FileNotFoundError:
-            return {"passed": True, "message": "ruff not found (skipped)"}
-        except subprocess.TimeoutExpired:
-            return {"passed": False, "message": "Linting timed out"}
-
-    def _preview_formatting(self) -> dict:
-        """Preview formatting check."""
-        try:
-            result = subprocess.run(
-                ["ruff", "format", "--check", "."],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-
-            passed = result.returncode == 0
-
-            if not passed:
-                unformatted = result.stdout.strip().split("\n")
-                file_count = len([f for f in unformatted if f.strip()])
-
-                return {
-                    "passed": False,
-                    "message": f"{file_count} files need formatting",
-                    "files": unformatted[:5],
-                }
-
-            return {"passed": True, "message": "All files properly formatted"}
-
-        except FileNotFoundError:
-            return {"passed": True, "message": "ruff not found (skipped)"}
 
     def validate_work_item_criteria(self) -> dict:
         """
