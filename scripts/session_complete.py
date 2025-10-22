@@ -630,7 +630,16 @@ def main():
             curator = LearningsCurator()
             added_count = 0
             for learning in learnings:
-                if curator.add_learning_if_new(learning):
+                # Convert string to dict format expected by curator
+                # Curator will auto-generate 'id' and auto-categorize
+                learning_dict = {
+                    "content": learning,
+                    "learned_in": f"session_{session_num:03d}",
+                    "timestamp": datetime.now().isoformat(),
+                    "source": "temp_file" if args.learnings_file else "manual",
+                }
+
+                if curator.add_learning_if_new(learning_dict):
                     added_count += 1
                     print(f"  ✓ Added: {learning}")
                 else:
