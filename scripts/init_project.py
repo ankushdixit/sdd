@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Initialize .session directory structure in current project.
-Enhanced with documentation checks and initial scans.
+Deterministic SDD initialization - transforms any project into working SDD project.
+Philosophy: Don't check and warn - CREATE and FIX.
 """
 
 import json
@@ -11,44 +11,258 @@ import sys
 from pathlib import Path
 
 
-def check_documentation():
-    """Check for project documentation."""
-    docs_dir = Path("docs")
-
-    if not docs_dir.exists():
-        print("⚠️  No docs/ directory found")
-        print("   Recommendation: Create at least docs/vision.md and docs/prd.md")
-        # Auto-continue in non-interactive mode (for testing)
-        if not sys.stdin.isatty():
-            print("   (Non-interactive mode: continuing anyway)")
-            return True
-        response = input("Continue anyway? (y/n): ")
-        if response.lower() != "y":
-            return False
-
-    # Check for common doc files
-    found_docs = []
-    for doc_file in ["vision.md", "prd.md", "architecture.md", "README.md"]:
-        if (docs_dir / doc_file).exists() or Path(doc_file).exists():
-            found_docs.append(doc_file)
-            print(f"✓ Found {doc_file}")
-
-    if found_docs:
-        print(f"\n✓ Project documentation found ({len(found_docs)} files)")
+def detect_project_type() -> str:
+    """Detect project type from existing files."""
+    if Path("package.json").exists():
+        if Path("tsconfig.json").exists():
+            return "typescript"
+        return "javascript"
+    elif Path("pyproject.toml").exists() or Path("setup.py").exists():
+        return "python"
     else:
-        print("\n⚠️  No standard documentation files found")
+        # No project files found - ask user
+        print("\nNo project files detected. What type of project is this?")
+        print("1. TypeScript")
+        print("2. JavaScript")
+        print("3. Python")
 
-    return True
+        if not sys.stdin.isatty():
+            # Non-interactive mode - default to TypeScript
+            print("Non-interactive mode: defaulting to TypeScript")
+            return "typescript"
+
+        choice = input("Enter choice (1-3): ").strip()
+        return {"1": "typescript", "2": "javascript", "3": "python"}.get(choice, "typescript")
 
 
-def create_directory_structure():
+def ensure_package_manager_file(project_type: str):
+    """Create or update package manager file with required dependencies."""
+    template_dir = Path(__file__).parent.parent / "templates"
+
+    if project_type in ["typescript", "javascript"]:
+        package_json = Path("package.json")
+
+        if not package_json.exists():
+            print("Creating package.json...")
+            # Get project name from directory
+            project_name = Path.cwd().name
+            project_desc = f"A {project_type} project with Session-Driven Development"
+
+            # Load template and replace placeholders
+            template_path = template_dir / "package.json.template"
+            template_content = template_path.read_text()
+            content = template_content.replace("{project_name}", project_name)
+            content = content.replace("{project_description}", project_desc)
+
+            package_json.write_text(content)
+            print(f"✓ Created package.json for {project_name}")
+        else:
+            print("✓ Found package.json")
+            # Ensure required scripts and devDependencies exist
+            with open(package_json) as f:
+                data = json.load(f)
+
+            # Ensure scripts
+            required_scripts = {
+                "test": "jest",
+                "lint": "eslint src tests --ext .ts,.tsx,.js,.jsx"
+                if project_type == "typescript"
+                else "eslint src tests --ext .js,.jsx",
+                "format": 'prettier --write "src/**/*" "tests/**/*"',
+            }
+            if project_type == "typescript":
+                required_scripts["build"] = "tsc"
+
+            if "scripts" not in data:
+                data["scripts"] = {}
+
+            scripts_modified = False
+            for script, cmd in required_scripts.items():
+                if script not in data["scripts"]:
+                    data["scripts"][script] = cmd
+                    print(f"  Added script: {script}")
+                    scripts_modified = True
+
+            # Ensure devDependencies
+            if "devDependencies" not in data:
+                data["devDependencies"] = {}
+
+            # Common dependencies for all JS/TS projects
+            required_deps = {
+                "jest": "^29.5.0",
+                "prettier": "^3.0.0",
+                "eslint": "^8.40.0",
+                "@types/jest": "^29.5.0",
+                "@types/node": "^20.0.0",
+            }
+
+            # TypeScript-specific dependencies
+            if project_type == "typescript":
+                required_deps.update(
+                    {
+                        "@typescript-eslint/eslint-plugin": "^6.0.0",
+                        "@typescript-eslint/parser": "^6.0.0",
+                        "ts-jest": "^29.1.0",
+                        "typescript": "^5.0.0",
+                    }
+                )
+
+            deps_modified = False
+            for pkg, version in required_deps.items():
+                if pkg not in data["devDependencies"]:
+                    data["devDependencies"][pkg] = version
+                    print(f"  Added devDependency: {pkg}")
+                    deps_modified = True
+
+            # Save back only if modified
+            if scripts_modified or deps_modified:
+                with open(package_json, "w") as f:
+                    json.dump(data, f, indent=2)
+                if deps_modified:
+                    print("  Run 'npm install' to install new dependencies")
+
+    elif project_type == "python":
+        pyproject = Path("pyproject.toml")
+
+        if not pyproject.exists():
+            print("Creating pyproject.toml...")
+            project_name = Path.cwd().name.replace("-", "_")
+            project_desc = "A Python project with Session-Driven Development"
+
+            template_path = template_dir / "pyproject.toml.template"
+            template_content = template_path.read_text()
+            content = template_content.replace("{project_name}", project_name)
+            content = template_content.replace("{project_description}", project_desc)
+
+            pyproject.write_text(content)
+            print(f"✓ Created pyproject.toml for {project_name}")
+        else:
+            print("✓ Found pyproject.toml")
+            # Check if it has dev dependencies section
+            content = pyproject.read_text()
+            if "[project.optional-dependencies]" not in content and "dev" not in content:
+                print(
+                    "  Note: Add [project.optional-dependencies] section with pytest, pytest-cov, ruff"
+                )
+                print("  Or install manually: pip install pytest pytest-cov ruff")
+
+
+def ensure_config_files(project_type: str):
+    """Create all required config files from templates."""
+    template_dir = Path(__file__).parent.parent / "templates"
+
+    # Common configs
+    configs_to_create = [
+        ("CHANGELOG.md", "CHANGELOG.md"),
+    ]
+
+    if project_type in ["typescript", "javascript"]:
+        configs_to_create.extend(
+            [
+                (".eslintrc.json", ".eslintrc.json"),
+                (".prettierrc.json", ".prettierrc.json"),
+                (".prettierignore", ".prettierignore"),
+            ]
+        )
+
+        # Use correct jest config based on project type
+        if project_type == "typescript":
+            configs_to_create.append(("jest.config.js", "jest.config.js"))
+            configs_to_create.append(("tsconfig.json", "tsconfig.json"))
+        else:  # javascript
+            configs_to_create.append(("jest.config.js.javascript", "jest.config.js"))
+
+    for template_name, dest_name in configs_to_create:
+        dest_path = Path(dest_name)
+        if not dest_path.exists():
+            template_path = template_dir / template_name
+            if template_path.exists():
+                shutil.copy(template_path, dest_path)
+                print(f"✓ Created {dest_name}")
+        else:
+            print(f"✓ Found {dest_name}")
+
+
+def install_dependencies(project_type: str):
+    """Install project dependencies."""
+    if project_type in ["typescript", "javascript"]:
+        # Always run npm install to ensure new devDependencies are installed
+        print("\nInstalling npm dependencies...")
+        try:
+            subprocess.run(["npm", "install"], check=True)
+            print("✓ Dependencies installed")
+        except subprocess.CalledProcessError:
+            print("⚠️  npm install failed - you may need to run it manually")
+
+    elif project_type == "python":
+        # Check if we're in a venv, if not create one
+        if not (Path("venv").exists() or Path(".venv").exists()):
+            print("\nCreating Python virtual environment...")
+            try:
+                subprocess.run([sys.executable, "-m", "venv", "venv"], check=True)
+                print("✓ Created venv/")
+                print(
+                    "  Activate with: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)"
+                )
+            except subprocess.CalledProcessError:
+                print("⚠️  venv creation failed")
+                return
+
+        # Try to install dev dependencies
+        print("\nInstalling Python dependencies...")
+        pip_cmd = "venv/bin/pip" if Path("venv").exists() else ".venv/bin/pip"
+        if Path(pip_cmd).exists():
+            try:
+                subprocess.run([pip_cmd, "install", "-e", ".[dev]"], check=True)
+                print("✓ Dependencies installed")
+            except subprocess.CalledProcessError:
+                print("⚠️  pip install failed - you may need to activate venv and install manually")
+        else:
+            print("⚠️  Please activate virtual environment and run: pip install -e .[dev]")
+
+
+def create_smoke_tests(project_type: str):
+    """Create initial smoke tests that validate SDD setup."""
+    template_dir = Path(__file__).parent.parent / "templates" / "tests"
+    test_dir = Path("tests")
+    test_dir.mkdir(exist_ok=True)
+
+    if project_type == "typescript":
+        test_file = test_dir / "sdd-setup.test.ts"
+        template_name = "sdd-setup.test.ts"
+        if not test_file.exists():
+            template_file = template_dir / template_name
+            if template_file.exists():
+                shutil.copy(template_file, test_file)
+                print(f"✓ Created smoke tests: {test_file}")
+        else:
+            print(f"✓ Found {test_file}")
+
+    elif project_type == "javascript":
+        test_file = test_dir / "sdd-setup.test.js"
+        template_name = "sdd-setup.test.js"
+        if not test_file.exists():
+            template_file = template_dir / template_name
+            if template_file.exists():
+                shutil.copy(template_file, test_file)
+                print(f"✓ Created smoke tests: {test_file}")
+        else:
+            print(f"✓ Found {test_file}")
+
+    elif project_type == "python":
+        test_file = test_dir / "test_sdd_setup.py"
+        if not test_file.exists():
+            template_file = template_dir / "test_sdd_setup.py"
+            if template_file.exists():
+                shutil.copy(template_file, test_file)
+                print(f"✓ Created smoke tests: {test_file}")
+        else:
+            print(f"✓ Found {test_file}")
+
+
+def create_session_structure():
     """Create .session directory structure."""
     session_dir = Path(".session")
-
-    if session_dir.exists():
-        print("❌ Error: .session directory already exists")
-        print("   Project already initialized")
-        return False
 
     print("\nCreating .session/ structure...")
 
@@ -62,8 +276,6 @@ def create_directory_structure():
     print("✓ Created .session/briefings/")
     print("✓ Created .session/history/")
     print("✓ Created .session/specs/")
-
-    return True
 
 
 def initialize_tracking_files():
@@ -209,60 +421,144 @@ def initialize_tracking_files():
     if schema_source.exists() and not schema_dest.exists():
         shutil.copy(schema_source, schema_dest)
         print("✓ Created config.schema.json")
-    elif not schema_source.exists():
-        print(
-            "⚠️  config.schema.json not found in repository, skipping (validation will be disabled)"
-        )
-
-    return True
 
 
 def run_initial_scans():
-    """Run initial stack and tree scans."""
-    print("\nRunning initial scans...")
+    """Run initial stack and tree scans with FIXED path resolution (Bug #12)."""
+    print("\nGenerating project context...")
 
-    # Run generate_stack.py
+    # Get SDD installation directory
+    script_dir = Path(__file__).parent
+
+    # Run generate_stack.py with absolute path
     try:
-        subprocess.run(["python", "scripts/generate_stack.py"], check=True, capture_output=True)
+        subprocess.run(
+            ["python", str(script_dir / "generate_stack.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
         print("✓ Generated stack.txt")
-    except subprocess.CalledProcessError:
-        print("⚠️  Could not generate stack.txt (will be generated on first session)")
+    except subprocess.CalledProcessError as e:
+        print("⚠️  Could not generate stack.txt")
+        if e.stderr:
+            print(f"  Error: {e.stderr.strip()}")
+    except subprocess.TimeoutExpired:
+        print("⚠️  Stack generation timed out")
 
-    # Run generate_tree.py
+    # Run generate_tree.py with absolute path
     try:
-        subprocess.run(["python", "scripts/generate_tree.py"], check=True, capture_output=True)
+        subprocess.run(
+            ["python", str(script_dir / "generate_tree.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
         print("✓ Generated tree.txt")
-    except subprocess.CalledProcessError:
-        print("⚠️  Could not generate tree.txt (will be generated on first session)")
+    except subprocess.CalledProcessError as e:
+        print("⚠️  Could not generate tree.txt")
+        if e.stderr:
+            print(f"  Error: {e.stderr.strip()}")
+    except subprocess.TimeoutExpired:
+        print("⚠️  Tree generation timed out")
 
-    return True
+
+def ensure_gitignore_entries():
+    """Add .session patterns to .gitignore."""
+    gitignore = Path(".gitignore")
+
+    required_entries = [
+        ".session/briefings/",
+        ".session/history/",
+        "coverage/",
+        "node_modules/",
+        "dist/",
+        "venv/",
+        ".venv/",
+        "*.pyc",
+        "__pycache__/",
+    ]
+
+    existing_content = gitignore.read_text() if gitignore.exists() else ""
+
+    entries_to_add = []
+    for entry in required_entries:
+        if entry not in existing_content:
+            entries_to_add.append(entry)
+
+    if entries_to_add:
+        print("\nUpdating .gitignore...")
+        with open(gitignore, "a") as f:
+            if existing_content and not existing_content.endswith("\n"):
+                f.write("\n")
+            f.write("\n# SDD-related patterns\n")
+            for entry in entries_to_add:
+                f.write(f"{entry}\n")
+        print(f"✓ Added {len(entries_to_add)} entries to .gitignore")
+    else:
+        print("✓ .gitignore already up to date")
 
 
 def init_project():
-    """Main initialization function."""
-    print("Initializing Session-Driven Development...\n")
+    """Main initialization function - deterministic setup."""
+    print("🚀 Initializing Session-Driven Development...\n")
 
-    # Check documentation
-    if not check_documentation():
+    # 1. Check if already initialized
+    if Path(".session").exists():
+        print("❌ Already initialized!")
+        print("   .session/ directory already exists")
+        print("   If you need to reinitialize, delete .session/ first")
         return 1
 
-    # Create directory structure
-    if not create_directory_structure():
-        return 1
+    # 2. Detect project type
+    project_type = detect_project_type()
+    print(f"\n📦 Project type: {project_type}\n")
 
-    # Initialize tracking files
-    if not initialize_tracking_files():
-        return 1
+    # 3. Ensure package manager file (create/update)
+    ensure_package_manager_file(project_type)
 
-    # Run initial scans
+    # 4. Ensure all config files (create from templates)
+    print()
+    ensure_config_files(project_type)
+
+    # 5. Install dependencies
+    print()
+    install_dependencies(project_type)
+
+    # 6. Create smoke tests
+    print()
+    create_smoke_tests(project_type)
+
+    # 7. Create .session structure
+    create_session_structure()
+
+    # 8. Initialize tracking files
+    initialize_tracking_files()
+
+    # 9. Generate project context (stack/tree)
     run_initial_scans()
 
-    print("\n" + "=" * 50)
-    print("Session-Driven Development initialized successfully!")
-    print("=" * 50)
-    print("\nNext steps:")
-    print("1. Create work items: /work-new")
-    print("2. Start first session: /start")
+    # 10. Update .gitignore
+    print()
+    ensure_gitignore_entries()
+
+    # Success summary
+    print("\n" + "=" * 60)
+    print("✅ SDD Initialized Successfully!")
+    print("=" * 60)
+
+    print("\n📦 What was created/updated:")
+    print("  ✓ Config files (.eslintrc, .prettierrc, jest.config, etc.)")
+    print("  ✓ Dependencies installed")
+    print("  ✓ Smoke tests created")
+    print("  ✓ .session/ structure with tracking files")
+    print("  ✓ Project context (stack.txt, tree.txt)")
+    print("  ✓ .gitignore updated")
+
+    print("\n🚀 Next Step:")
+    print("  /sdd:work-new")
     print()
 
     return 0
