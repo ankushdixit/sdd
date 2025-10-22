@@ -11,6 +11,43 @@ import sys
 from pathlib import Path
 
 
+def check_or_init_git(project_root: Path = None) -> bool:
+    """Check if git is initialized, if not initialize it."""
+    if project_root is None:
+        project_root = Path.cwd()
+
+    git_dir = project_root / ".git"
+
+    if git_dir.exists():
+        print("✓ Git repository already initialized")
+        return True
+
+    try:
+        # Initialize git
+        subprocess.run(
+            ["git", "init"],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+        )
+        print("✓ Initialized git repository")
+
+        # Set default branch to main (modern convention)
+        subprocess.run(
+            ["git", "branch", "-m", "main"],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+        )
+        print("✓ Set default branch to 'main'")
+
+        return True
+    except Exception as e:
+        print(f"⚠️  Failed to initialize git: {e}")
+        print("   You may need to run 'git init' manually")
+        return False
+
+
 def detect_project_type() -> str:
     """Detect project type from existing files."""
     if Path("package.json").exists():
@@ -512,35 +549,39 @@ def init_project():
         print("   If you need to reinitialize, delete .session/ first")
         return 1
 
-    # 2. Detect project type
+    # 2. Check or initialize git repository
+    check_or_init_git()
+    print()
+
+    # 3. Detect project type
     project_type = detect_project_type()
     print(f"\n📦 Project type: {project_type}\n")
 
-    # 3. Ensure package manager file (create/update)
+    # 4. Ensure package manager file (create/update)
     ensure_package_manager_file(project_type)
 
-    # 4. Ensure all config files (create from templates)
+    # 5. Ensure all config files (create from templates)
     print()
     ensure_config_files(project_type)
 
-    # 5. Install dependencies
+    # 6. Install dependencies
     print()
     install_dependencies(project_type)
 
-    # 6. Create smoke tests
+    # 7. Create smoke tests
     print()
     create_smoke_tests(project_type)
 
-    # 7. Create .session structure
+    # 8. Create .session structure
     create_session_structure()
 
-    # 8. Initialize tracking files
+    # 9. Initialize tracking files
     initialize_tracking_files()
 
-    # 9. Generate project context (stack/tree)
+    # 10. Generate project context (stack/tree)
     run_initial_scans()
 
-    # 10. Update .gitignore
+    # 11. Update .gitignore
     print()
     ensure_gitignore_entries()
 

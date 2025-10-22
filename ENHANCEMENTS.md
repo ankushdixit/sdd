@@ -11,7 +11,7 @@ This document tracks identified workflow improvements to make SDD more user-frie
 
 ## Enhancement #1: Auto Git Initialization in `sdd init`
 
-**Status:** 🔵 IDENTIFIED
+**Status:** ✅ IMPLEMENTED
 
 ### Problem
 Users must manually run `git init` before running `sdd init`, which is an unnecessary friction point and easy to forget.
@@ -219,7 +219,7 @@ if not changelog_updated:
 
 ## Enhancement #3: Pre-flight Commit Check in `/sdd:end`
 
-**Status:** 🔵 IDENTIFIED
+**Status:** ✅ IMPLEMENTED
 
 ### Problem
 Users run `/sdd:end` with uncommitted changes and get confusing error messages:
