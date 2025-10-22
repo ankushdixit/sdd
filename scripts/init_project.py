@@ -539,19 +539,34 @@ def run_initial_scans():
 
 
 def ensure_gitignore_entries():
-    """Add .session patterns to .gitignore."""
+    """Add .session patterns and OS-specific files to .gitignore."""
     gitignore = Path(".gitignore")
 
     required_entries = [
         ".session/briefings/",
         ".session/history/",
         "coverage/",
+        "coverage.json",
         "node_modules/",
         "dist/",
         "venv/",
         ".venv/",
         "*.pyc",
         "__pycache__/",
+    ]
+
+    # OS-specific files
+    os_specific_entries = [
+        ".DS_Store           # macOS",
+        ".DS_Store?          # macOS",
+        "._*                 # macOS resource forks",
+        ".Spotlight-V100     # macOS",
+        ".Trashes            # macOS",
+        "Thumbs.db           # Windows",
+        "ehthumbs.db         # Windows",
+        "Desktop.ini         # Windows",
+        "$RECYCLE.BIN/       # Windows",
+        "*~                  # Linux backup files",
     ]
 
     existing_content = gitignore.read_text() if gitignore.exists() else ""
@@ -561,15 +576,42 @@ def ensure_gitignore_entries():
         if entry not in existing_content:
             entries_to_add.append(entry)
 
-    if entries_to_add:
+    # First pass: check which patterns need to be added
+    os_patterns_needed = []
+    for entry in os_specific_entries:
+        # Skip comment-only lines in first pass
+        pattern = entry.split("#")[0].strip()
+        if pattern and pattern not in existing_content:
+            os_patterns_needed.append(entry)
+
+    # If we need to add any OS patterns, include the header
+    os_entries_to_add = []
+    if os_patterns_needed:
+        # Add the section header first
+        os_entries_to_add.append("# OS-specific files")
+        # Then add all the patterns
+        os_entries_to_add.extend(os_patterns_needed)
+
+    if entries_to_add or os_entries_to_add:
         print("\nUpdating .gitignore...")
         with open(gitignore, "a") as f:
             if existing_content and not existing_content.endswith("\n"):
                 f.write("\n")
-            f.write("\n# SDD-related patterns\n")
-            for entry in entries_to_add:
-                f.write(f"{entry}\n")
-        print(f"✓ Added {len(entries_to_add)} entries to .gitignore")
+
+            if entries_to_add:
+                f.write("\n# SDD-related patterns\n")
+                for entry in entries_to_add:
+                    f.write(f"{entry}\n")
+
+            if os_entries_to_add:
+                f.write("\n")
+                for entry in os_entries_to_add:
+                    f.write(f"{entry}\n")
+
+        total_added = len(entries_to_add) + len(
+            [e for e in os_entries_to_add if not e.startswith("#")]
+        )
+        print(f"✓ Added {total_added} entries to .gitignore")
     else:
         print("✓ .gitignore already up to date")
 

@@ -3,6 +3,14 @@
 import json
 from pathlib import Path
 
+import pytest
+
+# Skip all tests in this file if .session doesn't exist (not initialized)
+pytestmark = pytest.mark.skipif(
+    not Path(".session").exists(),
+    reason=".session directory not found (SDD not initialized)",
+)
+
 
 def test_project_structure():
     """Verify SDD project structure exists."""
