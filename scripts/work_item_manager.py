@@ -374,6 +374,17 @@ class WorkItemManager:
         # Add to data
         data["work_items"][work_id] = work_item
 
+        # Update metadata counters
+        if "metadata" not in data:
+            data["metadata"] = {}
+
+        work_items = data.get("work_items", {})
+        data["metadata"]["total_items"] = len(work_items)
+        data["metadata"]["completed"] = sum(1 for item in work_items.values() if item["status"] == "completed")
+        data["metadata"]["in_progress"] = sum(1 for item in work_items.values() if item["status"] == "in_progress")
+        data["metadata"]["blocked"] = sum(1 for item in work_items.values() if item["status"] == "blocked")
+        data["metadata"]["last_updated"] = datetime.now().isoformat()
+
         # Save atomically
         save_json(self.work_items_file, data)
 
