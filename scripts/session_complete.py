@@ -616,6 +616,82 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
     return "\n".join(summary)
 
 
+def check_uncommitted_changes() -> bool:
+    """Check for uncommitted changes and guide user to commit first."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
+        )
+
+        uncommitted = [line for line in result.stdout.split("\n") if line.strip()]
+
+        # Filter out .session/tracking files (they're updated by sdd end)
+        user_changes = [
+            line
+            for line in uncommitted
+            if ".session/tracking/" not in line and ".session/briefings/" not in line
+        ]
+
+        if not user_changes:
+            return True  # All good
+
+        # Display uncommitted changes
+        print("\n" + "=" * 60)
+        print("⚠️  UNCOMMITTED CHANGES DETECTED")
+        print("=" * 60)
+        print("\nYou have uncommitted changes:")
+        print()
+
+        for line in user_changes[:15]:  # Show first 15
+            print(f"   {line}")
+
+        if len(user_changes) > 15:
+            print(f"   ... and {len(user_changes) - 15} more")
+
+        print("\n" + "=" * 60)
+        print("📋 REQUIRED STEPS BEFORE /sdd:end:")
+        print("=" * 60)
+        print()
+        print("1. Review your changes:")
+        print("   git status")
+        print()
+        print("2. Update CHANGELOG.md with session changes:")
+        print("   ## [Unreleased]")
+        print("   ### Added")
+        print("   - Your feature or change")
+        print()
+        print("3. Commit everything:")
+        print("   git add -A")
+        print("   git commit -m 'Implement feature X")
+        print()
+        print("   LEARNING: Key insight from implementation")
+        print()
+        print("   🤖 Generated with [Claude Code](https://claude.com/claude-code)")
+        print("   Co-Authored-By: Claude <noreply@anthropic.com>'")
+        print()
+        print("4. Then run:")
+        print("   sdd end")
+        print()
+        print("=" * 60)
+
+        # In interactive mode, allow override
+        if sys.stdin.isatty():
+            print()
+            response = input("Continue anyway? (y/n): ")
+            return response.lower() == "y"
+        else:
+            print("\nNon-interactive mode: exiting")
+            print("Please commit your changes and run 'sdd end' again.")
+            return False
+
+    except Exception as e:
+        print(f"Warning: Could not check git status: {e}")
+        return True  # Don't block on errors
+
+
 def main():
     """Enhanced main entry point with full tracking updates."""
     # Parse command-line arguments
@@ -647,6 +723,12 @@ def main():
     work_item_id = status["current_work_item"]
     session_num = status["current_session"]
     work_item = work_items_data["work_items"][work_item_id]
+
+    # Pre-flight check - ensure changes are committed
+    if not check_uncommitted_changes():
+        print("\n❌ Session completion aborted")
+        print("Commit your changes and try again.\n")
+        return 1
 
     print("Completing session...\n")
     print("Running comprehensive quality gates...\n")
