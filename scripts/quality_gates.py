@@ -99,8 +99,8 @@ class QualityGates:
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff check .",
-                    "javascript": "eslint .",
-                    "typescript": "eslint .",
+                    "javascript": "npx eslint .",
+                    "typescript": "npx eslint .",
                 },
             },
             "formatting": {
@@ -109,8 +109,8 @@ class QualityGates:
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff format .",
-                    "javascript": "prettier --write .",
-                    "typescript": "prettier --write .",
+                    "javascript": "npx prettier .",
+                    "typescript": "npx prettier .",
                 },
             },
             "security": {
@@ -424,10 +424,15 @@ class QualityGates:
         if not command:
             return True, {"status": "skipped"}
 
-        if not auto_fix and language == "python":
-            command += " --check"
-        elif not auto_fix and language in ["javascript", "typescript"]:
-            command += " --check"
+        # Add appropriate flags based on auto_fix and language
+        if language == "python":
+            if not auto_fix:
+                command += " --check"
+        elif language in ["javascript", "typescript"]:
+            if auto_fix:
+                command += " --write"
+            else:
+                command += " --check"
 
         try:
             result = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
