@@ -100,6 +100,25 @@ def parse_work_show_args(args):
     return parser.parse_args(args)
 
 
+def parse_work_new_args(args):
+    """Parse arguments for work-new command."""
+    parser = argparse.ArgumentParser(description="Create a new work item")
+    parser.add_argument(
+        "--type",
+        "-t",
+        help="Work item type (feature, bug, refactor, security, integration_test, deployment)",
+    )
+    parser.add_argument("--title", "-T", help="Work item title")
+    parser.add_argument(
+        "--priority",
+        "-p",
+        default="high",
+        help="Priority (critical, high, medium, low). Default: high",
+    )
+    parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")
+    return parser.parse_args(args)
+
+
 def parse_work_update_args(args):
     """Parse arguments for work-update command."""
     parser = argparse.ArgumentParser(description="Update work item fields")
@@ -181,7 +200,22 @@ def route_command(command_name, args):
             elif command_name == "work-next":
                 result = method()
             elif command_name == "work-new":
-                result = method()
+                # Parse arguments
+                parsed = parse_work_new_args(args)
+
+                # Check if type and title are provided (non-interactive mode)
+                if parsed.type and parsed.title:
+                    # Non-interactive mode: use create_work_item_from_args
+                    non_interactive_method = getattr(instance, "create_work_item_from_args")
+                    result = non_interactive_method(
+                        work_type=parsed.type,
+                        title=parsed.title,
+                        priority=parsed.priority,
+                        dependencies=parsed.dependencies,
+                    )
+                else:
+                    # Interactive mode: use create_work_item
+                    result = method()
             elif command_name == "work-update":
                 # Parse arguments
                 parsed = parse_work_update_args(args)
