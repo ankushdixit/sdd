@@ -127,7 +127,7 @@ def initialize_tracking_files():
             },
             "linting": {
                 "enabled": True,
-                "required": False,
+                "required": True,
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff check .",
@@ -137,7 +137,7 @@ def initialize_tracking_files():
             },
             "formatting": {
                 "enabled": True,
-                "required": False,
+                "required": True,
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff format .",
@@ -148,14 +148,14 @@ def initialize_tracking_files():
             "security": {"enabled": True, "required": True, "fail_on": "high"},
             "documentation": {
                 "enabled": True,
-                "required": False,
+                "required": True,
                 "check_changelog": True,
                 "check_docstrings": True,
                 "check_readme": False,
             },
             "context7": {
                 "enabled": False,
-                "required": False,
+                "required": True,
                 "important_libraries": [],
             },
             "custom_validations": {"rules": []},
