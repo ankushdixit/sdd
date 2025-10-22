@@ -398,6 +398,10 @@ class QualityGates:
                 "fixed": auto_fix,
             }
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            # If gate is required but tool not found, treat as failure
+            is_required = config.get("required", False)
+            if is_required:
+                return False, {"status": "failed", "reason": f"Required linting tool not found: {str(e)}"}
             return True, {"status": "skipped", "reason": str(e)}
 
     def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
@@ -433,6 +437,10 @@ class QualityGates:
                 "output": result.stdout,
             }
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            # If gate is required but tool not found, treat as failure
+            is_required = config.get("required", False)
+            if is_required:
+                return False, {"status": "failed", "reason": f"Required formatting tool not found: {str(e)}"}
             return True, {"status": "skipped", "reason": str(e)}
 
     def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
@@ -1083,7 +1091,12 @@ class QualityGates:
         # Linting results
         if "linting" in all_results:
             lint_results = all_results["linting"]
-            status = "✓ PASSED" if lint_results["status"] == "passed" else "✗ FAILED"
+            if lint_results["status"] == "passed":
+                status = "✓ PASSED"
+            elif lint_results["status"] == "skipped":
+                status = "⊘ SKIPPED"
+            else:
+                status = "✗ FAILED"
             report.append(f"\nLinting: {status}")
             if lint_results.get("fixed"):
                 report.append("  Auto-fix applied")
@@ -1091,7 +1104,12 @@ class QualityGates:
         # Formatting results
         if "formatting" in all_results:
             fmt_results = all_results["formatting"]
-            status = "✓ PASSED" if fmt_results["status"] == "passed" else "✗ FAILED"
+            if fmt_results["status"] == "passed":
+                status = "✓ PASSED"
+            elif fmt_results["status"] == "skipped":
+                status = "⊘ SKIPPED"
+            else:
+                status = "✗ FAILED"
             report.append(f"\nFormatting: {status}")
             if fmt_results.get("formatted"):
                 report.append("  Auto-format applied")
