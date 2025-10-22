@@ -402,13 +402,45 @@ class GitWorkflow:
         branch_name = work_item["git"]["branch"]
         workflow_mode = self.config.get("mode", "pr")
 
-        # Step 1: Commit changes
+        # Step 1: Commit changes (if there are any)
         success, commit_sha = self.commit_changes(commit_message)
-        if not success:
-            return {"success": False, "message": f"Commit failed: {commit_sha}"}
 
-        # Update work item commits
-        work_item["git"]["commits"].append(commit_sha)
+        # If commit fails because there's nothing to commit, extract existing commits
+        if not success and "nothing to commit" in commit_sha.lower():
+            # No new changes to commit - extract existing commits from git log
+            try:
+                # Get commits for this branch since it was created
+                result = subprocess.run(
+                    ["git", "log", "--format=%h", branch_name, f"^{work_item['git'].get('parent_branch', 'main')}"],
+                    capture_output=True,
+                    text=True,
+                    cwd=self.project_root,
+                    timeout=10,
+                )
+
+                if result.returncode == 0 and result.stdout.strip():
+                    existing_commits = result.stdout.strip().split("\n")
+                    # Update commits array with any new commits not already tracked
+                    for commit in reversed(existing_commits):  # Oldest to newest
+                        if commit not in work_item["git"]["commits"]:
+                            work_item["git"]["commits"].append(commit)
+
+                    # If we found commits, treat this as success
+                    if existing_commits:
+                        success = True
+                        commit_sha = f"Found {len(existing_commits)} existing commit(s)"
+                    else:
+                        return {"success": False, "message": "No commits found for this work item"}
+                else:
+                    return {"success": False, "message": f"Failed to retrieve commits: {commit_sha}"}
+            except Exception as e:
+                return {"success": False, "message": f"Failed to retrieve commits: {e}"}
+        elif not success:
+            return {"success": False, "message": f"Commit failed: {commit_sha}"}
+        else:
+            # Update work item commits with the new commit
+            if commit_sha not in work_item["git"]["commits"]:
+                work_item["git"]["commits"].append(commit_sha)
 
         # Step 2: Push to remote (if enabled)
         push_success, push_msg = self.push_branch(branch_name)

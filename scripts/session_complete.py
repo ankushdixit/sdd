@@ -582,16 +582,40 @@ def main():
     )
     is_complete = input("> ").lower() == "y"
 
+    # Track changes for update_history
+    changes = []
+    previous_status = work_items_data["work_items"][work_item_id]["status"]
+
     # Update work item status
     if is_complete:
-        work_items_data["work_items"][work_item_id]["status"] = "completed"
+        new_status = "completed"
+        work_items_data["work_items"][work_item_id]["status"] = new_status
         if "metadata" not in work_items_data["work_items"][work_item_id]:
             work_items_data["work_items"][work_item_id]["metadata"] = {}
         work_items_data["work_items"][work_item_id]["metadata"]["completed_at"] = (
             datetime.now().isoformat()
         )
+
+        # Record changes
+        if previous_status != new_status:
+            changes.append(f"  status: {previous_status} → {new_status}")
+        changes.append(f"  metadata.completed_at: {datetime.now().isoformat()}")
     else:
-        work_items_data["work_items"][work_item_id]["status"] = "in_progress"
+        new_status = "in_progress"
+        work_items_data["work_items"][work_item_id]["status"] = new_status
+
+        # Record changes
+        if previous_status != new_status:
+            changes.append(f"  status: {previous_status} → {new_status}")
+
+    # Add update_history entry if changes were made
+    if changes:
+        if "update_history" not in work_items_data["work_items"][work_item_id]:
+            work_items_data["work_items"][work_item_id]["update_history"] = []
+
+        work_items_data["work_items"][work_item_id]["update_history"].append(
+            {"timestamp": datetime.now().isoformat(), "changes": changes}
+        )
 
     # Save updated work items
     with open(".session/tracking/work_items.json", "w") as f:
