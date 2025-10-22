@@ -2,7 +2,7 @@
 
 This document tracks currently unfixed bugs discovered during testing and development.
 
-**Last Updated:** 2025-10-22 after test-flow end-to-end testing
+**Last Updated:** 2025-10-22 after comprehensive end-to-end testing
 
 ---
 
@@ -362,6 +362,78 @@ Also need to verify that other operations that change work items also update met
 **Status:** Fix exists but not committed/deployed
 
 **Priority:** Medium (cosmetic, but important for accurate project tracking)
+
+---
+
+## Bug #18: Learning Extraction Fails with Multi-Paragraph Commits
+
+**Status:** 🔴 OPEN
+
+**Issue:** The learning extraction from git commits fails when commit messages have multiple paragraphs. The `LEARNING:` tag is not found even when present.
+
+**Root Cause:** In `scripts/learning_curator.py` line 573, the code splits commit messages by `\n\n`:
+```python
+commits = result.stdout.split("\n\n")
+```
+
+This breaks multi-paragraph commit messages into separate blocks. Only the first block contains `|||`, so subsequent blocks (which may contain `LEARNING:` tags) are skipped.
+
+**Example:**
+```
+Commit message:
+  Line 1|||Title
+
+  Paragraph 2
+
+  LEARNING: Something important
+```
+
+Gets split into:
+- Block 0: "Line 1|||Title" (has |||, checked)
+- Block 1: "Paragraph 2" (no |||, skipped)
+- Block 2: "LEARNING: Something..." (no |||, skipped!)
+
+**Impact:** Learnings in commit messages are never extracted, defeating the auto-learning feature.
+
+**Suggested Fix:**
+Parse each full commit block before splitting, not after:
+```python
+# Split by commit separator (double newline + hash)
+commit_pattern = r'([a-f0-9]{40}\|\|\|.+?)(?=\n[a-f0-9]{40}\|\|\||$)'
+for match in re.finditer(commit_pattern, result.stdout, re.DOTALL):
+    commit_block = match.group(1)
+    commit_hash, message = commit_block.split('|||', 1)
+    # Now search full message for LEARNING:
+    ...
+```
+
+**Priority:** Medium (learnings feature not functioning)
+
+---
+
+## Bug #19: Non-Interactive Work Completion Always Defaults to 'n'
+
+**Status:** 🔴 OPEN
+
+**Issue:** When running `sdd end` in non-interactive mode (Claude Code), work items are never marked as completed automatically, even when all acceptance criteria are met.
+
+**Output:**
+```
+Is work item 'Basic calculator (add, subtract)' complete? (y/n):
+> (non-interactive mode: defaulting to 'n')
+```
+
+**Root Cause:** `session_complete.py` prompts for work completion confirmation but defaults to 'n' in non-interactive mode, leaving items perpetually in_progress.
+
+**Impact:**
+- Work items never reach completed status automatically
+- Dependency chains don't progress
+- Manual `sdd work-update` required after every session
+
+**Suggested Fix:**
+In non-interactive mode, automatically mark work as complete if all quality gates pass and there are no validation errors.
+
+**Priority:** Medium (workflow inconvenience, manual workaround available)
 
 ---
 
