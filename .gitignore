@@ -48,3 +48,10 @@ scratch/
 # Implementation planning documents
 PLUGIN_IMPLEMENTATION_PLAN_*.md
 SDD_AUDIT_REPORT.md
+
+# SDD-related patterns
+.session/briefings/
+.session/history/
+coverage/
+node_modules/
+*.pyc
