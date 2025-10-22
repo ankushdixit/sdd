@@ -67,6 +67,9 @@ class LearningsCurator:
         learnings["last_curated"] = datetime.now().isoformat()
         learnings["curator"] = "session_curator"
 
+        # Update total_learnings counter
+        self._update_total_learnings(learnings)
+
         final_count = self._count_all_learnings(learnings)
 
         print(f"\nFinal learnings: {final_count}\n")
@@ -80,10 +83,21 @@ class LearningsCurator:
     def _load_learnings(self) -> dict:
         """Load learnings file"""
         if self.learnings_path.exists():
-            return self._load_json(self.learnings_path)
+            data = self._load_json(self.learnings_path)
+            # Ensure metadata exists
+            if "metadata" not in data:
+                data["metadata"] = {
+                    "total_learnings": self._count_all_learnings(data),
+                    "last_curated": data.get("last_curated"),
+                }
+            return data
         else:
             # Create default structure
             return {
+                "metadata": {
+                    "total_learnings": 0,
+                    "last_curated": None,
+                },
                 "last_curated": None,
                 "curator": "session_curator",
                 "categories": {
@@ -107,6 +121,12 @@ class LearningsCurator:
         count += len(learnings.get("archived", []))
 
         return count
+
+    def _update_total_learnings(self, learnings: dict) -> None:
+        """Update total_learnings metadata counter"""
+        if "metadata" not in learnings:
+            learnings["metadata"] = {}
+        learnings["metadata"]["total_learnings"] = self._count_all_learnings(learnings)
 
     def _categorize_learnings(self, learnings: dict) -> int:
         """Categorize uncategorized learnings using AI-powered analysis"""
@@ -656,6 +676,9 @@ class LearningsCurator:
 
         categories[category].append(learning_dict)
 
+        # Update total_learnings counter
+        self._update_total_learnings(learnings)
+
         # Save
         self._save_json(self.learnings_path, learnings)
 
@@ -731,6 +754,9 @@ class LearningsCurator:
             categories[category] = []
 
         categories[category].append(learning)
+
+        # Update total_learnings counter
+        self._update_total_learnings(learnings)
 
         # Save
         self._save_json(self.learnings_path, learnings)
