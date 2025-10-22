@@ -1,9 +1,8 @@
 import { existsSync } from 'fs';
-import { resolve } from 'path';
+import pkg from '../package.json';
 
 describe('SDD Project Setup', () => {
   it('should have valid package.json', () => {
-    const pkg = require('../package.json');
     expect(pkg.name).toBeDefined();
     expect(pkg.version).toBeDefined();
   });

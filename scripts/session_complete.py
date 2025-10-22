@@ -111,12 +111,15 @@ def update_all_tracking(session_num):
     """Update stack, tree, and other tracking files."""
     print("\nUpdating tracking files...")
 
+    # Get SDD installation directory for absolute path resolution
+    script_dir = Path(__file__).parent
+
     # Update stack
     try:
         result = subprocess.run(
             [
                 "python",
-                "scripts/generate_stack.py",
+                str(script_dir / "generate_stack.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
@@ -144,7 +147,7 @@ def update_all_tracking(session_num):
         result = subprocess.run(
             [
                 "python",
-                "scripts/generate_tree.py",
+                str(script_dir / "generate_tree.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
@@ -341,6 +344,55 @@ def complete_git_workflow(work_item_id, commit_message, session_num):
         return result
     except Exception as e:
         return {"success": False, "message": f"Git workflow error: {e}"}
+
+
+def record_session_commits(work_item_id):
+    """Record commits made during session to work item tracking (Bug #15 fix)."""
+    try:
+        work_items_file = Path(".session/tracking/work_items.json")
+        with open(work_items_file) as f:
+            data = json.load(f)
+
+        work_item = data["work_items"][work_item_id]
+        git_info = work_item.get("git", {})
+
+        # Get branch information
+        branch_name = git_info.get("branch")
+        parent_branch = git_info.get("parent_branch", "main")
+
+        if not branch_name:
+            # No git branch tracking for this work item
+            return
+
+        # Get commits on session branch that aren't in parent branch
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%H|%s|%ai", f"{parent_branch}..{branch_name}"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode != 0:
+            # Branch might not exist or other git error - skip silently
+            return
+
+        commits = []
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                parts = line.split("|", 2)
+                if len(parts) == 3:
+                    sha, message, timestamp = parts
+                    commits.append({"sha": sha, "message": message, "timestamp": timestamp})
+
+        # Update work_items.json with commits
+        if commits:
+            data["work_items"][work_item_id]["git"]["commits"] = commits
+            with open(work_items_file, "w") as f:
+                json.dump(data, f, indent=2)
+
+    except Exception:
+        # Silently skip if there's any error - this is non-critical tracking
+        pass
 
 
 def generate_commit_message(status, work_item):
@@ -615,9 +667,6 @@ def main():
     # Trigger curation if needed (every N sessions)
     trigger_curation_if_needed(session_num)
 
-    # Auto-extract learnings from session artifacts
-    auto_extract_learnings(session_num)
-
     # Extract learnings manually or from file
     learnings = extract_learnings_from_session(args.learnings_file)
 
@@ -745,6 +794,9 @@ def main():
     else:
         print(f"⚠️  Git: {git_result.get('message', 'Failed')}")
 
+    # Record commits to work item tracking (Bug #15 fix)
+    record_session_commits(work_item_id)
+
     # Generate comprehensive summary
     summary = generate_summary(status, work_items_data, gate_results, learnings)
 
@@ -754,6 +806,10 @@ def main():
     summary_file = history_dir / f"session_{session_num:03d}_summary.md"
     with open(summary_file, "w") as f:
         f.write(summary)
+
+    # Auto-extract learnings from session artifacts (Bug #16 fix)
+    # Now that commit and summary are created, we can extract from them
+    auto_extract_learnings(session_num)
 
     # Print summary
     print("\n" + "=" * 50)
