@@ -72,6 +72,7 @@ def install_git_hooks(project_root: Path = None) -> bool:
             shutil.copy(hook_template, hook_dest)
             # Make executable (chmod +x)
             import stat
+
             hook_dest.chmod(hook_dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             print("✓ Installed git prepare-commit-msg hook")
             return True
