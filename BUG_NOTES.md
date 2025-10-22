@@ -8,7 +8,7 @@ This document tracks currently unfixed bugs discovered during testing and develo
 
 ## Bug #12: Stack and Tree Generation Fails Due to Path Resolution
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED
 
 **Issue:** Stack.txt and tree.txt are never successfully generated, failing in TWO places:
 
@@ -99,7 +99,7 @@ subprocess.run(["python", str(script_dir / "generate_tree.py"), "--session", str
 
 ## Bug #14: Init-Generated Test File Has Linting Errors
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED
 
 **Issue:** When `sdd init` creates the TypeScript setup test file (`tests/sdd-setup.test.ts`), it contains linting errors that cause quality gate failures:
 
@@ -164,7 +164,7 @@ describe('SDD Project Setup', () => {
 
 ## Bug #15: Git Commits Not Tracked in Work Items
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED
 
 **Issue:** When commits are made during a session and tracked in git, the commit information is not recorded in `work_items.json`. The `git.commits` array remains empty even after successful commits.
 
@@ -240,7 +240,7 @@ def record_session_commits(work_item_id, branch_name):
 
 ## Bug #16: Learnings Not Extracted in Non-Interactive Mode
 
-**Status:** 🔴 OPEN
+**Status:** ✅ FIXED
 
 **Issue:** When running `sdd end` in non-interactive mode (via Claude Code), learnings are not automatically extracted from session artifacts. The `learnings.json` file remains empty despite session work being completed.
 
@@ -367,18 +367,15 @@ Also need to verify that other operations that change work items also update met
 
 ## Summary of Critical Issues
 
-**High Priority (Blocks Workflow):**
-- Bug #12: Stack/tree generation broken
-- Bug #14: Init-generated tests fail linting
+**Fixed in fix/bug-12-stack-tree-path-resolution branch:**
+- Bug #12: Stack/tree generation broken ✅ FIXED
+- Bug #14: Init-generated tests fail linting ✅ FIXED
+- Bug #15: Commits not tracked in work items ✅ FIXED
+- Bug #16: Learnings not extracted ✅ FIXED
 
-**Medium Priority (Reduces Functionality):**
-- Bug #15: Commits not tracked in work items
-- Bug #16: Learnings not extracted
-- Bug #17: Metadata counters (partially fixed)
-
-**Recently Fixed (In Current Session):**
+**Previously Fixed:**
 - Bug #11: work-new non-interactive mode ✅ (committed to fix/bug-11-work-new-non-interactive)
-- Bug #17: Metadata counters ✅ (code exists, needs commit)
+- Bug #17: Metadata counters ✅ (committed to main)
 
 ---
 
