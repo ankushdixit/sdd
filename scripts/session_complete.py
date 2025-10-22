@@ -377,16 +377,12 @@ def record_session_commits(work_item_id):
             return
 
         commits = []
-        for line in result.stdout.strip().split('\n'):
+        for line in result.stdout.strip().split("\n"):
             if line:
-                parts = line.split('|', 2)
+                parts = line.split("|", 2)
                 if len(parts) == 3:
                     sha, message, timestamp = parts
-                    commits.append({
-                        "sha": sha,
-                        "message": message,
-                        "timestamp": timestamp
-                    })
+                    commits.append({"sha": sha, "message": message, "timestamp": timestamp})
 
         # Update work_items.json with commits
         if commits:
