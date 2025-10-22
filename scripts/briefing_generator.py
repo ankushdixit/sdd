@@ -611,13 +611,20 @@ def main():
     briefings_dir.mkdir(exist_ok=True)
 
     # Determine session number
-    session_num = (
-        max(
-            [int(f.stem.split("_")[1]) for f in briefings_dir.glob("session_*.md")],
-            default=0,
+    # If work item is already in progress, reuse existing session number
+    if item.get("status") == "in_progress" and item.get("sessions"):
+        session_num = item["sessions"][-1]["session_num"]
+        logger.info("Resuming existing session %d for work item %s", session_num, item_id)
+    else:
+        # Create new session number for new work or restarted work
+        session_num = (
+            max(
+                [int(f.stem.split("_")[1]) for f in briefings_dir.glob("session_*.md")],
+                default=0,
+            )
+            + 1
         )
-        + 1
-    )
+        logger.info("Starting new session %d for work item %s", session_num, item_id)
 
     # Start git workflow for work item
     try:
@@ -678,10 +685,17 @@ def main():
             print(f"✓ Work item status updated: {item_id} → in_progress\n")
 
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
-    with open(briefing_file, "w") as f:
-        f.write(briefing)
 
-    # Print briefing
+    # Only write briefing file if it doesn't exist (new session)
+    # If resuming, the briefing already exists from when session started
+    if not briefing_file.exists():
+        with open(briefing_file, "w") as f:
+            f.write(briefing)
+        logger.info("Created briefing file: %s", briefing_file)
+    else:
+        logger.info("Reusing existing briefing file: %s", briefing_file)
+
+    # Print briefing (always show it, whether new or existing)
     print(briefing)
 
     # Update status file

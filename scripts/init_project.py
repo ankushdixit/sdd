@@ -131,8 +131,8 @@ def initialize_tracking_files():
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff check .",
-                    "javascript": "eslint .",
-                    "typescript": "eslint .",
+                    "javascript": "npx eslint .",
+                    "typescript": "npx eslint .",
                 },
             },
             "formatting": {
@@ -141,8 +141,8 @@ def initialize_tracking_files():
                 "auto_fix": True,
                 "commands": {
                     "python": "ruff format .",
-                    "javascript": "prettier --write .",
-                    "typescript": "prettier --write .",
+                    "javascript": "npx prettier .",
+                    "typescript": "npx prettier .",
                 },
             },
             "security": {"enabled": True, "required": True, "fail_on": "high"},
