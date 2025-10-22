@@ -8,6 +8,7 @@ actually making any changes.
 Updated in Phase 5.7.3 to use spec_parser for checking work item completeness.
 """
 
+import argparse
 import json
 import subprocess
 import sys
@@ -73,8 +74,12 @@ class SessionValidator:
         except Exception as e:
             return {"passed": False, "message": f"Git check failed: {e}"}
 
-    def preview_quality_gates(self) -> dict:
-        """Preview quality gate results without making changes."""
+    def preview_quality_gates(self, auto_fix: bool = False) -> dict:
+        """Preview quality gate results.
+
+        Args:
+            auto_fix: If True, automatically fix linting and formatting issues
+        """
         gates = {}
 
         # Use QualityGates to run tests (respects config)
@@ -99,11 +104,14 @@ class SessionValidator:
         # Use QualityGates for linting (respects config)
         lint_config = self.quality_gates.config.get("linting", {})
         if lint_config.get("enabled", True):
-            lint_passed, lint_results = self.quality_gates.run_linting(auto_fix=False)
+            lint_passed, lint_results = self.quality_gates.run_linting(auto_fix=auto_fix)
             if lint_config.get("required", False):
+                message = "No linting issues" if lint_passed else "Linting issues found"
+                if auto_fix and lint_results.get("fixed"):
+                    message = "Linting issues auto-fixed"
                 gates["linting"] = {
                     "passed": lint_passed,
-                    "message": "No linting issues" if lint_passed else "Linting issues found",
+                    "message": message,
                 }
             else:
                 gates["linting"] = {
@@ -114,13 +122,16 @@ class SessionValidator:
         # Use QualityGates for formatting (respects config)
         fmt_config = self.quality_gates.config.get("formatting", {})
         if fmt_config.get("enabled", True):
-            fmt_passed, fmt_results = self.quality_gates.run_formatting(auto_fix=False)
+            fmt_passed, fmt_results = self.quality_gates.run_formatting(auto_fix=auto_fix)
             if fmt_config.get("required", False):
+                message = (
+                    "All files properly formatted" if fmt_passed else "Files need formatting"
+                )
+                if auto_fix and fmt_results.get("formatted"):
+                    message = "Files auto-formatted"
                 gates["formatting"] = {
                     "passed": fmt_passed,
-                    "message": "All files properly formatted"
-                    if fmt_passed
-                    else "Files need formatting",
+                    "message": message,
                 }
             else:
                 gates["formatting"] = {
@@ -255,13 +266,17 @@ class SessionValidator:
         # This would run tree detection logic
         return {"has_changes": False, "message": "No structural changes"}
 
-    def validate(self) -> dict:
-        """Run all validation checks."""
+    def validate(self, auto_fix: bool = False) -> dict:
+        """Run all validation checks.
+
+        Args:
+            auto_fix: If True, automatically fix linting and formatting issues
+        """
         print("Running session validation...\n")
 
         checks = {
             "git_status": self.check_git_status(),
-            "quality_gates": self.preview_quality_gates(),
+            "quality_gates": self.preview_quality_gates(auto_fix=auto_fix),
             "work_item_criteria": self.validate_work_item_criteria(),
             "tracking_updates": self.check_tracking_updates(),
         }
@@ -306,8 +321,18 @@ class SessionValidator:
 
 def main():
     """CLI entry point."""
+    parser = argparse.ArgumentParser(
+        description="Validate session readiness for completion"
+    )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Automatically fix linting and formatting issues",
+    )
+    args = parser.parse_args()
+
     validator = SessionValidator()
-    result = validator.validate()
+    result = validator.validate(auto_fix=args.fix)
     return 0 if result["ready"] else 1
 
 
