@@ -577,7 +577,7 @@ class LearningsCurator:
                 return []
 
             # Each commit starts with hash|||, split on newline followed by hash pattern
-            commit_blocks = re.split(r'\n(?=[a-f0-9]{40}\|\|\|)', commits_raw)
+            commit_blocks = re.split(r"\n(?=[a-f0-9]{40}\|\|\|)", commits_raw)
 
             for commit_block in commit_blocks:
                 if "|||" not in commit_block:
