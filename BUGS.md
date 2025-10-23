@@ -19,10 +19,11 @@ This document tracks bugs discovered during development and testing.
 
 ### Problem
 
-The learning curator has two bugs when extracting learnings during `/sdd:end`:
+The learning curator has three bugs when extracting learnings during `/sdd:end`:
 
 1. **Truncated learnings** - Multi-line LEARNING statements in commit messages are cut off at the first newline
 2. **Extracts documentation examples** - Pulls example LEARNING statements from ENHANCEMENTS.md and other docs as if they were real learnings
+3. **Inconsistent metadata structure** - Git-extracted learnings use `context` field while temp-file learnings use `learned_in` field, causing inconsistent data structure
 
 ### Current Behavior
 
@@ -53,6 +54,27 @@ When running `/sdd:end`, learnings.json contains:
 }
 ```
 
+**Inconsistent Metadata:**
+```json
+// Git-extracted learning (Session 1)
+{
+  "content": "The .gitignore patterns are added programmatically...",
+  "source": "git_commit",
+  "context": "Commit cb7d417e - Enhancement #4",
+  "timestamp": "2025-10-22T23:18:57.687807"
+  // Missing: learned_in field
+}
+
+// Temp-file learning (Session 2)
+{
+  "content": "Test pollution issues can cause tests to pass...",
+  "source": "temp_file",
+  "learned_in": "session_002",
+  "timestamp": "2025-10-23T12:04:27.759210"
+  // Missing: context field
+}
+```
+
 ### Root Cause
 
 **Bug 1 - Truncated Learnings (scripts/learning_curator.py:570)**
@@ -63,6 +85,12 @@ This regex only captures to the first newline, stopping at line breaks even if t
 
 **Bug 2 - Extracting from Documentation (extract_from_code_comments)**
 The `extract_from_code_comments()` function scans ALL files including documentation (.md files) that contain example LEARNING statements for teaching purposes. These examples get extracted as real learnings.
+
+**Bug 3 - Inconsistent Metadata Structure**
+Different extraction methods in `learning_curator.py` use different metadata fields:
+- Git extraction adds `context` (commit hash) but no `learned_in` (session)
+- Temp file extraction adds `learned_in` (session) but no `context`
+- This makes the learnings database inconsistent and harder to query/filter
 
 ### Impact
 
@@ -76,6 +104,7 @@ The `extract_from_code_comments()` function scans ALL files including documentat
 1. **Multi-line capture**: LEARNING statements should be captured completely, including line breaks within the statement
 2. **Source filtering**: Only extract from actual source code files (.py, .js, .ts), not documentation files (.md)
 3. **Validation**: Skip obvious garbage like placeholders ("<your learning here>")
+4. **Consistent metadata**: All learnings should have both `learned_in` (session ID) and `context` (source details) fields regardless of extraction method
 
 ### Proposed Solution
 
@@ -120,7 +149,43 @@ def extract_from_code_comments(self):
             # ... extract from this file
 ```
 
-#### Fix 3: Validate Content
+#### Fix 3: Standardize Metadata Structure
+Ensure all learning entries have consistent metadata:
+
+```python
+def add_learning_metadata(learning: dict, session_id: str, source: str, context: str = None) -> dict:
+    """Add consistent metadata to all learnings."""
+    learning["learned_in"] = session_id
+    learning["source"] = source
+    if context:
+        learning["context"] = context
+    learning["timestamp"] = datetime.now().isoformat()
+    return learning
+
+# When extracting from git commits:
+learning = {
+    "content": extracted_content,
+}
+learning = add_learning_metadata(
+    learning,
+    session_id=current_session_id,
+    source="git_commit",
+    context=f"Commit {commit_hash[:8]} - {commit_title}"
+)
+
+# When extracting from temp file:
+learning = {
+    "content": extracted_content,
+}
+learning = add_learning_metadata(
+    learning,
+    session_id=current_session_id,
+    source="temp_file",
+    context=".session/temp_learnings.txt"
+)
+```
+
+#### Fix 4: Validate Content
 Add validation to skip garbage:
 
 ```python
