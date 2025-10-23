@@ -747,7 +747,8 @@ class LearningsCurator:
         if timestamp is None:
             timestamp = datetime.now().isoformat()
         if learning_id is None:
-            learning_id = hashlib.md5(content.encode()).hexdigest()[:8]
+            # MD5 used only for ID generation, not security
+            learning_id = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()[:8]
 
         # Both learned_in and context are required for consistency
         if session_id is None:
