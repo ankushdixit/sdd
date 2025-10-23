@@ -322,6 +322,10 @@ def parse_bug_spec(content: str) -> dict[str, Any]:
     # Testing Strategy
     result["testing_strategy"] = parse_section(content, "Testing Strategy")
 
+    # Acceptance Criteria - extract as checklist
+    ac_section = parse_section(content, "Acceptance Criteria")
+    result["acceptance_criteria"] = extract_checklist(ac_section) if ac_section else []
+
     # Dependencies
     result["dependencies"] = parse_section(content, "Dependencies")
 

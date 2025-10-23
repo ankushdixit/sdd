@@ -560,3 +560,342 @@ For each enhancement:
 - Verify error messages are clear and helpful
 - **Test on macOS, Windows, and Linux** (for #4)
 - **Test with new and existing git repos** (for #5)
+
+---
+
+## Enhancement #6: Work Item Completion Status Control
+
+**Status:** 🔵 IDENTIFIED
+
+**Discovered:** 2025-10-23 (During Session 3 - Bug #20 implementation)
+
+### Problem
+
+The current workflow has two major issues with work item completion status:
+
+1. **No prompt when ending session**: `/sdd:end` appears to default the work item status to "completed" without asking the user. This is problematic because:
+   - Work items may span multiple sessions (not complete in one session)
+   - Users have no explicit control over the completion status
+   - If the work isn't done, the status is incorrectly set to completed
+
+2. **No mid-session completion**: Users cannot mark a work item as complete during a session and immediately pick up the next work item without ending the session first. Current workflow:
+   ```bash
+   /start work_item_1       # Start work
+   # ... work and complete work_item_1 ...
+   /end                     # Must end session
+   /start                   # Start new session for work_item_2
+   ```
+
+### Current Behavior
+
+**When running `/sdd:end`:**
+- Session ends
+- Work item status is set (appears to default to "completed")
+- No prompt asking: "Is this work item complete?"
+- User has no explicit control
+
+**Mid-session completion:**
+- Not possible to mark work item as done and pick next one
+- Must end session, then start new session
+- Creates unnecessary session churn for small work items
+
+### Expected Behavior
+
+#### Part 1: Prompt for Work Item Completion Status
+
+When running `/sdd:end`, ask the user:
+
+```bash
+$ /sdd:end
+
+Running quality gates...
+✓ Tests: pass
+✓ Linting: pass
+✓ Formatting: pass
+
+Work item: "Learning Curator Bug Fix"
+
+Is this work item complete?
+1. Yes - Mark as completed (default)
+2. No - Keep as in-progress (will resume in next session)
+3. Cancel - Don't end session
+
+Choice [1]: _
+```
+
+**Behavior:**
+- **Option 1 (completed)**: Sets work item status to "completed", ends session
+- **Option 2 (in-progress)**: Leaves work item status as "in_progress", ends session, work will be auto-resumed on next `/start`
+- **Option 3 (cancel)**: Cancels `/end`, returns to session
+
+**Non-interactive mode:**
+- Add `--complete` flag: Forces completion
+- Add `--incomplete` flag: Forces in-progress
+- No flag: Interactive prompt (or default to incomplete for safety)
+
+```bash
+sdd end --complete      # Mark as complete
+sdd end --incomplete    # Keep in-progress
+sdd end                 # Prompt (interactive) or default incomplete (non-interactive)
+```
+
+#### Part 2: Mid-Session Work Item Completion
+
+Add new command: `/work-complete` (or similar)
+
+```bash
+$ /work-complete
+
+✓ Marked "Learning Curator Bug Fix" as completed
+
+Starting next work item...
+
+# Briefing for next work item
+...
+```
+
+**Behavior:**
+1. Runs quality gates for current work item
+2. If gates pass, marks work item as completed
+3. Automatically calls `get_next_work_item()` to find next work
+4. Generates briefing for next work item
+5. Updates session tracking to new work item
+6. Continues same session (no session end/start churn)
+
+**Alternative: Allow `/start` during active session**
+
+```bash
+$ /start work_item_2
+
+⚠️  Warning: Work item "bug_fix_1" is currently in-progress.
+
+Options:
+1. Complete current work and start new work item
+2. Abandon current work (mark incomplete) and start new work item
+3. Cancel
+
+Choice [1]: _
+```
+
+### Root Cause
+
+**Part 1: No completion prompt**
+- `scripts/session_complete.py` doesn't prompt for work item status
+- Defaults to marking work item as complete (or leaves it in-progress?)
+- User intent is not captured
+
+**Part 2: No mid-session completion**
+- Session-driven workflow assumes one session = one work item
+- No command exists to complete work item without ending session
+- Workflow inefficiency for small/quick work items
+
+### Impact
+
+**Part 1:**
+- **User Confusion**: Status updates happen implicitly
+- **Data Quality**: Work item status may be incorrect (marked complete when incomplete)
+- **Multi-session Work**: No clear way to keep work item in-progress across sessions
+- **Workflow Control**: Users lack explicit control over completion status
+
+**Part 2:**
+- **Workflow Inefficiency**: Must end/start session for each work item
+- **Session Churn**: Creates many small sessions instead of one productive session
+- **Productivity**: Slows down momentum when tackling multiple small items
+
+### Proposed Solution
+
+#### Part 1: Add Completion Status Prompt to `/sdd:end`
+
+**Location:** `scripts/session_complete.py`
+
+Add interactive prompt before updating work item status:
+
+```python
+def prompt_work_item_completion(work_item_title: str, non_interactive: bool = False) -> bool:
+    """
+    Prompt user to mark work item as complete or in-progress.
+
+    Returns:
+        True if work item should be marked complete
+        False if work item should remain in-progress
+    """
+    if non_interactive:
+        # In non-interactive mode, default to incomplete for safety
+        # User must explicitly use --complete flag to mark as done
+        return False
+
+    print(f"\nWork item: \"{work_item_title}\"\n")
+    print("Is this work item complete?")
+    print("1. Yes - Mark as completed")
+    print("2. No - Keep as in-progress (will resume in next session)")
+    print("3. Cancel - Don't end session")
+    print()
+
+    while True:
+        choice = input("Choice [1]: ").strip() or "1"
+
+        if choice == "1":
+            return True  # Mark complete
+        elif choice == "2":
+            return False  # Keep in-progress
+        elif choice == "3":
+            print("\nSession end cancelled")
+            sys.exit(0)
+        else:
+            print("Invalid choice. Enter 1, 2, or 3.")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--complete", action="store_true", help="Mark work item as completed")
+    parser.add_argument("--incomplete", action="store_true", help="Keep work item as in-progress")
+    args = parser.parse_args()
+
+    # ... quality gates ...
+
+    # Determine if non-interactive
+    non_interactive = not sys.stdin.isatty() or args.complete or args.incomplete
+
+    # Determine work item completion status
+    if args.complete:
+        is_complete = True
+    elif args.incomplete:
+        is_complete = False
+    else:
+        is_complete = prompt_work_item_completion(work_item_title, non_interactive)
+
+    # Update work item status
+    if is_complete:
+        work_items_data["work_items"][work_item_id]["status"] = "completed"
+        print(f"\n✓ Marking work item '{work_item_title}' as complete")
+    else:
+        # Keep as in_progress
+        print(f"\n✓ Keeping work item '{work_item_title}' as in-progress (will resume in next session)")
+```
+
+#### Part 2: Add Mid-Session Completion Command
+
+**Option A: New `/work-complete` command**
+
+Create new slash command in `.claude/commands/work-complete.md`:
+
+```markdown
+# Work Complete
+
+Mark the current work item as complete and start the next work item without ending the session.
+
+Usage:
+/work-complete
+
+This command:
+1. Validates current work meets quality gates
+2. Marks current work item as completed
+3. Finds and starts next available work item
+4. Continues in same session (no session restart)
+
+Use this when you've completed a work item mid-session and want to immediately start the next one.
+```
+
+**Implementation:** `scripts/work_complete.py`
+
+```python
+def main():
+    # 1. Load current work item
+    # 2. Run quality gates
+    # 3. If passed, mark work item as completed
+    # 4. Call get_next_work_item()
+    # 5. Generate briefing for next work item
+    # 6. Update session tracking
+    # 7. Display new briefing
+```
+
+**Option B: Enhance `/start` to handle active work items**
+
+Modify `scripts/briefing_generator.py` to allow starting new work when work is in-progress:
+
+```python
+def main():
+    # ... existing arg parsing ...
+
+    # Check if a work item is currently in-progress
+    current_work = find_in_progress_work_item()
+
+    if current_work and args.work_item_id and current_work != args.work_item_id:
+        # User wants to switch work items
+        print(f"⚠️  Work item '{current_work}' is currently in-progress.\n")
+        print("Options:")
+        print("1. Complete current work and start new work item")
+        print("2. Abandon current work (mark incomplete) and start new work item")
+        print("3. Cancel")
+
+        choice = input("\nChoice [1]: ").strip() or "1"
+
+        if choice == "1":
+            # Run quality gates for current work
+            # If pass, mark as completed
+            # Start new work item
+        elif choice == "2":
+            # Leave current work as in-progress
+            # Start new work item
+        elif choice == "3":
+            sys.exit(0)
+```
+
+### Benefits
+
+**Part 1:**
+- Explicit user control over work item completion
+- Prevents incorrect status updates
+- Supports multi-session work items properly
+- Clear workflow for incomplete work
+
+**Part 2:**
+- Eliminates session churn for small work items
+- Maintains productivity momentum
+- Reduces overhead of session end/start cycle
+- Allows tackling multiple small items in one session
+
+### Implementation Tasks
+
+**Part 1: Completion Prompt**
+- [ ] Add `prompt_work_item_completion()` to `scripts/session_complete.py`
+- [ ] Add `--complete` and `--incomplete` flags to argparse
+- [ ] Update work item status logic to use prompt result
+- [ ] Handle non-interactive mode (default to incomplete for safety)
+- [ ] Add tests for interactive prompt
+- [ ] Add tests for flag handling
+- [ ] Update documentation for `/end` command
+
+**Part 2: Mid-Session Completion**
+- [ ] Decide on approach (new command vs enhanced `/start`)
+- [ ] Implement chosen approach
+- [ ] Add quality gate validation
+- [ ] Add work item status updates
+- [ ] Add briefing generation for next work item
+- [ ] Add tests for mid-session transitions
+- [ ] Update documentation
+
+### Files Affected
+
+**Part 1:**
+- `scripts/session_complete.py` - Add completion prompt and flags
+- `.claude/commands/end.md` - Document new flags
+
+**Part 2 (Option A - new command):**
+- `scripts/work_complete.py` - New script for mid-session completion
+- `.claude/commands/work-complete.md` - New command documentation
+
+**Part 2 (Option B - enhanced start):**
+- `scripts/briefing_generator.py` - Add work item switching logic
+- `.claude/commands/start.md` - Document work item switching
+
+### Related Issues
+
+- Related to Bug #21: `/start` command ignores work item ID argument
+- Related to Bug #22: Git branch status not finalized when switching work items
+- All three issues involve improving work item lifecycle management
+
+### Priority
+
+**Part 1:** High - Core workflow issue affecting data quality
+**Part 2:** Medium - Nice to have for workflow efficiency

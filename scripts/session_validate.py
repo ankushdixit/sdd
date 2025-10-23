@@ -78,13 +78,15 @@ class SessionValidator:
         """Preview quality gate results.
 
         Args:
-            auto_fix: If True, automatically fix linting and formatting issues
+            auto_fix: If True, automatically fix linting and formatting issues.
+                     When True, skips tests since they cannot be auto-fixed.
         """
         gates = {}
 
+        # Skip tests when auto_fix=True since they cannot be automatically fixed
         # Use QualityGates to run tests (respects config)
         test_config = self.quality_gates.config.get("test_execution", {})
-        if test_config.get("enabled", True):
+        if test_config.get("enabled", True) and not auto_fix:
             test_passed, test_results = self.quality_gates.run_tests()
             # Check if tests are required
             if test_config.get("required", True):

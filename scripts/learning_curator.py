@@ -11,6 +11,7 @@ Curates and organizes accumulated learnings:
 """
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -19,11 +20,30 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+import jsonschema
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+# JSON Schema for learning entry validation
+LEARNING_SCHEMA = {
+    "type": "object",
+    "required": ["content", "learned_in", "source", "context", "timestamp", "id"],
+    "properties": {
+        "content": {"type": "string", "minLength": 10},
+        "learned_in": {"type": "string"},
+        "source": {
+            "type": "string",
+            "enum": ["git_commit", "temp_file", "inline_comment", "session_summary"],
+        },
+        "context": {"type": "string"},
+        "timestamp": {"type": "string"},
+        "id": {"type": "string"},
+    },
+}
 
 
 class LearningsCurator:
@@ -539,20 +559,25 @@ class LearningsCurator:
                     line = line.strip()
                     if line.startswith("-") or line.startswith("*"):
                         learning_text = line.lstrip("-*").strip()
-                        if learning_text and len(learning_text) > 10:
-                            learnings.append(
-                                {
-                                    "content": learning_text,
-                                    "source": "session_summary",
-                                    "learned_in": f"session_{session_num:03d}",
-                                    "timestamp": datetime.now().isoformat(),
-                                }
+                        # Validate learning content before adding
+                        if learning_text and self.is_valid_learning(learning_text):
+                            # Use standardized entry creator for consistent metadata
+                            entry = self.create_learning_entry(
+                                content=learning_text,
+                                source="session_summary",
+                                session_id=f"session_{session_num:03d}",
+                                context=f"Session summary file: {session_file.name}",
                             )
+                            # Validate schema before adding
+                            if self.validate_learning(entry):
+                                learnings.append(entry)
 
         return learnings
 
-    def extract_from_git_commits(self, since_session: int = 0) -> list[dict]:
-        """Extract learnings from git commit messages"""
+    def extract_from_git_commits(
+        self, since_session: int = 0, session_id: str = None
+    ) -> list[dict]:
+        """Extract learnings from git commit messages with standardized metadata"""
         try:
             # Get recent commits
             result = subprocess.run(
@@ -567,7 +592,9 @@ class LearningsCurator:
                 return []
 
             learnings = []
-            learning_pattern = r"LEARNING:\s*(.+?)(?=\n|$)"
+            # Updated regex to capture multi-line LEARNING statements
+            # Captures until: double newline (blank line) OR end of string
+            learning_pattern = r"LEARNING:\s*([\s\S]+?)(?=\n\n|\Z)"
 
             # Parse commit messages
             # Split by commit hash pattern (40-char hex at line start followed by |||)
@@ -588,23 +615,28 @@ class LearningsCurator:
                 # Find LEARNING: annotations
                 for match in re.finditer(learning_pattern, message, re.MULTILINE):
                     learning_text = match.group(1).strip()
-                    if learning_text and len(learning_text) > 10:
-                        learnings.append(
-                            {
-                                "content": learning_text,
-                                "source": "git_commit",
-                                "context": f"Commit {commit_hash[:8]}",
-                                "timestamp": datetime.now().isoformat(),
-                            }
+                    # Validate learning content before adding
+                    if learning_text and self.is_valid_learning(learning_text):
+                        # Use standardized entry creator for consistent metadata
+                        entry = self.create_learning_entry(
+                            content=learning_text,
+                            source="git_commit",
+                            session_id=session_id,
+                            context=f"Commit {commit_hash[:8]}",
                         )
+                        # Validate schema before adding
+                        if self.validate_learning(entry):
+                            learnings.append(entry)
 
             return learnings
 
         except Exception:
             return []
 
-    def extract_from_code_comments(self, changed_files: list[Path] = None) -> list[dict]:
-        """Extract learnings from inline code comments"""
+    def extract_from_code_comments(
+        self, changed_files: list[Path] = None, session_id: str = None
+    ) -> list[dict]:
+        """Extract learnings from inline code comments (not documentation) with standardized metadata"""
         if changed_files is None:
             # Get recently changed files from git
             try:
@@ -630,8 +662,24 @@ class LearningsCurator:
         learnings = []
         learning_pattern = r"#\s*LEARNING:\s*(.+?)$"
 
+        # Only scan actual code files, not documentation
+        code_extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs"}
+        doc_extensions = {".md", ".txt", ".rst"}
+
         for file_path in changed_files:
             if not file_path.exists() or not file_path.is_file():
+                continue
+
+            # Skip documentation files
+            if file_path.suffix in doc_extensions:
+                continue
+
+            # Skip example/template directories
+            if "examples" in file_path.parts or "templates" in file_path.parts:
+                continue
+
+            # Only process code files
+            if file_path.suffix not in code_extensions:
                 continue
 
             # Skip binary files and large files
@@ -644,19 +692,95 @@ class LearningsCurator:
                         match = re.search(learning_pattern, line)
                         if match:
                             learning_text = match.group(1).strip()
-                            if learning_text and len(learning_text) > 10:
-                                learnings.append(
-                                    {
-                                        "content": learning_text,
-                                        "source": "inline_comment",
-                                        "context": f"{file_path.name}:{line_num}",
-                                        "timestamp": datetime.now().isoformat(),
-                                    }
+                            # Validate learning content before adding
+                            if learning_text and self.is_valid_learning(learning_text):
+                                # Use standardized entry creator for consistent metadata
+                                entry = self.create_learning_entry(
+                                    content=learning_text,
+                                    source="inline_comment",
+                                    session_id=session_id,
+                                    context=f"{file_path.name}:{line_num}",
                                 )
+                                # Validate schema before adding
+                                if self.validate_learning(entry):
+                                    learnings.append(entry)
             except Exception:
                 continue
 
         return learnings
+
+    def is_valid_learning(self, content: str) -> bool:
+        """Check if extracted content is a valid learning (not placeholder/garbage)."""
+        if not content or not isinstance(content, str):
+            return False
+
+        # Skip placeholders and examples (content with angle brackets)
+        if "<" in content or ">" in content:
+            return False
+
+        # Skip known placeholder text
+        content_lower = content.lower().strip()
+        placeholders = ["your learning here", "example learning", "todo", "tbd", "placeholder"]
+        if content_lower in placeholders:
+            return False
+
+        # Must have substance (more than just a few words)
+        if len(content.split()) < 5:
+            return False
+
+        return True
+
+    def create_learning_entry(
+        self,
+        content: str,
+        source: str,
+        session_id: str = None,
+        context: str = None,
+        timestamp: str = None,
+        learning_id: str = None,
+    ) -> dict:
+        """Create a standardized learning entry with all required fields.
+
+        Ensures consistent metadata structure across all extraction methods.
+        All entries will have both 'learned_in' and 'context' fields.
+        """
+        if timestamp is None:
+            timestamp = datetime.now().isoformat()
+        if learning_id is None:
+            # MD5 used only for ID generation, not security
+            learning_id = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()[:8]
+
+        # Both learned_in and context are required for consistency
+        if session_id is None:
+            session_id = "unknown"
+        if context is None:
+            context = "No context provided"
+
+        return {
+            "content": content,
+            "learned_in": session_id,
+            "source": source,
+            "context": context,
+            "timestamp": timestamp,
+            "id": learning_id,
+        }
+
+    def validate_learning(self, learning: dict) -> bool:
+        """Validate learning entry against JSON schema.
+
+        Returns True if valid, False otherwise.
+        Logs warnings for invalid entries.
+        """
+        try:
+            jsonschema.validate(learning, LEARNING_SCHEMA)
+            return True
+        except jsonschema.ValidationError as e:
+            logger.warning(f"Invalid learning entry: {e.message}")
+            logger.debug(f"Invalid learning data: {learning}")
+            return False
+        except Exception as e:
+            logger.warning(f"Unexpected error validating learning: {e}")
+            return False
 
     def add_learning_if_new(self, learning_dict: dict) -> bool:
         """Add learning if it doesn't already exist (based on similarity)"""
