@@ -93,9 +93,9 @@ class TestDocumentationUpdates:
 
         content_lower = content.lower()
         for concept in key_concepts:
-            assert concept.lower() in content_lower, (
-                f"session-driven-development.md should mention: {concept}"
-            )
+            assert (
+                concept.lower() in content_lower
+            ), f"session-driven-development.md should mention: {concept}"
 
         print("✓ Test 2: docs/session-driven-development.md updated with spec architecture")
 
@@ -108,24 +108,24 @@ class TestDocumentationUpdates:
         start_content = start_cmd_path.read_text(encoding="utf-8")
         assert "spec file" in start_content.lower(), "start.md should mention spec file"
         assert "source of truth" in start_content.lower(), "start.md should mention source of truth"
-        assert "Spec-First Architecture" in start_content, (
-            "start.md should have Spec-First Architecture section"
-        )
+        assert (
+            "Spec-First Architecture" in start_content
+        ), "start.md should have Spec-First Architecture section"
 
         # Check /work-new command
         work_new_cmd_path = project_root / ".claude" / "commands" / "work-new.md"
         assert work_new_cmd_path.exists(), ".claude/commands/work-new.md should exist"
 
         work_new_content = work_new_cmd_path.read_text(encoding="utf-8")
-        assert "fill out the spec file" in work_new_content.lower(), (
-            "work-new.md should mention filling out spec file"
-        )
-        assert "Next Step: Fill Out the Spec File" in work_new_content, (
-            "work-new.md should have spec file section"
-        )
-        assert "writing-specs.md" in work_new_content, (
-            "work-new.md should reference writing-specs.md"
-        )
+        assert (
+            "fill out the spec file" in work_new_content.lower()
+        ), "work-new.md should mention filling out spec file"
+        assert (
+            "Next Step: Fill Out the Spec File" in work_new_content
+        ), "work-new.md should have spec file section"
+        assert (
+            "writing-specs.md" in work_new_content
+        ), "work-new.md should reference writing-specs.md"
 
         print("✓ Test 3: Command documentation updated for spec-first workflow")
 

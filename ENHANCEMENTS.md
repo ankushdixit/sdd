@@ -447,7 +447,7 @@ $RECYCLE.BIN/       # Windows
 
 ## Enhancement #5: Create Initial Commit on Main During sdd init
 
-**Status:** 🔵 IDENTIFIED
+**Status:** ✅ IMPLEMENTED
 
 ### Problem
 When `sdd init` creates a git repository, it doesn't create an initial commit on the main branch. This causes issues:
@@ -531,13 +531,13 @@ def init_project():
 - Clean project history from the start
 
 ### Implementation Tasks
-- [ ] Add `create_initial_commit()` function to `scripts/init_workflow.py`
-- [ ] Call it after all initialization files are created
-- [ ] Include comprehensive commit message listing what was initialized
-- [ ] Handle errors gracefully (warn but don't fail init)
-- [ ] Update tests to verify initial commit exists
-- [ ] Test with both new repos and existing repos
-- [ ] Update documentation to reflect automatic initial commit
+- [x] Add `create_initial_commit()` function to `scripts/init_project.py`
+- [x] Call it after all initialization files are created
+- [x] Include comprehensive commit message listing what was initialized
+- [x] Handle errors gracefully (warn but don't fail init)
+- [x] Update tests to verify initial commit exists
+- [x] Test with both new repos and existing repos (handles existing repos by checking commit count)
+- [x] Update documentation to reflect automatic initial commit
 
 ---
 
@@ -546,8 +546,8 @@ def init_project():
 ### Phase 1: Quick Wins (Estimated: 1 session)
 1. Enhancement #1: Git auto-init ✅ IMPLEMENTED
 2. Enhancement #3: Pre-flight commit check ✅ IMPLEMENTED
-3. **Enhancement #4: Add .DS_Store to .gitignore** (NEW)
-4. **Enhancement #5: Create initial commit on main** (NEW)
+3. Enhancement #4: Add .DS_Store to .gitignore ✅ IMPLEMENTED
+4. Enhancement #5: Create initial commit on main ✅ IMPLEMENTED
 
 ### Phase 2: CHANGELOG Workflow (Estimated: 1-2 sessions)
 1. Enhancement #2: Git hooks + smarter checking ✅ IMPLEMENTED

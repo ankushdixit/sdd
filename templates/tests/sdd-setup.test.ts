@@ -1,4 +1,5 @@
 import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 import pkg from '../package.json';
 
 describe('SDD Project Setup', () => {
@@ -27,5 +28,35 @@ describe('SDD Project Setup', () => {
   it('should have work items tracking', () => {
     expect(existsSync('.session/tracking/work_items.json')).toBe(true);
     expect(existsSync('.session/tracking/learnings.json')).toBe(true);
+  });
+
+  it('should have initial commit from sdd init', () => {
+    // Check if .git directory exists
+    expect(existsSync('.git')).toBe(true);
+
+    try {
+      // Get commit count
+      const commitCount = parseInt(
+        execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim(),
+        10
+      );
+      expect(commitCount).toBeGreaterThan(0);
+
+      // Get first commit message
+      const firstCommitMessage = execSync(
+        'git log --reverse --format=%B -n 1',
+        { encoding: 'utf-8' }
+      ).trim();
+
+      // Verify it's an SDD initialization commit
+      const isSddCommit =
+        firstCommitMessage.includes('Initialize project with Session-Driven Development') ||
+        firstCommitMessage.includes('Session-Driven Development');
+
+      expect(isSddCommit).toBe(true);
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Git command failed: ${err.message}`);
+    }
   });
 });

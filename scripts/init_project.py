@@ -616,6 +616,68 @@ def ensure_gitignore_entries():
         print("✓ .gitignore already up to date")
 
 
+def create_initial_commit(project_root: Path = None):
+    """Create initial commit after project initialization."""
+    if project_root is None:
+        project_root = Path.cwd()
+
+    try:
+        # Check if there are already commits in the repository
+        result = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        # If command succeeds, there are commits
+        if result.returncode == 0 and int(result.stdout.strip()) > 0:
+            print("✓ Git repository already has commits, skipping initial commit")
+            return True
+
+    except Exception:
+        # If command fails (e.g., no commits yet), continue to create initial commit
+        pass
+
+    try:
+        # Stage all initialized files
+        subprocess.run(
+            ["git", "add", "-A"],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+        )
+
+        # Create initial commit
+        commit_message = """chore: Initialize project with Session-Driven Development
+
+Project initialized with SDD framework including:
+- Project structure and configuration files
+- Quality gates and testing setup
+- Session tracking infrastructure
+- Documentation templates
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"""
+
+        subprocess.run(
+            ["git", "commit", "-m", commit_message],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+        )
+
+        print("✓ Created initial commit on main branch")
+        return True
+
+    except Exception as e:
+        print(f"⚠️  Failed to create initial commit: {e}")
+        print("   You may need to commit manually before starting sessions")
+        return False
+
+
 def init_project():
     """Main initialization function - deterministic setup."""
     print("🚀 Initializing Session-Driven Development...\n")
@@ -666,12 +728,17 @@ def init_project():
     print()
     ensure_gitignore_entries()
 
+    # 13. Create initial commit
+    print()
+    create_initial_commit()
+
     # Success summary
     print("\n" + "=" * 60)
     print("✅ SDD Initialized Successfully!")
     print("=" * 60)
 
     print("\n📦 What was created/updated:")
+    print("  ✓ Git repository initialized with initial commit")
     print("  ✓ Git hooks (prepare-commit-msg with CHANGELOG/LEARNING reminders)")
     print("  ✓ Config files (.eslintrc, .prettierrc, jest.config, etc.)")
     print("  ✓ Dependencies installed")

@@ -331,15 +331,15 @@ Testing strategy.
 
         # Should NOT have content fields
         assert "rationale" not in work_item, "work_items.json should not contain 'rationale' field"
-        assert "acceptance_criteria" not in work_item, (
-            "work_items.json should not contain 'acceptance_criteria' field"
-        )
-        assert "implementation_paths" not in work_item, (
-            "work_items.json should not contain 'implementation_paths' field"
-        )
-        assert "test_paths" not in work_item, (
-            "work_items.json should not contain 'test_paths' field"
-        )
+        assert (
+            "acceptance_criteria" not in work_item
+        ), "work_items.json should not contain 'acceptance_criteria' field"
+        assert (
+            "implementation_paths" not in work_item
+        ), "work_items.json should not contain 'implementation_paths' field"
+        assert (
+            "test_paths" not in work_item
+        ), "work_items.json should not contain 'test_paths' field"
 
         # Should have tracking fields
         assert "id" in work_item

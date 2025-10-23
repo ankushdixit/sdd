@@ -100,9 +100,9 @@ def test_validation_respects_required_true_for_tests(tmp_path):
         # Should fail because tests are required and they failed
         assert not result["passed"], "Quality gates should fail when required tests fail"
         assert "tests" in result["gates"]
-        assert not result["gates"]["tests"]["passed"], (
-            "Test gate should fail when required and tests fail"
-        )
+        assert not result["gates"]["tests"][
+            "passed"
+        ], "Test gate should fail when required and tests fail"
 
 
 def test_validation_with_disabled_test_gate(tmp_path):
@@ -195,9 +195,9 @@ def test_validation_with_mixed_required_gates(tmp_path):
 
         # Linting should fail (required)
         assert "linting" in result["gates"]
-        assert not result["gates"]["linting"]["passed"], (
-            "Required linting gate should fail when linting fails"
-        )
+        assert not result["gates"]["linting"][
+            "passed"
+        ], "Required linting gate should fail when linting fails"
 
         # Overall should fail because linting (required) failed
         assert not result["passed"], "Overall validation should fail when required gates fail"

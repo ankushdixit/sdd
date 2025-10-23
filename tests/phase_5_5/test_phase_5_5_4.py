@@ -127,7 +127,8 @@ def test_contract_file_validation():
         # Test 1: Valid OpenAPI YAML file
         print("Test 1: Valid OpenAPI YAML file")
         valid_yaml_contract = temp_dir / "valid-api.yaml"
-        valid_yaml_contract.write_text("""
+        valid_yaml_contract.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -145,7 +146,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         work_item = {
             "id": "TEST-001",
@@ -193,12 +195,14 @@ paths:
         # Test 3: Invalid contract - missing paths
         print("Test 3: Invalid contract - missing paths")
         invalid_contract = temp_dir / "invalid-api.yaml"
-        invalid_contract.write_text("""
+        invalid_contract.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
   version: 1.0.0
-""")
+"""
+        )
 
         if not validator._validate_contract_file(str(invalid_contract)):
             print("✅ PASS: Invalid contract (missing paths) rejected")
@@ -261,7 +265,8 @@ def test_breaking_change_detection():
     try:
         # Create v1 contract
         v1_contract = temp_dir / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -296,12 +301,14 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Test 1: Removed endpoint detection
         print("Test 1: Removed endpoint detection")
         v2_removed_endpoint = temp_dir / "api-v2-removed-endpoint.yaml"
-        v2_removed_endpoint.write_text("""
+        v2_removed_endpoint.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -319,7 +326,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         work_item = {"id": "TEST-001", "api_contracts": []}
         validator = APIContractValidator(work_item)
@@ -340,7 +348,8 @@ paths:
         # Test 2: Removed HTTP method detection
         print("Test 2: Removed HTTP method detection")
         v2_removed_method = temp_dir / "api-v2-removed-method.yaml"
-        v2_removed_method.write_text("""
+        v2_removed_method.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -364,7 +373,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         changes = validator._detect_breaking_changes(str(v2_removed_method), str(v1_contract))
 
@@ -383,7 +393,8 @@ paths:
         # Test 3: Removed required parameter detection
         print("Test 3: Removed required parameter detection")
         v2_removed_param = temp_dir / "api-v2-removed-param.yaml"
-        v2_removed_param.write_text("""
+        v2_removed_param.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -413,7 +424,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         changes = validator._detect_breaking_changes(str(v2_removed_param), str(v1_contract))
 
@@ -431,7 +443,8 @@ paths:
         # Test 4: Added required parameter detection
         print("Test 4: Added required parameter detection")
         v2_added_param = temp_dir / "api-v2-added-param.yaml"
-        v2_added_param.write_text("""
+        v2_added_param.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -471,7 +484,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         changes = validator._detect_breaking_changes(str(v2_added_param), str(v1_contract))
 
@@ -489,7 +503,8 @@ paths:
         # Test 5: No breaking changes
         print("Test 5: No breaking changes (backward compatible)")
         v2_compatible = temp_dir / "api-v2-compatible.yaml"
-        v2_compatible.write_text("""
+        v2_compatible.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -535,7 +550,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         changes = validator._detect_breaking_changes(str(v2_compatible), str(v1_contract))
 
