@@ -730,6 +730,126 @@ Manually edit `.session/tracking/work_items.json` and update the git.status fiel
 
 ---
 
+## Bug #23: Bug Spec Template Missing Acceptance Criteria Section
+
+**Status:** 🟡 MEDIUM
+
+**Discovered:** 2025-10-23 (During Session 3 - Bug #20 implementation)
+
+### Problem
+
+The bug specification template in `templates/bug_spec.md` does not include an "Acceptance Criteria" section. This causes spec validation to fail during `/sdd:validate` because the spec parser expects at least 3 acceptance criteria items for all work item types, including bugs.
+
+### Current Behavior
+
+When creating a bug spec from the template:
+1. Template generates a spec file without "Acceptance Criteria" section
+2. User fills in all other sections (Description, Root Cause, Fix Approach, etc.)
+3. Running `/sdd:validate` fails with "Spec file incomplete" error
+4. User must manually add the missing section
+
+**Template currently has:**
+- Description
+- Steps to Reproduce
+- Expected Behavior
+- Actual Behavior
+- Impact
+- Root Cause Analysis
+- Fix Approach
+- Testing Strategy
+- Prevention
+
+**Missing:**
+- Acceptance Criteria
+
+### Expected Behavior
+
+The bug spec template should include an "Acceptance Criteria" section with examples, similar to other spec templates (feature, refactor, etc.).
+
+**Expected template structure:**
+```markdown
+## Acceptance Criteria
+
+- [ ] Bug fix resolves the root cause identified in Root Cause Analysis
+- [ ] All test scenarios in Testing Strategy pass
+- [ ] No regression in related functionality
+```
+
+### Root Cause
+
+**File:** `templates/bug_spec.md`
+
+The template was created before the spec validation system was implemented in Phase 5.7. The validation now requires acceptance criteria for all work item types, but the bug template wasn't updated to include this section.
+
+### Impact
+
+- **Severity:** Medium (workaround available but causes friction)
+- **Affected Users:** Anyone creating bug work items
+- **User Friction:** Must manually add acceptance criteria section to every bug spec
+- **Validation Friction:** Spec validation fails unnecessarily, confusing users
+- **Documentation Gap:** Users don't know what acceptance criteria to write for bugs
+
+### Proposed Solution
+
+Update `templates/bug_spec.md` to include an "Acceptance Criteria" section after "Fix Approach" and before "Testing Strategy":
+
+```markdown
+## Fix Approach
+
+[Detailed approach to fixing the bug...]
+
+## Acceptance Criteria
+
+<!-- Define specific, measurable criteria for considering this bug fixed -->
+- [ ] [Specific fix criterion related to root cause]
+- [ ] [Specific fix criterion related to behavior]
+- [ ] [Specific fix criterion related to testing]
+- [ ] [Add more as needed - minimum 3 required]
+
+## Testing Strategy
+```
+
+**Recommended acceptance criteria for bugs:**
+1. Root cause is addressed (not just symptoms)
+2. All reproduction steps no longer trigger the bug
+3. Comprehensive test coverage prevents regression
+4. No new bugs introduced by the fix
+5. Edge cases identified in testing strategy are handled
+
+### Reproduction Steps
+
+1. Run `sdd work-new` and select "bug" type
+2. Fill in the generated spec file from template
+3. Complete all sections except acceptance criteria (since it's not in template)
+4. Run `sdd validate`
+5. Observe validation failure: "Spec file incomplete - Acceptance Criteria (at least 3 items)"
+6. Manually add acceptance criteria section
+
+### Workaround
+
+Manually add the "Acceptance Criteria" section to bug specs after creation:
+
+```markdown
+## Acceptance Criteria
+
+- [ ] Bug is fixed and root cause is addressed
+- [ ] All test scenarios pass
+- [ ] No regression in related functionality
+```
+
+### Related Issues
+
+- Discovered during Session 3 while fixing Bug #20
+- Related to Phase 5.7 spec validation implementation
+- Bug template needs to align with spec parser expectations (`scripts/spec_parser.py`)
+
+### Files Affected
+
+- `templates/bug_spec.md` - Add Acceptance Criteria section
+- Potentially `templates/refactor_spec.md` and other templates - verify they all have this section
+
+---
+
 ## Bug Template
 
 ```markdown
