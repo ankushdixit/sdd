@@ -1,6 +1,7 @@
 """SDD Project Setup Validation Tests"""
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -60,3 +61,46 @@ def test_project_metadata():
     assert has_metadata, (
         "No project metadata file found (pyproject.toml, setup.py, or package.json)"
     )
+
+
+@pytest.mark.skipif(
+    Path("ENHANCEMENTS.md").exists(),
+    reason="Skip for SDD repo itself (already has commits from development)",
+)
+def test_initial_commit_exists():
+    """Verify that an initial commit was created during sdd init."""
+    # Check if .git directory exists
+    assert Path(".git").exists(), "Git repository not initialized"
+
+    try:
+        # Get commit count
+        result = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        commit_count = int(result.stdout.strip())
+        assert commit_count > 0, "No commits found in repository"
+
+        # Get the first commit message
+        result = subprocess.run(
+            ["git", "log", "--reverse", "--format=%B", "-n", "1"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        first_commit_message = result.stdout.strip()
+
+        # Verify it's an SDD initialization commit
+        assert (
+            "Initialize project with Session-Driven Development" in first_commit_message
+            or "Session-Driven Development" in first_commit_message
+        ), (
+            f"First commit doesn't appear to be SDD initialization commit. Message: {first_commit_message[:100]}"
+        )
+
+    except subprocess.CalledProcessError as e:
+        pytest.fail(f"Git command failed: {e}")

@@ -255,7 +255,8 @@ def test_sequence_diagram_validation():
 
         # Test 2: Finds mermaid sequence diagrams
         print("Test 2: Finds mermaid sequence diagrams")
-        spec_file.write_text("""# Integration Test
+        spec_file.write_text(
+            """# Integration Test
 
 ## Sequence Diagrams
 
@@ -266,7 +267,8 @@ sequenceDiagram
     Service B-->>Service A: Response
     Service A-->>Client: Response
 ```
-""")
+"""
+        )
 
         os.chdir(temp_dir)
         passed, results = gates.validate_integration_documentation(work_item)
@@ -286,13 +288,15 @@ sequenceDiagram
 
         # Test 3: Finds scenario sections
         print("Test 3: Finds scenario sections")
-        spec_file.write_text("""# Integration Test
+        spec_file.write_text(
+            """# Integration Test
 
 ### Scenario 1: Happy Path
 - Setup: Services running
 - Actions: Send request
 - Expected: HTTP 200
-""")
+"""
+        )
 
         os.chdir(temp_dir)
         passed, results = gates.validate_integration_documentation(work_item)

@@ -76,6 +76,7 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 ignore = [
+    "E402",  # Module level import not at top (needed for dynamic path setup)
     "E501",  # Line too long (handled by formatter)
     "N801",  # Class name should use CapWords convention (test classes use descriptive names)
 ]
