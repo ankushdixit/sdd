@@ -761,14 +761,19 @@ def main():
             curator = LearningsCurator()
             added_count = 0
             for learning in learnings:
-                # Convert string to dict format expected by curator
-                # Curator will auto-generate 'id' and auto-categorize
-                learning_dict = {
-                    "content": learning,
-                    "learned_in": f"session_{session_num:03d}",
-                    "timestamp": datetime.now().isoformat(),
-                    "source": "temp_file" if args.learnings_file else "manual",
-                }
+                # Use standardized entry creator for consistent metadata structure
+                # This ensures both 'learned_in' and 'context' fields are present
+                source_type = "temp_file" if args.learnings_file else "manual"
+                context = (
+                    f"Temp file: {args.learnings_file}" if args.learnings_file else "Manual entry"
+                )
+
+                learning_dict = curator.create_learning_entry(
+                    content=learning,
+                    source=source_type,
+                    session_id=f"session_{session_num:03d}",
+                    context=context,
+                )
 
                 if curator.add_learning_if_new(learning_dict):
                     added_count += 1

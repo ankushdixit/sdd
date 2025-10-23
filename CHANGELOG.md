@@ -34,6 +34,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite reliability improved by marking flaky Phase 5.7 tests as skipped with documentation
 
 ### Fixed
+- **Bug #20**: Learning curator extraction bugs - multi-line LEARNING statements now captured completely, documentation files filtered out, and metadata structure standardized across all extraction methods
+  - Multi-line LEARNING statements in commit messages no longer truncated at first newline
+  - Documentation files (.md, .txt, .rst) and template directories excluded from learning extraction
+  - Placeholder content (angle brackets, known placeholders, content < 5 words) rejected during validation
+  - All learning entries now have standardized metadata structure with both `learned_in` and `context` fields
+  - Added JSON schema validation (`LEARNING_SCHEMA`) to ensure consistent learning structure
+  - Added `create_learning_entry()` function for standardized learning creation
+  - Added `is_valid_learning()` validation function to filter garbage entries
+  - 30 comprehensive unit tests added for all bug fixes
+- **Bug #23**: Bug spec template missing acceptance criteria section (documented)
+- **Performance**: `sdd validate --fix` now skips tests since they cannot be auto-fixed (much faster)
+- **Spec Parser**: Bug specifications now properly extract acceptance criteria for validation
 - **UX Issue**: Users no longer need to manually run `git init` before `sdd init`
 - **UX Issue**: Users no longer need to manually create initial commit after `sdd init`
 - **UX Issue**: Clear guidance when `/sdd:end` fails due to uncommitted changes
