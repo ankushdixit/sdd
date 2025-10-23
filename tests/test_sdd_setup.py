@@ -58,9 +58,9 @@ def test_project_metadata():
         or Path("setup.py").exists()
         or Path("package.json").exists()
     )
-    assert (
-        has_metadata
-    ), "No project metadata file found (pyproject.toml, setup.py, or package.json)"
+    assert has_metadata, (
+        "No project metadata file found (pyproject.toml, setup.py, or package.json)"
+    )
 
 
 @pytest.mark.skipif(
@@ -98,7 +98,9 @@ def test_initial_commit_exists():
         assert (
             "Initialize project with Session-Driven Development" in first_commit_message
             or "Session-Driven Development" in first_commit_message
-        ), f"First commit doesn't appear to be SDD initialization commit. Message: {first_commit_message[:100]}"
+        ), (
+            f"First commit doesn't appear to be SDD initialization commit. Message: {first_commit_message[:100]}"
+        )
 
     except subprocess.CalledProcessError as e:
         pytest.fail(f"Git command failed: {e}")

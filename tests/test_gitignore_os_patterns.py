@@ -68,14 +68,14 @@ def test_gitignore_os_patterns():
 
         # Check that all OS-specific patterns are present
         for pattern in all_patterns:
-            assert (
-                pattern in gitignore_content
-            ), f"Missing OS-specific pattern: {pattern}\n\n.gitignore content:\n{gitignore_content}"
+            assert pattern in gitignore_content, (
+                f"Missing OS-specific pattern: {pattern}\n\n.gitignore content:\n{gitignore_content}"
+            )
 
         # Check that comments are present
-        assert (
-            "# OS-specific files" in gitignore_content
-        ), "Missing OS-specific files section header"
+        assert "# OS-specific files" in gitignore_content, (
+            "Missing OS-specific files section header"
+        )
         assert "# macOS" in gitignore_content, "Missing macOS comment"
         assert "# Windows" in gitignore_content, "Missing Windows comment"
         assert "# Linux" in gitignore_content, "Missing Linux comment"

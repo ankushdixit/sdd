@@ -538,9 +538,9 @@ def test_integration_points_documentation():
 
     # Test 2: Documented integration points (detailed scope)
     print("Test 2: Documented integration points (detailed scope)")
-    work_item[
-        "scope"
-    ] = "This is a detailed scope describing the integration between Service A and Service B with sufficient detail"
+    work_item["scope"] = (
+        "This is a detailed scope describing the integration between Service A and Service B with sufficient detail"
+    )
 
     passed, results = gates.validate_integration_documentation(work_item)
 

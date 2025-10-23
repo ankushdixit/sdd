@@ -821,9 +821,9 @@ def main():
         work_items_data["work_items"][work_item_id]["status"] = new_status
         if "metadata" not in work_items_data["work_items"][work_item_id]:
             work_items_data["work_items"][work_item_id]["metadata"] = {}
-        work_items_data["work_items"][work_item_id]["metadata"][
-            "completed_at"
-        ] = datetime.now().isoformat()
+        work_items_data["work_items"][work_item_id]["metadata"]["completed_at"] = (
+            datetime.now().isoformat()
+        )
 
         # Record changes
         if previous_status != new_status:
