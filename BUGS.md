@@ -850,6 +850,216 @@ Manually add the "Acceptance Criteria" section to bug specs after creation:
 
 ---
 
+## Bug #24: Learning Curator Extracts Test Data Strings as Real Learnings
+
+**Status:** 🟠 HIGH
+
+**Discovered:** 2025-10-23 (During Session 3 - Bug #20 testing/dogfooding)
+
+### Problem
+
+The learning curator extracts Python string literals from test files as if they were real LEARNING statements. When test files contain strings like `"Valid code learning with enough words here"` in test data, these get extracted as actual learnings, polluting the learnings database with garbage entries.
+
+### Current Behavior
+
+After implementing Bug #20 fixes and running `/sdd:end`, the learnings.json contains garbage entries from test file strings:
+
+```json
+{
+  "content": "annotations\n- Code comments - Extract # LEARNING: inline comments",
+  "learned_in": "unknown",
+  "source": "git_commit",
+  "context": "Commit 9d32c883",
+  "timestamp": "2025-10-23T13:19:53.069055",
+  "id": "41cb7f06"
+},
+{
+  "content": "Valid code learning with enough words here\")",
+  "learned_in": "unknown",
+  "source": "inline_comment",
+  "context": "test_learning_curator_bug_fixes.py:152",
+  "timestamp": "2025-10-23T13:19:53.088569",
+  "id": "83323749"
+},
+{
+  "content": "Valid code learning from main file with words\")",
+  "learned_in": "unknown",
+  "source": "inline_comment",
+  "context": "test_learning_curator_bug_fixes.py:174",
+  "timestamp": "2025-10-23T13:19:53.089708",
+  "id": "ee61be3f"
+},
+{
+  "content": "Example learning from template directory here\")",
+  "learned_in": "unknown",
+  "source": "inline_comment",
+  "context": "test_learning_curator_bug_fixes.py:176",
+  "timestamp": "2025-10-23T13:19:53.090501",
+  "id": "bc794b20"
+}
+```
+
+**Problems:**
+1. Test data strings are extracted as learnings
+2. Malformed content with trailing `")` characters
+3. Truncated/fragment content from commit diffs
+4. Test files should be excluded from learning extraction
+
+### Expected Behavior
+
+Test files and test data should never be extracted as learnings:
+- `tests/` directory should be completely excluded
+- String literals in test code should not be extracted
+- Only actual `# LEARNING:` comments in production code should be extracted
+- Malformed content (with `"`, `)`, `\` characters) should be rejected
+
+### Root Cause
+
+**Multiple issues in `scripts/learning_curator.py`:**
+
+1. **Test directory not excluded** - File type filtering added in Bug #20 fix only excludes documentation extensions (`.md`, `.txt`, `.rst`) and `examples/`, `templates/` directories, but doesn't exclude `tests/` directory
+
+2. **Pattern matching too broad** - The regex pattern `r"#\s*LEARNING:\s*(.+?)$"` matches any line containing this pattern, including Python string literals:
+   ```python
+   self.code_file.write_text("# LEARNING: Valid code learning with enough words here")
+   ```
+   This line in test code gets matched and extracts the string content
+
+3. **Content validation insufficient** - `is_valid_learning()` checks for `<` `>` angle brackets and known placeholders, but doesn't detect:
+   - Trailing quote and parenthesis characters (`")`)
+   - String escape sequences (`\"`)
+   - Other code syntax artifacts
+
+### Impact
+
+- **Severity:** High (pollutes learnings database with garbage)
+- **Data Quality:** Learnings database contains test data and malformed entries
+- **User Confusion:** Real learnings mixed with garbage entries
+- **Curation Overhead:** Manual cleanup required to remove test artifacts
+- **Trust Issues:** Users lose confidence in automated learning extraction
+
+### Proposed Solution
+
+#### Fix 1: Exclude Test Directories
+
+Update `extract_from_code_comments()` in `scripts/learning_curator.py`:
+
+```python
+def extract_from_code_comments(self, changed_files: list[Path] = None, session_id: str = None) -> list[dict]:
+    # ... existing code ...
+
+    # Only scan actual code files, not documentation or tests
+    code_extensions = {'.py', '.js', '.ts', '.jsx', '.tsx', '.go', '.rs'}
+    doc_extensions = {'.md', '.txt', '.rst'}
+    excluded_dirs = {'examples', 'templates', 'tests', 'test', '__tests__', 'spec'}  # ← Add test directories
+
+    for file_path in changed_files:
+        # ... existing checks ...
+
+        # Skip test directories
+        if any(excluded_dir in file_path.parts for excluded_dir in excluded_dirs):
+            continue
+
+        # ... rest of extraction ...
+```
+
+#### Fix 2: Improve Content Validation
+
+Enhance `is_valid_learning()` to detect code artifacts:
+
+```python
+def is_valid_learning(self, content: str) -> bool:
+    """Check if extracted content is a valid learning (not placeholder/garbage)."""
+    if not content or not isinstance(content, str):
+        return False
+
+    # Skip placeholders and examples (content with angle brackets)
+    if '<' in content or '>' in content:
+        return False
+
+    # NEW: Skip content with code syntax artifacts
+    code_artifacts = [
+        '")',  # String literal ending
+        '\"',  # Escaped quotes
+        '\\n', # Escape sequences (visible in extracted content)
+        '`',   # Backticks
+    ]
+    if any(artifact in content for artifact in code_artifacts):
+        return False
+
+    # NEW: Skip if content looks like a code fragment (ends with quote/paren)
+    if content.strip().endswith(('")' , '";', '`,', "')", "';")):
+        return False
+
+    # Skip known placeholder text
+    content_lower = content.lower().strip()
+    placeholders = [
+        'your learning here',
+        'example learning',
+        'todo',
+        'tbd',
+        'placeholder'
+    ]
+    if content_lower in placeholders:
+        return False
+
+    # Must have substance (more than just a few words)
+    if len(content.split()) < 5:
+        return False
+
+    return True
+```
+
+#### Fix 3: Only Extract from Actual Comments
+
+Update the regex pattern to be more strict about comment context:
+
+```python
+# Current pattern (too broad):
+learning_pattern = r"#\s*LEARNING:\s*(.+?)$"
+
+# Better pattern (only matches actual comments):
+learning_pattern = r"^\s*#\s*LEARNING:\s*(.+?)$"  # Must start at line beginning (with optional whitespace)
+```
+
+This ensures we only match actual comment lines, not string literals containing the pattern.
+
+### Reproduction Steps
+
+1. Create a test file with test data strings containing "# LEARNING:" pattern:
+   ```python
+   def test_example():
+       test_data = "# LEARNING: This is test data"
+       file.write_text("# LEARNING: Another test string")
+   ```
+2. Run `/sdd:end` to complete session
+3. Check `.session/tracking/learnings.json`
+4. Observe test data strings extracted as learnings
+
+### Workaround
+
+Manually edit `.session/tracking/learnings.json` to remove:
+1. All entries from `tests/` directory (check `context` field)
+2. All entries with malformed content (ending in `")`, containing `\"`, etc.)
+3. All entries that look like code fragments rather than complete sentences
+
+### Related Issues
+
+- Bug #20: Original learning curator bugs (partially addressed, but missed test directory exclusion)
+- Enhancement #6: Work item completion status control (discovered during same dogfooding session)
+
+### Files Affected
+
+- `scripts/learning_curator.py` - `extract_from_code_comments()` method needs test directory exclusion
+- `scripts/learning_curator.py` - `is_valid_learning()` method needs better artifact detection
+- `.session/tracking/learnings.json` - Currently contains garbage entries that need cleanup
+
+### Priority
+
+High - Impacts data quality and user trust in automated learning extraction. Should be fixed before Bug #20 is considered fully resolved.
+
+---
+
 ## Bug Template
 
 ```markdown
