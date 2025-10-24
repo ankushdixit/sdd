@@ -34,6 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite reliability improved by marking flaky Phase 5.7 tests as skipped with documentation
 
 ### Fixed
+- **Bug #24**: `/start` command ignores work item ID argument - Command now properly handles explicit work item selection with conflict detection and dependency validation
+  - Added argparse support to `scripts/briefing_generator.py` for optional `work_item_id` positional argument
+  - Added `--force` flag to override in-progress work item conflicts
+  - Explicit work item selection now validates dependencies and shows clear error messages
+  - In-progress conflict detection warns users and suggests options (complete first, use --force, or cancel)
+  - Automatic selection preserved when no work item ID provided (prioritizes in-progress, then highest priority)
+  - Invalid work item IDs show helpful error with list of available work items
+  - Resuming same in-progress item no longer shows conflict warning
+  - 3 comprehensive unit tests added for argument parsing and validation
 - **Bug #20**: Learning curator extraction bugs - multi-line LEARNING statements now captured completely, documentation files filtered out, and metadata structure standardized across all extraction methods
   - Multi-line LEARNING statements in commit messages no longer truncated at first newline
   - Documentation files (.md, .txt, .rst) and template directories excluded from learning extraction

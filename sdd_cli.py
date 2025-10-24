@@ -256,10 +256,10 @@ def route_command(command_name, args):
             # Handle different return types
             if result is None:
                 return 0
-            elif isinstance(result, int):
-                return result
             elif isinstance(result, bool):
                 return 0 if result else 1
+            elif isinstance(result, int):
+                return result
             else:
                 return 0
 
