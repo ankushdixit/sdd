@@ -585,6 +585,22 @@ def generate_deployment_briefing(work_item: dict) -> str:
 
 def main():
     """Main entry point."""
+    import argparse
+
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Start session for work item")
+    parser.add_argument(
+        "work_item_id",
+        nargs="?",
+        help="Specific work item ID to start (optional)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force start even if another item is in-progress",
+    )
+    args = parser.parse_args()
+
     logger.info("Starting session briefing generation")
 
     # Ensure .session directory exists
@@ -598,13 +614,82 @@ def main():
     work_items_data = load_work_items()
     learnings_data = load_learnings()
 
-    # Find next work item
-    item_id, item = get_next_work_item(work_items_data)
+    # Determine which work item to start
+    if args.work_item_id:
+        # User specified a work item explicitly
+        item_id = args.work_item_id
+        item = work_items_data.get("work_items", {}).get(item_id)
 
-    if not item_id:
-        logger.warning("No available work items found")
-        print("No available work items. All dependencies must be satisfied first.")
-        return 1
+        if not item:
+            logger.error("Work item not found: %s", item_id)
+            print(f"❌ Error: Work item '{item_id}' not found.")
+            print("\nAvailable work items:")
+            for wid, wi in work_items_data.get("work_items", {}).items():
+                status_emoji = {
+                    "not_started": "○",
+                    "in_progress": "◐",
+                    "completed": "✓",
+                    "blocked": "✗",
+                }.get(wi["status"], "○")
+                print(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
+            return 1
+
+        # Check if a DIFFERENT work item is in-progress (excluding the requested one)
+        in_progress = [
+            (id, wi)
+            for id, wi in work_items_data.get("work_items", {}).items()
+            if wi["status"] == "in_progress" and id != item_id
+        ]
+
+        # If another item is in-progress, warn and exit (unless --force)
+        if in_progress and not args.force:
+            in_progress_id = in_progress[0][0]
+            print(f"\n⚠️  Warning: Work item '{in_progress_id}' is currently in-progress.")
+            print("Starting a new work item will leave the current one incomplete.\n")
+            print("Options:")
+            print("1. Complete current work item first: /end")
+            print(f"2. Force start new work item: sdd start {item_id} --force")
+            print("3. Cancel: Ctrl+C\n")
+            logger.warning(
+                "Blocked start of %s due to in-progress item: %s (use --force to override)",
+                item_id,
+                in_progress_id,
+            )
+            return 1
+
+        # Check dependencies are satisfied
+        deps_satisfied = all(
+            work_items_data.get("work_items", {}).get(dep_id, {}).get("status") == "completed"
+            for dep_id in item.get("dependencies", [])
+        )
+
+        if not deps_satisfied:
+            unmet_deps = [
+                dep_id
+                for dep_id in item.get("dependencies", [])
+                if work_items_data.get("work_items", {}).get(dep_id, {}).get("status")
+                != "completed"
+            ]
+            logger.error("Work item %s has unmet dependencies: %s", item_id, unmet_deps)
+            print(f"❌ Error: Work item '{item_id}' has unmet dependencies:")
+            for dep_id in unmet_deps:
+                dep = work_items_data.get("work_items", {}).get(dep_id, {})
+                print(
+                    f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})"
+                )
+            print("\nPlease complete dependencies first.")
+            return 1
+
+        # Note: If requested item is already in-progress, no conflict - just resume it
+        logger.info("User explicitly requested work item: %s", item_id)
+    else:
+        # Use automatic selection
+        item_id, item = get_next_work_item(work_items_data)
+
+        if not item_id:
+            logger.warning("No available work items found")
+            print("No available work items. All dependencies must be satisfied first.")
+            return 1
 
     logger.info("Generating briefing for work item: %s", item_id)
     # Generate briefing
