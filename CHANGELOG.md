@@ -43,7 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `create_learning_entry()` function for standardized learning creation
   - Added `is_valid_learning()` validation function to filter garbage entries
   - 30 comprehensive unit tests added for all bug fixes
-- **Bug #23**: Bug spec template missing acceptance criteria section (documented)
+- **Bug #23**: Bug spec template missing acceptance criteria section - Added "Acceptance Criteria" section to both `bug_spec.md` and `refactor_spec.md` templates
+  - Templates now include acceptance criteria section positioned between "Fix Approach" and "Testing Strategy"
+  - Section includes clear guidance comments and examples (minimum 3 items required)
+  - Updated `docs/spec-template-structure.md` to reflect new template structure
+  - Newly created bug and refactor work items now pass spec validation without manual intervention
 - **Performance**: `sdd validate --fix` now skips tests since they cannot be auto-fixed (much faster)
 - **Spec Parser**: Bug specifications now properly extract acceptance criteria for validation
 - **UX Issue**: Users no longer need to manually run `git init` before `sdd init`
@@ -61,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhancement #2**: CHANGELOG workflow improvements (git hook template + smarter checking)
 - **Enhancement #3**: Pre-flight commit check (75 lines added to session_complete.py)
 - **Enhancement #4**: OS-specific gitignore patterns (35 lines added to init_project.py, comprehensive test coverage)
-- **Files Modified**: 4 files (`scripts/init_project.py`, `scripts/quality_gates.py`, new `templates/git-hooks/prepare-commit-msg`, new `tests/test_gitignore_os_patterns.py`)
+- **Bug #23**: Template acceptance criteria fix (3 files modified: `templates/bug_spec.md`, `templates/refactor_spec.md`, `docs/spec-template-structure.md`)
+- **Files Modified**: 7 files total across enhancements and bug fixes
 - **Focus**: Developer experience improvements from E2E testing insights
 
 ### Planned

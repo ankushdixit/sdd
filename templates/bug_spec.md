@@ -164,6 +164,25 @@ async createSession(userId: string): Promise<string> {
 - `src/config/redis.ts` - Increase default timeout to 500ms
 - `src/monitoring/metrics.ts` - Add session creation metrics
 
+## Acceptance Criteria
+
+<!-- Define specific, measurable criteria for considering this bug fixed -->
+<!-- Minimum 3 items required for spec validation -->
+
+- [ ] Root cause is identified and addressed (not just symptoms)
+- [ ] All reproduction steps no longer trigger the bug
+- [ ] Comprehensive tests added to prevent regression
+- [ ] No new bugs or regressions introduced by the fix
+- [ ] Edge cases identified in investigation are handled
+- [ ] All tests pass (unit, integration, and manual)
+- [ ] Documentation updated if behavior changed
+
+**Example criteria for a specific bug:**
+- [ ] Mobile login success rate improves to >99% (currently ~85%)
+- [ ] Session creation completes within 500ms on high-latency networks
+- [ ] Redis write failures are properly handled and logged
+- [ ] Monitoring alerts configured for session creation failures
+
 ## Testing Strategy
 
 <!-- Comprehensive testing to verify the fix and prevent regression -->
