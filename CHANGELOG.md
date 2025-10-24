@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhancement #2**: CHANGELOG workflow improvements (git hook template + smarter checking)
 - **Enhancement #3**: Pre-flight commit check (75 lines added to session_complete.py)
 - **Enhancement #4**: OS-specific gitignore patterns (35 lines added to init_project.py, comprehensive test coverage)
-- **Bug #23**: Template acceptance criteria fix (3 files modified: `templates/bug_spec.md`, `templates/refactor_spec.md`, `docs/spec-template-structure.md`)
+- **Bug #23**: Template acceptance criteria fix (3 files modified: `templates/bug_spec.md`, `templates/refactor_spec.md`, `docs/reference/spec-template-structure.md`)
 - **Files Modified**: 7 files total across enhancements and bug fixes
 - **Focus**: Developer experience improvements from E2E testing insights
 
@@ -160,8 +160,8 @@ See [ROADMAP.md Phase 5.8](./ROADMAP.md#phase-58-marketplace-plugin-support-v058
 - Comprehensive markdown parser (`spec_parser.py`, 700+ lines) supporting all 6 work item types
 - Spec file validation system with required section checks and quality gates
 - Complete context loading - removed all compression (50-line tree limit, 500-char doc limits)
-- Writing guide (`docs/writing-specs.md`, 500+ lines) with examples for all work item types
-- Template structure documentation (`docs/spec-template-structure.md`)
+- Writing guide (`docs/guides/writing-specs.md`, 500+ lines) with examples for all work item types
+- Template structure documentation (`docs/reference/spec-template-structure.md`)
 
 ### Changed
 - Eliminated dual storage problem - work item content now only in spec files, not `work_items.json`
@@ -292,7 +292,7 @@ See [ROADMAP.md Phase 5](./ROADMAP.md#phase-5-quality-gates-v05---validation--se
 ### Technical Details
 - **Tests Added**: 53 tests across all learning features
 - **Code Added**: ~1,587 lines (commands, documentation, integration)
-- **Documentation**: `docs/learning-system.md` guide (550 lines)
+- **Documentation**: `docs/reference/learning-system.md` guide (550 lines)
 - **Categories**: 6 comprehensive categories covering software development learnings
 
 ### Reference
@@ -430,7 +430,7 @@ Phase mapping to versions:
 
 ## Links
 
-- [Roadmap](./ROADMAP.md) - Detailed development history and technical implementation
+- [Roadmap](./docs/project/ROADMAP.md) - Detailed development history and technical implementation
 - [Contributing](./CONTRIBUTING.md) - How to contribute (if available)
-- [Documentation](./docs/) - Full documentation
-- [Session-Driven Development Methodology](./docs/session-driven-development.md) - Complete methodology specification
+- [Documentation](./docs/README.md) - Full documentation index
+- [Session-Driven Development Methodology](./docs/architecture/session-driven-development.md) - Complete methodology specification

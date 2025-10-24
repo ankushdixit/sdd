@@ -27,9 +27,9 @@ This project follows standard open-source community guidelines:
 
 Before you begin:
 
-1. **Familiarize yourself with SDD** - Read the [README](README.md) and [documentation](docs/)
+1. **Familiarize yourself with SDD** - Read the [README](README.md) and [documentation](docs/README.md)
 2. **Check existing issues** - Look for open issues or create a new one
-3. **Understand the architecture** - Review the [Session-Driven Development Framework](docs/session-driven-development.md)
+3. **Understand the architecture** - Review the [Session-Driven Development Framework](docs/architecture/session-driven-development.md)
 
 ## Development Setup
 
@@ -62,8 +62,14 @@ sdd/
 ├── scripts/                 # Core Python logic (13 modules)
 ├── templates/              # Work item specification templates
 ├── docs/                   # Documentation
-├── tests/                  # Test suites (343 tests)
-└── [Development files...]
+│   ├── architecture/       # System architecture and design
+│   ├── guides/             # User guides and how-tos
+│   ├── reference/          # Reference documentation
+│   ├── project/            # Project planning
+│   └── development/        # Development notes
+├── tests/                  # Test suites (392 tests)
+├── Makefile                # Developer convenience targets
+└── .editorconfig           # Editor configuration
 ```
 
 ## How to Contribute
@@ -364,7 +370,7 @@ Technical considerations or challenges
 If you have questions:
 
 - Check existing [issues](https://github.com/ankushdixit/sdd/issues)
-- Review [documentation](docs/)
+- Review [documentation](docs/README.md)
 - Open a new issue for discussion
 
 ## License
