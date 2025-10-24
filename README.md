@@ -363,7 +363,7 @@ SDD implements a **spec-first architecture** (Phase 5.7) where work item specifi
    - Open `.session/specs/{work_item_id}.md`
    - Complete all required sections for the work item type
    - Follow template guidance and inline comments
-   - See `docs/writing-specs.md` for best practices
+   - See `docs/guides/writing-specs.md` for best practices
 
 3. **Start Session:**
    ```bash
@@ -420,9 +420,9 @@ Specs are automatically validated for:
 - **Templates**: Standardized structure for consistency
 
 For more information:
-- **Writing Specs**: `docs/writing-specs.md`
-- **Template Structure**: `docs/spec-template-structure.md`
-- **Session-Driven Development**: `docs/session-driven-development.md`
+- **Writing Specs**: `docs/guides/writing-specs.md`
+- **Template Structure**: `docs/reference/spec-template-structure.md`
+- **Session-Driven Development**: `docs/architecture/session-driven-development.md`
 
 ## Configuration
 
@@ -468,11 +468,15 @@ Configure SDD via `.session/config.json` (created during `/init`):
 
 ## Documentation
 
-- [Session-Driven Development Framework](docs/session-driven-development.md) - Complete methodology specification
-- [AI-Augmented Solo Framework](docs/ai-augmented-solo-framework.md) - Philosophical context and broader methodology
-- [Implementation Insights](docs/implementation-insights.md) - Lessons learned and proven patterns
-- [Learning System Guide](docs/learning-system.md) - Knowledge capture and curation details
-- [Roadmap](ROADMAP.md) - Phased development plan
+- [Documentation Index](docs/README.md) - Complete documentation navigation
+- [Architecture Overview](docs/ARCHITECTURE.md) - System architecture and components
+- [Session-Driven Development Framework](docs/architecture/session-driven-development.md) - Complete methodology specification
+- [AI-Augmented Solo Framework](docs/architecture/ai-augmented-solo-framework.md) - Philosophical context and broader methodology
+- [Implementation Insights](docs/architecture/implementation-insights.md) - Lessons learned and proven patterns
+- [Learning System Guide](docs/reference/learning-system.md) - Knowledge capture and curation details
+- [Configuration Guide](docs/guides/configuration.md) - Project configuration options
+- [Troubleshooting](docs/guides/troubleshooting.md) - Common issues and solutions
+- [Roadmap](docs/project/ROADMAP.md) - Phased development plan
 
 ## Project Structure
 
@@ -492,15 +496,20 @@ sdd/
 │   ├── bug_spec.md
 │   └── [4 more templates...]
 ├── docs/                     # Comprehensive documentation
-│   ├── commands/             # Developer documentation for commands
-│   ├── session-driven-development.md    # Complete SDD methodology
-│   ├── ai-augmented-solo-framework.md   # Philosophical framework
-│   └── [2 more docs...]
-├── tests/                    # Test suites (343 tests total)
-│   └── phase_1/ through phase_5_6/
-├── ROADMAP.md                # Development roadmap
+│   ├── commands/             # Command reference documentation
+│   ├── architecture/         # System architecture and design
+│   ├── guides/               # User guides and how-tos
+│   ├── reference/            # Reference documentation
+│   ├── project/              # Project planning (roadmap, bugs, enhancements)
+│   └── development/          # Development notes
+├── tests/                    # Test suites (392 tests total)
+│   └── phase_1/ through phase_5_7/
 ├── README.md                 # This file
-└── [Development files...]    # Implementation plans, etc.
+├── CHANGELOG.md              # Version history
+├── CONTRIBUTING.md           # Contribution guidelines
+├── LICENSE                   # MIT License
+├── Makefile                  # Developer convenience targets
+└── .editorconfig             # Editor configuration
 ```
 
 ## Architecture Notes

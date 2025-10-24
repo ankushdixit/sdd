@@ -64,7 +64,7 @@ def test_project_metadata():
 
 
 @pytest.mark.skipif(
-    Path("ENHANCEMENTS.md").exists(),
+    Path("docs/project/ENHANCEMENTS.md").exists(),
     reason="Skip for SDD repo itself (already has commits from development)",
 )
 def test_initial_commit_exists():

@@ -17,8 +17,8 @@ class TestDocumentationUpdates:
     """Test suite for documentation updates in Phase 5.7.6."""
 
     def test_writing_specs_guide_exists_and_complete(self):
-        """Test: docs/writing-specs.md exists and contains key sections."""
-        writing_specs_path = project_root / "docs" / "writing-specs.md"
+        """Test: docs/guides/writing-specs.md exists and contains key sections."""
+        writing_specs_path = project_root / "docs" / "guides" / "writing-specs.md"
 
         assert writing_specs_path.exists(), "docs/writing-specs.md should exist"
 
@@ -60,8 +60,8 @@ class TestDocumentationUpdates:
         print("✓ Test 1: docs/writing-specs.md exists and contains all required sections")
 
     def test_session_driven_development_updated_with_spec_architecture(self):
-        """Test: docs/session-driven-development.md includes spec architecture section."""
-        sdd_doc_path = project_root / "docs" / "session-driven-development.md"
+        """Test: docs/architecture/session-driven-development.md includes spec architecture section."""
+        sdd_doc_path = project_root / "docs" / "architecture" / "session-driven-development.md"
 
         assert sdd_doc_path.exists(), "docs/session-driven-development.md should exist"
 
