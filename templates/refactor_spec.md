@@ -224,6 +224,27 @@ describe('UserService', () => {
   - Gradual rollout with feature flag
   - Code review focusing on dependency correctness
 
+## Acceptance Criteria
+
+<!-- Define specific, measurable criteria for considering this refactor complete -->
+<!-- Minimum 3 items required for spec validation -->
+
+- [ ] All code in scope has been refactored according to the proposed approach
+- [ ] All existing functionality preserved (no breaking changes)
+- [ ] All existing tests pass without modification
+- [ ] Code quality metrics improved (complexity, coupling, testability)
+- [ ] No performance regressions detected
+- [ ] New tests added for previously untestable scenarios
+- [ ] Code review completed and approved
+- [ ] Documentation updated to reflect new structure
+
+**Example criteria for a specific refactor:**
+- [ ] UserService uses dependency injection with interface-based contracts
+- [ ] All UserService dependencies injected through constructor
+- [ ] Unit test code reduced by >30% due to improved mockability
+- [ ] Cyclomatic complexity reduced from 12 to 6
+- [ ] 100% test coverage maintained or improved
+
 ## Testing Strategy
 
 <!-- How to verify the refactor doesn't break anything -->

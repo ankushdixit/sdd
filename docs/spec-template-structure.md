@@ -56,7 +56,7 @@ These sections appear in multiple templates with consistent naming:
 |--------------|-----------|--------------|-------------------|
 | `## Overview` | feature, refactor | Paragraph | Text description |
 | `## Rationale` | feature | Paragraph | Bullet points, text |
-| `## Acceptance Criteria` | feature, security | Checklist | Task list items |
+| `## Acceptance Criteria` | feature, bug, refactor, security, integration_test, deployment | Checklist | Task list items |
 | `## Testing Strategy` | feature, bug, refactor | Mixed | Subsections, checklists |
 | `## Dependencies` | All templates | List | Work item IDs, bullet points |
 | `## Estimated Effort` | All templates | Text | Number + "sessions" |
@@ -82,6 +82,7 @@ These sections appear in multiple templates with consistent naming:
 | `## Impact` | None | Severity field, bullet points |
 | `## Root Cause Analysis` | `### Investigation`, `### Root Cause`, `### Why It Happened` | Paragraphs, code blocks |
 | `## Fix Approach` | None | Paragraph, code blocks |
+| `## Acceptance Criteria` | None | Checklist (minimum 3 items) |
 | `## Prevention` | None | Bullet points |
 
 #### Refactor Template
@@ -94,6 +95,7 @@ These sections appear in multiple templates with consistent naming:
 | `## Implementation Plan` | None | Numbered list with phases |
 | `## Scope` | `### In Scope`, `### Out of Scope` | Bullet points |
 | `## Risk Assessment` | None | Risk level, mitigation strategies |
+| `## Acceptance Criteria` | None | Checklist (minimum 3 items) |
 | `## Success Criteria` | None | Checklist |
 
 #### Security Template
@@ -415,11 +417,11 @@ The `### LLM/Processing Configuration` subsection within "Implementation Details
 - ⚠️ Optional: User Story, Documentation Updates
 
 **Bug:**
-- ✅ Required: Description, Steps to Reproduce, Expected Behavior, Actual Behavior, Impact, Root Cause Analysis, Fix Approach, Testing Strategy
+- ✅ Required: Description, Steps to Reproduce, Expected Behavior, Actual Behavior, Impact, Root Cause Analysis, Fix Approach, Acceptance Criteria, Testing Strategy
 - ⚠️ Optional: Prevention
 
 **Refactor:**
-- ✅ Required: Overview, Current State, Problems with Current Approach, Proposed Refactor, Scope, Testing Strategy
+- ✅ Required: Overview, Current State, Problems with Current Approach, Proposed Refactor, Scope, Acceptance Criteria, Testing Strategy
 - ⚠️ Optional: Risk Assessment, Success Criteria
 
 **Security:**
