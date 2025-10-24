@@ -583,6 +583,155 @@ def generate_deployment_briefing(work_item: dict) -> str:
     return "\n".join(briefing)
 
 
+def determine_git_branch_final_status(branch_name, git_info):
+    """
+    Determine the final status of a git branch by inspecting actual git state.
+
+    Returns one of: "merged", "pr_created", "pr_closed", "ready_for_pr", "deleted"
+    """
+    parent_branch = git_info.get("parent_branch", "main")
+
+    # Check 1: Is branch merged?
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--merged", parent_branch],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0 and branch_name in result.stdout:
+            logger.debug(f"Branch {branch_name} is merged to {parent_branch}")
+            return "merged"
+    except Exception as e:
+        logger.debug(f"Error checking if branch merged: {e}")
+
+    # Check 2: Does PR exist? (requires gh CLI)
+    try:
+        result = subprocess.run(
+            ["gh", "pr", "list", "--head", branch_name, "--state", "all", "--json", "number,state"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            prs = json.loads(result.stdout)
+            if prs:
+                pr = prs[0]  # Get first/most recent PR
+                pr_state = pr.get("state", "").upper()
+
+                if pr_state == "MERGED":
+                    logger.debug(f"Branch {branch_name} has merged PR")
+                    return "merged"
+                elif pr_state == "CLOSED":
+                    logger.debug(f"Branch {branch_name} has closed (unmerged) PR")
+                    return "pr_closed"
+                elif pr_state == "OPEN":
+                    logger.debug(f"Branch {branch_name} has open PR")
+                    return "pr_created"
+    except FileNotFoundError:
+        logger.debug("gh CLI not available, skipping PR status check")
+    except Exception as e:
+        logger.debug(f"Error checking PR status: {e}")
+
+    # Check 3: Does branch still exist locally?
+    try:
+        result = subprocess.run(
+            ["git", "show-ref", "--verify", f"refs/heads/{branch_name}"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            logger.debug(f"Branch {branch_name} exists locally")
+            # Branch exists locally, no PR found
+            return "ready_for_pr"
+    except Exception as e:
+        logger.debug(f"Error checking local branch: {e}")
+
+    # Check 4: Does branch exist remotely?
+    try:
+        result = subprocess.run(
+            ["git", "ls-remote", "--heads", "origin", branch_name],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            logger.debug(f"Branch {branch_name} exists remotely")
+            # Branch exists remotely, no PR found
+            return "ready_for_pr"
+    except Exception as e:
+        logger.debug(f"Error checking remote branch: {e}")
+
+    # Branch doesn't exist and no PR found
+    logger.debug(f"Branch {branch_name} not found locally or remotely")
+    return "deleted"
+
+
+def finalize_previous_work_item_git_status(work_items_data, current_work_item_id):
+    """
+    Finalize git status for previous completed work item when starting a new one.
+
+    This handles the case where:
+    - Previous work item was completed
+    - User performed git operations externally (pushed, created PR, merged)
+    - Starting a new work item (not resuming the previous one)
+
+    Args:
+        work_items_data: Loaded work items data
+        current_work_item_id: ID of work item being started
+    """
+    work_items = work_items_data.get("work_items", {})
+
+    # Find previously active work item
+    previous_work_item = None
+    previous_work_item_id = None
+
+    for wid, wi in work_items.items():
+        # Skip current work item
+        if wid == current_work_item_id:
+            continue
+
+        # Find work item with git branch in "in_progress" status
+        git_info = wi.get("git", {})
+        if git_info.get("status") == "in_progress":
+            # Only finalize if work item itself is completed
+            if wi.get("status") == "completed":
+                previous_work_item = wi
+                previous_work_item_id = wid
+                break
+
+    if not previous_work_item:
+        # No previous work item to finalize
+        logger.debug("No previous work item with stale git status found")
+        return
+
+    git_info = previous_work_item.get("git", {})
+    branch_name = git_info.get("branch")
+
+    if not branch_name:
+        logger.debug(f"Previous work item {previous_work_item_id} has no git branch")
+        return
+
+    logger.info(f"Finalizing git status for completed work item: {previous_work_item_id}")
+
+    # Inspect actual git state
+    final_status = determine_git_branch_final_status(branch_name, git_info)
+
+    # Update git status
+    work_items[previous_work_item_id]["git"]["status"] = final_status
+
+    # Save updated work items
+    work_items_file = Path(".session/tracking/work_items.json")
+    with open(work_items_file, "w") as f:
+        json.dump(work_items_data, f, indent=2)
+
+    logger.info(f"Updated git status for {previous_work_item_id}: in_progress → {final_status}")
+    print(
+        f"✓ Finalized git status for previous work item: {previous_work_item_id} → {final_status}\n"
+    )
+
+
 def main():
     """Main entry point."""
     import argparse
@@ -690,6 +839,9 @@ def main():
             logger.warning("No available work items found")
             print("No available work items. All dependencies must be satisfied first.")
             return 1
+
+    # Finalize previous work item's git status if starting a new work item
+    finalize_previous_work_item_git_status(work_items_data, item_id)
 
     logger.info("Generating briefing for work item: %s", item_id)
     # Generate briefing

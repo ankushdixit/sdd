@@ -34,6 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite reliability improved by marking flaky Phase 5.7 tests as skipped with documentation
 
 ### Fixed
+- **Bug #25**: Git branch status not finalized when switching work items - Git status in work_items.json now automatically updates to reflect actual branch state when starting a new work item
+  - Added automatic git status finalization when starting a new work item (not when resuming same work item)
+  - System detects actual git branch state: merged (via `git branch --merged`), PR status (via `gh pr list`), local/remote existence
+  - Status values: "merged", "pr_created", "pr_closed", "ready_for_pr", "deleted", "in_progress"
+  - Only finalizes completed work items with stale git status ("in_progress")
+  - Gracefully handles missing gh CLI (falls back to branch existence checks)
+  - Work items spanning multiple sessions keep "in_progress" status until completed and new work item started
+  - Prevents stale git tracking data, ensures reliable historical reporting
+  - Added `determine_git_branch_final_status()` and `finalize_previous_work_item_git_status()` functions to `scripts/briefing_generator.py`
+  - 12 comprehensive unit tests added covering all status values and edge cases
 - **Bug #24**: `/start` command ignores work item ID argument - Command now properly handles explicit work item selection with conflict detection and dependency validation
   - Added argparse support to `scripts/briefing_generator.py` for optional `work_item_id` positional argument
   - Added `--force` flag to override in-progress work item conflicts
