@@ -48,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Section includes clear guidance comments and examples (minimum 3 items required)
   - Updated `docs/spec-template-structure.md` to reflect new template structure
   - Newly created bug and refactor work items now pass spec validation without manual intervention
+- **Bug #21**: Learning curator extracts test data strings as real learnings - Test files and string literals now properly excluded from learning extraction
+  - Test directories (tests/, test/, __tests__/, spec/) completely excluded from learning extraction
+  - Content validation enhanced to reject code artifacts (`")`, `\"`, `\n`, backticks, etc.)
+  - Regex pattern updated to only match actual `# LEARNING:` comment lines (not string literals)
+  - Prevents test data pollution in learnings.json database
+  - 21 comprehensive unit tests added covering all three fixes
+  - Cleaned learnings.json database of 4 garbage entries created by the bug
 - **Performance**: `sdd validate --fix` now skips tests since they cannot be auto-fixed (much faster)
 - **Spec Parser**: Bug specifications now properly extract acceptance criteria for validation
 - **UX Issue**: Users no longer need to manually run `git init` before `sdd init`
