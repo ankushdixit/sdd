@@ -899,3 +899,963 @@ def main():
 
 **Part 1:** High - Core workflow issue affecting data quality
 **Part 2:** Medium - Nice to have for workflow efficiency
+
+---
+
+## Enhancement #7: Phase 1 - Documentation Reorganization & Project Files
+
+**Status:** 🔵 IDENTIFIED
+
+**Discovered:** 2025-10-24 (Project structure review)
+
+### Problem
+
+The project root directory is cluttered with too many markdown files (10+ files), making it harder to navigate and understand the project structure. Additionally, several standard project convenience files are missing:
+
+**Current root directory issues:**
+- 10+ markdown files in root (README, CHANGELOG, ROADMAP, BUGS, ENHANCEMENTS, NOTES, SECURITY, CONTRIBUTING, LICENSE)
+- Documentation scattered between root and docs/ directory
+- No clear organization or categorization
+- Missing developer convenience files (.editorconfig, Makefile)
+- No high-level architecture documentation
+- docs/ directory has flat structure (no logical grouping)
+
+**Impact:**
+- Harder for new contributors to find relevant documentation
+- Cluttered appearance reduces professionalism
+- Missing convenience files slows down common development tasks
+- No clear documentation hierarchy
+
+### Current State
+
+```
+sdd/
+├── README.md
+├── CHANGELOG.md
+├── ROADMAP.md              ← Should be in docs/
+├── BUGS.md                 ← Should be in docs/
+├── ENHANCEMENTS.md         ← Should be in docs/
+├── NOTES.md                ← Should be in docs/
+├── SECURITY.md             ← Should be in docs/
+├── CONTRIBUTING.md
+├── LICENSE
+├── docs/
+│   ├── session-driven-development.md
+│   ├── ai-augmented-solo-framework.md
+│   ├── implementation-insights.md
+│   ├── writing-specs.md
+│   ├── configuration.md
+│   ├── troubleshooting.md
+│   ├── learning-system.md
+│   ├── spec-template-structure.md
+│   └── commands/           ← Only organized subdirectory
+```
+
+Missing files:
+- No .editorconfig (editor consistency)
+- No Makefile (common development tasks)
+- No docs/ARCHITECTURE.md (high-level overview)
+- No docs/README.md (documentation index)
+
+### Proposed Solution
+
+#### 1. Reorganize Documentation Structure
+
+Create logical subdirectories in docs/:
+
+```
+docs/
+├── README.md                    # NEW: Documentation index
+├── ARCHITECTURE.md              # NEW: High-level architecture overview
+├── SECURITY.md                  # MOVED from root
+├── project/                     # NEW: Project management docs
+│   ├── ROADMAP.md              # MOVED from root
+│   ├── BUGS.md                 # MOVED from root
+│   └── ENHANCEMENTS.md         # MOVED from root
+├── development/                 # NEW: Development notes
+│   └── NOTES.md                # MOVED from root
+├── guides/                      # NEW: User guides
+│   ├── getting-started.md      # NEW: Extract from README
+│   ├── writing-specs.md        # MOVED from docs/
+│   ├── configuration.md        # MOVED from docs/
+│   └── troubleshooting.md      # MOVED from docs/
+├── architecture/                # NEW: Architecture docs
+│   ├── session-driven-development.md   # MOVED from docs/
+│   ├── ai-augmented-solo-framework.md  # MOVED from docs/
+│   └── implementation-insights.md       # MOVED from docs/
+├── reference/                   # NEW: Reference documentation
+│   ├── learning-system.md      # MOVED from docs/
+│   └── spec-template-structure.md  # MOVED from docs/
+└── commands/                    # KEEP: Command documentation
+```
+
+#### 2. Add Missing Project Files
+
+**Create .editorconfig:**
+```ini
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{py,md,json,yaml,yml}]
+indent_style = space
+indent_size = 4
+
+[*.{json,yaml,yml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+```
+
+**Create Makefile:**
+```makefile
+.PHONY: help install test lint format clean build
+
+help:  ## Show this help message
+	@echo 'Usage: make [target]'
+	@echo ''
+	@echo 'Available targets:'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
+
+install:  ## Install package in development mode
+	pip install -e .
+
+install-dev:  ## Install with development dependencies
+	pip install -e ".[dev]"
+
+test:  ## Run all tests
+	pytest tests/ -v
+
+test-coverage:  ## Run tests with coverage report
+	pytest tests/ --cov=scripts --cov-report=html --cov-report=term
+
+lint:  ## Run code linter
+	ruff check scripts/ tests/
+
+format:  ## Format code automatically
+	ruff format scripts/ tests/
+
+clean:  ## Clean build artifacts and cache files
+	rm -rf build/ dist/ *.egg-info/
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name '*.pyc' -delete
+	rm -rf .pytest_cache/ .ruff_cache/ htmlcov/
+
+build:  ## Build package distribution
+	python -m build
+```
+
+**Create docs/ARCHITECTURE.md:**
+High-level system architecture overview with component diagrams, data flow, and design principles.
+
+**Create docs/README.md:**
+Documentation index with organized links to all documentation sections.
+
+#### 3. Update All References
+
+Files with references that need updating:
+- **README.md**: Update links to ROADMAP.md, SECURITY.md, and all docs/ links
+- **CHANGELOG.md**: Update references to ROADMAP.md
+- **CONTRIBUTING.md**: Update all docs/ references to new structure
+- **Other markdown files**: Check for cross-references
+
+#### 4. Improve .gitignore
+
+Verify all runtime artifacts are properly excluded:
+```gitignore
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+.venv/
+```
+
+### Benefits
+
+- ✅ **Cleaner root directory** - Reduces from 10 files to 4 essential files (README, CHANGELOG, CONTRIBUTING, LICENSE)
+- ✅ **Better discoverability** - Logical grouping makes docs easier to find
+- ✅ **Professional appearance** - Follows industry best practices
+- ✅ **Developer convenience** - Makefile provides quick access to common tasks
+- ✅ **Editor consistency** - .editorconfig ensures consistent formatting across team
+- ✅ **Documentation hierarchy** - Clear organization from getting started to advanced topics
+- ✅ **Zero code changes** - No risk of breaking existing functionality
+- ✅ **GitHub compatibility** - SECURITY.md works from docs/ directory
+
+### Implementation Tasks
+
+**File Moves:**
+- [ ] Create docs/ subdirectories (project/, development/, guides/, architecture/, reference/)
+- [ ] Move ROADMAP.md → docs/project/ROADMAP.md
+- [ ] Move BUGS.md → docs/project/BUGS.md
+- [ ] Move ENHANCEMENTS.md → docs/project/ENHANCEMENTS.md
+- [ ] Move NOTES.md → docs/development/NOTES.md
+- [ ] Move SECURITY.md → docs/SECURITY.md
+- [ ] Move writing-specs.md → docs/guides/writing-specs.md
+- [ ] Move configuration.md → docs/guides/configuration.md
+- [ ] Move troubleshooting.md → docs/guides/troubleshooting.md
+- [ ] Move session-driven-development.md → docs/architecture/session-driven-development.md
+- [ ] Move ai-augmented-solo-framework.md → docs/architecture/ai-augmented-solo-framework.md
+- [ ] Move implementation-insights.md → docs/architecture/implementation-insights.md
+- [ ] Move learning-system.md → docs/reference/learning-system.md
+- [ ] Move spec-template-structure.md → docs/reference/spec-template-structure.md
+
+**New Files:**
+- [ ] Create .editorconfig with standard settings
+- [ ] Create Makefile with common development tasks
+- [ ] Create docs/ARCHITECTURE.md with high-level overview
+- [ ] Create docs/README.md as documentation index
+- [ ] Create docs/guides/getting-started.md (extract from README if needed)
+
+**Reference Updates:**
+- [ ] Update README.md - Fix all docs/ links to new structure
+- [ ] Update README.md - Fix ROADMAP.md and SECURITY.md links
+- [ ] Update CHANGELOG.md - Fix ROADMAP.md references
+- [ ] Update CONTRIBUTING.md - Fix all docs/ references
+- [ ] Search all .md files for broken links and update
+
+**Validation:**
+- [ ] Run `pytest tests/` to ensure nothing broke
+- [ ] Check all markdown links work (use link checker or manual verification)
+- [ ] Verify GitHub can find SECURITY.md (GitHub checks docs/ automatically)
+- [ ] Test Makefile targets (make help, make test, make lint, etc.)
+- [ ] Verify .editorconfig is recognized by common editors
+
+**.gitignore Improvements:**
+- [ ] Review .gitignore for any missing patterns
+- [ ] Add any OS-specific files not already covered
+- [ ] Ensure all build/test artifacts are excluded
+
+### Files Affected
+
+**Moved:**
+- ROADMAP.md
+- BUGS.md
+- ENHANCEMENTS.md
+- NOTES.md
+- SECURITY.md
+- docs/writing-specs.md
+- docs/configuration.md
+- docs/troubleshooting.md
+- docs/session-driven-development.md
+- docs/ai-augmented-solo-framework.md
+- docs/implementation-insights.md
+- docs/learning-system.md
+- docs/spec-template-structure.md
+
+**Created:**
+- .editorconfig
+- Makefile
+- docs/README.md
+- docs/ARCHITECTURE.md
+- docs/guides/getting-started.md (optional)
+
+**Modified (reference updates):**
+- README.md
+- CHANGELOG.md
+- CONTRIBUTING.md
+- Potentially other .md files with cross-references
+
+### Estimated Effort
+
+**Time:** 20-30 minutes
+
+**Complexity:** Low - Simple file moves and additions, no code changes
+
+**Risk:** Very low - No code changes, only documentation reorganization
+
+### Dependencies
+
+**None** - This enhancement is independent and can be implemented immediately.
+
+**Enables:**
+- Sets foundation for cleaner project structure
+- Prepares for Phase 2 (test reorganization)
+- Establishes documentation patterns for future additions
+
+### Testing Strategy
+
+1. **Before making changes:**
+   - Run full test suite: `pytest tests/` (establish baseline)
+   - Document current test count and status
+
+2. **After making changes:**
+   - Run full test suite again: `pytest tests/`
+   - Verify same number of tests pass
+   - Check no new failures introduced
+
+3. **Documentation validation:**
+   - Manually check key documentation links
+   - Verify GitHub renders SECURITY.md properly
+   - Test Makefile commands in clean environment
+
+4. **Git validation:**
+   - Ensure git history tracks file moves properly
+   - Verify no files accidentally deleted
+   - Check .gitignore excludes all runtime artifacts
+
+---
+
+## Enhancement #8: Phase 2 - Test Suite Reorganization
+
+**Status:** 🔵 IDENTIFIED
+
+**Discovered:** 2025-10-24 (Project structure review)
+
+### Problem
+
+The current test suite is organized by development phases (phase_1, phase_2, ..., phase_5_7), which made sense during incremental development but creates challenges for long-term maintenance:
+
+**Current issues:**
+- **Hard to navigate** - New contributors don't know which phase contains which functionality
+- **No semantic organization** - Tests grouped by when they were written, not what they test
+- **Doesn't match typical Python projects** - Most Python projects use unit/integration/e2e structure
+- **Difficult to run specific test types** - Can't easily run "all unit tests" or "all integration tests"
+- **Discovery problems** - Finding tests for a specific module requires searching multiple phase directories
+
+**Impact:**
+- **Onboarding friction** - New contributors struggle to find relevant tests
+- **Maintenance difficulty** - Adding tests for existing modules means choosing arbitrary phase
+- **Test organization entropy** - No clear guideline where new tests should go
+- **Coverage analysis complexity** - Hard to identify coverage gaps by domain
+
+### Current State
+
+```
+tests/
+├── phase_1/
+│   └── test_phase_1_complete.py          (6 tests - Init workflow)
+├── phase_2/
+│   └── test_phase_2_complete.py          (9 tests - Work items)
+├── phase_3/
+│   └── test_phase_3_complete.py          (11 tests - Dependency graph)
+├── phase_4/
+│   └── test_phase_4_complete.py          (12 tests - Learning system)
+├── phase_5/
+│   └── test_phase_5_complete.py          (12 tests - Quality gates)
+├── phase_5_5/
+│   ├── test_phase_5_5_1.py through 7.py  (178 tests - Integration testing)
+├── phase_5_6/
+│   ├── test_phase_5_6_1.py through 5.py  (65 tests - Deployment)
+├── phase_5_7/
+│   ├── test_phase_5_7_1.py through 6.py  (49 tests - Spec-first)
+├── test_config_validation.py             (Orphaned in root)
+├── test_gitignore_os_patterns.py         (Orphaned in root)
+├── test_logging.py                       (Orphaned in root)
+├── test_sdd_setup.py                     (Orphaned in root)
+└── test_session_validate.py              (Orphaned in root)
+```
+
+**Total:** 392 tests across 24 files
+
+### Proposed Solution
+
+Reorganize tests by **domain and test type** instead of development phase:
+
+```
+tests/
+├── conftest.py                           # NEW: Shared fixtures and test utilities
+├── unit/                                 # NEW: Fast, isolated unit tests
+│   ├── test_work_item_manager.py        # Work item CRUD operations
+│   ├── test_learning_curator.py         # Learning categorization, deduplication
+│   ├── test_dependency_graph.py         # Graph algorithms, critical path
+│   ├── test_spec_parser.py              # Spec parsing and validation
+│   ├── test_spec_validator.py           # Spec completeness checks
+│   ├── test_quality_gates.py            # Individual gate logic
+│   ├── test_git_integration.py          # Git operations
+│   ├── test_config_validation.py        # Config schema validation
+│   ├── test_logging.py                  # Logging configuration
+│   └── test_file_ops.py                 # File operations utilities
+├── integration/                          # NEW: Multi-component integration tests
+│   ├── test_session_workflow.py         # start → work → end workflow
+│   ├── test_quality_pipeline.py         # Full quality gate pipeline
+│   ├── test_learning_extraction.py      # Learning extraction from commits/code
+│   ├── test_work_item_lifecycle.py      # Work item creation → completion
+│   ├── test_briefing_generation.py      # Briefing with all components
+│   ├── test_deployment_workflow.py      # Deployment spec → execution
+│   └── test_git_workflow.py             # Git integration end-to-end
+├── e2e/                                  # NEW: Full end-to-end workflows
+│   ├── test_init_to_complete.py         # sdd init → work → end (complete flow)
+│   ├── test_multi_session_workflow.py   # Multiple sessions on same work item
+│   └── test_feature_complete_workflow.py # Feature spec → implementation → completion
+├── fixtures/                             # NEW: Test data and fixtures
+│   ├── sample_work_items.json
+│   ├── sample_learnings.json
+│   ├── sample_specs/
+│   └── mock_repos/
+└── legacy/                               # Keep phase tests for reference/regression
+    ├── phase_1/
+    ├── phase_2/
+    ├── phase_3/
+    ├── phase_4/
+    ├── phase_5/
+    ├── phase_5_5/
+    ├── phase_5_6/
+    └── phase_5_7/
+```
+
+#### Migration Strategy
+
+**Step 1: Create new structure**
+- Create unit/, integration/, e2e/, fixtures/, legacy/ directories
+- Move existing phase tests to legacy/ (preserve for regression)
+
+**Step 2: Extract and reorganize tests**
+For each domain (work_items, learning, quality_gates, etc.):
+- Extract unit tests from phase tests
+- Group by module under test
+- Create integration tests for multi-component scenarios
+- Create e2e tests for complete workflows
+
+**Step 3: Create shared fixtures**
+- Extract common setup code to conftest.py
+- Create reusable fixtures for temporary directories, mock repos, sample data
+- Reduce code duplication across tests
+
+**Step 4: Update imports**
+- Update test imports to match new structure
+- Update pytest configuration in pyproject.toml
+- Ensure test discovery still works
+
+**Step 5: Validate and clean up**
+- Run full test suite to ensure all tests still pass
+- Verify test count matches (392 tests)
+- Once validated, can optionally remove legacy/ tests (or keep for safety)
+
+### Benefits
+
+- ✅ **Better organization** - Tests grouped by what they test, not when written
+- ✅ **Easier navigation** - Clear semantic structure (unit/integration/e2e)
+- ✅ **Faster test execution** - Can run unit tests only for quick feedback
+- ✅ **Better for contributors** - Industry-standard structure familiar to Python developers
+- ✅ **Improved coverage analysis** - Easy to see coverage by domain
+- ✅ **Clearer test purpose** - Test type (unit/integration/e2e) indicates scope
+- ✅ **Reduced duplication** - Shared fixtures in conftest.py
+- ✅ **Selective test runs** - `pytest tests/unit/` or `pytest tests/integration/`
+
+### Implementation Tasks
+
+**Directory Structure:**
+- [ ] Create tests/unit/ directory
+- [ ] Create tests/integration/ directory
+- [ ] Create tests/e2e/ directory
+- [ ] Create tests/fixtures/ directory
+- [ ] Create tests/legacy/ directory
+- [ ] Create tests/conftest.py with shared fixtures
+
+**Move Phase Tests to Legacy:**
+- [ ] Move tests/phase_1/ → tests/legacy/phase_1/
+- [ ] Move tests/phase_2/ → tests/legacy/phase_2/
+- [ ] Move tests/phase_3/ → tests/legacy/phase_3/
+- [ ] Move tests/phase_4/ → tests/legacy/phase_4/
+- [ ] Move tests/phase_5/ → tests/legacy/phase_5/
+- [ ] Move tests/phase_5_5/ → tests/legacy/phase_5_5/
+- [ ] Move tests/phase_5_6/ → tests/legacy/phase_5_6/
+- [ ] Move tests/phase_5_7/ → tests/legacy/phase_5_7/
+
+**Create Unit Tests (extract from phase tests):**
+- [ ] Create test_work_item_manager.py (from phase_2, phase_5_7)
+- [ ] Create test_learning_curator.py (from phase_4)
+- [ ] Create test_dependency_graph.py (from phase_3)
+- [ ] Create test_spec_parser.py (from phase_5_7)
+- [ ] Create test_spec_validator.py (from phase_5_7)
+- [ ] Create test_quality_gates.py (from phase_5)
+- [ ] Create test_git_integration.py (from phase_1, phase_5)
+- [ ] Move test_config_validation.py → tests/unit/
+- [ ] Move test_logging.py → tests/unit/
+- [ ] Create test_file_ops.py
+
+**Create Integration Tests:**
+- [ ] Create test_session_workflow.py (from phase_1 complete workflow tests)
+- [ ] Create test_quality_pipeline.py (from phase_5, phase_5_5)
+- [ ] Create test_learning_extraction.py (from phase_4)
+- [ ] Create test_work_item_lifecycle.py (from phase_2, phase_5_7)
+- [ ] Create test_briefing_generation.py (from phase_1, phase_5_7)
+- [ ] Create test_deployment_workflow.py (from phase_5_6)
+- [ ] Create test_git_workflow.py (from phase_1, phase_5)
+
+**Create E2E Tests:**
+- [ ] Create test_init_to_complete.py (full SDD workflow)
+- [ ] Create test_multi_session_workflow.py (multiple sessions)
+- [ ] Create test_feature_complete_workflow.py (from phase_5_7 complete tests)
+
+**Create Shared Fixtures:**
+- [ ] Extract common setup to conftest.py
+- [ ] Create sample data fixtures (work_items, learnings, specs)
+- [ ] Create mock repository fixtures
+- [ ] Create temporary directory fixtures
+
+**Update Configuration:**
+- [ ] Update pyproject.toml [tool.pytest.ini_options]
+- [ ] Update test discovery patterns
+- [ ] Add test markers for unit/integration/e2e
+
+**Validation:**
+- [ ] Run `pytest tests/unit/` - verify all unit tests pass
+- [ ] Run `pytest tests/integration/` - verify all integration tests pass
+- [ ] Run `pytest tests/e2e/` - verify all e2e tests pass
+- [ ] Run `pytest tests/` - verify total test count is 392
+- [ ] Run `pytest tests/legacy/` - verify legacy tests still pass (regression check)
+- [ ] Verify test coverage is maintained or improved
+
+**Documentation:**
+- [ ] Update CONTRIBUTING.md with new test structure
+- [ ] Add test writing guidelines (where to put new tests)
+- [ ] Update README.md test structure documentation
+
+**Optional Cleanup:**
+- [ ] After validation, decide whether to keep or remove legacy/ tests
+- [ ] Document decision in NOTES.md or ARCHITECTURE.md
+
+### Files Affected
+
+**All test files** (24 files) will be moved or reorganized:
+- tests/phase_*/test_*.py → tests/legacy/phase_*/
+- New domain-based test files in unit/, integration/, e2e/
+
+**Configuration files:**
+- pyproject.toml (pytest configuration)
+- CONTRIBUTING.md (test guidelines)
+- README.md (test documentation)
+
+### Estimated Effort
+
+**Time:** 2-4 hours (careful extraction and validation required)
+
+**Complexity:** Medium - Requires careful test extraction and import updates
+
+**Risk:** Low-Medium - All changes are test-only, no production code affected. Legacy tests provide safety net.
+
+### Dependencies
+
+**Depends on:** None - Can be done independently
+
+**Enables:**
+- Better test organization for future development
+- Easier test maintenance and contribution
+- Foundation for Phase 3 (when src/ layout is implemented, tests will already be organized properly)
+
+### Testing Strategy
+
+1. **Preserve legacy tests first** - Move all phase tests to legacy/ before any extraction
+2. **Extract incrementally** - Do one domain at a time (work_items, then learning, etc.)
+3. **Run tests after each extraction** - Ensure new tests pass and match coverage
+4. **Keep running total** - Track test count to ensure all 392 tests are preserved
+5. **Use legacy as regression check** - Keep legacy tests until new organization is proven stable
+
+### Migration Script Approach
+
+Consider creating a migration script to help with the reorganization:
+
+```python
+# scripts/migrate_tests.py
+
+"""
+Helper script to migrate tests from phase-based to domain-based structure.
+Analyzes phase tests and suggests which domain tests they belong in.
+"""
+
+def analyze_test_file(file_path):
+    """Analyze a test file and suggest target domain."""
+    # Read file, analyze imports and test names
+    # Suggest: unit/test_work_item_manager.py or integration/test_session_workflow.py
+    pass
+
+def extract_tests(source, target):
+    """Extract specific tests from source file to target file."""
+    pass
+
+if __name__ == "__main__":
+    # Analyze all phase tests
+    # Generate migration plan
+    # Optionally execute migration
+    pass
+```
+
+---
+
+## Enhancement #9: Phase 3 - Complete Phase 5.9 (src/ Layout Transition)
+
+**Status:** 🔵 IDENTIFIED
+
+**Discovered:** 2025-10-24 (Aligns with ROADMAP.md Phase 5.9)
+
+**Related:** ROADMAP.md Phase 5.9 - Package Structure Refactoring
+
+### Problem
+
+The current codebase uses a **hybrid packaging approach** (documented in README Architecture Notes) that works but has technical debt:
+
+**Current issues:**
+1. **Flat scripts/ directory** - All 23 Python modules at root level, no logical grouping
+2. **sys.path manipulation** - 38 files use `sys.path.insert(0, ...)` to handle imports
+3. **Non-standard structure** - Doesn't follow Python packaging best practices
+4. **Import inconsistencies** - Mix of `from scripts.X import Y` patterns
+5. **sdd_cli.py at root** - Should be part of package structure
+
+**From ROADMAP Phase 5.9:**
+```
+Planned Refactoring (Phase 5.9):
+- 🔄 Move scripts/ → sdd/scripts/
+- 🔄 Move sdd_cli.py → sdd/cli.py
+- 🔄 Remove all sys.path manipulation (38 files)
+- 🔄 Update imports to use from sdd.scripts.X pattern
+- 🔄 Full compliance with Python packaging standards
+```
+
+**Impact:**
+- **Maintainability** - Current structure requires understanding of sys.path hacks
+- **Contributor friction** - Non-standard imports confuse new contributors
+- **Package distribution** - Works but not ideal for PyPI distribution
+- **IDE support** - Some IDEs struggle with current import patterns
+- **Testing complexity** - Tests must account for sys.path manipulation
+
+### Current State
+
+```
+sdd/
+├── sdd_cli.py                  ← Should be sdd/cli.py
+├── scripts/                    ← Should be sdd/scripts/ or sdd/core/
+│   ├── __init__.py
+│   ├── work_item_manager.py   ← Uses sys.path
+│   ├── learning_curator.py    ← Uses sys.path
+│   ├── quality_gates.py       ← Uses sys.path
+│   └── ... (23 files total)   ← All use sys.path
+├── templates/                  ← Should be sdd/templates/
+├── tests/                      ← OK as is
+├── docs/                       ← OK as is
+├── pyproject.toml
+└── setup.py
+```
+
+**Current pyproject.toml:**
+```toml
+[project.scripts]
+sdd = "sdd_cli:main"
+
+[tool.setuptools]
+py-modules = ["sdd_cli"]
+packages = ["scripts", "templates"]
+```
+
+**Current import pattern (in 38 files):**
+```python
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from scripts.work_item_manager import WorkItemManager
+from scripts.quality_gates import QualityGates
+```
+
+### Proposed Solution
+
+Transition to **standard Python src/ layout** following best practices:
+
+```
+sdd/
+├── src/
+│   └── sdd/
+│       ├── __init__.py
+│       ├── __version__.py          # NEW: Version management
+│       ├── cli.py                  # MOVED from sdd_cli.py
+│       ├── core/                   # NEW: Core functionality
+│       │   ├── __init__.py
+│       │   ├── file_ops.py        # FROM scripts/
+│       │   ├── logging_config.py  # FROM scripts/
+│       │   └── config_validator.py # FROM scripts/
+│       ├── session/                # NEW: Session management
+│       │   ├── __init__.py
+│       │   ├── complete.py        # FROM scripts/session_complete.py
+│       │   ├── status.py          # FROM scripts/session_status.py
+│       │   ├── validate.py        # FROM scripts/session_validate.py
+│       │   └── briefing.py        # FROM scripts/briefing_generator.py
+│       ├── work_items/             # NEW: Work item management
+│       │   ├── __init__.py
+│       │   ├── manager.py         # FROM scripts/work_item_manager.py
+│       │   ├── spec_parser.py     # FROM scripts/
+│       │   └── spec_validator.py  # FROM scripts/
+│       ├── learning/               # NEW: Learning system
+│       │   ├── __init__.py
+│       │   └── curator.py         # FROM scripts/learning_curator.py
+│       ├── quality/                # NEW: Quality gates
+│       │   ├── __init__.py
+│       │   ├── gates.py           # FROM scripts/quality_gates.py
+│       │   ├── env_validator.py   # FROM scripts/environment_validator.py
+│       │   └── api_validator.py   # FROM scripts/api_contract_validator.py
+│       ├── visualization/          # NEW: Visualization
+│       │   ├── __init__.py
+│       │   └── dependency_graph.py # FROM scripts/
+│       ├── git/                    # NEW: Git integration
+│       │   ├── __init__.py
+│       │   └── integration.py     # FROM scripts/git_integration.py
+│       ├── testing/                # NEW: Testing utilities
+│       │   ├── __init__.py
+│       │   ├── integration_runner.py  # FROM scripts/integration_test_runner.py
+│       │   └── performance.py     # FROM scripts/performance_benchmark.py
+│       ├── deployment/             # NEW: Deployment
+│       │   ├── __init__.py
+│       │   └── executor.py        # FROM scripts/deployment_executor.py
+│       ├── project/                # NEW: Project management
+│       │   ├── __init__.py
+│       │   ├── init.py            # FROM scripts/init_project.py
+│       │   ├── stack.py           # FROM scripts/generate_stack.py
+│       │   ├── tree.py            # FROM scripts/generate_tree.py
+│       │   └── sync_plugin.py     # FROM scripts/sync_to_plugin.py
+│       └── templates/              # MOVED from root templates/
+│           ├── __init__.py
+│           └── ... (all templates)
+├── tests/                          # UNCHANGED (or use tests/ at root)
+├── docs/                           # UNCHANGED
+├── .claude/                        # UNCHANGED (needs command path updates)
+├── pyproject.toml                  # UPDATED
+└── setup.py                        # UPDATED or removed
+```
+
+#### Updated pyproject.toml
+
+```toml
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdd"
+version = "0.6.0"  # Bump for major refactoring
+# ... rest of project metadata ...
+
+[project.scripts]
+sdd = "sdd.cli:main"  # CHANGED from sdd_cli:main
+
+[tool.setuptools]
+package-dir = {"" = "src"}  # NEW: Use src layout
+packages = ["sdd"]           # CHANGED: Just sdd package
+
+[tool.setuptools.package-data]
+"sdd.templates" = ["*.md", "*.json"]  # CHANGED: Templates in package
+```
+
+#### Updated Import Patterns
+
+**Before (current):**
+```python
+# In scripts/session_complete.py
+import sys
+from pathlib import Path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from scripts.work_item_manager import WorkItemManager
+from scripts.quality_gates import QualityGates
+from scripts.file_ops import load_json
+```
+
+**After (standard):**
+```python
+# In src/sdd/session/complete.py
+from sdd.work_items.manager import WorkItemManager
+from sdd.quality.gates import QualityGates
+from sdd.core.file_ops import load_json
+```
+
+**Benefits:**
+- ✅ No sys.path manipulation needed
+- ✅ Standard Python imports
+- ✅ Better IDE autocomplete and type checking
+- ✅ Clearer dependencies and module boundaries
+
+### Benefits
+
+- ✅ **Standard Python packaging** - Follows PEP 517/518 best practices
+- ✅ **No sys.path hacks** - Eliminates all 38 instances of sys.path manipulation
+- ✅ **Better IDE support** - Standard imports work perfectly with IDEs
+- ✅ **Clearer organization** - Modules grouped by domain (session/, work_items/, etc.)
+- ✅ **PyPI-ready** - Proper structure for package distribution
+- ✅ **Better testing** - Tests import from installed package, not sys.path tricks
+- ✅ **Contributor-friendly** - Standard structure familiar to Python developers
+- ✅ **Type checking** - Tools like mypy work better with standard structure
+
+### Implementation Tasks
+
+**Phase 3.1: Create src/ Structure**
+- [ ] Create src/sdd/ directory structure
+- [ ] Create all subdirectories (core/, session/, work_items/, etc.)
+- [ ] Create __init__.py files for all packages
+- [ ] Create src/sdd/__version__.py with version management
+
+**Phase 3.2: Move and Rename Files**
+- [ ] Move sdd_cli.py → src/sdd/cli.py
+- [ ] Move scripts/file_ops.py → src/sdd/core/file_ops.py
+- [ ] Move scripts/logging_config.py → src/sdd/core/logging_config.py
+- [ ] Move scripts/config_validator.py → src/sdd/core/config_validator.py
+- [ ] Move scripts/session_complete.py → src/sdd/session/complete.py
+- [ ] Move scripts/session_status.py → src/sdd/session/status.py
+- [ ] Move scripts/session_validate.py → src/sdd/session/validate.py
+- [ ] Move scripts/briefing_generator.py → src/sdd/session/briefing.py
+- [ ] Move scripts/work_item_manager.py → src/sdd/work_items/manager.py
+- [ ] Move scripts/spec_parser.py → src/sdd/work_items/spec_parser.py
+- [ ] Move scripts/spec_validator.py → src/sdd/work_items/spec_validator.py
+- [ ] Move scripts/learning_curator.py → src/sdd/learning/curator.py
+- [ ] Move scripts/quality_gates.py → src/sdd/quality/gates.py
+- [ ] Move scripts/environment_validator.py → src/sdd/quality/env_validator.py
+- [ ] Move scripts/api_contract_validator.py → src/sdd/quality/api_validator.py
+- [ ] Move scripts/dependency_graph.py → src/sdd/visualization/dependency_graph.py
+- [ ] Move scripts/git_integration.py → src/sdd/git/integration.py
+- [ ] Move scripts/integration_test_runner.py → src/sdd/testing/integration_runner.py
+- [ ] Move scripts/performance_benchmark.py → src/sdd/testing/performance.py
+- [ ] Move scripts/deployment_executor.py → src/sdd/deployment/executor.py
+- [ ] Move scripts/init_project.py → src/sdd/project/init.py
+- [ ] Move scripts/generate_stack.py → src/sdd/project/stack.py
+- [ ] Move scripts/generate_tree.py → src/sdd/project/tree.py
+- [ ] Move scripts/sync_to_plugin.py → src/sdd/project/sync_plugin.py
+- [ ] Move templates/ → src/sdd/templates/
+
+**Phase 3.3: Update All Imports (38+ files)**
+- [ ] Update imports in src/sdd/cli.py
+- [ ] Update imports in all src/sdd/**/*.py files (remove sys.path, use sdd.* imports)
+- [ ] Update test imports (use sdd.* instead of scripts.*)
+- [ ] Update .claude/commands/*.md (if they reference file paths)
+
+**Phase 3.4: Update Configuration**
+- [ ] Update pyproject.toml with src layout
+- [ ] Update pyproject.toml [project.scripts] entry point
+- [ ] Update pyproject.toml package-data for templates
+- [ ] Update or remove setup.py (pyproject.toml preferred)
+- [ ] Update .gitignore if needed
+
+**Phase 3.5: Update Documentation**
+- [ ] Update README.md Architecture Notes section (remove hybrid approach note)
+- [ ] Update CONTRIBUTING.md import patterns
+- [ ] Update ROADMAP.md - Mark Phase 5.9 as complete
+- [ ] Update any other docs referencing scripts/ structure
+
+**Phase 3.6: Validation**
+- [ ] Uninstall old package: `pip uninstall sdd`
+- [ ] Install new package: `pip install -e .`
+- [ ] Verify `sdd` command works
+- [ ] Run full test suite: `pytest tests/`
+- [ ] Verify all 392 tests pass
+- [ ] Test slash commands in Claude Code
+- [ ] Test CLI: `sdd init`, `sdd status`, etc.
+- [ ] Verify package can be built: `python -m build`
+
+**Phase 3.7: Cleanup**
+- [ ] Remove old scripts/ directory (after validation)
+- [ ] Remove old sdd_cli.py (after validation)
+- [ ] Remove old templates/ directory (after validation)
+- [ ] Clean up any backup files
+
+### Files Affected
+
+**Moved/Renamed:**
+- sdd_cli.py → src/sdd/cli.py
+- All 23 files in scripts/ → src/sdd/*/
+- templates/ → src/sdd/templates/
+
+**Modified (import updates):**
+- All 38 files with sys.path manipulation
+- All test files (import path changes)
+- .claude/commands/*.md (if needed)
+
+**Modified (configuration):**
+- pyproject.toml
+- setup.py (or removed)
+- CONTRIBUTING.md
+- README.md
+- ROADMAP.md
+
+**Removed:**
+- scripts/ directory (after migration)
+- sdd_cli.py (after migration)
+- templates/ directory (after migration)
+
+### Estimated Effort
+
+**Time:** 3-5 hours (comprehensive changes requiring careful testing)
+
+**Complexity:** High - Touches all Python files, requires careful import updates
+
+**Risk:** Medium - High impact but well-defined transformation. Tests provide safety net.
+
+### Dependencies
+
+**Depends on:**
+- Enhancement #7 (Phase 1) - Nice to have documentation organized first
+- Enhancement #8 (Phase 2) - Nice to have tests organized before major refactoring
+
+**Blocked by:** None - Can be done independently, but safer after Phases 1 & 2
+
+**Enables:**
+- Proper Python package distribution
+- Better contributor experience
+- Foundation for future modularization
+
+### Testing Strategy
+
+1. **Create feature branch** - Do all work in isolated branch
+2. **Incremental migration** - Move one domain at a time (start with core/, then session/, etc.)
+3. **Test after each domain** - Run tests after moving each subdomain
+4. **Keep scripts/ until validated** - Don't delete old structure until new structure is fully tested
+5. **Full regression** - Run complete test suite before final commit
+6. **Manual CLI testing** - Test all CLI commands work
+7. **Claude Code integration testing** - Test all slash commands work
+
+### Migration Checklist
+
+Before starting:
+- [ ] Create feature branch: `git checkout -b feature/phase-5-9-src-layout`
+- [ ] Ensure all tests pass on main: `pytest tests/`
+- [ ] Document current test count (392 tests)
+
+During migration:
+- [ ] Follow task list above sequentially
+- [ ] Test after each major section
+- [ ] Keep notes of any issues encountered
+
+After migration:
+- [ ] All tests pass: `pytest tests/` (392/392)
+- [ ] CLI works: `sdd --help`, `sdd init`, `sdd status`
+- [ ] Slash commands work in Claude Code
+- [ ] Package builds: `python -m build`
+- [ ] Editable install works: `pip install -e .`
+
+Final steps:
+- [ ] Update CHANGELOG.md with Phase 5.9 completion
+- [ ] Update version to 0.6.0 in pyproject.toml
+- [ ] Commit changes with detailed message
+- [ ] Open PR for review
+- [ ] After PR approval, merge to main
+- [ ] Tag release: `git tag v0.6.0`
+
+### Related Work
+
+**From ROADMAP.md Phase 5.9:**
+This enhancement completes the planned package structure refactoring outlined in the roadmap.
+
+**From CONTRIBUTING.md:**
+Current contributor guide documents the hybrid approach and will be updated to reflect standard Python imports after this enhancement is complete.
+
+**From README.md Architecture Notes:**
+The "Hybrid Packaging Approach" section explains current limitations and points to this enhancement as the solution.
