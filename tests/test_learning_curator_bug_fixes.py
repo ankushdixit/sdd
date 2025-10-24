@@ -236,6 +236,30 @@ class TestContentValidation(unittest.TestCase):
         self.assertFalse(self.curator.is_valid_learning(""))
         self.assertFalse(self.curator.is_valid_learning(None))
 
+    def test_rejects_list_fragments(self):
+        """Test that list fragments from commit messages are rejected"""
+        # Reject hyphen list markers
+        self.assertFalse(
+            self.curator.is_valid_learning("annotations\n- Code comments with enough words")
+        )
+
+        # Reject asterisk list markers
+        self.assertFalse(
+            self.curator.is_valid_learning("Some content\n* List item with enough words")
+        )
+
+        # Reject bullet point markers
+        self.assertFalse(
+            self.curator.is_valid_learning("Fragment text\n• Bullet point with enough words")
+        )
+
+        # Accept multi-line prose (no list markers)
+        self.assertTrue(
+            self.curator.is_valid_learning(
+                "This is a valid multi-line learning\nthat spans multiple lines without list markers"
+            )
+        )
+
 
 class TestStandardizedEntryCreation(unittest.TestCase):
     """Test Bug 3 fix: Standardized learning entry creation"""

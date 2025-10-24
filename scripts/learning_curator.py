@@ -730,6 +730,10 @@ class LearningsCurator:
         if content_stripped.endswith(('")', '";', "`,", "')", "';", "`)", "`,")):
             return False
 
+        # Skip list fragments from commit messages (newline followed by list marker)
+        if "\n- " in content or "\n* " in content or "\n• " in content:
+            return False
+
         # Skip known placeholder text
         content_lower = content.lower().strip()
         placeholders = ["your learning here", "example learning", "todo", "tbd", "placeholder"]
