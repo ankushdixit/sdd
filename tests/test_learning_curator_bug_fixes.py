@@ -236,6 +236,30 @@ class TestContentValidation(unittest.TestCase):
         self.assertFalse(self.curator.is_valid_learning(""))
         self.assertFalse(self.curator.is_valid_learning(None))
 
+    def test_rejects_list_fragments(self):
+        """Test that list fragments from commit messages are rejected"""
+        # Reject hyphen list markers
+        self.assertFalse(
+            self.curator.is_valid_learning("annotations\n- Code comments with enough words")
+        )
+
+        # Reject asterisk list markers
+        self.assertFalse(
+            self.curator.is_valid_learning("Some content\n* List item with enough words")
+        )
+
+        # Reject bullet point markers
+        self.assertFalse(
+            self.curator.is_valid_learning("Fragment text\n• Bullet point with enough words")
+        )
+
+        # Accept multi-line prose (no list markers)
+        self.assertTrue(
+            self.curator.is_valid_learning(
+                "This is a valid multi-line learning\nthat spans multiple lines without list markers"
+            )
+        )
+
 
 class TestStandardizedEntryCreation(unittest.TestCase):
     """Test Bug 3 fix: Standardized learning entry creation"""
@@ -450,6 +474,306 @@ LEARNING: Second learning also with sufficient word count"""
 
         # Should find both learnings
         self.assertEqual(len(matches), 2)
+
+
+class TestTestDirectoryExclusion(unittest.TestCase):
+    """Test Bug #21 Fix 1: Test directories are excluded from learning extraction"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.project_root = Path(self.temp_dir)
+        self.curator = LearningsCurator(self.project_root)
+
+        # Create test directories
+        (self.project_root / "tests").mkdir(exist_ok=True)
+        (self.project_root / "test").mkdir(exist_ok=True)
+        (self.project_root / "__tests__").mkdir(exist_ok=True)
+        (self.project_root / "spec").mkdir(exist_ok=True)
+        (self.project_root / "src").mkdir(exist_ok=True)
+
+        # Create test files in test directories
+        self.tests_file = self.project_root / "tests" / "test_example.py"
+        self.test_file = self.project_root / "test" / "test_example.py"
+        self.jest_file = self.project_root / "__tests__" / "example.test.js"
+        self.spec_file = self.project_root / "spec" / "example_spec.rb"
+
+        # Create production file
+        self.prod_file = self.project_root / "src" / "main.py"
+
+    def test_excludes_tests_directory(self):
+        """Test that tests/ directory is excluded from extraction"""
+        self.tests_file.write_text("# LEARNING: Test data from tests directory with words")
+        self.prod_file.write_text("# LEARNING: Production learning from src directory here")
+
+        learnings = self.curator.extract_from_code_comments(
+            changed_files=[self.tests_file, self.prod_file]
+        )
+
+        # Should only extract from production file
+        self.assertTrue(
+            any("Production learning from src" in entry.get("content", "") for entry in learnings)
+        )
+        self.assertFalse(
+            any("Test data from tests" in entry.get("content", "") for entry in learnings)
+        )
+
+    def test_excludes_test_directory(self):
+        """Test that test/ directory is excluded from extraction"""
+        self.test_file.write_text("# LEARNING: Test data from test directory with words")
+        self.prod_file.write_text("# LEARNING: Production learning from src directory here")
+
+        learnings = self.curator.extract_from_code_comments(
+            changed_files=[self.test_file, self.prod_file]
+        )
+
+        # Should only extract from production file
+        self.assertTrue(
+            any("Production learning from src" in entry.get("content", "") for entry in learnings)
+        )
+        self.assertFalse(
+            any("Test data from test" in entry.get("content", "") for entry in learnings)
+        )
+
+    def test_excludes_jest_tests_directory(self):
+        """Test that __tests__/ directory (JavaScript convention) is excluded"""
+        self.jest_file.write_text("// LEARNING: Test data from jest tests directory here")
+        self.prod_file.write_text("# LEARNING: Production learning from src directory here")
+
+        learnings = self.curator.extract_from_code_comments(
+            changed_files=[self.jest_file, self.prod_file]
+        )
+
+        # Should only extract from production file
+        self.assertTrue(
+            any("Production learning from src" in entry.get("content", "") for entry in learnings)
+        )
+        self.assertFalse(
+            any("Test data from jest" in entry.get("content", "") for entry in learnings)
+        )
+
+    def test_excludes_spec_directory(self):
+        """Test that spec/ directory (RSpec convention) is excluded"""
+        self.spec_file.write_text("# LEARNING: Test data from spec directory with words")
+        self.prod_file.write_text("# LEARNING: Production learning from src directory here")
+
+        learnings = self.curator.extract_from_code_comments(
+            changed_files=[self.spec_file, self.prod_file]
+        )
+
+        # Should only extract from production file
+        self.assertTrue(
+            any("Production learning from src" in entry.get("content", "") for entry in learnings)
+        )
+        self.assertFalse(
+            any("Test data from spec" in entry.get("content", "") for entry in learnings)
+        )
+
+
+class TestCodeArtifactValidation(unittest.TestCase):
+    """Test Bug #21 Fix 2: Content validation rejects code artifacts"""
+
+    def setUp(self):
+        self.curator = LearningsCurator()
+
+    def test_rejects_content_with_quote_paren(self):
+        """Test rejection of content ending with quote-paren from string literals"""
+        artifact_content = 'Valid code learning with enough words here")'
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_rejects_content_with_escaped_quote(self):
+        """Test rejection of content with escaped quotes"""
+        artifact_content = 'Learning with \\" escaped quote and words'
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_rejects_content_with_visible_newline(self):
+        """Test rejection of content with visible \\n escape sequences"""
+        artifact_content = "Learning with \\n visible newline and more words"
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_rejects_content_with_backticks(self):
+        """Test rejection of content with backticks (code fragments)"""
+        artifact_content = "Learning with `code` backticks and more words"
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_rejects_content_ending_with_quote_semicolon(self):
+        """Test rejection of content ending with quote-semicolon"""
+        artifact_content = 'Valid learning with enough words here";'
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_rejects_content_with_single_quote_paren(self):
+        """Test rejection of content ending with single-quote-paren"""
+        artifact_content = "Valid learning with enough words here')"
+        self.assertFalse(self.curator.is_valid_learning(artifact_content))
+
+    def test_accepts_clean_valid_learning(self):
+        """Test that clean valid learnings are still accepted"""
+        clean_content = "This is a clean learning with no code artifacts"
+        self.assertTrue(self.curator.is_valid_learning(clean_content))
+
+    def test_accepts_learning_with_normal_punctuation(self):
+        """Test that learnings with normal punctuation are accepted"""
+        normal_content = "Learning with normal punctuation: commas, periods, and more."
+        self.assertTrue(self.curator.is_valid_learning(normal_content))
+
+
+class TestRegexPatternStrictness(unittest.TestCase):
+    """Test Bug #21 Fix 3: Regex pattern only matches actual comment lines"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.project_root = Path(self.temp_dir)
+        self.curator = LearningsCurator(self.project_root)
+
+        # Create test file
+        (self.project_root / "src").mkdir(exist_ok=True)
+        self.test_file = self.project_root / "src" / "test.py"
+
+    def test_extracts_actual_comment(self):
+        """Test that actual # LEARNING comments are extracted"""
+        code = """# LEARNING: This is an actual comment with words
+def foo():
+    pass
+"""
+        self.test_file.write_text(code)
+        learnings = self.curator.extract_from_code_comments(changed_files=[self.test_file])
+
+        self.assertEqual(len(learnings), 1)
+        self.assertIn("actual comment", learnings[0]["content"])
+
+    def test_extracts_indented_comment(self):
+        """Test that indented # LEARNING comments are extracted"""
+        code = """def foo():
+    # LEARNING: Indented learning comment with enough words here
+    pass
+"""
+        self.test_file.write_text(code)
+        learnings = self.curator.extract_from_code_comments(changed_files=[self.test_file])
+
+        self.assertEqual(len(learnings), 1)
+        self.assertIn("Indented learning", learnings[0]["content"])
+
+    def test_does_not_extract_string_literal(self):
+        """Test that string literals containing LEARNING pattern are NOT extracted"""
+        code = """def test_example():
+    test_data = "# LEARNING: This is test data not comment"
+    file.write_text("# LEARNING: Another test string with enough words here")
+"""
+        self.test_file.write_text(code)
+        learnings = self.curator.extract_from_code_comments(changed_files=[self.test_file])
+
+        # Should not extract any learnings from string literals
+        self.assertEqual(len(learnings), 0)
+
+    def test_does_not_extract_learning_in_middle_of_line(self):
+        """Test that LEARNING pattern not at line start is NOT extracted"""
+        code = """def foo():
+    x = "some string # LEARNING: This should not be extracted ever"
+"""
+        self.test_file.write_text(code)
+        learnings = self.curator.extract_from_code_comments(changed_files=[self.test_file])
+
+        self.assertEqual(len(learnings), 0)
+
+    def test_extracts_multiple_actual_comments(self):
+        """Test that multiple actual comments are all extracted"""
+        code = """# LEARNING: First learning comment with enough words here
+def foo():
+    # LEARNING: Second learning comment also with enough words
+    pass
+
+# LEARNING: Third learning comment at end with words
+"""
+        self.test_file.write_text(code)
+        learnings = self.curator.extract_from_code_comments(changed_files=[self.test_file])
+
+        self.assertEqual(len(learnings), 3)
+        self.assertTrue(any("First learning" in entry["content"] for entry in learnings))
+        self.assertTrue(any("Second learning" in entry["content"] for entry in learnings))
+        self.assertTrue(any("Third learning" in entry["content"] for entry in learnings))
+
+
+class TestBug21Integration(unittest.TestCase):
+    """Integration test for Bug #21: All three fixes working together"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.project_root = Path(self.temp_dir)
+        self.curator = LearningsCurator(self.project_root)
+
+        # Create directories
+        (self.project_root / "tests").mkdir(exist_ok=True)
+        (self.project_root / "src").mkdir(exist_ok=True)
+
+    def test_full_bug_scenario(self):
+        """Test the full bug scenario: test file with string literals should extract nothing"""
+        # This is the exact scenario from the bug report
+        test_file = self.project_root / "tests" / "test_learning_curator_bug_fixes.py"
+        test_content = """def test_example():
+    test_data = "# LEARNING: This is test data"
+    file.write_text("# LEARNING: Valid code learning with enough words here")
+    assert test_data
+"""
+        test_file.write_text(test_content)
+
+        learnings = self.curator.extract_from_code_comments(changed_files=[test_file])
+
+        # Should extract NOTHING from test file (directory excluded + string literals)
+        self.assertEqual(len(learnings), 0)
+
+    def test_production_code_still_works(self):
+        """Test that production code with real comments still works correctly"""
+        prod_file = self.project_root / "src" / "main.py"
+        prod_content = """# LEARNING: Production learning comment with enough words
+
+def important_function():
+    # LEARNING: Another production learning with sufficient word count
+    pass
+"""
+        prod_file.write_text(prod_content)
+
+        learnings = self.curator.extract_from_code_comments(changed_files=[prod_file])
+
+        # Should extract both production learnings
+        self.assertEqual(len(learnings), 2)
+        self.assertTrue(
+            any("Production learning comment" in entry["content"] for entry in learnings)
+        )
+        self.assertTrue(
+            any("Another production learning" in entry["content"] for entry in learnings)
+        )
+
+    def test_mixed_scenario(self):
+        """Test mixed scenario with test files and production files"""
+        test_file = self.project_root / "tests" / "test_example.py"
+        test_file.write_text('file.write_text("# LEARNING: Test data with enough words here")')
+
+        prod_file = self.project_root / "src" / "main.py"
+        prod_file.write_text("# LEARNING: Real production learning with enough words")
+
+        learnings = self.curator.extract_from_code_comments(changed_files=[test_file, prod_file])
+
+        # Should only extract from production file
+        self.assertEqual(len(learnings), 1)
+        self.assertIn("Real production learning", learnings[0]["content"])
+
+    def test_no_garbage_entries(self):
+        """Test that no garbage entries with code artifacts are created"""
+        test_file = self.project_root / "tests" / "test.py"
+        test_file.write_text('x = "# LEARNING: annotations\\n- Code comments with words")')
+
+        learnings = self.curator.extract_from_code_comments(changed_files=[test_file])
+
+        # Should be empty (test directory excluded)
+        self.assertEqual(len(learnings), 0)
+
+        # Even if we bypass directory check, content validation should reject it
+        prod_file = self.project_root / "src" / "broken.py"
+        prod_file.write_text('x = "# LEARNING: Valid code learning with enough words here")')
+
+        learnings = self.curator.extract_from_code_comments(changed_files=[prod_file])
+
+        # Should be empty (regex won't match string literals anymore)
+        self.assertEqual(len(learnings), 0)
 
 
 if __name__ == "__main__":

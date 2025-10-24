@@ -660,11 +660,13 @@ class LearningsCurator:
                 changed_files = []
 
         learnings = []
-        learning_pattern = r"#\s*LEARNING:\s*(.+?)$"
+        # Pattern must match actual comment lines (starting with #), not string literals
+        learning_pattern = r"^\s*#\s*LEARNING:\s*(.+?)$"
 
         # Only scan actual code files, not documentation
         code_extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs"}
         doc_extensions = {".md", ".txt", ".rst"}
+        excluded_dirs = {"examples", "templates", "tests", "test", "__tests__", "spec"}
 
         for file_path in changed_files:
             if not file_path.exists() or not file_path.is_file():
@@ -674,8 +676,8 @@ class LearningsCurator:
             if file_path.suffix in doc_extensions:
                 continue
 
-            # Skip example/template directories
-            if "examples" in file_path.parts or "templates" in file_path.parts:
+            # Skip example/template/test directories
+            if any(excluded_dir in file_path.parts for excluded_dir in excluded_dirs):
                 continue
 
             # Only process code files
@@ -716,6 +718,20 @@ class LearningsCurator:
 
         # Skip placeholders and examples (content with angle brackets)
         if "<" in content or ">" in content:
+            return False
+
+        # Skip content with code syntax artifacts (from string literals or code fragments)
+        code_artifacts = ['")', '\\"', "\\n", "`", "')", "');", '");', "`,"]
+        if any(artifact in content for artifact in code_artifacts):
+            return False
+
+        # Skip if content ends with code syntax patterns
+        content_stripped = content.strip()
+        if content_stripped.endswith(('")', '";', "`,", "')", "';", "`)", "`,")):
+            return False
+
+        # Skip list fragments from commit messages (newline followed by list marker)
+        if "\n- " in content or "\n* " in content or "\n• " in content:
             return False
 
         # Skip known placeholder text
