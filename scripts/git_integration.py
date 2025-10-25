@@ -22,6 +22,7 @@ class GitWorkflow:
     """Manage git workflow for sessions."""
 
     def __init__(self, project_root: Path = None):
+        """Initialize GitWorkflow with project root path."""
         self.project_root = project_root or Path.cwd()
         self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
         self.config_file = self.project_root / ".session" / "config.json"

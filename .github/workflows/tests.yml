@@ -1,7 +1,11 @@
 name: Tests
 
 on:
-  workflow_dispatch:  # Manual trigger only - tests run locally during sdd validate
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger option
 
 jobs:
   test:
@@ -29,7 +33,9 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest tests/ -v --tb=short
+        # Skip e2e tests in CI - they run full CLI commands and take 4-8 minutes
+        # E2E tests should be run locally before commits
+        pytest tests/unit tests/integration -v --tb=short
 
     - name: Upload test results
       if: always()
@@ -126,7 +132,8 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest tests/ --cov=scripts --cov-report=xml --cov-report=term
+        # Skip e2e tests in CI - they run full CLI commands and take 4-8 minutes
+        pytest tests/unit tests/integration --cov=scripts --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

@@ -24,6 +24,7 @@ class SessionValidator:
     """Validate session readiness for completion."""
 
     def __init__(self, project_root: Path = None):
+        """Initialize SessionValidator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
         self.quality_gates = QualityGates(self.session_dir / "config.json")

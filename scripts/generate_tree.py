@@ -15,6 +15,7 @@ class TreeGenerator:
     """Generate project tree documentation."""
 
     def __init__(self, project_root: Path = None):
+        """Initialize TreeGenerator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
         self.updates_file = self.project_root / ".session" / "tracking" / "tree_updates.json"
