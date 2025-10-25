@@ -92,7 +92,7 @@ class GitWorkflow:
         """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
         # Capture parent branch BEFORE creating new branch
         parent_branch = self.get_current_branch()
-        branch_name = f"session-{session_num:03d}-{work_item_id}"
+        branch_name = work_item_id
 
         try:
             # Create and checkout branch

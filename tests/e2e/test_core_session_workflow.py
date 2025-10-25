@@ -295,7 +295,8 @@ class TestSessionStart:
             text=True,
         )
 
-        assert "session-" in result.stdout, "Git session branch not created"
+        # Branch name should be the work item ID (no session- prefix)
+        assert "feature_" in result.stdout, "Git branch not created"
 
     def test_start_updates_work_item_status(self, project_with_work_item):
         """Test that session start updates work item status to in_progress."""
@@ -419,7 +420,7 @@ class TestGitWorkflowIntegration:
         return temp_sdd_project
 
     def test_session_uses_git_branch(self, project_with_active_session):
-        """Test that active session is on a session git branch."""
+        """Test that active session is on a git branch (work item ID)."""
         # Arrange & Act
         result = subprocess.run(
             ["git", "branch", "--show-current"],
@@ -430,7 +431,12 @@ class TestGitWorkflowIntegration:
 
         # Assert
         current_branch = result.stdout.strip()
-        assert current_branch.startswith("session-"), f"Not on session branch: {current_branch}"
+        # Branch name should be the work item ID (e.g., feature_foo, not session-NNN-feature_foo)
+        assert (
+            current_branch.startswith("feature_")
+            or current_branch.startswith("bug_")
+            or current_branch.startswith("refactor_")
+        ), f"Not on work item branch: {current_branch}"
 
     def test_git_tracks_file_changes(self, project_with_active_session):
         """Test that git detects changes made during session."""

@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Simplified git branch naming** - Branch names now use work item ID directly instead of `session-NNN-work_item_id` format
+  - Changed `scripts/git_integration.py` to create branches with format `work_item_id` instead of `session-{session_num:03d}-{work_item_id}`
+  - Example: `feature_add_authentication` instead of `session-001-feature_add_authentication`
+  - Clearer intent, shorter names, eliminates confusing session number prefix
+  - Backward compatible - existing branches with old naming continue to work
+  - Session numbers still tracked in briefing files and work item metadata where they belong
+- **Standardized spec validation** - Refactor work items now use "Acceptance Criteria" section (consistent with all other work item types)
+  - Updated `scripts/spec_parser.py` to extract "Acceptance Criteria" for refactor specs (was "Success Criteria")
+  - Removed redundant "Success Criteria" section from refactor template
+  - All work item types now consistently use "Acceptance Criteria" for validation
+- **Updated Enhancement #9 documentation** - Corrected test counts and clarified implementation details for Phase 3 src/ layout transition
+  - Updated all test count references from 392 → 1408 tests
+  - Clarified that setup.py will be removed (not "updated or removed")
+  - Clarified that tests/ directory stays at project root
+  - Added __version__.py to spec file acceptance criteria
+  - Spec file now completely self-contained with all 72 detailed tasks across 7 phases
+
+### Fixed
+- **Quality gates test timeout** - Increased test execution timeout from 5 to 10 minutes
+  - Changed timeout in `scripts/quality_gates.py` from 300s to 600s
+  - Full test suite with 1408 tests takes ~6 minutes to complete
+  - Prevents false failures due to timeout when all tests actually pass
+
+### Changed
+- **Makefile clean target** - Enhanced to remove coverage artifacts
+  - Added `htmlcov/` (HTML coverage reports directory)
+  - Added `coverage.xml` and `coverage.json` files
+  - Keeps repository clean after running tests with coverage
+
+### Fixed
+- **Docstring validation** - Fixed pydocstyle configuration and quality gate to properly validate project docstrings
+  - Fixed `.pydocstyle` match-dir regex (previous regex had invalid negative lookahead syntax causing pydocstyle to fail)
+  - Updated match-dir to explicitly check only project directories (scripts, tests, docs) instead of trying to exclude venv
+  - Fixed `scripts/quality_gates.py` to use `sys.executable` instead of `python3` for pydocstyle check (ensures venv Python is used)
+  - Resolves issue where quality gate failed due to python3 not having pydocstyle installed (only venv Python has it)
+- **Test compatibility** - Updated git integration tests to match new branch naming convention
+  - Fixed unit tests: `test_create_branch_success` and `test_create_branch_naming_convention`
+  - Fixed E2E tests: `test_start_creates_git_branch` and `test_session_uses_git_branch`
+  - All tests now expect branch names like `feature_foo` instead of `session-005-feature_foo`
+
 ### Added
 - **Comprehensive Test Infrastructure Rewrite** - Complete test suite reorganization and expansion from 183 to 1,401 tests with 85% coverage
   - Created unit/integration/e2e test structure replacing phase-based organization
@@ -78,10 +119,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `is_valid_learning()` validation function to filter garbage entries
   - 30 comprehensive unit tests added for all bug fixes
 - **Bug #23**: Bug spec template missing acceptance criteria section - Added "Acceptance Criteria" section to both `bug_spec.md` and `refactor_spec.md` templates
-  - Templates now include acceptance criteria section positioned between "Fix Approach" and "Testing Strategy"
-  - Section includes clear guidance comments and examples (minimum 3 items required)
-  - Updated `docs/spec-template-structure.md` to reflect new template structure
-  - Newly created bug and refactor work items now pass spec validation without manual intervention
 - **Bug #21**: Learning curator extracts test data strings as real learnings - Test files and string literals now properly excluded from learning extraction
   - Test directories (tests/, test/, __tests__/, spec/) completely excluded from learning extraction
   - Content validation enhanced to reject code artifacts (`")`, `\"`, `\n`, backticks, etc.)
@@ -100,6 +137,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UX Issue**: Pre-flight check runs before expensive quality gates, saving time
 - **UX Issue**: CHANGELOG reminders now appear automatically in commit message editor
 - **UX Issue**: CHANGELOG check now correctly detects updates anywhere in branch history
+
+### Removed
+- Deleted `NEXT_SESSION_PROMPT.md` - obsolete development tracking file
+- Deleted `TEST_PROGRESS.md` - test development documentation moved to session history
 
 ### Technical Details
 - **Test Infrastructure Rewrite**: Complete test suite reorganization across 20 development sessions

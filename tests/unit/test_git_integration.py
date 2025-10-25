@@ -295,11 +295,11 @@ class TestCreateBranch:
 
         # Assert
         assert success is True
-        assert branch_name == "session-005-feature_foo"
+        assert branch_name == "feature_foo"
         assert parent_branch == "main"
 
     def test_create_branch_naming_convention(self, tmp_path):
-        """Test that branch name follows session-NNN-work_item_id convention."""
+        """Test that branch name uses work_item_id directly."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
         mock_get_branch = Mock(return_value="main")
@@ -314,7 +314,7 @@ class TestCreateBranch:
 
         # Assert
         assert success is True
-        assert branch_name == "session-042-bug_123"
+        assert branch_name == "bug_123"
 
     def test_create_branch_captures_parent(self, tmp_path):
         """Test that create_branch captures parent branch before creating new branch."""
