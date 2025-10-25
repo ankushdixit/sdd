@@ -158,7 +158,7 @@ class QualityGates:
 
         # Run tests
         try:
-            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=300)
+            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=600)
 
             # pytest exit codes:
             # 0 = all tests passed

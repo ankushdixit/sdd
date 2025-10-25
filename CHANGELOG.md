@@ -26,11 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Spec file now completely self-contained with all 72 detailed tasks across 7 phases
 
 ### Fixed
-- **Coverage configuration** - Removed untested sdd_cli module from coverage sources to eliminate warnings
-  - Removed `sdd_cli` from `source` list in pyproject.toml [tool.coverage.run]
-  - Added `sdd_cli.py` to `omit` list to explicitly exclude it
-  - Eliminates "Module sdd_cli was never imported" warning during test runs
-  - Keeps quality gate validation output clean and clear
+- **Quality gates test timeout** - Increased test execution timeout from 5 to 10 minutes
+  - Changed timeout in `scripts/quality_gates.py` from 300s to 600s
+  - Full test suite with 1408 tests takes ~6 minutes to complete
+  - Prevents false failures due to timeout when all tests actually pass
 
 ### Changed
 - **Makefile clean target** - Enhanced to remove coverage artifacts
