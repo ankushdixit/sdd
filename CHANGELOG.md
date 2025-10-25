@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added __version__.py to spec file acceptance criteria
   - Spec file now completely self-contained with all 72 detailed tasks across 7 phases
 
+### Fixed
+- **Docstring validation** - Fixed pydocstyle configuration and quality gate to properly validate project docstrings
+  - Fixed `.pydocstyle` match-dir regex (previous regex had invalid negative lookahead syntax causing pydocstyle to fail)
+  - Updated match-dir to explicitly check only project directories (scripts, tests, docs) instead of trying to exclude venv
+  - Fixed `scripts/quality_gates.py` to use `sys.executable` instead of `python3` for pydocstyle check (ensures venv Python is used)
+  - Resolves issue where quality gate failed due to python3 not having pydocstyle installed (only venv Python has it)
+
 ### Added
 - **Comprehensive Test Infrastructure Rewrite** - Complete test suite reorganization and expansion from 183 to 1,401 tests with 85% coverage
   - Created unit/integration/e2e test structure replacing phase-based organization

@@ -530,7 +530,7 @@ class QualityGates:
         """Check if Python functions have docstrings."""
         try:
             result = subprocess.run(
-                ["python3", "-m", "pydocstyle", "--count"],
+                [sys.executable, "-m", "pydocstyle", "--count"],
                 capture_output=True,
                 text=True,
                 timeout=30,
