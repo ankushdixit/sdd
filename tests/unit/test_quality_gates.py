@@ -1583,8 +1583,11 @@ class TestQualityGatesIntegration:
         def exists_side_effect(self):
             return str(self) == ".session/config.json"
 
-        with patch.object(Path, "exists", exists_side_effect), patch(
-            "builtins.open", mock_open(read_data='{"integration_tests": {"enabled": false}}')
+        with (
+            patch.object(Path, "exists", exists_side_effect),
+            patch(
+                "builtins.open", mock_open(read_data='{"integration_tests": {"enabled": false}}')
+            ),
         ):
             passed, results = gates.run_integration_tests(work_item)
 
@@ -1715,8 +1718,9 @@ class TestQualityGatesIntegration:
             return str(self) == ".session/config.json"
 
         config_data = '{"integration_tests": {"documentation": {"enabled": false}}}'
-        with patch.object(Path, "exists", exists_side_effect), patch(
-            "builtins.open", mock_open(read_data=config_data)
+        with (
+            patch.object(Path, "exists", exists_side_effect),
+            patch("builtins.open", mock_open(read_data=config_data)),
         ):
             passed, results = gates.validate_integration_documentation(work_item)
 

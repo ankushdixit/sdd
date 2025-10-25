@@ -21,6 +21,7 @@ class StackGenerator:
     """Generate technology stack documentation."""
 
     def __init__(self, project_root: Path = None):
+        """Initialize StackGenerator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.stack_file = self.project_root / ".session" / "tracking" / "stack.txt"
         self.updates_file = self.project_root / ".session" / "tracking" / "stack_updates.json"

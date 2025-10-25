@@ -50,6 +50,7 @@ class LearningsCurator:
     """Curates project learnings"""
 
     def __init__(self, project_root: Path = None):
+        """Initialize LearningsCurator with project root path."""
         if project_root is None:
             project_root = Path.cwd()
         self.project_root = project_root

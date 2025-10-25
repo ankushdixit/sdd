@@ -215,7 +215,7 @@ def load_work_item_spec(work_item) -> str:
 
 
 def shift_heading_levels(markdown_content: str, shift: int) -> str:
-    """Shift all markdown heading levels by a specified amount.
+    r"""Shift all markdown heading levels by a specified amount.
 
     Args:
         markdown_content: The markdown text to process

@@ -35,6 +35,7 @@ class WorkItemManager:
     PRIORITIES = ["critical", "high", "medium", "low"]
 
     def __init__(self, project_root: Path = None):
+        """Initialize WorkItemManager with project root path."""
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
         self.work_items_file = self.session_dir / "tracking" / "work_items.json"

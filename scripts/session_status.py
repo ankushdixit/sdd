@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Display current session status.
-"""
+"""Display current session status."""
 
 import json
 import subprocess
