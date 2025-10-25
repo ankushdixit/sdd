@@ -62,6 +62,39 @@ This script validates quality gates:
 
 The script automatically updates project context files (stack.py and tree.py) after validation passes.
 
+### Work Item Completion Control
+
+During session completion, you will be prompted to explicitly mark the work item as complete or in-progress:
+
+```
+Work item: "Learning Curator Bug Fix"
+
+Is this work item complete?
+1. Yes - Mark as completed
+2. No - Keep as in-progress (will resume in next session)
+3. Cancel - Don't end session
+
+Choice [1]: _
+```
+
+**Option 1 (Yes)**: Marks the work item as complete and ends the session. The work item will not auto-resume in the next session.
+
+**Option 2 (No)**: Keeps the work item as in-progress and ends the session. The work item will automatically resume when you run `/start` in the next session, making it easy to work on large items across multiple sessions.
+
+**Option 3 (Cancel)**: Aborts the `/end` operation entirely. The session remains active and you can continue working.
+
+**Non-interactive Mode**: You can also use command-line flags to control completion status:
+
+```bash
+# Mark work item as completed
+sdd end --complete --learnings-file .session/temp_learnings.txt
+
+# Keep work item as in-progress
+sdd end --incomplete --learnings-file .session/temp_learnings.txt
+```
+
+**Note**: Without flags in non-interactive mode, the work item defaults to "in-progress" for safety.
+
 Show the user:
 - Session summary with work accomplished
 - List of files changed

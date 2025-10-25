@@ -6,6 +6,8 @@ Enhanced with full tracking updates and git workflow.
 Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import subprocess
@@ -692,6 +694,44 @@ def check_uncommitted_changes() -> bool:
         return True  # Don't block on errors
 
 
+def prompt_work_item_completion(work_item_title: str, non_interactive: bool = False) -> bool | None:
+    """
+    Prompt user to mark work item as complete or in-progress.
+
+    Args:
+        work_item_title: Title of the work item to display in prompt
+        non_interactive: If True, skip interactive prompt (defaults to incomplete for safety)
+
+    Returns:
+        True if work item should be marked complete
+        False if work item should remain in-progress
+        None if user cancelled (should abort session end)
+    """
+    if non_interactive:
+        # In non-interactive mode, default to incomplete for safety
+        return False
+
+    print(f'\nWork item: "{work_item_title}"\n')
+    print("Is this work item complete?")
+    print("1. Yes - Mark as completed")
+    print("2. No - Keep as in-progress (will resume in next session)")
+    print("3. Cancel - Don't end session")
+    print()
+
+    while True:
+        choice = input("Choice [1]: ").strip() or "1"
+
+        if choice == "1":
+            return True  # Mark complete
+        elif choice == "2":
+            return False  # Keep in-progress
+        elif choice == "3":
+            print("\nSession end cancelled")
+            return None  # Cancel operation
+        else:
+            print("Invalid choice. Enter 1, 2, or 3.")
+
+
 def main():
     """Enhanced main entry point with full tracking updates."""
     # Parse command-line arguments
@@ -789,32 +829,35 @@ def main():
             print(f"⚠️  Failed to process learnings: {e}")
 
     # Determine work item completion status
+    work_item_title = work_items_data["work_items"][work_item_id]["title"]
+
     if args.complete:
-        print(
-            f"\n✓ Marking work item '{work_items_data['work_items'][work_item_id]['title']}' as complete (--complete flag)"
-        )
+        print(f"\n✓ Marking work item '{work_item_title}' as complete (--complete flag)")
         is_complete = True
     elif args.incomplete:
-        print(
-            f"\n✓ Keeping work item '{work_items_data['work_items'][work_item_id]['title']}' as in-progress (--incomplete flag)"
-        )
+        print(f"\n✓ Keeping work item '{work_item_title}' as in-progress (--incomplete flag)")
         is_complete = False
-    elif not sys.stdin.isatty():
-        # In non-interactive mode without flags, default to complete if quality gates passed
-        print(
-            f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
-        )
-        print("> (non-interactive mode: defaulting to 'y' - quality gates passed)")
-        is_complete = True
     else:
-        # Interactive mode - ask user
-        print(
-            f"\nIs work item '{work_items_data['work_items'][work_item_id]['title']}' complete? (y/n): "
-        )
-        try:
-            is_complete = input("> ").lower() == "y"
-        except EOFError:
-            is_complete = False
+        # Determine if non-interactive
+        non_interactive = not sys.stdin.isatty()
+
+        # Use new prompt function
+        completion_result = prompt_work_item_completion(work_item_title, non_interactive)
+
+        if completion_result is None:
+            # User cancelled - abort session end
+            print("\n❌ Session completion aborted by user")
+            return 1
+
+        is_complete = completion_result
+
+        # Print completion decision message (for interactive mode)
+        if is_complete:
+            print(f"\n✓ Marking work item '{work_item_title}' as complete")
+        else:
+            print(
+                f"\n✓ Keeping work item '{work_item_title}' as in-progress (will resume in next session)"
+            )
 
     # Track changes for update_history
     changes = []
