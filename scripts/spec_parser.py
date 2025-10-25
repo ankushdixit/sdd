@@ -347,7 +347,7 @@ def parse_refactor_spec(content: str) -> dict[str, Any]:
     - Implementation Plan
     - Scope (with subsections: In Scope, Out of Scope)
     - Risk Assessment
-    - Success Criteria
+    - Acceptance Criteria
     - Testing Strategy
     - Dependencies
     - Estimated Effort
@@ -390,9 +390,9 @@ def parse_refactor_spec(content: str) -> dict[str, Any]:
     # Risk Assessment
     result["risk_assessment"] = parse_section(content, "Risk Assessment")
 
-    # Success Criteria - extract as checklist
-    sc_section = parse_section(content, "Success Criteria")
-    result["success_criteria"] = extract_checklist(sc_section) if sc_section else []
+    # Acceptance Criteria - extract as checklist
+    ac_section = parse_section(content, "Acceptance Criteria")
+    result["acceptance_criteria"] = extract_checklist(ac_section) if ac_section else []
 
     # Testing Strategy
     result["testing_strategy"] = parse_section(content, "Testing Strategy")

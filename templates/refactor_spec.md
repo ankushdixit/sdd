@@ -267,18 +267,6 @@ describe('UserService', () => {
 - [ ] No new linting errors introduced
 - [ ] Code duplication reduced
 
-## Success Criteria
-
-<!-- How do we know the refactor was successful? -->
-
-- [ ] Code is more maintainable (easier to understand and modify)
-- [ ] Complexity reduced (measured by cyclomatic complexity)
-- [ ] All tests pass (100% of existing tests, plus new tests)
-- [ ] No regressions (all functionality works as before)
-- [ ] Test coverage improved (from 65% to 85%+)
-- [ ] Performance maintained (no regression > 5%)
-- [ ] Team feedback positive (easier to work with)
-
 ## Dependencies
 
 <!-- List any dependencies on other work -->
