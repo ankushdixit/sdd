@@ -570,7 +570,7 @@ Use a DI container to manage service instances.
 ## Risk Assessment
 **Risk Level:** Medium
 
-## Success Criteria
+## Acceptance Criteria
 - [ ] All services use DI
 - [ ] Tests pass
 - [x] Documentation updated
@@ -601,7 +601,7 @@ Requires DI library installation.
         assert "User service" in result["scope"]["in_scope"]
         assert "UI components" in result["scope"]["out_of_scope"]
         assert "Medium" in result["risk_assessment"]
-        assert len(result["success_criteria"]) == 3
+        assert len(result["acceptance_criteria"]) == 3
 
 
 class TestParseSecuritySpec:
