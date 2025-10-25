@@ -1574,7 +1574,7 @@ class TestQualityGatesIntegration:
     def test_run_integration_tests_disabled(self):
         """Test running integration tests when disabled."""
         # Arrange
-        work_item = {"type": "integration_test"}
+        work_item = {"id": "test-001", "type": "integration_test"}
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -1702,7 +1702,7 @@ class TestQualityGatesIntegration:
     def test_validate_integration_documentation_disabled(self):
         """Test validating integration documentation when disabled."""
         # Arrange
-        work_item = {"type": "integration_test"}
+        work_item = {"id": "test-001", "type": "integration_test"}
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()

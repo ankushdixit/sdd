@@ -10,6 +10,7 @@ Tests the init_project.py module and overall project setup including:
 """
 
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -121,6 +122,7 @@ class TestProjectStructure:
             ".session/history directory missing"
         )
 
+    @pytest.mark.skipif("CI" in os.environ, reason="Skipped in CI - requires initialized project")
     def test_session_directory_accessible_on_real_project(self):
         """Test that current project has .session directory structure.
 
@@ -181,6 +183,7 @@ class TestTrackingFiles:
         # Assert
         assert "categories" in data, "learnings.json missing categories section"
 
+    @pytest.mark.skipif("CI" in os.environ, reason="Skipped in CI - requires initialized project")
     def test_tracking_files_accessible_on_real_project(self):
         """Test that current project has valid tracking files.
 
@@ -234,6 +237,7 @@ class TestSessionConfiguration:
         assert "quality_gates" in data, "config.json missing quality_gates section"
         assert "curation" in data, "config.json missing curation section"
 
+    @pytest.mark.skipif("CI" in os.environ, reason="Skipped in CI - requires initialized project")
     def test_config_file_accessible_on_real_project(self):
         """Test that current project has valid configuration file.
 
