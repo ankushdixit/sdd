@@ -82,8 +82,8 @@ ignore = [
 ]
 
 [tool.coverage.run]
-source = ["scripts", "sdd_cli"]
-omit = ["tests/*", "templates/*"]
+source = ["scripts"]
+omit = ["tests/*", "templates/*", "sdd_cli.py"]
 
 [tool.coverage.report]
 exclude_lines = [
