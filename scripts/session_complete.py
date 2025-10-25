@@ -6,6 +6,8 @@ Enhanced with full tracking updates and git workflow.
 Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import subprocess
