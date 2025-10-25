@@ -33,10 +33,13 @@ clean:
 	rm -rf *.egg-info
 	rm -rf .pytest_cache/
 	rm -rf .ruff_cache/
+	rm -rf htmlcov/
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name ".coverage" -delete
+	find . -type f -name "coverage.xml" -delete
+	find . -type f -name "coverage.json" -delete
 
 build:
 	python setup.py sdist bdist_wheel

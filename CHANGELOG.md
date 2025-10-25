@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added __version__.py to spec file acceptance criteria
   - Spec file now completely self-contained with all 72 detailed tasks across 7 phases
 
+### Changed
+- **Makefile clean target** - Enhanced to remove coverage artifacts
+  - Added `htmlcov/` (HTML coverage reports directory)
+  - Added `coverage.xml` and `coverage.json` files
+  - Keeps repository clean after running tests with coverage
+
 ### Fixed
 - **Docstring validation** - Fixed pydocstyle configuration and quality gate to properly validate project docstrings
   - Fixed `.pydocstyle` match-dir regex (previous regex had invalid negative lookahead syntax causing pydocstyle to fail)
