@@ -1,10 +1,7 @@
 name: Tests
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:  # Manual trigger only - tests run locally during sdd validate
 
 jobs:
   test:
