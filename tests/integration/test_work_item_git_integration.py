@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from scripts.briefing_generator import (
+from sdd.session.briefing import (
     determine_git_branch_final_status,
     finalize_previous_work_item_git_status,
 )

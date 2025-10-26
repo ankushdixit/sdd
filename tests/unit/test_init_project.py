@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.init_project import (
+from sdd.project.init import (
     check_or_init_git,
     create_initial_commit,
     create_session_structure,
@@ -172,7 +172,7 @@ class TestInstallGitHooks:
 
         # Mock the template path to exist
         with patch.object(Path, "exists", return_value=True):
-            with patch("scripts.init_project.Path") as mock_path:
+            with patch("sdd.project.init.Path") as mock_path:
                 # Setup mock to return our template dir
                 mock_file = Mock()
                 mock_file.parent.parent = mock_template_dir.parent
@@ -877,18 +877,18 @@ class TestInitProject:
         assert result == 1
         assert "Already initialized!" in captured.out
 
-    @patch("scripts.init_project.create_initial_commit")
-    @patch("scripts.init_project.ensure_gitignore_entries")
-    @patch("scripts.init_project.run_initial_scans")
-    @patch("scripts.init_project.initialize_tracking_files")
-    @patch("scripts.init_project.create_session_structure")
-    @patch("scripts.init_project.create_smoke_tests")
-    @patch("scripts.init_project.install_dependencies")
-    @patch("scripts.init_project.ensure_config_files")
-    @patch("scripts.init_project.ensure_package_manager_file")
-    @patch("scripts.init_project.detect_project_type")
-    @patch("scripts.init_project.install_git_hooks")
-    @patch("scripts.init_project.check_or_init_git")
+    @patch("sdd.project.init.create_initial_commit")
+    @patch("sdd.project.init.ensure_gitignore_entries")
+    @patch("sdd.project.init.run_initial_scans")
+    @patch("sdd.project.init.initialize_tracking_files")
+    @patch("sdd.project.init.create_session_structure")
+    @patch("sdd.project.init.create_smoke_tests")
+    @patch("sdd.project.init.install_dependencies")
+    @patch("sdd.project.init.ensure_config_files")
+    @patch("sdd.project.init.ensure_package_manager_file")
+    @patch("sdd.project.init.detect_project_type")
+    @patch("sdd.project.init.install_git_hooks")
+    @patch("sdd.project.init.check_or_init_git")
     def test_init_project_full_workflow(
         self,
         mock_git,
@@ -935,18 +935,18 @@ class TestInitProject:
         mock_gitignore.assert_called_once()
         mock_commit.assert_called_once()
 
-    @patch("scripts.init_project.create_initial_commit")
-    @patch("scripts.init_project.ensure_gitignore_entries")
-    @patch("scripts.init_project.run_initial_scans")
-    @patch("scripts.init_project.initialize_tracking_files")
-    @patch("scripts.init_project.create_session_structure")
-    @patch("scripts.init_project.create_smoke_tests")
-    @patch("scripts.init_project.install_dependencies")
-    @patch("scripts.init_project.ensure_config_files")
-    @patch("scripts.init_project.ensure_package_manager_file")
-    @patch("scripts.init_project.detect_project_type")
-    @patch("scripts.init_project.install_git_hooks")
-    @patch("scripts.init_project.check_or_init_git")
+    @patch("sdd.project.init.create_initial_commit")
+    @patch("sdd.project.init.ensure_gitignore_entries")
+    @patch("sdd.project.init.run_initial_scans")
+    @patch("sdd.project.init.initialize_tracking_files")
+    @patch("sdd.project.init.create_session_structure")
+    @patch("sdd.project.init.create_smoke_tests")
+    @patch("sdd.project.init.install_dependencies")
+    @patch("sdd.project.init.ensure_config_files")
+    @patch("sdd.project.init.ensure_package_manager_file")
+    @patch("sdd.project.init.detect_project_type")
+    @patch("sdd.project.init.install_git_hooks")
+    @patch("sdd.project.init.check_or_init_git")
     def test_init_project_python_workflow(
         self,
         mock_git,
@@ -990,23 +990,21 @@ class TestInitProject:
         # Arrange
         monkeypatch.chdir(temp_project)
 
-        with patch("scripts.init_project.check_or_init_git", return_value=True):
-            with patch("scripts.init_project.install_git_hooks", return_value=True):
-                with patch("scripts.init_project.detect_project_type", return_value="python"):
-                    with patch("scripts.init_project.ensure_package_manager_file"):
-                        with patch("scripts.init_project.ensure_config_files"):
-                            with patch("scripts.init_project.install_dependencies"):
-                                with patch("scripts.init_project.create_smoke_tests"):
-                                    with patch("scripts.init_project.create_session_structure"):
-                                        with patch(
-                                            "scripts.init_project.initialize_tracking_files"
-                                        ):
-                                            with patch("scripts.init_project.run_initial_scans"):
+        with patch("sdd.project.init.check_or_init_git", return_value=True):
+            with patch("sdd.project.init.install_git_hooks", return_value=True):
+                with patch("sdd.project.init.detect_project_type", return_value="python"):
+                    with patch("sdd.project.init.ensure_package_manager_file"):
+                        with patch("sdd.project.init.ensure_config_files"):
+                            with patch("sdd.project.init.install_dependencies"):
+                                with patch("sdd.project.init.create_smoke_tests"):
+                                    with patch("sdd.project.init.create_session_structure"):
+                                        with patch("sdd.project.init.initialize_tracking_files"):
+                                            with patch("sdd.project.init.run_initial_scans"):
                                                 with patch(
-                                                    "scripts.init_project.ensure_gitignore_entries"
+                                                    "sdd.project.init.ensure_gitignore_entries"
                                                 ):
                                                     with patch(
-                                                        "scripts.init_project.create_initial_commit",
+                                                        "sdd.project.init.create_initial_commit",
                                                         return_value=True,
                                                     ):
                                                         # Act

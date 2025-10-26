@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
-from scripts.session_status import get_session_status
+from sdd.session.status import get_session_status
 
 
 class TestGetSessionStatusNoStatusFile:
@@ -31,7 +31,7 @@ class TestGetSessionStatusNoStatusFile:
         Act: Call get_session_status()
         Assert: Returns 1 and prints "No active session"
         """
-        with patch("scripts.session_status.Path") as mock_path:
+        with patch("sdd.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False
@@ -55,7 +55,7 @@ class TestGetSessionStatusNoStatusFile:
         Act: Call get_session_status()
         Assert: No work item info displayed
         """
-        with patch("scripts.session_status.Path") as mock_path:
+        with patch("sdd.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False
@@ -84,7 +84,7 @@ class TestGetSessionStatusNoWorkItem:
         Act: Call get_session_status()
         Assert: Returns 1 and prints "No active work item"
         """
-        with patch("scripts.session_status.Path") as mock_path:
+        with patch("sdd.session.status.Path") as mock_path:
             # Arrange
             status_data = {}  # No current_work_item
             mock_status_file = MagicMock()
@@ -110,7 +110,7 @@ class TestGetSessionStatusNoWorkItem:
         Act: Call get_session_status()
         Assert: Returns 1 and prints "No active work item"
         """
-        with patch("scripts.session_status.Path") as mock_path:
+        with patch("sdd.session.status.Path") as mock_path:
             # Arrange
             status_data = {"current_work_item": ""}
             mock_status_file = MagicMock()
@@ -217,7 +217,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     # Mock git diff to return no changes
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
@@ -260,7 +260,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -297,7 +297,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -343,10 +343,10 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
-                    with patch("scripts.session_status.datetime") as mock_datetime:
+                    with patch("sdd.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
                         mock_datetime.fromisoformat = datetime.fromisoformat
 
@@ -389,10 +389,10 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
-                    with patch("scripts.session_status.datetime") as mock_datetime:
+                    with patch("sdd.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
                         mock_datetime.fromisoformat = datetime.fromisoformat
 
@@ -430,7 +430,7 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -473,7 +473,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=0, stdout=git_output)
 
                     # Act
@@ -516,7 +516,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=0, stdout=git_output)
 
                     # Act
@@ -557,7 +557,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.side_effect = subprocess.TimeoutExpired("git", 5)
 
                     # Act
@@ -594,7 +594,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=0, stdout="")
 
                     # Act
@@ -631,7 +631,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="some output")
 
                     # Act
@@ -676,7 +676,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -715,7 +715,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -753,7 +753,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -815,7 +815,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -862,7 +862,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -908,7 +908,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -946,7 +946,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -985,7 +985,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1039,7 +1039,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1084,7 +1084,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1139,7 +1139,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1200,7 +1200,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1243,7 +1243,7 @@ class TestGetSessionStatusQuickActions:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1287,7 +1287,7 @@ class TestGetSessionStatusMainEntry:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("scripts.session_status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.subprocess.run") as mock_run:
                     mock_run.return_value = Mock(returncode=1, stdout="")
 
                     # Act
@@ -1304,7 +1304,7 @@ class TestGetSessionStatusMainEntry:
         Act: Execute module as main
         Assert: Would exit with code 1
         """
-        with patch("scripts.session_status.Path") as mock_path:
+        with patch("sdd.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False

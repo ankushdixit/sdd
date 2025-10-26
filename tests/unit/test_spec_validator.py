@@ -10,13 +10,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root / "scripts"))
-
-from scripts.quality_gates import QualityGates  # noqa: E402
-from scripts.spec_validator import (  # noqa: E402
+from sdd.quality.gates import QualityGates
+from sdd.work_items.spec_validator import (
     check_acceptance_criteria,
     check_deployment_subsections,
     check_required_sections,

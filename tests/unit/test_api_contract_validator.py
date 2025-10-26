@@ -7,7 +7,7 @@ specifications and detects breaking changes between contract versions.
 import json
 from pathlib import Path
 
-from scripts.api_contract_validator import APIContractValidator
+from sdd.quality.api_validator import APIContractValidator
 
 
 class TestAPIContractValidatorInit:
@@ -509,7 +509,7 @@ class TestFileStructure:
     def test_api_contract_validator_file_exists(self):
         """Test that api_contract_validator.py file exists."""
         # Arrange & Act
-        file_path = Path("scripts/api_contract_validator.py")
+        file_path = Path("src/sdd/quality/api_validator.py")
 
         # Assert
         assert file_path.exists()
@@ -517,7 +517,7 @@ class TestFileStructure:
     def test_api_contract_validator_class_defined(self):
         """Test that APIContractValidator class is defined."""
         # Arrange
-        file_path = Path("scripts/api_contract_validator.py")
+        file_path = Path("src/sdd/quality/api_validator.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -546,14 +546,14 @@ class TestFileStructure:
     def test_api_contract_validator_has_required_imports(self):
         """Test that api_contract_validator.py has required imports."""
         # Arrange
-        file_path = Path("scripts/api_contract_validator.py")
+        file_path = Path("src/sdd/quality/api_validator.py")
         content = file_path.read_text()
 
         required_imports = [
             "import json",
             "import yaml",
             "from pathlib import Path",
-            "from scripts.file_ops import",
+            "from sdd.core.file_ops import",
         ]
 
         # Act & Assert
@@ -563,7 +563,7 @@ class TestFileStructure:
     def test_api_contract_validator_has_main_function(self):
         """Test that api_contract_validator.py has main function."""
         # Arrange
-        file_path = Path("scripts/api_contract_validator.py")
+        file_path = Path("src/sdd/quality/api_validator.py")
         content = file_path.read_text()
 
         # Act & Assert

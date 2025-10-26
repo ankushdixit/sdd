@@ -503,10 +503,10 @@ def run_initial_scans():
     # Get SDD installation directory
     script_dir = Path(__file__).parent
 
-    # Run generate_stack.py with absolute path
+    # Run stack.py with absolute path
     try:
         subprocess.run(
-            ["python", str(script_dir / "generate_stack.py")],
+            ["python", str(script_dir / "stack.py")],
             check=True,
             capture_output=True,
             text=True,
@@ -520,10 +520,10 @@ def run_initial_scans():
     except subprocess.TimeoutExpired:
         print("⚠️  Stack generation timed out")
 
-    # Run generate_tree.py with absolute path
+    # Run tree.py with absolute path
     try:
         subprocess.run(
-            ["python", str(script_dir / "generate_tree.py")],
+            ["python", str(script_dir / "tree.py")],
             check=True,
             capture_output=True,
             text=True,

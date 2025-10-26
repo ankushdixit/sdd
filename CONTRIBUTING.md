@@ -59,17 +59,28 @@ pytest tests/
 ```
 sdd/
 ├── .claude/commands/        # Slash command definitions (15 commands)
-├── scripts/                 # Core Python logic (13 modules)
-├── templates/              # Work item specification templates
+├── src/sdd/                 # Python package (standard src/ layout)
+│   ├── cli.py               # CLI entry point
+│   ├── core/                # Core functionality
+│   ├── session/             # Session management
+│   ├── work_items/          # Work item management
+│   ├── learning/            # Learning system
+│   ├── quality/             # Quality gates
+│   ├── visualization/       # Dependency graphs
+│   ├── git/                 # Git integration
+│   ├── testing/             # Testing utilities
+│   ├── deployment/          # Deployment executor
+│   ├── project/             # Project initialization
+│   └── templates/           # Work item spec templates
 ├── docs/                   # Documentation
 │   ├── architecture/       # System architecture and design
 │   ├── guides/             # User guides and how-tos
 │   ├── reference/          # Reference documentation
 │   ├── project/            # Project planning
 │   └── development/        # Development notes
-├── tests/                  # Test suites (392 tests)
+├── tests/                  # Test suites (1408 tests)
 ├── Makefile                # Developer convenience targets
-└── .editorconfig           # Editor configuration
+└── pyproject.toml          # Package configuration (PEP 517/518)
 ```
 
 ## How to Contribute
@@ -182,15 +193,18 @@ from scripts.session_manager import SessionManager
 ```python
 # ❌ WRONG - Don't do this
 from .file_ops import load_json
-from ..scripts.work_item_manager import WorkItemManager
+from sdd.work_items.manager import WorkItemManager
+from sdd.quality.gates import QualityGates
+from sdd.session.briefing import generate_briefing
 ```
 
-**Why this pattern?**
-- Current structure uses `scripts/` at root level with sys.path manipulation
-- This will be refactored to `from sdd.scripts.X` in Phase 5.8
-- Current pattern is documented and works reliably
+**Import Guidelines:**
+- Use standard Python imports from the `sdd` package
+- No `sys.path` manipulation needed (v0.6.0+)
+- Package organized by domain for clarity
+- Full PEP 517/518 compliance
 
-See [README.md Architecture Notes](#) and [ROADMAP.md Phase 5.8](#) for details about the planned package structure refactoring.
+See [README.md Architecture Notes](README.md#architecture-notes) for package organization details.
 
 ### Command Design
 

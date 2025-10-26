@@ -11,11 +11,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts import spec_parser
-from scripts.file_ops import load_json, save_json
-from scripts.logging_config import get_logger
+from sdd.core.file_ops import load_json, save_json
+from sdd.core.logging_config import get_logger
+from sdd.work_items import spec_parser
 
 logger = get_logger(__name__)
 

@@ -484,17 +484,19 @@ Configure SDD via `.session/config.json` (created during `/init`):
 sdd/
 ├── .claude/                  # Claude Code command definitions
 │   └── commands/             # 15 slash commands (auto-discovered by Claude Code)
-├── scripts/                  # Core Python logic (13 modules, 8,677 lines)
-│   ├── work_item_manager.py  # Work item CRUD operations
-│   ├── quality_gates.py      # Quality enforcement system
-│   ├── learning_curator.py   # Knowledge capture & curation
-│   ├── briefing_generator.py # Session context generation
-│   ├── dependency_graph.py   # Dependency visualization
-│   └── [8 more modules...]
-├── templates/                # Work item specification templates
-│   ├── feature_spec.md
-│   ├── bug_spec.md
-│   └── [4 more templates...]
+├── src/sdd/                  # Python package (standard src/ layout)
+│   ├── cli.py                # CLI entry point
+│   ├── core/                 # Core functionality (file ops, logging, config)
+│   ├── session/              # Session management (briefing, complete, status, validate)
+│   ├── work_items/           # Work item management (CRUD, specs, validation)
+│   ├── learning/             # Learning system (capture & curation)
+│   ├── quality/              # Quality gates and validation
+│   ├── visualization/        # Dependency graphs
+│   ├── git/                  # Git integration
+│   ├── testing/              # Testing utilities
+│   ├── deployment/           # Deployment executor
+│   ├── project/              # Project initialization and management
+│   └── templates/            # Work item specification templates
 ├── docs/                     # Comprehensive documentation
 │   ├── commands/             # Command reference documentation
 │   ├── architecture/         # System architecture and design
@@ -502,51 +504,54 @@ sdd/
 │   ├── reference/            # Reference documentation
 │   ├── project/              # Project planning (roadmap, bugs, enhancements)
 │   └── development/          # Development notes
-├── tests/                    # Test suites (392 tests total)
-│   └── phase_1/ through phase_5_7/
+├── tests/                    # Test suites (1408 tests total)
+│   ├── unit/                 # Unit tests
+│   ├── integration/          # Integration tests
+│   └── e2e/                  # End-to-end tests
 ├── README.md                 # This file
 ├── CHANGELOG.md              # Version history
 ├── CONTRIBUTING.md           # Contribution guidelines
 ├── LICENSE                   # MIT License
 ├── Makefile                  # Developer convenience targets
-└── .editorconfig             # Editor configuration
+└── pyproject.toml            # Package configuration (PEP 517/518)
 ```
 
 ## Architecture Notes
 
-### Hybrid Packaging Approach
+### Standard Python Package Structure (v0.6.0+)
 
-SDD currently uses a **hybrid packaging approach** that balances pragmatism with Python best practices:
+SDD follows **standard Python packaging best practices** using src/ layout:
 
-**Current Implementation (v0.5.8):**
-- ✅ **Unified CLI**: All commands use `sdd` command (no relative paths)
-- ✅ **Pip installable**: `pip install -e .` required for all installation methods
+**Current Implementation (v0.6.0):**
+- ✅ **Standard src/ layout**: Full PEP 517/518 compliance
+- ✅ **No sys.path manipulation**: Clean imports throughout codebase
+- ✅ **Domain-organized modules**: Code organized by functionality
+- ✅ **Unified CLI**: All commands use `sdd` command
+- ✅ **Pip installable**: `pip install -e .` for development
 - ✅ **Plugin compatible**: Works with Claude Code marketplace plugins
-- ✅ **CLI command**: `sdd` command available after installation
-- ⚠️ **Import pattern**: Scripts still use `sys.path` manipulation (to be fixed in Phase 5.9)
-
-**Why this approach?**
-1. **Low risk**: Maintains stability of 102 passing tests
-2. **Works now**: Immediately pip-installable and distributable
-3. **Contributor-friendly**: Clear documentation of import patterns
-4. **Future-proof**: Proper refactoring planned for Phase 5.8
+- ✅ **PyPI-ready**: Can be published to PyPI
 
 **For Contributors:**
-When importing from other scripts, use this pattern:
+Import from the sdd package using standard Python imports:
 ```python
-from scripts.module_name import ClassName
+from sdd.work_items.manager import WorkItemManager
+from sdd.quality.gates import QualityGates
+from sdd.session.briefing import generate_briefing
 ```
 
-This pattern will be updated to proper relative imports in Phase 5.8 when the codebase is restructured to a standard `sdd/` package layout.
+**Package Organization:**
+- `sdd.core` - Core functionality (file ops, logging, config)
+- `sdd.session` - Session management
+- `sdd.work_items` - Work item management and specs
+- `sdd.learning` - Learning capture and curation
+- `sdd.quality` - Quality gates and validation
+- `sdd.visualization` - Dependency graphs
+- `sdd.git` - Git integration
+- `sdd.testing` - Testing utilities
+- `sdd.deployment` - Deployment execution
+- `sdd.project` - Project initialization
 
-**Planned Refactoring (Phase 5.9):**
-- 🔄 Move `scripts/` → `sdd/scripts/`
-- 🔄 Move `sdd_cli.py` → `sdd/cli.py`
-- 🔄 Remove all `sys.path` manipulation (38 files)
-- 🔄 Update imports to use `from sdd.scripts.X` pattern
-- 🔄 Full compliance with Python packaging standards
-
-See [ROADMAP.md Phase 5.9](#) for details.
+See [ROADMAP.md Phase 5.9](docs/project/ROADMAP.md#phase-59-package-structure-refactoring-v060---python-best-practices) for migration details.
 
 ## Development Status
 

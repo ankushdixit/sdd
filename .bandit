@@ -22,5 +22,12 @@
 # B112: Try, Except, Continue detected
 #       Acceptable: Used when iterating over collections and skipping invalid/corrupted entries
 #       Prevents one bad entry from stopping the entire operation
+#
+# B101: Use of assert detected
+#       Excluded from template test files only - using assert in pytest tests is standard practice
 
 skips: ['B404', 'B603', 'B607', 'B110', 'B112']
+
+# Exclude template test files from scanning - these are templates copied to user projects
+# and use standard pytest assert statements which trigger B101 warnings
+exclude_dirs: ['src/sdd/templates/tests']

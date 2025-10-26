@@ -334,12 +334,12 @@ class TestStackAndTreeTracking:
         stack_file = temp_sdd_project / ".session/tracking/stack.txt"
         _original_content = stack_file.read_text()
 
-        # Get the project root to find scripts directory
-        scripts_dir = Path(__file__).parent.parent.parent / "scripts"
+        # Get the project root to find sdd package directory
+        sdd_project_dir = Path(__file__).parent.parent.parent / "src/sdd/project"
 
         # Act
         result = subprocess.run(
-            ["python3", str(scripts_dir / "generate_stack.py")],
+            ["python3", str(sdd_project_dir / "stack.py")],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,
@@ -358,12 +358,12 @@ class TestStackAndTreeTracking:
         (temp_sdd_project / "newdir").mkdir()
         (temp_sdd_project / "newdir" / "test.py").write_text('print("Test")\n')
 
-        # Get the project root to find scripts directory
-        scripts_dir = Path(__file__).parent.parent.parent / "scripts"
+        # Get the project root to find sdd package directory
+        sdd_project_dir = Path(__file__).parent.parent.parent / "src/sdd/project"
 
         # Act
         result = subprocess.run(
-            ["python3", str(scripts_dir / "generate_tree.py")],
+            ["python3", str(sdd_project_dir / "tree.py")],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,

@@ -19,9 +19,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts import spec_parser
+from sdd.work_items import spec_parser
 
 
 class IntegrationTestRunner:
@@ -407,7 +405,6 @@ Status: {"PASSED" if self.results["failed"] == 0 else "FAILED"}
 
 def main():
     """CLI entry point."""
-    import sys
 
     if len(sys.argv) < 2:
         print("Usage: python integration_test_runner.py <work_item_id>")
@@ -416,7 +413,7 @@ def main():
     work_item_id = sys.argv[1]
 
     # Load work item
-    from file_ops import load_json
+    from sdd.core.file_ops import load_json
 
     work_items_file = Path(".session/tracking/work_items.json")
     data = load_json(work_items_file)

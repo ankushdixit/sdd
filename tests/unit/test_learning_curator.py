@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.learning_curator import LEARNING_SCHEMA, LearningsCurator
+from sdd.learning.curator import LEARNING_SCHEMA, LearningsCurator
 
 
 @pytest.fixture

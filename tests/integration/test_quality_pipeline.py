@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.quality_gates import QualityGates
+from sdd.quality.gates import QualityGates
 
 
 class TestQualityGatesInit:
@@ -192,11 +192,9 @@ class TestIntegrationTestsDisabled:
         work_item = {"id": "INTEG-001", "type": "integration_test", "title": "Integration Test"}
 
         # Act
-        with patch("scripts.spec_parser.parse_spec_file") as mock_parse:
+        with patch("sdd.work_items.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"test_scenarios": []}
-            with patch(
-                "scripts.integration_test_runner.IntegrationTestRunner"
-            ) as mock_runner_class:
+            with patch("sdd.testing.integration_runner.IntegrationTestRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner.setup_environment.return_value = (True, "Setup complete")
                 mock_runner.run_tests.return_value = (True, {"passed": 5, "failed": 0})

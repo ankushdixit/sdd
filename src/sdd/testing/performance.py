@@ -14,9 +14,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.file_ops import load_json, save_json
+from sdd.core.file_ops import load_json, save_json
 
 
 class PerformanceBenchmark:
@@ -377,7 +375,6 @@ Resource Usage:
 
 def main():
     """CLI entry point."""
-    import sys
 
     if len(sys.argv) < 2:
         print("Usage: python performance_benchmark.py <work_item_id>")

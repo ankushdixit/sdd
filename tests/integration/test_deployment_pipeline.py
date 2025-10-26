@@ -11,7 +11,7 @@ This module tests the integration of quality gates for deployment work items:
 
 import pytest
 
-from scripts.quality_gates import QualityGates
+from sdd.quality.gates import QualityGates
 
 
 @pytest.fixture

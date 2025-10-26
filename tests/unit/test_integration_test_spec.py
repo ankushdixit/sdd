@@ -7,14 +7,11 @@ Tests the work_item_manager.py module's integration test validation including:
 - Required section checking
 """
 
-import sys
 from pathlib import Path
 
 import pytest
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.work_item_manager import WorkItemManager
+from sdd.work_items.manager import WorkItemManager
 
 
 @pytest.fixture
@@ -91,7 +88,7 @@ class TestIntegrationTestTemplate:
         The template file should be present at templates/integration_test_spec.md.
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
 
         # Assert
         assert template_path.exists(), "integration_test_spec.md template not found"
@@ -109,7 +106,7 @@ class TestIntegrationTestTemplate:
         - Acceptance Criteria
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
         required_sections = [
             "## Scope",
             "## Test Scenarios",
@@ -145,7 +142,7 @@ class TestIntegrationTestTemplate:
         Parametrized test to verify each required section individually.
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
 
         # Act
         template_content = template_path.read_text()

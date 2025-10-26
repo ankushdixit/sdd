@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scripts.config_validator import (
+from sdd.core.config_validator import (
     _format_validation_error,
     load_and_validate_config,
     validate_config,
@@ -72,7 +72,7 @@ class TestImportHandling:
             # Force reload to trigger ImportError path
             import importlib
 
-            import scripts.config_validator as cv
+            import sdd.core.config_validator as cv
 
             importlib.reload(cv)
             is_valid, errors = cv.validate_config(config_path, schema_path)
@@ -412,7 +412,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from scripts.config_validator import main
+        from sdd.core.config_validator import main
 
         # Act & Assert
         with patch.object(sys, "argv", ["config_validator.py"]):
@@ -429,7 +429,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from scripts.config_validator import main
+        from sdd.core.config_validator import main
 
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -451,7 +451,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from scripts.config_validator import main
+        from sdd.core.config_validator import main
 
         config = {"test_field": 123}  # Wrong type
         config_path = tmp_path / "config.json"
@@ -474,7 +474,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from scripts.config_validator import main
+        from sdd.core.config_validator import main
 
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -504,7 +504,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from scripts.config_validator import main
+        from sdd.core.config_validator import main
 
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"

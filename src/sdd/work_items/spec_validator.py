@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from scripts.spec_parser import (
+from sdd.work_items.spec_parser import (
     extract_checklist,
     extract_subsection,
     parse_section,

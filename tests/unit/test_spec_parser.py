@@ -6,7 +6,7 @@ from work item specification markdown files.
 
 import pytest
 
-from scripts import spec_parser
+from sdd.work_items import spec_parser
 
 
 class TestStripHtmlComments:

@@ -18,27 +18,24 @@ import sys
 from pathlib import Path
 
 # Import logging
-from scripts.logging_config import get_logger
+from sdd.core.logging_config import get_logger
+from sdd.work_items import spec_parser
 
 logger = get_logger(__name__)
 
 # Import config validator for schema validation
 try:
-    from scripts.config_validator import load_and_validate_config
+    from sdd.core.config_validator import load_and_validate_config
 except ImportError:
     # Fallback if running from different location
     try:
-        from config_validator import load_and_validate_config
+        from sdd.core.config_validator import load_and_validate_config
     except ImportError:
         load_and_validate_config = None
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts import spec_parser  # noqa: E402
-
 # Import spec validator for spec completeness quality gate
 try:
-    from scripts.spec_validator import validate_spec_file
+    from sdd.work_items.spec_validator import validate_spec_file
 except ImportError:
     validate_spec_file = None
 
@@ -828,12 +825,9 @@ class QualityGates:
         }
 
         # Import here to avoid circular imports
-        import sys
-
-        sys.path.insert(0, str(Path(__file__).parent))
 
         # 1. Run integration tests
-        from integration_test_runner import IntegrationTestRunner
+        from sdd.testing.integration_runner import IntegrationTestRunner
 
         runner = IntegrationTestRunner(work_item)
 
@@ -856,7 +850,7 @@ class QualityGates:
 
             # 2. Run performance benchmarks
             if work_item.get("performance_benchmarks"):
-                from performance_benchmark import PerformanceBenchmark
+                from sdd.testing.performance import PerformanceBenchmark
 
                 benchmark = PerformanceBenchmark(work_item)
                 benchmarks_passed, benchmark_results = benchmark.run_benchmarks()
@@ -871,7 +865,7 @@ class QualityGates:
 
             # 3. Validate API contracts
             if work_item.get("api_contracts"):
-                from api_contract_validator import APIContractValidator
+                from sdd.quality.api_validator import APIContractValidator
 
                 validator = APIContractValidator(work_item)
                 contracts_passed, contract_results = validator.validate_contracts()
@@ -1294,7 +1288,7 @@ class QualityGates:
     def _validate_deployment_environment(self, work_item: dict) -> bool:
         """Validate deployment environment is ready."""
         try:
-            from environment_validator import EnvironmentValidator
+            from sdd.quality.env_validator import EnvironmentValidator
 
             # Parse target environment from work item
             # Try to extract from spec, fallback to "staging"

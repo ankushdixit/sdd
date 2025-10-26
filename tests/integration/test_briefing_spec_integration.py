@@ -6,7 +6,7 @@ including full content loading, validation warnings, and schema changes.
 
 import json
 
-from scripts.briefing_generator import (
+from sdd.session.briefing import (
     generate_briefing,
     load_current_tree,
     load_project_docs,

@@ -8,8 +8,8 @@ This module tests the integration of deployment session workflow including:
 
 import pytest
 
-from scripts.briefing_generator import generate_deployment_briefing
-from scripts.session_complete import generate_deployment_summary
+from sdd.session.briefing import generate_deployment_briefing
+from sdd.session.complete import generate_deployment_summary
 
 
 @pytest.fixture

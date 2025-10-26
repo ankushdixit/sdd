@@ -12,15 +12,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root / "scripts"))
-
-from scripts.briefing_generator import generate_briefing, load_work_item_spec  # noqa: E402
-from scripts.quality_gates import QualityGates  # noqa: E402
-from scripts.spec_parser import parse_spec_file  # noqa: E402
-from scripts.spec_validator import validate_spec_file  # noqa: E402
+from sdd.quality.gates import QualityGates
+from sdd.session.briefing import generate_briefing, load_work_item_spec
+from sdd.work_items.spec_parser import parse_spec_file
+from sdd.work_items.spec_validator import validate_spec_file
 
 
 class TestPhase5_7Complete:

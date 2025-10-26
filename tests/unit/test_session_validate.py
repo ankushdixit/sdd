@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.session_validate import SessionValidator
+from sdd.session.validate import SessionValidator
 
 
 @pytest.fixture
@@ -69,8 +69,8 @@ class TestSessionValidatorInit:
     def test_init_with_default_project_root(self, temp_session_dir):
         """Test SessionValidator initializes with current directory as default project root."""
         # Arrange & Act
-        with patch("scripts.session_validate.Path.cwd", return_value=temp_session_dir.parent):
-            with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.Path.cwd", return_value=temp_session_dir.parent):
+            with patch("sdd.session.validate.QualityGates"):
                 validator = SessionValidator()
 
         # Assert
@@ -83,7 +83,7 @@ class TestSessionValidatorInit:
         project_root = temp_session_dir.parent
 
         # Act
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Assert
@@ -96,7 +96,7 @@ class TestSessionValidatorInit:
         project_root = temp_session_dir.parent
 
         # Act
-        with patch("scripts.session_validate.QualityGates") as mock_qg_class:
+        with patch("sdd.session.validate.QualityGates") as mock_qg_class:
             _validator = SessionValidator(project_root=project_root)
 
         # Assert
@@ -111,7 +111,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=True for clean working directory."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_result = Mock()
@@ -135,7 +135,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=True when changes don't include tracking files."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_result = Mock()
@@ -158,7 +158,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=False when tracking files are uncommitted."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_result = Mock()
@@ -180,7 +180,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=False when directory is not a git repo."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_result = Mock()
@@ -198,7 +198,7 @@ class TestCheckGitStatus:
         """Test check_git_status handles subprocess exceptions gracefully."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -217,7 +217,7 @@ class TestPreviewQualityGates:
         """Test preview_quality_gates returns passed=True when all gates pass."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -238,7 +238,7 @@ class TestPreviewQualityGates:
             {"status": "failed", "reason": "2 tests failed"},
         )
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -256,7 +256,7 @@ class TestPreviewQualityGates:
         """Test preview_quality_gates skips tests when auto_fix=True."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -275,7 +275,7 @@ class TestPreviewQualityGates:
         mock_quality_gates.config["test_execution"]["required"] = False
         mock_quality_gates.run_tests.return_value = (False, {"status": "failed"})
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -293,7 +293,7 @@ class TestPreviewQualityGates:
         project_root = temp_session_dir.parent
         mock_quality_gates.config["test_execution"]["enabled"] = False
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -312,7 +312,7 @@ class TestPreviewQualityGates:
         )
         mock_quality_gates.run_linting.return_value = (True, {"status": "passed", "fixed": True})
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -334,7 +334,7 @@ class TestPreviewQualityGates:
             {"status": "passed", "formatted": True},
         )
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -352,7 +352,7 @@ class TestValidateWorkItemCriteria:
         """Test validate_work_item_criteria returns passed=False when status file doesn't exist."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -369,7 +369,7 @@ class TestValidateWorkItemCriteria:
         status_file = temp_session_dir / "tracking" / "status_update.json"
         status_file.write_text(json.dumps({"current_work_item": None}))
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -400,7 +400,7 @@ class TestValidateWorkItemCriteria:
         }
         work_items_file.write_text(json.dumps(work_items))
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -435,11 +435,13 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("Invalid spec content")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
-        with patch("scripts.spec_parser.parse_spec_file", side_effect=Exception("Parse error")):
+        with patch(
+            "sdd.work_items.spec_parser.parse_spec_file", side_effect=Exception("Parse error")
+        ):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -473,12 +475,12 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         with patch(
-            "scripts.spec_parser.parse_spec_file",
+            "sdd.work_items.spec_parser.parse_spec_file",
             return_value={"acceptance_criteria": ["AC1", "AC2"]},
         ):
             result = validator.validate_work_item_criteria()
@@ -513,14 +515,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing overview and implementation_details
-        with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -553,14 +555,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "BUG-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing description and fix_approach
-        with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -595,14 +597,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "TEST-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing scope and test_scenarios
-        with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -635,7 +637,7 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -644,7 +646,7 @@ class TestValidateWorkItemCriteria:
             "overview": "Feature overview",
             "implementation_details": "Details",
         }
-        with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -659,7 +661,7 @@ class TestCheckTrackingUpdates:
         """Test check_tracking_updates returns passed=True with no changes message."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -675,7 +677,7 @@ class TestCheckTrackingUpdates:
         """Test check_tracking_updates detects changes when stack or tree modified."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("scripts.session_validate.QualityGates"):
+        with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -719,7 +721,7 @@ class TestValidate:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock all checks to pass
@@ -738,7 +740,7 @@ class TestValidate:
 
         # Act
         with patch("subprocess.run", side_effect=[mock_git_result, mock_branch]):
-            with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+            with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 result = validator.validate()
 
         # Assert
@@ -754,7 +756,7 @@ class TestValidate:
         # Arrange
         project_root = temp_session_dir.parent
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock git check to fail
@@ -796,7 +798,7 @@ class TestValidate:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("scripts.session_validate.QualityGates", return_value=mock_quality_gates):
+        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock git
@@ -815,7 +817,7 @@ class TestValidate:
 
         # Act
         with patch("subprocess.run", side_effect=[mock_git_result, mock_branch]):
-            with patch("scripts.spec_parser.parse_spec_file", return_value=parsed_spec):
+            with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 validator.validate(auto_fix=True)
 
         # Assert

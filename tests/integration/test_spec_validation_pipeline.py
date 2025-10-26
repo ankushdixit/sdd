@@ -6,8 +6,8 @@ including validation of integration tests and deployments.
 
 import pytest
 
-from scripts.integration_test_runner import IntegrationTestRunner
-from scripts.work_item_manager import WorkItemManager
+from sdd.testing.integration_runner import IntegrationTestRunner
+from sdd.work_items.manager import WorkItemManager
 
 
 class TestValidateIntegrationTest:

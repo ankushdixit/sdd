@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdd"
-version = "0.5.8"
+version = "0.6.0"
 description = "Session-Driven Development - AI-augmented development workflow framework"
 readme = "README.md"
 license = {text = "MIT"}
@@ -53,14 +53,14 @@ Issues = "https://github.com/yourusername/sdd/issues"
 Changelog = "https://github.com/yourusername/sdd/blob/main/CHANGELOG.md"
 
 [project.scripts]
-sdd = "sdd_cli:main"
+sdd = "sdd.cli:main"
 
 [tool.setuptools]
-py-modules = ["sdd_cli"]
-packages = ["scripts", "templates"]
+package-dir = {"" = "src"}
+packages = ["sdd"]
 
 [tool.setuptools.package-data]
-templates = ["*.md", "*.json"]
+"sdd.templates" = ["*.md", "*.json", "*.toml", "git-hooks/*", "tests/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -76,14 +76,13 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 ignore = [
-    "E402",  # Module level import not at top (needed for dynamic path setup)
     "E501",  # Line too long (handled by formatter)
     "N801",  # Class name should use CapWords convention (test classes use descriptive names)
 ]
 
 [tool.coverage.run]
-source = ["scripts", "sdd_cli"]
-omit = ["tests/*", "templates/*"]
+source = ["src/sdd"]
+omit = ["tests/*", "src/sdd/templates/*"]
 
 [tool.coverage.report]
 exclude_lines = [

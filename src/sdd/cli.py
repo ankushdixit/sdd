@@ -3,31 +3,24 @@
 SDD CLI Entry Point
 
 Universal interface for all Session-Driven Development commands.
-Solves module import issues by dynamically adding the plugin directory
-to Python's path before importing any scripts.
 
 Usage:
-    sdd_cli.py <command> [args...]
+    sdd <command> [args...]
 
 Examples:
-    sdd_cli.py work-list
-    sdd_cli.py work-list --status not_started
-    sdd_cli.py work-show feature_user_auth
-    sdd_cli.py start
-    sdd_cli.py learn-search "authentication"
+    sdd work-list
+    sdd work-list --status not_started
+    sdd work-show feature_user_auth
+    sdd start
+    sdd learn-search "authentication"
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-# CRITICAL: Add plugin directory to Python path BEFORE any imports
-# This allows all scripts to import from 'scripts.module_name'
-PLUGIN_DIR = Path(__file__).parent.resolve()
-sys.path.insert(0, str(PLUGIN_DIR))
-
 # Import logging configuration
-from scripts.logging_config import setup_logging  # noqa: E402
+from sdd.core.logging_config import setup_logging
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
@@ -38,49 +31,49 @@ from scripts.logging_config import setup_logging  # noqa: E402
 COMMANDS = {
     # Work Item Management (WorkItemManager class)
     "work-list": (
-        "scripts.work_item_manager",
+        "sdd.work_items.manager",
         "WorkItemManager",
         "list_work_items",
         False,
     ),
     "work-next": (
-        "scripts.work_item_manager",
+        "sdd.work_items.manager",
         "WorkItemManager",
         "get_next_work_item",
         False,
     ),
     "work-show": (
-        "scripts.work_item_manager",
+        "sdd.work_items.manager",
         "WorkItemManager",
         "show_work_item",
         False,
     ),
     "work-update": (
-        "scripts.work_item_manager",
+        "sdd.work_items.manager",
         "WorkItemManager",
         "update_work_item_interactive",
         False,
     ),
     "work-new": (
-        "scripts.work_item_manager",
+        "sdd.work_items.manager",
         "WorkItemManager",
         "create_work_item",
         False,
     ),
     # Dependency Graph (uses argparse in main)
-    "work-graph": ("scripts.dependency_graph", None, "main", True),
+    "work-graph": ("sdd.visualization.dependency_graph", None, "main", True),
     # Session Management (standalone main functions)
-    "start": ("scripts.briefing_generator", None, "main", True),
-    "end": ("scripts.session_complete", None, "main", True),
-    "status": ("scripts.session_status", None, "get_session_status", False),
-    "validate": ("scripts.session_validate", None, "main", True),
+    "start": ("sdd.session.briefing", None, "main", True),
+    "end": ("sdd.session.complete", None, "main", True),
+    "status": ("sdd.session.status", None, "get_session_status", False),
+    "validate": ("sdd.session.validate", None, "main", True),
     # Learning System (uses argparse in main)
-    "learn": ("scripts.learning_curator", None, "main", True),
-    "learn-show": ("scripts.learning_curator", None, "main", True),
-    "learn-search": ("scripts.learning_curator", None, "main", True),
-    "learn-curate": ("scripts.learning_curator", None, "main", True),
+    "learn": ("sdd.learning.curator", None, "main", True),
+    "learn-show": ("sdd.learning.curator", None, "main", True),
+    "learn-search": ("sdd.learning.curator", None, "main", True),
+    "learn-curate": ("sdd.learning.curator", None, "main", True),
     # Project Initialization
-    "init": ("scripts.init_project", None, "init_project", False),
+    "init": ("sdd.project.init", None, "init_project", False),
 }
 
 
@@ -316,7 +309,7 @@ def main():
     # Check if command is provided
     if len(remaining) < 1:
         print(
-            "Usage: sdd_cli.py [--verbose] [--log-file FILE] <command> [args...]",
+            "Usage: sdd [--verbose] [--log-file FILE] <command> [args...]",
             file=sys.stderr,
         )
         print("\nGlobal flags:", file=sys.stderr)

@@ -16,10 +16,8 @@ from datetime import datetime
 from pathlib import Path
 
 # Add scripts directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from quality_gates import QualityGates
-from spec_parser import parse_spec_file
+from sdd.quality.gates import QualityGates
+from sdd.work_items.spec_parser import parse_spec_file
 
 
 def load_status():
@@ -115,13 +113,14 @@ def update_all_tracking(session_num):
 
     # Get SDD installation directory for absolute path resolution
     script_dir = Path(__file__).parent
+    project_dir = script_dir.parent / "project"
 
     # Update stack
     try:
         result = subprocess.run(
             [
                 "python",
-                str(script_dir / "generate_stack.py"),
+                str(project_dir / "stack.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
@@ -149,7 +148,7 @@ def update_all_tracking(session_num):
         result = subprocess.run(
             [
                 "python",
-                str(script_dir / "generate_tree.py"),
+                str(project_dir / "tree.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
@@ -229,7 +228,7 @@ def auto_extract_learnings(session_num):
 
     try:
         # Import learning curator
-        from learning_curator import LearningsCurator
+        from sdd.learning.curator import LearningsCurator
 
         curator = LearningsCurator()
 
@@ -318,18 +317,10 @@ def extract_learnings_from_session(learnings_file=None):
 def complete_git_workflow(work_item_id, commit_message, session_num):
     """Complete git workflow (commit, push, optionally merge or create PR)."""
     try:
-        # Import git workflow dynamically
-        git_module_path = Path(__file__).parent / "git_integration.py"
-        if not git_module_path.exists():
-            return {"success": False, "message": "git_integration.py not found"}
+        # Import git workflow from new location
+        from sdd.git.integration import GitWorkflow
 
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
-        git_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(git_module)
-
-        workflow = git_module.GitWorkflow()
+        workflow = GitWorkflow()
 
         # Load work items to check status
         with open(".session/tracking/work_items.json") as f:
@@ -796,7 +787,7 @@ def main():
     if learnings:
         print(f"\nProcessing {len(learnings)} learnings...")
         try:
-            from learning_curator import LearningsCurator
+            from sdd.learning.curator import LearningsCurator
 
             curator = LearningsCurator()
             added_count = 0

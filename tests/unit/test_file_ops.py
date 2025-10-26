@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from scripts.file_ops import (
+from sdd.core.file_ops import (
     backup_file,
     ensure_directory,
     load_json,

@@ -11,13 +11,10 @@ Updated in Phase 5.7.3 to use spec_parser for checking work item completeness.
 import argparse
 import json
 import subprocess
-import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts import spec_parser
-from scripts.quality_gates import QualityGates
+from sdd.quality.gates import QualityGates
+from sdd.work_items import spec_parser
 
 
 class SessionValidator:

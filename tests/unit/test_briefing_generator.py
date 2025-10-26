@@ -23,7 +23,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts import briefing_generator
+from sdd.session import briefing as briefing_generator
 
 
 @pytest.fixture
@@ -160,7 +160,7 @@ class TestLoadWorkItems:
         work_items_file = Path(".session/tracking/work_items.json")
         work_items_file.write_text(json.dumps(sample_work_items))
 
-        with patch("scripts.briefing_generator.logger") as mock_logger:
+        with patch("sdd.session.briefing.logger") as mock_logger:
             # Act
             briefing_generator.load_work_items()
 
@@ -687,22 +687,14 @@ class TestValidateEnvironment:
 class TestCheckGitStatus:
     """Tests for check_git_status function."""
 
-    @patch("importlib.util.spec_from_file_location")
-    @patch("importlib.util.module_from_spec")
-    def test_check_git_status_returns_git_info(self, mock_module_from_spec, mock_spec_from_file):
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_check_git_status_returns_git_info(self, mock_git_workflow_class):
         """Test that check_git_status returns git status information."""
         # Arrange
         mock_workflow = Mock()
         mock_workflow.check_git_status.return_value = (True, "clean")
         mock_workflow.get_current_branch.return_value = "main"
-
-        mock_module = Mock()
-        mock_module.GitWorkflow.return_value = mock_workflow
-        mock_module_from_spec.return_value = mock_module
-
-        mock_spec = Mock()
-        mock_spec.loader.exec_module = Mock()
-        mock_spec_from_file.return_value = mock_spec
+        mock_git_workflow_class.return_value = mock_workflow
 
         # Act
         result = briefing_generator.check_git_status()
@@ -766,7 +758,7 @@ class TestGenerateIntegrationTestBriefing:
         # Assert
         assert result == ""
 
-    @patch("scripts.briefing_generator.check_command_exists")
+    @patch("sdd.session.briefing.check_command_exists")
     def test_generate_integration_test_briefing_includes_context(self, mock_check):
         """Test that generate_integration_test_briefing includes integration test context."""
         # Arrange
@@ -794,7 +786,7 @@ class TestGenerateIntegrationTestBriefing:
         assert "database" in result
         assert "Test Scenarios" in result
 
-    @patch("scripts.briefing_generator.check_command_exists")
+    @patch("sdd.session.briefing.check_command_exists")
     def test_generate_integration_test_briefing_checks_docker(self, mock_check):
         """Test that generate_integration_test_briefing checks for Docker availability."""
         # Arrange
@@ -1029,14 +1021,14 @@ class TestFinalizePreviousWorkItemGitStatus:
 class TestGenerateBriefing:
     """Tests for generate_briefing function."""
 
-    @patch("scripts.briefing_generator.load_project_docs")
-    @patch("scripts.briefing_generator.load_current_stack")
-    @patch("scripts.briefing_generator.load_current_tree")
-    @patch("scripts.briefing_generator.load_work_item_spec")
-    @patch("scripts.briefing_generator.validate_environment")
-    @patch("scripts.briefing_generator.check_git_status")
-    @patch("scripts.briefing_generator.load_milestone_context")
-    @patch("scripts.briefing_generator.get_relevant_learnings")
+    @patch("sdd.session.briefing.load_project_docs")
+    @patch("sdd.session.briefing.load_current_stack")
+    @patch("sdd.session.briefing.load_current_tree")
+    @patch("sdd.session.briefing.load_work_item_spec")
+    @patch("sdd.session.briefing.validate_environment")
+    @patch("sdd.session.briefing.check_git_status")
+    @patch("sdd.session.briefing.load_milestone_context")
+    @patch("sdd.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_work_item_info(
         self,
         mock_learnings,
@@ -1077,14 +1069,14 @@ class TestGenerateBriefing:
         assert "feature" in result
         assert "high" in result
 
-    @patch("scripts.briefing_generator.load_project_docs")
-    @patch("scripts.briefing_generator.load_current_stack")
-    @patch("scripts.briefing_generator.load_current_tree")
-    @patch("scripts.briefing_generator.load_work_item_spec")
-    @patch("scripts.briefing_generator.validate_environment")
-    @patch("scripts.briefing_generator.check_git_status")
-    @patch("scripts.briefing_generator.load_milestone_context")
-    @patch("scripts.briefing_generator.get_relevant_learnings")
+    @patch("sdd.session.briefing.load_project_docs")
+    @patch("sdd.session.briefing.load_current_stack")
+    @patch("sdd.session.briefing.load_current_tree")
+    @patch("sdd.session.briefing.load_work_item_spec")
+    @patch("sdd.session.briefing.validate_environment")
+    @patch("sdd.session.briefing.check_git_status")
+    @patch("sdd.session.briefing.load_milestone_context")
+    @patch("sdd.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_environment_status(
         self,
         mock_learnings,
@@ -1119,15 +1111,15 @@ class TestGenerateBriefing:
         assert "Python: 3.11" in result
         assert "Git: 2.39" in result
 
-    @patch("scripts.briefing_generator.load_project_docs")
-    @patch("scripts.briefing_generator.load_current_stack")
-    @patch("scripts.briefing_generator.load_current_tree")
-    @patch("scripts.briefing_generator.load_work_item_spec")
-    @patch("scripts.briefing_generator.validate_environment")
-    @patch("scripts.briefing_generator.check_git_status")
-    @patch("scripts.briefing_generator.load_milestone_context")
-    @patch("scripts.briefing_generator.get_relevant_learnings")
-    @patch("scripts.briefing_generator.validate_spec_file")
+    @patch("sdd.session.briefing.load_project_docs")
+    @patch("sdd.session.briefing.load_current_stack")
+    @patch("sdd.session.briefing.load_current_tree")
+    @patch("sdd.session.briefing.load_work_item_spec")
+    @patch("sdd.session.briefing.validate_environment")
+    @patch("sdd.session.briefing.check_git_status")
+    @patch("sdd.session.briefing.load_milestone_context")
+    @patch("sdd.session.briefing.get_relevant_learnings")
+    @patch("sdd.session.briefing.validate_spec_file")
     def test_generate_briefing_includes_spec_validation_warning(
         self,
         mock_validate_spec,
@@ -1157,9 +1149,9 @@ class TestGenerateBriefing:
         mock_validate_spec.return_value = (False, ["Missing acceptance criteria"])
 
         # Patch the validate_spec_file global in briefing_generator
-        with patch("scripts.briefing_generator.validate_spec_file", mock_validate_spec):
+        with patch("sdd.session.briefing.validate_spec_file", mock_validate_spec):
             with patch(
-                "scripts.briefing_generator.format_validation_report",
+                "sdd.session.briefing.format_validation_report",
                 return_value="Validation Warning",
             ):
                 # Act
@@ -1168,14 +1160,14 @@ class TestGenerateBriefing:
         # Assert
         assert "Specification Validation Warning" in result
 
-    @patch("scripts.briefing_generator.load_project_docs")
-    @patch("scripts.briefing_generator.load_current_stack")
-    @patch("scripts.briefing_generator.load_current_tree")
-    @patch("scripts.briefing_generator.load_work_item_spec")
-    @patch("scripts.briefing_generator.validate_environment")
-    @patch("scripts.briefing_generator.check_git_status")
-    @patch("scripts.briefing_generator.load_milestone_context")
-    @patch("scripts.briefing_generator.get_relevant_learnings")
+    @patch("sdd.session.briefing.load_project_docs")
+    @patch("sdd.session.briefing.load_current_stack")
+    @patch("sdd.session.briefing.load_current_tree")
+    @patch("sdd.session.briefing.load_work_item_spec")
+    @patch("sdd.session.briefing.validate_environment")
+    @patch("sdd.session.briefing.check_git_status")
+    @patch("sdd.session.briefing.load_milestone_context")
+    @patch("sdd.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_relevant_learnings(
         self,
         mock_learnings,
@@ -1213,11 +1205,11 @@ class TestGenerateBriefing:
 class TestMainFunction:
     """Tests for main CLI function."""
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
-    @patch("scripts.briefing_generator.get_next_work_item")
-    @patch("scripts.briefing_generator.generate_briefing")
-    @patch("scripts.briefing_generator.finalize_previous_work_item_git_status")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
+    @patch("sdd.session.briefing.get_next_work_item")
+    @patch("sdd.session.briefing.generate_briefing")
+    @patch("sdd.session.briefing.finalize_previous_work_item_git_status")
     def test_main_selects_next_work_item_when_no_arg(
         self,
         mock_finalize,
@@ -1245,8 +1237,8 @@ class TestMainFunction:
         assert result == 0
         mock_get_next.assert_called_once()
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_returns_error_when_no_session_dir(
         self, mock_load_learnings, mock_load_work_items
     ):
@@ -1260,9 +1252,9 @@ class TestMainFunction:
         # Assert
         assert result == 1
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
-    @patch("scripts.briefing_generator.get_next_work_item")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
+    @patch("sdd.session.briefing.get_next_work_item")
     def test_main_returns_error_when_no_available_work_items(
         self, mock_get_next, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1279,8 +1271,8 @@ class TestMainFunction:
         # Assert
         assert result == 1
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_with_explicit_work_item_id(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1300,16 +1292,16 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001"]):
-            with patch("scripts.briefing_generator.generate_briefing", return_value="# Briefing"):
-                with patch("scripts.briefing_generator.finalize_previous_work_item_git_status"):
+            with patch("sdd.session.briefing.generate_briefing", return_value="# Briefing"):
+                with patch("sdd.session.briefing.finalize_previous_work_item_git_status"):
                     # Act
                     result = briefing_generator.main()
 
         # Assert
         assert result == 0
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_returns_error_when_work_item_not_found(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1325,8 +1317,8 @@ class TestMainFunction:
         # Assert
         assert result == 1
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_blocks_when_another_item_in_progress(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1348,8 +1340,8 @@ class TestMainFunction:
         # Assert
         assert result == 1
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_allows_force_start_with_flag(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1370,16 +1362,16 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001", "--force"]):
-            with patch("scripts.briefing_generator.generate_briefing", return_value="# Briefing"):
-                with patch("scripts.briefing_generator.finalize_previous_work_item_git_status"):
+            with patch("sdd.session.briefing.generate_briefing", return_value="# Briefing"):
+                with patch("sdd.session.briefing.finalize_previous_work_item_git_status"):
                     # Act
                     result = briefing_generator.main()
 
         # Assert
         assert result == 0
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
     def test_main_checks_dependencies_are_satisfied(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1405,14 +1397,14 @@ class TestMainFunction:
         # Assert
         assert result == 1  # Should fail due to unmet dependencies
 
-    @patch("scripts.briefing_generator.load_work_items")
-    @patch("scripts.briefing_generator.load_learnings")
-    @patch("scripts.briefing_generator.generate_briefing")
-    @patch("scripts.briefing_generator.finalize_previous_work_item_git_status")
-    @patch("importlib.util.spec_from_file_location")
+    @patch("sdd.session.briefing.load_work_items")
+    @patch("sdd.session.briefing.load_learnings")
+    @patch("sdd.session.briefing.generate_briefing")
+    @patch("sdd.session.briefing.finalize_previous_work_item_git_status")
+    @patch("sdd.git.integration.GitWorkflow")
     def test_main_starts_git_workflow(
         self,
-        mock_spec,
+        mock_git_workflow_class,
         mock_finalize,
         mock_generate,
         mock_load_learnings,
@@ -1429,7 +1421,14 @@ class TestMainFunction:
                     "dependencies": [],
                     "sessions": [],
                 }
-            }
+            },
+            "metadata": {
+                "total_items": 1,
+                "completed": 0,
+                "in_progress": 0,
+                "blocked": 0,
+                "last_updated": "2025-01-01T00:00:00",
+            },
         }
         mock_load_work_items.return_value = work_items_data
         mock_load_learnings.return_value = {"learnings": []}
@@ -1442,18 +1441,15 @@ class TestMainFunction:
             "action": "created",
             "branch": "session-001-test",
         }
-        mock_git_module = Mock()
-        mock_git_module.GitWorkflow.return_value = mock_workflow
+        mock_git_workflow_class.return_value = mock_workflow
 
-        # Create git_integration.py file
-        git_file = Path("scripts/git_integration.py")
-        git_file.parent.mkdir(exist_ok=True)
-        git_file.write_text("# Git integration")
+        # Create work_items.json file (required for status update)
+        work_items_file = Path(".session/tracking/work_items.json")
+        work_items_file.write_text(json.dumps(work_items_data, indent=2))
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001"]):
-            with patch("importlib.util.module_from_spec", return_value=mock_git_module):
-                # Act
-                result = briefing_generator.main()
+            # Act
+            result = briefing_generator.main()
 
         # Assert
         assert result == 0

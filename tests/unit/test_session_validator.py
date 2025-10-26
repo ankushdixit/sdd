@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scripts.session_validate import SessionValidator
+from sdd.session.validate import SessionValidator
 
 
 @pytest.fixture
