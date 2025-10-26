@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sdd"
-version = "0.6.0"
+name = "session-driven-development"
+version = "0.7.0"
 description = "Session-Driven Development - AI-augmented development workflow framework"
 readme = "README.md"
 license = {text = "MIT"}
@@ -46,11 +46,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/sdd"
-Documentation = "https://github.com/yourusername/sdd/blob/main/README.md"
-Repository = "https://github.com/yourusername/sdd"
-Issues = "https://github.com/yourusername/sdd/issues"
-Changelog = "https://github.com/yourusername/sdd/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/ankushdixit/sdd"
+Documentation = "https://github.com/ankushdixit/sdd/blob/main/README.md"
+Repository = "https://github.com/ankushdixit/sdd"
+Issues = "https://github.com/ankushdixit/sdd/issues"
+Changelog = "https://github.com/ankushdixit/sdd/blob/main/CHANGELOG.md"
 
 [project.scripts]
 sdd = "sdd.cli:main"
