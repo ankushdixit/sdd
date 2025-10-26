@@ -67,11 +67,11 @@ jobs:
 
     - name: Run ruff check
       run: |
-        ruff check scripts/ tests/ sdd_cli.py --ignore E402
+        ruff check src/sdd/ tests/
 
     - name: Run ruff format check
       run: |
-        ruff format --check scripts/ tests/ sdd_cli.py
+        ruff format --check src/sdd/ tests/
 
   security:
     name: Security Scanning
@@ -94,8 +94,8 @@ jobs:
 
     - name: Run bandit security scan
       run: |
-        bandit -r scripts/ sdd_cli.py -c .bandit -f json -o bandit-report.json
-        bandit -r scripts/ sdd_cli.py -c .bandit
+        bandit -r src/sdd/ -c .bandit -f json -o bandit-report.json
+        bandit -r src/sdd/ -c .bandit
 
     - name: Run safety check
       run: |
