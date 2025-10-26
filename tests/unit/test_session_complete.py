@@ -795,76 +795,51 @@ class TestCompleteGitWorkflow:
         new_callable=mock_open,
         read_data='{"work_items": {"feature-001": {"status": "completed"}}}',
     )
-    def test_complete_git_workflow_success(self, mock_file, tmp_path):
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_complete_git_workflow_success(self, mock_git_workflow_class, mock_file, tmp_path):
         """Test successful git workflow completion."""
         # Arrange
-        git_file = tmp_path / "git_integration.py"
-        git_file.write_text("# dummy git module")
-
         mock_workflow = MagicMock()
         mock_workflow.complete_work_item.return_value = {
             "success": True,
             "message": "Work item completed",
         }
+        mock_git_workflow_class.return_value = mock_workflow
 
-        with patch("importlib.util.spec_from_file_location") as mock_spec_from:
-            with patch("importlib.util.module_from_spec") as mock_module_from_spec:
-                mock_spec = MagicMock()
-                mock_module = MagicMock()
-                mock_module.GitWorkflow.return_value = mock_workflow
-
-                mock_spec_from.return_value = mock_spec
-                mock_module_from_spec.return_value = mock_module
-
-                # Mock exists check to return True
-                with patch.object(Path, "exists", return_value=True):
-                    # Act
-                    result = complete_git_workflow("feature-001", "Commit message", 5)
+        # Act
+        result = complete_git_workflow("feature-001", "Commit message", 5)
 
         # Assert
         assert result["success"] is True
 
-    @patch("sdd.session.complete.Path")
-    def test_complete_git_workflow_module_not_found(self, mock_path_class):
-        """Test git workflow when git_integration.py not found."""
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_complete_git_workflow_module_not_found(self, mock_git_workflow_class):
+        """Test git workflow when import fails."""
         # Arrange
-        mock_path = MagicMock()
-        mock_path.exists.return_value = False
-        mock_path_class.return_value.parent.__truediv__.return_value = mock_path
+        mock_git_workflow_class.side_effect = ImportError("Module not found")
 
         # Act
         result = complete_git_workflow("feature-001", "Commit message", 5)
 
         # Assert
         assert result["success"] is False
-        assert "not found" in result["message"]
+        assert "error" in result["message"].lower()
 
     @patch(
         "builtins.open",
         new_callable=mock_open,
         read_data='{"work_items": {"feature-001": {"status": "completed"}}}',
     )
-    def test_complete_git_workflow_with_merge(self, mock_file, tmp_path):
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_complete_git_workflow_with_merge(self, mock_git_workflow_class, mock_file, tmp_path):
         """Test git workflow with merge when work item completed."""
         # Arrange
-        git_file = tmp_path / "git_integration.py"
-        git_file.write_text("# dummy")
-
         mock_workflow = MagicMock()
         mock_workflow.complete_work_item.return_value = {"success": True}
+        mock_git_workflow_class.return_value = mock_workflow
 
-        with patch("importlib.util.spec_from_file_location") as mock_spec_from:
-            with patch("importlib.util.module_from_spec") as mock_module_from_spec:
-                mock_spec = MagicMock()
-                mock_module = MagicMock()
-                mock_module.GitWorkflow.return_value = mock_workflow
-
-                mock_spec_from.return_value = mock_spec
-                mock_module_from_spec.return_value = mock_module
-
-                with patch.object(Path, "exists", return_value=True):
-                    # Act
-                    complete_git_workflow("feature-001", "Commit", 5)
+        # Act
+        complete_git_workflow("feature-001", "Commit", 5)
 
         # Assert
         mock_workflow.complete_work_item.assert_called_once()
