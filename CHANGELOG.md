@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-10-26
+
 ### Added
 - **Enhanced session briefings with context continuity (Enhancement #11)**
   - Previous Work section for in-progress items showing commits, file stats, and quality gates from prior sessions
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic metadata updates (total_items, status counts)
   - 19 comprehensive unit tests
   - Full documentation in `.claude/commands/work-delete.md` and `docs/commands/work-delete.md`
+
+- **PyPI Publishing Workflow** - Automated package publishing to PyPI on GitHub releases
 
 ## [0.6.0] - 2025-10-26
 
