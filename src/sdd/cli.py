@@ -60,6 +60,7 @@ COMMANDS = {
         "create_work_item",
         False,
     ),
+    "work-delete": ("sdd.work_items.delete", None, "main", True),
     # Dependency Graph (uses argparse in main)
     "work-graph": ("sdd.visualization.dependency_graph", None, "main", True),
     # Session Management (standalone main functions)
@@ -318,7 +319,7 @@ def main():
         print("\nAvailable commands:", file=sys.stderr)
         print("  Work Items:", file=sys.stderr)
         print(
-            "    work-list, work-next, work-show, work-update, work-new, work-graph",
+            "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph",
             file=sys.stderr,
         )
         print("  Sessions:", file=sys.stderr)

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Work item deletion** - Safe deletion of work items with dependency checking
+  - New `sdd work-delete <work_item_id>` command
+  - Interactive mode with 3 options: keep spec, delete spec, or cancel
+  - Non-interactive mode with `--keep-spec` and `--delete-spec` flags
+  - Dependency checking warns about dependent work items
+  - Automatic metadata updates (total_items, status counts)
+  - 19 comprehensive unit tests
+  - Full documentation in `.claude/commands/work-delete.md` and `docs/commands/work-delete.md`
+
 ## [0.6.0] - 2025-10-26
 
 ### Changed

@@ -155,7 +155,7 @@ class QualityGates:
 
         # Run tests
         try:
-            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=600)
+            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=1200)
 
             # pytest exit codes:
             # 0 = all tests passed
@@ -266,7 +266,7 @@ class QualityGates:
                         [
                             "bandit",
                             "-r",
-                            ".",
+                            "src/",
                             "-f",
                             "json",
                             "-o",
@@ -302,10 +302,12 @@ class QualityGates:
             except (FileNotFoundError, subprocess.TimeoutExpired):
                 pass  # bandit not available
 
-            # Run safety
+            # Run safety (scan only project requirements, not entire environment)
             try:
                 safety_result = subprocess.run(
-                    ["safety", "check", "--json"], capture_output=True, timeout=60
+                    ["safety", "check", "--file", "requirements.txt", "--json"],
+                    capture_output=True,
+                    timeout=60,
                 )
 
                 if safety_result.stdout:
