@@ -10,7 +10,7 @@ Note: This script is automatically executed by GitHub Actions on every push to m
       See .github/workflows/sync-plugin.yml for the automation workflow.
 
 Usage:
-    python scripts/sync_to_plugin.py [--main-repo PATH] [--plugin-repo PATH] [--dry-run]
+    python src/sdd/project/sync_plugin.py [--main-repo PATH] [--plugin-repo PATH] [--dry-run]
 
 Arguments:
     --main-repo PATH     Path to main SDD repository (default: current directory)
@@ -30,11 +30,9 @@ class PluginSyncer:
 
     # Define file mappings: (source_path, dest_path, is_directory)
     FILE_MAPPINGS = [
-        ("sdd_cli.py", "sdd/sdd_cli.py", False),
-        ("scripts", "sdd/scripts", True),
-        ("templates", "sdd/templates", True),
-        ("hooks", "sdd/hooks", True),
+        ("src/sdd", "sdd/src/sdd", True),
         (".claude/commands", "sdd/commands", True),
+        ("pyproject.toml", "sdd/pyproject.toml", False),
     ]
 
     # Files to preserve in plugin repo (never overwrite)
@@ -70,7 +68,7 @@ class PluginSyncer:
             print(f"❌ Main repo not found: {self.main_repo}")
             return False
 
-        main_markers = ["sdd_cli.py", "pyproject.toml", ".claude/commands"]
+        main_markers = ["src/sdd/cli.py", "pyproject.toml", ".claude/commands"]
         for marker in main_markers:
             if not (self.main_repo / marker).exists():
                 print(f"❌ Main repo missing expected file/dir: {marker}")

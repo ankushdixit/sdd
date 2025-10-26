@@ -45,13 +45,13 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             echo "Running in DRY RUN mode..."
-            python scripts/sync_to_plugin.py \
+            python src/sdd/project/sync_plugin.py \
               --main-repo . \
               --plugin-repo ../claude-plugins \
               --dry-run
           else
             echo "Running sync..."
-            python scripts/sync_to_plugin.py \
+            python src/sdd/project/sync_plugin.py \
               --main-repo . \
               --plugin-repo ../claude-plugins
           fi
@@ -95,11 +95,9 @@ jobs:
           Auto-synced from ankushdixit/sdd@${{ github.sha }}
 
           Changes synced:
-          - sdd_cli.py
-          - scripts/
-          - templates/
-          - hooks/
-          - commands/
+          - src/sdd/ (complete package structure)
+          - .claude/commands/
+          - pyproject.toml
           - plugin.json version update
 
           This sync was automatically triggered by the sync-plugin workflow.
