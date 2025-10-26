@@ -439,8 +439,45 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
 ## Work Items
 - **{work_item_id}**: {work_item["title"]} ({work_item["status"]})
 
-## Quality Gates
 """
+
+    # Add commit details with file stats (Enhancement #11 Phase 1)
+    commits = work_item.get("git", {}).get("commits", [])
+    if commits:
+        summary += "## Commits Made\n\n"
+        for commit in commits:
+            # Show short SHA and first line of commit message
+            message_lines = commit["message"].split("\n")
+            first_line = message_lines[0] if message_lines else ""
+            summary += f"**{commit['sha'][:7]}** - {first_line}\n"
+
+            # Show full message if multi-line
+            if len(message_lines) > 1:
+                remaining_lines = "\n".join(message_lines[1:]).strip()
+                if remaining_lines:
+                    summary += "\n```\n"
+                    summary += remaining_lines
+                    summary += "\n```\n\n"
+
+            # Get file stats using git diff
+            try:
+                result = subprocess.run(
+                    ["git", "diff", "--stat", f"{commit['sha']}^..{commit['sha']}"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    summary += "\nFiles changed:\n```\n"
+                    summary += result.stdout
+                    summary += "```\n\n"
+            except Exception:
+                # Silently skip if git diff fails
+                pass
+
+        summary += "\n"
+
+    summary += "## Quality Gates\n"
 
     # Add results for each gate
     for gate_name, gate_result in gate_results.items():

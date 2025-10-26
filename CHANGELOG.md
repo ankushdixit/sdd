@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enhanced session briefings with context continuity (Enhancement #11)**
+  - Previous Work section for in-progress items showing commits, file stats, and quality gates from prior sessions
+  - Enriched session summaries with full commit messages and file change statistics
+  - Enhanced learning relevance scoring using multi-factor algorithm (keywords, type, recency, category bonuses)
+  - Top 10 relevant learnings (up from 5) with intelligent scoring
+  - Fixes briefing update bug - briefings now regenerated for in-progress items
+  - Makes multi-session work practical by eliminating context loss
+  - Updated documentation in `.claude/commands/start.md` and `.claude/commands/end.md`
+
 - **Work item deletion** - Safe deletion of work items with dependency checking
   - New `sdd work-delete <work_item_id>` command
   - Interactive mode with 3 options: keep spec, delete spec, or cancel
