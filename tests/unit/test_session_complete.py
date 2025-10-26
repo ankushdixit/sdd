@@ -16,7 +16,7 @@ Tests cover:
 import json
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 
@@ -1123,6 +1123,132 @@ class TestGenerateSummary:
 
         # Assert
         assert "Linting: ⊘ SKIPPED" in result
+
+    @patch("subprocess.run")
+    def test_generate_summary_with_commits(self, mock_run):
+        """Test summary includes commit details (Enhancement #11)."""
+        # Arrange
+        status = {"current_session": 1, "current_work_item": "feature-001"}
+        work_items_data = {
+            "work_items": {
+                "feature-001": {
+                    "title": "Feature",
+                    "status": "completed",
+                    "git": {
+                        "commits": [
+                            {
+                                "sha": "abc1234567890",
+                                "message": "feat: Add feature X",
+                                "timestamp": "2025-10-26T10:00:00",
+                            }
+                        ]
+                    },
+                }
+            }
+        }
+        gate_results = {"tests": {"status": "passed"}}
+
+        # Mock git diff --stat
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout=" file1.py | 10 +++++-----\n 1 file changed, 5 insertions(+), 5 deletions(-)",
+        )
+
+        # Act
+        result = generate_summary(status, work_items_data, gate_results, None)
+
+        # Assert
+        assert "Commits Made" in result
+        assert "abc1234" in result  # Short SHA
+        assert "feat: Add feature X" in result
+        assert "Files changed:" in result
+        assert "file1.py" in result
+
+    @patch("subprocess.run")
+    def test_generate_summary_with_multiline_commit(self, mock_run):
+        """Test summary preserves multi-line commit messages (Enhancement #11)."""
+        # Arrange
+        status = {"current_session": 1, "current_work_item": "feature-001"}
+        work_items_data = {
+            "work_items": {
+                "feature-001": {
+                    "title": "Feature",
+                    "status": "completed",
+                    "git": {
+                        "commits": [
+                            {
+                                "sha": "abc1234567890",
+                                "message": "feat: Add feature X\n\nAdded comprehensive implementation\nwith tests and documentation",
+                                "timestamp": "2025-10-26T10:00:00",
+                            }
+                        ]
+                    },
+                }
+            }
+        }
+        gate_results = {"tests": {"status": "passed"}}
+        mock_run.return_value = Mock(returncode=0, stdout="")
+
+        # Act
+        result = generate_summary(status, work_items_data, gate_results, None)
+
+        # Assert
+        assert "Commits Made" in result
+        assert "feat: Add feature X" in result
+        assert "Added comprehensive implementation" in result
+        assert "with tests and documentation" in result
+
+    def test_generate_summary_no_commits(self):
+        """Test summary works when no commits present (Enhancement #11)."""
+        # Arrange
+        status = {"current_session": 1, "current_work_item": "feature-001"}
+        work_items_data = {
+            "work_items": {"feature-001": {"title": "Feature", "status": "completed", "git": {}}}
+        }
+        gate_results = {"tests": {"status": "passed"}}
+
+        # Act
+        result = generate_summary(status, work_items_data, gate_results, None)
+
+        # Assert
+        assert "Commits Made" not in result
+        assert "Session 1 Summary" in result  # Summary still generated
+
+    @patch("subprocess.run")
+    def test_generate_summary_git_diff_fails_gracefully(self, mock_run):
+        """Test summary handles git diff failure gracefully (Enhancement #11)."""
+        # Arrange
+        status = {"current_session": 1, "current_work_item": "feature-001"}
+        work_items_data = {
+            "work_items": {
+                "feature-001": {
+                    "title": "Feature",
+                    "status": "completed",
+                    "git": {
+                        "commits": [
+                            {
+                                "sha": "abc1234567890",
+                                "message": "feat: Add feature X",
+                                "timestamp": "2025-10-26T10:00:00",
+                            }
+                        ]
+                    },
+                }
+            }
+        }
+        gate_results = {"tests": {"status": "passed"}}
+
+        # Mock git diff failure
+        mock_run.return_value = Mock(returncode=1, stdout="")
+
+        # Act
+        result = generate_summary(status, work_items_data, gate_results, None)
+
+        # Assert - Should still include commit but no file stats
+        assert "Commits Made" in result
+        assert "abc1234" in result
+        assert "feat: Add feature X" in result
+        # File stats section should not crash, just be omitted
 
 
 class TestGenerateIntegrationTestSummary:

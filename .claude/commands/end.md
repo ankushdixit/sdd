@@ -97,9 +97,18 @@ sdd end --incomplete --learnings-file .session/temp_learnings.txt
 
 Show the user:
 - Session summary with work accomplished
-- List of files changed
+- **Commit details** (full messages + file change statistics) - Enhancement #11
 - Quality gate results (pass/fail for each check)
 - Learnings captured
 - Suggested next steps
 
 If any quality gates fail, display the specific errors and guide the user on what needs to be fixed before the session can be completed. Do not proceed with session completion until all quality gates pass.
+
+## Enhanced Session Summaries (Enhancement #11)
+
+Session summaries now include comprehensive commit details:
+- **Full commit messages** (multi-line messages preserved)
+- **File change statistics** from `git diff --stat` (files changed, insertions, deletions)
+- Each commit listed with short SHA and message
+
+This enriched session summary serves as the **single source of truth** for "Previous Work" sections in future session briefings when resuming in-progress work items.

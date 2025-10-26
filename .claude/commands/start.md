@@ -15,11 +15,28 @@ If the user provided a work item ID in `$ARGUMENTS`, it will be passed through `
 
 The briefing includes:
 - Complete project context (technology stack, directory tree, documentation)
+- **Previous work context** (for in-progress items) - commits made, files changed, quality gates from prior sessions
 - **Full work item specification from `.session/specs/{work_item_id}.md`** (source of truth)
 - Work item tracking details (title, type, priority, dependencies)
 - Spec validation warnings (if specification is incomplete)
-- Relevant past learnings from previous sessions
+- **Top 10 relevant learnings** scored by keyword matching, type relevance, recency, and category
 - Milestone context and progress (if the work item belongs to a milestone)
+
+## Enhanced Briefings (Enhancement #11)
+
+For **in-progress work items**, briefings include a "Previous Work" section with:
+- All commits made in previous sessions (full messages, file stats)
+- Quality gate results from each session
+- Session dates and durations
+- This makes multi-session work practical by eliminating context loss
+
+**Learning relevance** uses multi-factor scoring:
+- Keyword matching from work item title and spec
+- Work item type matching
+- Tag overlap (legacy support)
+- Category bonuses (best_practices, patterns, architecture)
+- Recency weighting (recent learnings score higher)
+- Returns top 10 most relevant learnings (up from 5)
 
 ## Spec-First Architecture (Phase 5.7)
 

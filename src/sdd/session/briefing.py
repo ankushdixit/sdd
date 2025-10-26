@@ -93,21 +93,99 @@ def get_next_work_item(work_items_data):
     return available[0]
 
 
-def get_relevant_learnings(learnings_data, work_item):
-    """Get learnings relevant to this work item."""
-    learnings = learnings_data.get("learnings", [])
-    relevant = []
+def get_relevant_learnings(learnings_data, work_item, spec_content=""):
+    """Get learnings relevant to this work item using multi-factor scoring.
 
-    # Simple relevance: check if work item tags overlap with learning tags
-    work_item_tags = set(work_item.get("tags", []))
+    Enhancement #11 Phase 4: Uses intelligent scoring algorithm instead of
+    simple tag matching. Considers keyword matching, type-based relevance,
+    recency weighting, and category bonuses.
 
-    for learning in learnings:
+    Args:
+        learnings_data: Full learnings.json data structure
+        work_item: Work item dictionary with title, type, tags
+        spec_content: Optional spec content for keyword extraction
+
+    Returns:
+        Top 10 scored learnings
+    """
+    # Flatten all learnings from categories structure
+    all_learnings = []
+    categories = learnings_data.get("categories", {})
+
+    # Handle both old format (learnings list) and new format (categories dict)
+    if not categories and "learnings" in learnings_data:
+        # Old format compatibility
+        all_learnings = learnings_data.get("learnings", [])
+        for learning in all_learnings:
+            if "category" not in learning:
+                learning["category"] = "general"
+    else:
+        # New format with categories
+        for category, learnings in categories.items():
+            for learning in learnings:
+                learning_copy = learning.copy()
+                learning_copy["category"] = category
+                all_learnings.append(learning_copy)
+
+    if not all_learnings:
+        return []
+
+    # Extract keywords from work item
+    title_keywords = extract_keywords(work_item.get("title", ""))
+    spec_keywords = extract_keywords(spec_content[:500])  # First 500 chars
+    work_type = work_item.get("type", "")
+    work_tags = set(work_item.get("tags", []))
+
+    scored = []
+    for learning in all_learnings:
+        score = 0
+        content_lower = learning.get("content", "").lower()
+        context_lower = learning.get("context", "").lower()
         learning_tags = set(learning.get("tags", []))
-        if work_item_tags & learning_tags:  # Intersection
-            relevant.append(learning)
+        category = learning.get("category", "general")
 
-    # Limit to 5 most recent relevant learnings
-    return sorted(relevant, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
+        # 1. Keyword matching (title and spec)
+        content_keywords = extract_keywords(content_lower)
+        title_matches = len(title_keywords & content_keywords)
+        spec_matches = len(spec_keywords & content_keywords)
+        score += title_matches * 3  # Title match is worth more
+        score += spec_matches * 1.5
+
+        # 2. Type-based matching
+        if work_type in content_lower or work_type in context_lower:
+            score += 5
+
+        # 3. Tag matching (legacy support)
+        tag_overlap = len(work_tags & learning_tags)
+        score += tag_overlap * 2
+
+        # 4. Category bonuses
+        category_bonuses = {
+            "best_practices": 3,
+            "patterns": 2,
+            "gotchas": 2,
+            "architecture": 2,
+        }
+        score += category_bonuses.get(category, 0)
+
+        # 5. Recency weighting (decay over time)
+        created_at = learning.get("created_at", "")
+        if created_at:
+            days_ago = calculate_days_ago(created_at)
+            if days_ago < 7:
+                score += 3  # Very recent
+            elif days_ago < 30:
+                score += 2  # Recent
+            elif days_ago < 90:
+                score += 1  # Moderately recent
+
+        # Only include if score > 0
+        if score > 0:
+            scored.append((score, learning))
+
+    # Sort by score (descending) and return top 10
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [learning for score, learning in scored[:10]]
 
 
 def load_milestone_context(work_item):
@@ -255,6 +333,127 @@ def shift_heading_levels(markdown_content: str, shift: int) -> str:
     return "\n".join(result)
 
 
+def extract_section(markdown: str, heading: str) -> str:
+    """Extract section from markdown between heading and next ## heading.
+
+    Args:
+        markdown: Full markdown content
+        heading: Heading to find (e.g., "## Commits Made")
+
+    Returns:
+        Section content (without the heading itself)
+    """
+    lines = markdown.split("\n")
+    section_lines = []
+    in_section = False
+
+    for line in lines:
+        if line.startswith(heading):
+            in_section = True
+            continue
+        elif in_section and line.startswith("## "):
+            break
+        elif in_section:
+            section_lines.append(line)
+
+    return "\n".join(section_lines).strip()
+
+
+def generate_previous_work_section(item_id: str, item: dict) -> str:
+    """Generate previous work context from session summaries.
+
+    Args:
+        item_id: Work item identifier
+        item: Work item dictionary with sessions list
+
+    Returns:
+        Markdown section with previous work context (empty string if none)
+    """
+    sessions = item.get("sessions", [])
+    if not sessions:
+        return ""
+
+    section = "\n## Previous Work\n\n"
+    section += f"This work item has been in progress across {len(sessions)} session(s).\n\n"
+
+    for session_info in sessions:
+        session_num = session_info["session_num"]
+        started_at = session_info.get("started_at", "")
+
+        summary_file = Path(f".session/history/session_{session_num:03d}_summary.md")
+        if not summary_file.exists():
+            continue
+
+        summary_content = summary_file.read_text()
+        section += f"### Session {session_num} ({started_at[:10]})\n\n"
+
+        # Extract commits section
+        if "## Commits Made" in summary_content:
+            commits = extract_section(summary_content, "## Commits Made")
+            if commits:
+                section += commits + "\n\n"
+
+        # Extract quality gates
+        if "## Quality Gates" in summary_content:
+            gates = extract_section(summary_content, "## Quality Gates")
+            if gates:
+                section += "**Quality Gates:**\n" + gates + "\n\n"
+
+    return section
+
+
+def extract_keywords(text: str) -> set[str]:
+    """Extract meaningful keywords from text (lowercase, >3 chars).
+
+    Args:
+        text: Text to extract keywords from
+
+    Returns:
+        Set of lowercase keywords longer than 3 characters
+    """
+    import re
+
+    words = re.findall(r"\b\w+\b", text.lower())
+    # Filter stop words and short words
+    stop_words = {
+        "the",
+        "this",
+        "that",
+        "with",
+        "from",
+        "have",
+        "will",
+        "for",
+        "and",
+        "or",
+        "not",
+        "but",
+        "was",
+        "are",
+        "been",
+    }
+    return {w for w in words if len(w) > 3 and w not in stop_words}
+
+
+def calculate_days_ago(timestamp: str) -> int:
+    """Calculate days since timestamp.
+
+    Args:
+        timestamp: ISO format timestamp string
+
+    Returns:
+        Number of days ago (defaults to 365 if parsing fails)
+    """
+    try:
+        from datetime import datetime
+
+        ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        delta = datetime.now() - ts
+        return delta.days
+    except Exception:
+        return 365  # Default to old if parsing fails
+
+
 def validate_environment():
     """Validate development environment."""
     checks = []
@@ -359,6 +558,12 @@ def generate_briefing(item_id, item, learnings_data):
 
 """
 
+    # Add previous work section for in-progress items (Enhancement #11 Phase 3)
+    if item.get("status") == "in_progress":
+        previous_work = generate_previous_work_section(item_id, item)
+        if previous_work:
+            briefing += previous_work
+
     # Work item specification - shift headings to maintain hierarchy under H2
     shifted_spec = shift_heading_levels(work_item_spec, 2)
     briefing += f"""## Work Item Specification
@@ -397,8 +602,8 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
                 briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
         briefing += "\n"
 
-    # Relevant learnings
-    relevant_learnings = get_relevant_learnings(learnings_data, item)
+    # Relevant learnings (Enhancement #11 Phase 4: pass spec for keyword matching)
+    relevant_learnings = get_relevant_learnings(learnings_data, item, work_item_spec)
     if relevant_learnings:
         briefing += "\n## Relevant Learnings\n\n"
         for learning in relevant_learnings:
@@ -914,14 +1119,15 @@ def main():
 
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
 
-    # Only write briefing file if it doesn't exist (new session)
-    # If resuming, the briefing already exists from when session started
-    if not briefing_file.exists():
-        with open(briefing_file, "w") as f:
-            f.write(briefing)
-        logger.info("Created briefing file: %s", briefing_file)
+    # Always write briefing file to include fresh context (Enhancement #11 Phase 2)
+    # This is critical for in-progress items to show previous work context
+    with open(briefing_file, "w") as f:
+        f.write(briefing)
+
+    if item.get("status") == "in_progress":
+        logger.info("Updated briefing with previous work context: %s", briefing_file)
     else:
-        logger.info("Reusing existing briefing file: %s", briefing_file)
+        logger.info("Created briefing file: %s", briefing_file)
 
     # Print briefing (always show it, whether new or existing)
     print(briefing)
