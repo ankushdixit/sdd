@@ -955,6 +955,9 @@ def main():
     # Record commits to work item tracking (Bug #15 fix)
     record_session_commits(work_item_id)
 
+    # Reload work_items_data to include newly recorded commits (Enhancement #11 Phase 1)
+    work_items_data = load_work_items()
+
     # Generate comprehensive summary
     summary = generate_summary(status, work_items_data, gate_results, learnings)
 
