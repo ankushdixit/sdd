@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced learning relevance scoring using multi-factor algorithm (keywords, type, recency, category bonuses)
   - Top 10 relevant learnings (up from 5) with intelligent scoring
   - Fixes briefing update bug - briefings now regenerated for in-progress items
+  - Fixes timing issue - work_items data reloaded after recording commits to ensure accurate summaries
   - Makes multi-session work practical by eliminating context loss
+  - 22 new comprehensive unit tests for helper functions and enhanced functionality
   - Updated documentation in `.claude/commands/start.md` and `.claude/commands/end.md`
 
 - **Work item deletion** - Safe deletion of work items with dependency checking
