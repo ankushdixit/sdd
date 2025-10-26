@@ -36,28 +36,59 @@ SDD automatically captures and curates knowledge from development sessions:
 
 ### CLI Entry Point
 
-`sdd_cli.py` - Main command-line interface that routes commands to appropriate scripts.
+`src/sdd/cli.py` - Main command-line interface that routes commands to appropriate modules.
 
-### Core Scripts
+### Core Modules
 
-Located in `scripts/`:
+Python package organized by domain in `src/sdd/`:
 
-- **briefing_generator.py** - Generates comprehensive session briefings
-- **session_complete.py** - Handles session completion and learning capture
-- **session_status.py** - Displays current session status
-- **session_validate.py** - Validates quality gates
-- **work_item_manager.py** - CRUD operations for work items
-- **learning_curator.py** - AI-powered learning extraction and organization
+**Core (`sdd.core`):**
+- **file_ops.py** - File operations
+- **logging_config.py** - Logging configuration
+- **config_validator.py** - Configuration validation
+
+**Session Management (`sdd.session`):**
+- **briefing.py** - Generates comprehensive session briefings
+- **complete.py** - Handles session completion and learning capture
+- **status.py** - Displays current session status
+- **validate.py** - Validates quality gates
+
+**Work Items (`sdd.work_items`):**
+- **manager.py** - CRUD operations for work items
 - **spec_parser.py** - Parses work item specifications
 - **spec_validator.py** - Validates spec completeness
+
+**Learning (`sdd.learning`):**
+- **curator.py** - AI-powered learning extraction and organization
+
+**Quality (`sdd.quality`):**
+- **gates.py** - Test and validation execution
+- **env_validator.py** - Environment validation
+- **api_validator.py** - API contract validation
+
+**Visualization (`sdd.visualization`):**
 - **dependency_graph.py** - Visualizes work item dependencies
-- **git_integration.py** - Git branch and status management
-- **quality_gates.py** - Test and validation execution
+
+**Git Integration (`sdd.git`):**
+- **integration.py** - Git branch and status management
+
+**Testing (`sdd.testing`):**
+- **integration_runner.py** - Integration test execution
+- **performance.py** - Performance benchmarking
+
+**Deployment (`sdd.deployment`):**
+- **executor.py** - Deployment execution
+
+**Project (`sdd.project`):**
+- **init.py** - Project initialization
+- **stack.py** - Technology stack generation
+- **tree.py** - Project tree generation
+- **sync_plugin.py** - Plugin synchronization
 
 ### Configuration
 
 - `.session/config.json` - Project configuration
-- `templates/config.schema.json` - Configuration schema
+- `src/sdd/templates/config.schema.json` - Configuration schema
 
 ### Session State
 

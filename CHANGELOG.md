@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-10-25
+
+### Changed
+- **BREAKING: Package structure migrated to standard Python src/ layout (Phase 5.9)**
+  - Moved all Python modules from flat `scripts/` directory to organized `src/sdd/` package structure
+  - Moved CLI entry point from `sdd_cli.py` to `src/sdd/cli.py`
+  - Moved `templates/` to `src/sdd/templates/`
+  - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
+  - Updated all imports from `scripts.X` pattern to `sdd.X` pattern (43 files updated)
+  - Removed all `sys.path.insert()` hacks (38 instances eliminated)
+  - Updated `pyproject.toml` with proper src layout configuration
+  - Removed `setup.py` (pyproject.toml is now sufficient per PEP 517/518)
+  - CLI command remains `sdd` (no user-facing changes)
+  - All 1408 tests pass with new structure
+  - Better IDE support (autocomplete, type checking, navigation)
+  - PyPI-ready package structure
+  - Contributor-friendly standard Python layout
+
+### Removed
+- Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
+- Removed 38 instances of `sys.path.insert()` manipulation
+- Removed flat `scripts/` directory structure
+- Removed E402 ignore from ruff config (no longer needed without sys.path hacks)
+
 ### Added
 - **Work item completion status control** - Added explicit control over work item completion during session end
   - Interactive 3-choice prompt: "Yes - Mark as completed", "No - Keep as in-progress", "Cancel - Don't end session"

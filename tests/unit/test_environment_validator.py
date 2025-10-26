@@ -14,7 +14,7 @@ import os
 
 import pytest
 
-from scripts.environment_validator import EnvironmentValidator
+from sdd.quality.env_validator import EnvironmentValidator
 
 
 class TestEnvironmentValidatorInit:

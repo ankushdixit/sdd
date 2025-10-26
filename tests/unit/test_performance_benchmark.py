@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from scripts.performance_benchmark import PerformanceBenchmark
+from sdd.testing.performance import PerformanceBenchmark
 
 
 class TestPerformanceBenchmarkInit:
@@ -496,7 +496,7 @@ class TestFileStructure:
     def test_performance_benchmark_file_exists(self):
         """Test that performance_benchmark.py file exists."""
         # Arrange & Act
-        file_path = Path("scripts/performance_benchmark.py")
+        file_path = Path("src/sdd/testing/performance.py")
 
         # Assert
         assert file_path.exists()
@@ -504,7 +504,7 @@ class TestFileStructure:
     def test_performance_benchmark_class_defined(self):
         """Test that PerformanceBenchmark class is defined."""
         # Arrange
-        file_path = Path("scripts/performance_benchmark.py")
+        file_path = Path("src/sdd/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -537,14 +537,14 @@ class TestFileStructure:
     def test_performance_benchmark_has_required_imports(self):
         """Test that performance_benchmark.py has required imports."""
         # Arrange
-        file_path = Path("scripts/performance_benchmark.py")
+        file_path = Path("src/sdd/testing/performance.py")
         content = file_path.read_text()
 
         required_imports = [
             "import subprocess",
             "from pathlib import Path",
             "from datetime import datetime",
-            "from scripts.file_ops import",
+            "from sdd.core.file_ops import",
         ]
 
         # Act & Assert
@@ -554,7 +554,7 @@ class TestFileStructure:
     def test_performance_benchmark_has_main_function(self):
         """Test that performance_benchmark.py has main function."""
         # Arrange
-        file_path = Path("scripts/performance_benchmark.py")
+        file_path = Path("src/sdd/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -563,7 +563,7 @@ class TestFileStructure:
     def test_regression_threshold_is_ten_percent(self):
         """Test that regression threshold is set to 10% (1.1)."""
         # Arrange
-        file_path = Path("scripts/performance_benchmark.py")
+        file_path = Path("src/sdd/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert

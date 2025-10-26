@@ -9,7 +9,7 @@ This module tests the logging configuration functionality including:
 
 import logging
 
-from scripts.logging_config import get_logger, setup_logging
+from sdd.core.logging_config import get_logger, setup_logging
 
 
 class TestSetupLogging:

@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-from scripts.session_complete import (
+from sdd.session.complete import (
     auto_extract_learnings,
     check_uncommitted_changes,
     complete_git_workflow,
@@ -140,7 +140,7 @@ class TestLoadWorkItems:
 class TestRunQualityGates:
     """Tests for run_quality_gates function."""
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_all_pass(self, mock_gates_class):
         """Test run_quality_gates when all gates pass."""
         # Arrange
@@ -175,7 +175,7 @@ class TestRunQualityGates:
         assert mock_gates.run_tests.called
         assert mock_gates.run_security_scan.called
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_test_failure(self, mock_gates_class):
         """Test run_quality_gates when tests fail."""
         # Arrange
@@ -207,7 +207,7 @@ class TestRunQualityGates:
         assert "tests" in failed_gates
         assert mock_gates.get_remediation_guidance.called
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_security_failure(self, mock_gates_class):
         """Test run_quality_gates when security scan fails."""
         # Arrange
@@ -239,7 +239,7 @@ class TestRunQualityGates:
         assert "security" in failed_gates
         assert results["security"]["issues"] == 3
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_multiple_failures(self, mock_gates_class):
         """Test run_quality_gates with multiple gate failures."""
         # Arrange
@@ -273,7 +273,7 @@ class TestRunQualityGates:
         assert "linting" in failed_gates
         assert "formatting" in failed_gates
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_with_work_item(self, mock_gates_class):
         """Test run_quality_gates with work item for custom validations."""
         # Arrange
@@ -307,7 +307,7 @@ class TestRunQualityGates:
         assert "custom" in results
         mock_gates.run_custom_validations.assert_called_once_with(work_item)
 
-    @patch("scripts.session_complete.QualityGates")
+    @patch("sdd.session.complete.QualityGates")
     def test_run_quality_gates_non_required_gate_failure(self, mock_gates_class):
         """Test run_quality_gates when non-required gate fails."""
         # Arrange
@@ -344,8 +344,8 @@ class TestRunQualityGates:
 class TestUpdateAllTracking:
     """Tests for update_all_tracking function."""
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.Path")
     def test_update_tracking_success(self, mock_path, mock_run):
         """Test successful tracking update."""
         # Arrange
@@ -363,8 +363,8 @@ class TestUpdateAllTracking:
         assert result is True
         assert mock_run.call_count == 2  # stack and tree
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.Path")
     def test_update_tracking_stack_failure(self, mock_path, mock_run):
         """Test tracking update when stack update fails."""
         # Arrange
@@ -392,8 +392,8 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True  # Function returns True even on failure
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.Path")
     def test_update_tracking_tree_failure(self, mock_path, mock_run):
         """Test tracking update when tree update fails."""
         # Arrange
@@ -421,8 +421,8 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.Path")
     def test_update_tracking_timeout(self, mock_path, mock_run):
         """Test tracking update handles timeout exception."""
         # Arrange
@@ -508,7 +508,7 @@ class TestLoadCurationConfig:
 class TestTriggerCurationIfNeeded:
     """Tests for trigger_curation_if_needed function."""
 
-    @patch("scripts.session_complete.load_curation_config")
+    @patch("sdd.session.complete.load_curation_config")
     def test_trigger_curation_disabled(self, mock_load_config):
         """Test trigger_curation_if_needed when auto_curate is disabled."""
         # Arrange
@@ -519,8 +519,8 @@ class TestTriggerCurationIfNeeded:
 
         # Assert - should return early, no subprocess call
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.load_curation_config")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.load_curation_config")
     def test_trigger_curation_triggered(self, mock_load_config, mock_run):
         """Test trigger_curation_if_needed triggers curation."""
         # Arrange
@@ -538,8 +538,8 @@ class TestTriggerCurationIfNeeded:
         mock_run.assert_called_once()
         assert "learning_curator.py" in str(mock_run.call_args)
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.load_curation_config")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.load_curation_config")
     def test_trigger_curation_not_time_yet(self, mock_load_config, mock_run):
         """Test trigger_curation_if_needed when not time to curate."""
         # Arrange
@@ -551,8 +551,8 @@ class TestTriggerCurationIfNeeded:
         # Assert
         mock_run.assert_not_called()
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.load_curation_config")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.load_curation_config")
     def test_trigger_curation_failure(self, mock_load_config, mock_run):
         """Test trigger_curation_if_needed handles subprocess failure."""
         # Arrange
@@ -568,8 +568,8 @@ class TestTriggerCurationIfNeeded:
         # Assert - should not raise exception
         mock_run.assert_called_once()
 
-    @patch("scripts.session_complete.subprocess.run")
-    @patch("scripts.session_complete.load_curation_config")
+    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.load_curation_config")
     def test_trigger_curation_exception(self, mock_load_config, mock_run):
         """Test trigger_curation_if_needed handles exceptions gracefully."""
         # Arrange
@@ -602,15 +602,8 @@ class TestAutoExtractLearnings:
         mock_curator.extract_from_git_commits.return_value = []
         mock_curator.extract_from_code_comments.return_value = []
 
-        # Mock the dynamic import
-        with patch(
-            "builtins.__import__",
-            side_effect=lambda name, *args, **kwargs: MagicMock(
-                LearningsCurator=lambda: mock_curator
-            )
-            if name == "learning_curator"
-            else __import__(name, *args, **kwargs),
-        ):
+        # Mock the LearningsCurator class
+        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -628,14 +621,8 @@ class TestAutoExtractLearnings:
         mock_curator.add_learning_if_new.return_value = True
         mock_curator.extract_from_code_comments.return_value = []
 
-        with patch(
-            "builtins.__import__",
-            side_effect=lambda name, *args, **kwargs: MagicMock(
-                LearningsCurator=lambda: mock_curator
-            )
-            if name == "learning_curator"
-            else __import__(name, *args, **kwargs),
-        ):
+        # Mock the LearningsCurator class
+        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -655,14 +642,8 @@ class TestAutoExtractLearnings:
         ]
         mock_curator.add_learning_if_new.return_value = True
 
-        with patch(
-            "builtins.__import__",
-            side_effect=lambda name, *args, **kwargs: MagicMock(
-                LearningsCurator=lambda: mock_curator
-            )
-            if name == "learning_curator"
-            else __import__(name, *args, **kwargs),
-        ):
+        # Mock the LearningsCurator class
+        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -843,7 +824,7 @@ class TestCompleteGitWorkflow:
         # Assert
         assert result["success"] is True
 
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.Path")
     def test_complete_git_workflow_module_not_found(self, mock_path_class):
         """Test git workflow when git_integration.py not found."""
         # Arrange
@@ -890,7 +871,7 @@ class TestCompleteGitWorkflow:
         call_args = mock_workflow.complete_work_item.call_args
         assert call_args[1]["merge"] is True
 
-    @patch("scripts.session_complete.Path")
+    @patch("sdd.session.complete.Path")
     def test_complete_git_workflow_exception(self, mock_path_class):
         """Test git workflow handles exceptions."""
         # Arrange
@@ -907,7 +888,7 @@ class TestCompleteGitWorkflow:
 class TestRecordSessionCommits:
     """Tests for record_session_commits function."""
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_record_commits_success(self, mock_run, tmp_path, monkeypatch):
         """Test successful recording of session commits."""
         # Arrange
@@ -937,7 +918,7 @@ class TestRecordSessionCommits:
         assert "commits" in updated_data["work_items"]["feature-001"]["git"]
         assert len(updated_data["work_items"]["feature-001"]["git"]["commits"]) == 1
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_record_commits_no_branch(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits when work item has no git branch."""
         # Arrange
@@ -961,7 +942,7 @@ class TestRecordSessionCommits:
         # Assert - should return silently without calling git
         mock_run.assert_not_called()
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_record_commits_git_error(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits handles git errors silently."""
         # Arrange
@@ -986,7 +967,7 @@ class TestRecordSessionCommits:
 
         # Assert - should not raise exception
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_record_commits_parsing(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits parses multiple commits correctly."""
         # Arrange
@@ -1024,7 +1005,7 @@ class TestRecordSessionCommits:
 class TestGenerateCommitMessage:
     """Tests for generate_commit_message function."""
 
-    @patch("scripts.session_complete.parse_spec_file")
+    @patch("sdd.session.complete.parse_spec_file")
     def test_generate_commit_message_completed(self, mock_parse):
         """Test commit message generation for completed work item."""
         # Arrange
@@ -1041,7 +1022,7 @@ class TestGenerateCommitMessage:
         assert "Users need secure login" in result
         assert "Claude Code" in result
 
-    @patch("scripts.session_complete.parse_spec_file")
+    @patch("sdd.session.complete.parse_spec_file")
     def test_generate_commit_message_in_progress(self, mock_parse):
         """Test commit message generation for in-progress work item."""
         # Arrange
@@ -1057,7 +1038,7 @@ class TestGenerateCommitMessage:
         assert "🚧 Work in progress" in result
         assert "Login fails on mobile" in result
 
-    @patch("scripts.session_complete.parse_spec_file")
+    @patch("sdd.session.complete.parse_spec_file")
     def test_generate_commit_message_with_long_rationale(self, mock_parse):
         """Test commit message truncates long rationale."""
         # Arrange
@@ -1073,7 +1054,7 @@ class TestGenerateCommitMessage:
         assert "..." in result  # Should be truncated
         assert len(result.split("\n\n")[1]) < 210  # Should be trimmed
 
-    @patch("scripts.session_complete.parse_spec_file")
+    @patch("sdd.session.complete.parse_spec_file")
     def test_generate_commit_message_no_spec(self, mock_parse):
         """Test commit message when spec file not found."""
         # Arrange
@@ -1307,7 +1288,7 @@ class TestGenerateDeploymentSummary:
 class TestCheckUncommittedChanges:
     """Tests for check_uncommitted_changes function."""
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_no_uncommitted_changes(self, mock_run):
         """Test check_uncommitted_changes returns True when no changes."""
         # Arrange
@@ -1323,7 +1304,7 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="y")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_uncommitted_changes_user_override(self, mock_run, mock_isatty, mock_input):
         """Test user can override uncommitted changes check."""
         # Arrange
@@ -1339,7 +1320,7 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="n")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_uncommitted_changes_user_abort(self, mock_run, mock_isatty, mock_input):
         """Test user can abort on uncommitted changes."""
         # Arrange
@@ -1354,7 +1335,7 @@ class TestCheckUncommittedChanges:
         assert result is False
 
     @patch("sys.stdin.isatty", return_value=False)
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_uncommitted_changes_non_interactive(self, mock_run, mock_isatty):
         """Test non-interactive mode returns False on uncommitted changes."""
         # Arrange
@@ -1368,7 +1349,7 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is False
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_uncommitted_changes_only_session_tracking(self, mock_run):
         """Test check passes when only session tracking files changed."""
         # Arrange
@@ -1384,7 +1365,7 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is True
 
-    @patch("scripts.session_complete.subprocess.run")
+    @patch("sdd.session.complete.subprocess.run")
     def test_uncommitted_changes_exception(self, mock_run):
         """Test check returns True on exception."""
         # Arrange
@@ -1472,7 +1453,7 @@ class TestPromptWorkItemCompletion:
 class TestMain:
     """Tests for main function."""
 
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.load_status")
     def test_main_no_active_session(self, mock_load_status):
         """Test main exits when no active session."""
         # Arrange
@@ -1485,17 +1466,17 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("scripts.session_complete.auto_extract_learnings")
-    @patch("scripts.session_complete.record_session_commits")
-    @patch("scripts.session_complete.complete_git_workflow")
-    @patch("scripts.session_complete.generate_commit_message")
-    @patch("scripts.session_complete.extract_learnings_from_session")
-    @patch("scripts.session_complete.trigger_curation_if_needed")
-    @patch("scripts.session_complete.update_all_tracking")
-    @patch("scripts.session_complete.run_quality_gates")
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.auto_extract_learnings")
+    @patch("sdd.session.complete.record_session_commits")
+    @patch("sdd.session.complete.complete_git_workflow")
+    @patch("sdd.session.complete.generate_commit_message")
+    @patch("sdd.session.complete.extract_learnings_from_session")
+    @patch("sdd.session.complete.trigger_curation_if_needed")
+    @patch("sdd.session.complete.update_all_tracking")
+    @patch("sdd.session.complete.run_quality_gates")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     @patch("builtins.input", return_value="1")  # Changed from "y" to "1" for new prompt
     @patch("sys.stdin.isatty", return_value=True)
     def test_main_success_complete(
@@ -1558,9 +1539,9 @@ class TestMain:
         assert mock_run_gates.called
         assert mock_update_tracking.called
 
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     def test_main_uncommitted_changes_abort(
         self, mock_load_status, mock_load_work_items, mock_check_changes
     ):
@@ -1579,10 +1560,10 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("scripts.session_complete.run_quality_gates")
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.run_quality_gates")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     def test_main_quality_gates_fail(
         self, mock_load_status, mock_load_work_items, mock_check_changes, mock_run_gates
     ):
@@ -1604,17 +1585,17 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("scripts.session_complete.auto_extract_learnings")
-    @patch("scripts.session_complete.record_session_commits")
-    @patch("scripts.session_complete.complete_git_workflow")
-    @patch("scripts.session_complete.generate_commit_message")
-    @patch("scripts.session_complete.extract_learnings_from_session")
-    @patch("scripts.session_complete.trigger_curation_if_needed")
-    @patch("scripts.session_complete.update_all_tracking")
-    @patch("scripts.session_complete.run_quality_gates")
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.auto_extract_learnings")
+    @patch("sdd.session.complete.record_session_commits")
+    @patch("sdd.session.complete.complete_git_workflow")
+    @patch("sdd.session.complete.generate_commit_message")
+    @patch("sdd.session.complete.extract_learnings_from_session")
+    @patch("sdd.session.complete.trigger_curation_if_needed")
+    @patch("sdd.session.complete.update_all_tracking")
+    @patch("sdd.session.complete.run_quality_gates")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     def test_main_with_learnings_file(
         self,
         mock_load_status,
@@ -1687,11 +1668,11 @@ class TestMain:
         assert result == 0
         mock_extract_learnings.assert_called_once_with(str(learnings_file))
 
-    @patch("scripts.session_complete.prompt_work_item_completion")
-    @patch("scripts.session_complete.run_quality_gates")
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.prompt_work_item_completion")
+    @patch("sdd.session.complete.run_quality_gates")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     def test_main_user_cancels_completion(
         self,
         mock_load_status,
@@ -1734,17 +1715,17 @@ class TestMain:
         assert result == 1
         mock_prompt.assert_called_once()
 
-    @patch("scripts.session_complete.auto_extract_learnings")
-    @patch("scripts.session_complete.record_session_commits")
-    @patch("scripts.session_complete.complete_git_workflow")
-    @patch("scripts.session_complete.generate_commit_message")
-    @patch("scripts.session_complete.extract_learnings_from_session")
-    @patch("scripts.session_complete.trigger_curation_if_needed")
-    @patch("scripts.session_complete.update_all_tracking")
-    @patch("scripts.session_complete.run_quality_gates")
-    @patch("scripts.session_complete.check_uncommitted_changes")
-    @patch("scripts.session_complete.load_work_items")
-    @patch("scripts.session_complete.load_status")
+    @patch("sdd.session.complete.auto_extract_learnings")
+    @patch("sdd.session.complete.record_session_commits")
+    @patch("sdd.session.complete.complete_git_workflow")
+    @patch("sdd.session.complete.generate_commit_message")
+    @patch("sdd.session.complete.extract_learnings_from_session")
+    @patch("sdd.session.complete.trigger_curation_if_needed")
+    @patch("sdd.session.complete.update_all_tracking")
+    @patch("sdd.session.complete.run_quality_gates")
+    @patch("sdd.session.complete.check_uncommitted_changes")
+    @patch("sdd.session.complete.load_work_items")
+    @patch("sdd.session.complete.load_status")
     def test_main_complete_flag(
         self,
         mock_load_status,

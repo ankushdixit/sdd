@@ -22,9 +22,7 @@ from pathlib import Path
 
 import jsonschema
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.logging_config import get_logger
+from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 

@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from scripts.git_integration import GitWorkflow
+from sdd.git.integration import GitWorkflow
 
 # ============================================================================
 # Test GitWorkflow Initialization
@@ -1344,8 +1344,8 @@ class TestMain:
         mock_workflow.get_current_branch.return_value = "main"
 
         # Act
-        with patch("scripts.git_integration.GitWorkflow", return_value=mock_workflow):
-            from scripts.git_integration import main
+        with patch("sdd.git.integration.GitWorkflow", return_value=mock_workflow):
+            from sdd.git.integration import main
 
             main()
 

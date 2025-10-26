@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scripts.work_item_manager import WorkItemManager
+from sdd.work_items.manager import WorkItemManager
 
 
 @pytest.fixture
@@ -1237,7 +1237,7 @@ class TestGetNextWorkItem:
 class TestValidateIntegrationTest:
     """Tests for integration test validation."""
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_spec(self, mock_parse, work_item_manager, capsys):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -1251,7 +1251,7 @@ class TestValidateIntegrationTest:
         assert is_valid is False
         assert any("not found" in err for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_invalid_spec(self, mock_parse, work_item_manager):
         """Test validation fails with invalid spec file."""
         # Arrange
@@ -1265,7 +1265,7 @@ class TestValidateIntegrationTest:
         assert is_valid is False
         assert any("Invalid spec" in err for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_required_sections(
         self, mock_parse, work_item_manager
     ):
@@ -1287,7 +1287,7 @@ class TestValidateIntegrationTest:
         assert is_valid is False
         assert len(errors) > 0
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_no_dependencies(self, mock_parse, work_item_manager):
         """Test validation fails when no dependencies provided."""
         # Arrange
@@ -1307,7 +1307,7 @@ class TestValidateIntegrationTest:
         assert is_valid is False
         assert any("dependencies" in err.lower() for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid integration test."""
         # Arrange
@@ -1330,7 +1330,7 @@ class TestValidateIntegrationTest:
         assert is_valid is True
         assert len(errors) == 0
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_insufficient_acceptance_criteria(
         self, mock_parse, work_item_manager
     ):
@@ -1356,7 +1356,7 @@ class TestValidateIntegrationTest:
 class TestValidateDeployment:
     """Tests for deployment validation."""
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -1370,7 +1370,7 @@ class TestValidateDeployment:
         assert is_valid is False
         assert any("not found" in err for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_required_sections(self, mock_parse, work_item_manager):
         """Test validation fails when required sections are missing."""
         # Arrange
@@ -1391,7 +1391,7 @@ class TestValidateDeployment:
         assert is_valid is False
         assert len(errors) > 0
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_deployment_subsections(
         self, mock_parse, work_item_manager
     ):
@@ -1419,7 +1419,7 @@ class TestValidateDeployment:
         assert any("pre-deployment" in err.lower() for err in errors)
         assert any("post-deployment" in err.lower() for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_rollback_subsections(self, mock_parse, work_item_manager):
         """Test validation fails when rollback procedure subsections are missing."""
         # Arrange
@@ -1445,7 +1445,7 @@ class TestValidateDeployment:
         assert any("rollback triggers" in err.lower() for err in errors)
         assert any("rollback steps" in err.lower() for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_no_smoke_tests(self, mock_parse, work_item_manager):
         """Test validation fails when no smoke tests provided."""
         # Arrange
@@ -1470,7 +1470,7 @@ class TestValidateDeployment:
         assert is_valid is False
         assert any("smoke test" in err.lower() for err in errors)
 
-    @patch("scripts.work_item_manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid deployment."""
         # Arrange

@@ -16,10 +16,8 @@ from datetime import datetime
 from pathlib import Path
 
 # Add scripts directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from quality_gates import QualityGates
-from spec_parser import parse_spec_file
+from sdd.quality.gates import QualityGates
+from sdd.work_items.spec_parser import parse_spec_file
 
 
 def load_status():
@@ -229,7 +227,7 @@ def auto_extract_learnings(session_num):
 
     try:
         # Import learning curator
-        from learning_curator import LearningsCurator
+        from sdd.learning.curator import LearningsCurator
 
         curator = LearningsCurator()
 
@@ -796,7 +794,7 @@ def main():
     if learnings:
         print(f"\nProcessing {len(learnings)} learnings...")
         try:
-            from learning_curator import LearningsCurator
+            from sdd.learning.curator import LearningsCurator
 
             curator = LearningsCurator()
             added_count = 0

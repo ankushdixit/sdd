@@ -10,7 +10,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from scripts.work_item_manager import WorkItemManager
+from sdd.work_items.manager import WorkItemManager
 
 
 class TestDeploymentTemplate:

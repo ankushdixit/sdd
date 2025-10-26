@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.generate_stack import StackGenerator
+from sdd.project.stack import StackGenerator
 
 
 @pytest.fixture
@@ -683,7 +683,7 @@ class TestRecordStackUpdate:
         reasoning = "Added JavaScript support"
 
         # Act
-        with patch("scripts.generate_stack.datetime") as mock_datetime:
+        with patch("sdd.project.stack.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             stack_generator._record_stack_update(session_num, changes, reasoning)
 
@@ -715,7 +715,7 @@ class TestRecordStackUpdate:
         reasoning = "Added JavaScript support"
 
         # Act
-        with patch("scripts.generate_stack.datetime") as mock_datetime:
+        with patch("sdd.project.stack.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             stack_generator._record_stack_update(session_num, changes, reasoning)
 
@@ -734,7 +734,7 @@ class TestRecordStackUpdate:
         reasoning = "Added JavaScript support"
 
         # Act
-        with patch("scripts.generate_stack.datetime") as mock_datetime:
+        with patch("sdd.project.stack.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             stack_generator._record_stack_update(session_num, changes, reasoning)
 
@@ -753,13 +753,13 @@ class TestMainFunction:
 
         # Act
         with patch("sys.argv", ["generate_stack.py"] + test_args):
-            with patch("scripts.generate_stack.StackGenerator") as mock_generator_class:
+            with patch("sdd.project.stack.StackGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.update_stack.return_value = [{"type": "addition", "content": "test"}]
                 mock_instance.stack_file = temp_project / "stack.txt"
                 mock_generator_class.return_value = mock_instance
 
-                from scripts.generate_stack import main
+                from sdd.project.stack import main
 
                 main()
 
@@ -775,13 +775,13 @@ class TestMainFunction:
 
         # Act
         with patch("sys.argv", ["generate_stack.py"] + test_args):
-            with patch("scripts.generate_stack.StackGenerator") as mock_generator_class:
+            with patch("sdd.project.stack.StackGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.update_stack.return_value = []
                 mock_instance.stack_file = temp_project / "stack.txt"
                 mock_generator_class.return_value = mock_instance
 
-                from scripts.generate_stack import main
+                from sdd.project.stack import main
 
                 main()
 
@@ -793,13 +793,13 @@ class TestMainFunction:
         """Test main function when no changes detected."""
         # Act
         with patch("sys.argv", ["generate_stack.py"]):
-            with patch("scripts.generate_stack.StackGenerator") as mock_generator_class:
+            with patch("sdd.project.stack.StackGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.update_stack.return_value = []
                 mock_instance.stack_file = temp_project / "stack.txt"
                 mock_generator_class.return_value = mock_instance
 
-                from scripts.generate_stack import main
+                from sdd.project.stack import main
 
                 main()
 

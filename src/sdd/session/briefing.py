@@ -10,15 +10,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripts.logging_config import get_logger
+from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 # Import spec validator for validation warnings
 try:
-    from spec_validator import format_validation_report, validate_spec_file
+    from sdd.work_items.spec_validator import format_validation_report, validate_spec_file
 except ImportError:
     # Gracefully handle if spec_validator not available
     validate_spec_file = None
@@ -280,24 +278,16 @@ def validate_environment():
 def check_git_status():
     """Check git status for session start."""
     try:
-        # Import git workflow
-        git_module_path = Path(__file__).parent / "git_integration.py"
-        if git_module_path.exists():
-            import importlib.util
+        # Import git workflow from new location
+        from sdd.git.integration import GitWorkflow
 
-            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
-            git_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(git_module)
+        workflow = GitWorkflow()
+        is_clean, status_msg = workflow.check_git_status()
+        current_branch = workflow.get_current_branch()
 
-            workflow = git_module.GitWorkflow()
-            is_clean, status_msg = workflow.check_git_status()
-            current_branch = workflow.get_current_branch()
-
-            return {"clean": is_clean, "status": status_msg, "branch": current_branch}
+        return {"clean": is_clean, "status": status_msg, "branch": current_branch}
     except Exception as e:
         return {"clean": False, "status": f"Error checking git: {e}", "branch": None}
-
-    return {"clean": True, "status": "Git check skipped", "branch": None}
 
 
 def generate_briefing(item_id, item, learnings_data):
@@ -560,10 +550,7 @@ def generate_deployment_briefing(work_item: dict) -> str:
     # Environment pre-checks
     briefing.append("\n**Pre-Session Environment Checks:**")
     try:
-        import sys
-
-        sys.path.insert(0, str(Path(__file__).parent))
-        from environment_validator import EnvironmentValidator
+        from sdd.quality.env_validator import EnvironmentValidator
 
         # NOTE: Framework stub - Parse target environment from spec using spec_parser.py
         # Extract from "## Deployment Scope" or "## Environment" section
@@ -869,25 +856,19 @@ def main():
 
     # Start git workflow for work item
     try:
-        # Import git workflow
-        git_module_path = Path(__file__).parent / "git_integration.py"
-        if git_module_path.exists():
-            import importlib.util
+        # Import git workflow from new location
+        from sdd.git.integration import GitWorkflow
 
-            spec = importlib.util.spec_from_file_location("git_integration", git_module_path)
-            git_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(git_module)
+        workflow = GitWorkflow()
+        git_result = workflow.start_work_item(item_id, session_num)
 
-            workflow = git_module.GitWorkflow()
-            git_result = workflow.start_work_item(item_id, session_num)
-
-            if git_result["success"]:
-                if git_result["action"] == "created":
-                    print(f"✓ Created git branch: {git_result['branch']}\n")
-                else:
-                    print(f"✓ Resumed git branch: {git_result['branch']}\n")
+        if git_result["success"]:
+            if git_result["action"] == "created":
+                print(f"✓ Created git branch: {git_result['branch']}\n")
             else:
-                print(f"⚠️  Git workflow warning: {git_result['message']}\n")
+                print(f"✓ Resumed git branch: {git_result['branch']}\n")
+        else:
+            print(f"⚠️  Git workflow warning: {git_result['message']}\n")
     except Exception as e:
         print(f"⚠️  Could not start git workflow: {e}\n")
 

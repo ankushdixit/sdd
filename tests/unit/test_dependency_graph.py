@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from scripts.dependency_graph import DependencyGraphVisualizer
+from sdd.visualization.dependency_graph import DependencyGraphVisualizer
 
 
 @pytest.fixture

@@ -15,14 +15,12 @@ from unittest.mock import patch
 
 import pytest
 
-# Import functions under test
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.briefing_generator import (
+from sdd.session.briefing import (
     check_command_exists,
     generate_integration_test_briefing,
     main,
 )
-from scripts.session_complete import generate_integration_test_summary
+from sdd.session.complete import generate_integration_test_summary
 
 
 @pytest.fixture
@@ -558,7 +556,7 @@ class TestBriefingGeneratorFileStructure:
         The module should export generate_integration_test_briefing function.
         """
         # Arrange
-        briefing_file = Path("scripts/briefing_generator.py")
+        briefing_file = Path("src/sdd/session/briefing.py")
 
         # Act
         content = briefing_file.read_text()
@@ -574,7 +572,7 @@ class TestBriefingGeneratorFileStructure:
         if required commands are available.
         """
         # Arrange
-        briefing_file = Path("scripts/briefing_generator.py")
+        briefing_file = Path("src/sdd/session/briefing.py")
 
         # Act
         content = briefing_file.read_text()
@@ -589,7 +587,7 @@ class TestBriefingGeneratorFileStructure:
         defined and importable from the briefing_generator module.
         """
         # Arrange & Act - Already imported at module level
-        from scripts.briefing_generator import generate_integration_test_briefing
+        from sdd.session.briefing import generate_integration_test_briefing
 
         # Assert - Function is callable
         assert callable(generate_integration_test_briefing)
@@ -604,7 +602,7 @@ class TestSessionCompleteFileStructure:
         The module should export generate_integration_test_summary function.
         """
         # Arrange
-        session_file = Path("scripts/session_complete.py")
+        session_file = Path("src/sdd/session/complete.py")
 
         # Act
         assert session_file.exists()
@@ -620,7 +618,7 @@ class TestSessionCompleteFileStructure:
         summary function when appropriate.
         """
         # Arrange
-        session_file = Path("scripts/session_complete.py")
+        session_file = Path("src/sdd/session/complete.py")
 
         # Act
         content = session_file.read_text()

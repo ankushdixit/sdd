@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from scripts.integration_test_runner import IntegrationTestRunner
+from sdd.testing.integration_runner import IntegrationTestRunner
 
 
 class TestIntegrationTestRunnerInit:
@@ -34,7 +34,7 @@ class TestIntegrationTestRunnerInit:
             "environment_requirements": "postgresql\nredis\ndocker-compose.integration.yml",
         }
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -64,7 +64,7 @@ class TestIntegrationTestRunnerInit:
         # Arrange
         work_item = {"id": "INTEG-002", "type": "integration_test"}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.side_effect = FileNotFoundError("Spec file not found")
 
             # Act & Assert
@@ -76,7 +76,7 @@ class TestIntegrationTestRunnerInit:
         # Arrange
         work_item = {"id": "INTEG-003", "type": "integration_test"}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.side_effect = Exception("Invalid YAML")
 
             # Act & Assert
@@ -89,7 +89,7 @@ class TestIntegrationTestRunnerInit:
         work_item = {"id": "INTEG-004"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -120,7 +120,7 @@ class TestEnvironmentRequirementsParsing:
         work_item = {"id": "INTEG-005"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -139,7 +139,7 @@ class TestEnvironmentRequirementsParsing:
             "environment_requirements": "PostgreSQL database\nRedis cache",
         }
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -156,7 +156,7 @@ class TestEnvironmentRequirementsParsing:
         env_text = "MongoDB database\nUse `docker-compose.custom.yml` for orchestration"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -176,7 +176,7 @@ nginx reverse proxy
 kafka message broker"""
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -202,7 +202,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-009"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -221,7 +221,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-010"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -240,7 +240,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-011"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -260,7 +260,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-012"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -278,7 +278,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-013"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -298,7 +298,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-014", "title": "API Integration Tests"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -328,7 +328,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-015", "title": "Database Integration Tests"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -355,7 +355,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-016"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -374,7 +374,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_exists(self):
         """Test that integration_test_runner.py file exists."""
         # Arrange & Act
-        file_path = Path("scripts/integration_test_runner.py")
+        file_path = Path("src/sdd/testing/integration_runner.py")
 
         # Assert
         assert file_path.exists()
@@ -398,7 +398,7 @@ class TestIntegrationTestRunnerStructure:
             "_parse_environment_requirements",
         ]
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -411,7 +411,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_has_main_function(self):
         """Test that integration_test_runner.py has main function."""
         # Arrange
-        file_path = Path("scripts/integration_test_runner.py")
+        file_path = Path("src/sdd/testing/integration_runner.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -420,7 +420,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_has_required_imports(self):
         """Test that integration_test_runner.py has required imports."""
         # Arrange
-        file_path = Path("scripts/integration_test_runner.py")
+        file_path = Path("src/sdd/testing/integration_runner.py")
         content = file_path.read_text()
 
         required_imports = [
@@ -438,7 +438,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_class_defined(self):
         """Test that IntegrationTestRunner class is defined."""
         # Arrange
-        file_path = Path("scripts/integration_test_runner.py")
+        file_path = Path("src/sdd/testing/integration_runner.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -455,7 +455,7 @@ class TestDockerComposeSupport:
         env_text = "Services defined in custom-compose.yml for orchestration"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -473,7 +473,7 @@ redis cache
 nginx API gateway"""
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -494,7 +494,7 @@ nginx API gateway"""
             "environment_requirements": "",
         }
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -511,7 +511,7 @@ nginx API gateway"""
         work_item = {"id": "INTEG-021", "title": "Integration Test", "type": "integration_test"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -536,7 +536,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-022"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -558,7 +558,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-023"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -579,7 +579,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-024"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -603,7 +603,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-025"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -628,7 +628,7 @@ class TestEnvironmentSetup:
         env_text = "postgresql database\nredis cache"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -654,7 +654,7 @@ class TestEnvironmentSetup:
         env_text = "postgresql database"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -678,7 +678,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-028"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -702,7 +702,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-052"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -727,7 +727,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-029"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -750,7 +750,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-030"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -774,7 +774,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-031"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -803,7 +803,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-032"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -824,7 +824,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-033"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture1), str(fixture2)]
@@ -848,7 +848,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-034"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture)]
@@ -868,7 +868,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-035"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(tmp_path / "nonexistent.py")]
@@ -889,7 +889,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-036"}
         mock_parsed_spec = {"test_scenarios": [{"name": "Test 1"}], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -909,7 +909,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-037"}
         mock_parsed_spec = {"test_scenarios": [{"name": "Test 1"}], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -929,7 +929,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-038"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -946,7 +946,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-039"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -975,7 +975,7 @@ class TestRunPytest:
         }
         results_file.write_text(json.dumps(results_data))
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1004,7 +1004,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-041"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1023,7 +1023,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-042"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1043,7 +1043,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-051"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1076,7 +1076,7 @@ class TestRunJest:
         }
         results_file.write_text(json.dumps(results_data))
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1106,7 +1106,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-047"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1125,7 +1125,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-048"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1145,7 +1145,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-049"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1172,7 +1172,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-043"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1192,7 +1192,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-044"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1212,7 +1212,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-045"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1232,7 +1232,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-050"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("scripts.integration_test_runner.spec_parser") as mock_parser:
+        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 

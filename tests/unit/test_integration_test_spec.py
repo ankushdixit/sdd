@@ -7,14 +7,11 @@ Tests the work_item_manager.py module's integration test validation including:
 - Required section checking
 """
 
-import sys
 from pathlib import Path
 
 import pytest
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.work_item_manager import WorkItemManager
+from sdd.work_items.manager import WorkItemManager
 
 
 @pytest.fixture
