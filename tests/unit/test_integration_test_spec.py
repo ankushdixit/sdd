@@ -88,7 +88,7 @@ class TestIntegrationTestTemplate:
         The template file should be present at templates/integration_test_spec.md.
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
 
         # Assert
         assert template_path.exists(), "integration_test_spec.md template not found"
@@ -106,7 +106,7 @@ class TestIntegrationTestTemplate:
         - Acceptance Criteria
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
         required_sections = [
             "## Scope",
             "## Test Scenarios",
@@ -142,7 +142,7 @@ class TestIntegrationTestTemplate:
         Parametrized test to verify each required section individually.
         """
         # Arrange
-        template_path = project_root / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
 
         # Act
         template_content = template_path.read_text()

@@ -115,7 +115,7 @@ class TestWorkItemTypeTemplates:
     def test_all_work_item_templates_exist(self):
         """Test that all 6 work item type templates exist."""
         # Arrange
-        templates_dir = Path(__file__).parent.parent.parent / "templates"
+        templates_dir = Path(__file__).parent.parent.parent / "src" / "sdd" / "templates"
         expected_templates = [
             "feature_spec.md",
             "bug_spec.md",
@@ -134,7 +134,7 @@ class TestWorkItemTypeTemplates:
     def test_work_item_types_documentation_exists(self):
         """Test that WORK_ITEM_TYPES.md documents all types."""
         # Arrange
-        templates_dir = Path(__file__).parent.parent.parent / "templates"
+        templates_dir = Path(__file__).parent.parent.parent / "src" / "sdd" / "templates"
         types_file = templates_dir / "WORK_ITEM_TYPES.md"
         work_item_types = [
             "feature",
