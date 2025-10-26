@@ -1,7 +1,7 @@
 # SDD (Session-Driven Development)
 
+[![PyPI](https://img.shields.io/pypi/v/session-driven-development)](https://pypi.org/project/session-driven-development/)
 [![Tests](https://github.com/ankushdixit/sdd/workflows/Tests/badge.svg)](https://github.com/ankushdixit/sdd/actions?query=workflow%3ATests)
-[![codecov](https://codecov.io/gh/ankushdixit/sdd/branch/main/graph/badge.svg)](https://codecov.io/gh/ankushdixit/sdd)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/ankushdixit/sdd)
@@ -121,27 +121,29 @@ sdd learn-curate --dry-run
 
 ## Installation
 
-SDD can be installed in two ways:
+### Option 1: Claude Code Plugin + PyPI (Recommended)
 
-### Option 1: Via Claude Code Marketplace (Recommended)
+For the best experience with both slash commands and CLI:
 
-**Step 1:** Install the SDD plugin from Claude Code marketplace
+**Step 1:** Install the SDD plugin from Claude Code marketplace (`ankushdixit/claude-plugins`)
 
-**Step 2:** Run one-time setup:
+**Step 2:** Install the Python package:
 ```bash
-pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+pip install session-driven-development
 ```
 
-**Step 3:** Done! Use slash commands in any project:
-```
-/sdd:init          # Initialize SDD
-/sdd:start         # Start session
-/sdd:end           # Complete session
+**Step 3:** Verify installation:
+```bash
+sdd status
 ```
 
-### Option 2: Direct Installation
+Now you have:
+- ✅ Slash commands available in Claude Code (`/sdd:init`, `/sdd:start`, `/sdd:end`, etc.)
+- ✅ CLI commands available globally (`sdd status`, `sdd work-list`, etc.)
 
-For contributors or users who want the latest development version:
+### Option 2: From Source (For Contributors)
+
+For development or customization:
 
 ```bash
 # Clone repository
@@ -158,7 +160,7 @@ pip install -e ".[dev]"
 sdd status
 ```
 
-After installation, the `sdd` command is available globally, and Claude Code will discover slash commands.
+This installs the package in editable mode, allowing you to modify the source code.
 
 ### Verify Installation
 
