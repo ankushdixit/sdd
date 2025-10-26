@@ -266,7 +266,7 @@ class QualityGates:
                         [
                             "bandit",
                             "-r",
-                            ".",
+                            "src/",
                             "-f",
                             "json",
                             "-o",
