@@ -268,7 +268,7 @@ Specs are automatically validated for:
 **Validation occurs at:**
 1. **Session start** (`/start`): Warning displayed in briefing if spec incomplete
 2. **Session end** (`/end`): Quality gate fails if spec incomplete
-3. **Manual**: `python3 scripts/spec_validator.py {work_item_id} {type}`
+3. **Manual**: `sdd validate-spec {work_item_id} {type}`
 
 #### Benefits
 
@@ -289,7 +289,7 @@ Specs are automatically validated for:
 
 ### Starting a Session
 When you run `/start`:
-1. Run: `python .session/scripts/session_init.py --next`
+1. Run: `sdd start --next` (or `/sdd:start`)
 2. Read generated briefing
 3. Validate environment
 4. Begin work
@@ -297,7 +297,7 @@ When you run `/start`:
 ### Ending a Session
 When you run `/end`:
 1. Run tests
-2. Run: `python .session/scripts/session_complete.py`
+2. Run: `sdd end` (or `/sdd:end`)
 3. Update documentation
 4. Create commit
 
@@ -732,13 +732,13 @@ Curated project knowledge:
 **Usage:**
 ```bash
 # Auto-detect next work item (recommended)
-python .session/scripts/session_init.py --next
+sdd start --next
 
 # Specific work item
-python .session/scripts/session_init.py --item feature_oauth
+sdd start --item feature_oauth
 
 # Skip git checks (use cautiously)
-python .session/scripts/session_init.py --next --skip-git-check
+sdd start --next --skip-git-check
 ```
 
 **Generated Briefing Format:**
@@ -790,7 +790,7 @@ Session 003: Started basic implementation, authentication flow working
 
 ---
 Generated: 2025-10-09 14:30:00
-Run `python .session/scripts/session_validate.py` to check environment
+Run `sdd validate` (or `/sdd:validate`) to check environment
 ```
 
 ### Script 2: `session_complete.py`
@@ -812,16 +812,16 @@ Run `python .session/scripts/session_validate.py` to check environment
 **Usage:**
 ```bash
 # Auto-detect current work item
-python .session/scripts/session_complete.py
+sdd end
 
 # Specific work item
-python .session/scripts/session_complete.py --item feature_oauth
+sdd end --item feature_oauth
 
 # Force completion (skip tests - use cautiously)
-python .session/scripts/session_complete.py --force
+sdd end --force
 
 # Skip tests
-python .session/scripts/session_complete.py --no-tests
+sdd end --no-tests
 ```
 
 **Generated Commit Message Format:**
@@ -988,13 +988,13 @@ def verify_library_docs(self, work_item: Dict) -> bool:
 **Override Flags:**
 ```bash
 # Skip specific gates
-python .session/scripts/session_complete.py --no-tests --no-lint
+sdd end --no-tests --no-lint
 
 # Force completion despite failures
-python .session/scripts/session_complete.py --force
+sdd end --force
 
 # Skip only specific check
-python .session/scripts/session_complete.py --skip-gate linting
+sdd end --skip-gate linting
 ```
 
 ### Script 3: `session_validate.py`
@@ -1013,13 +1013,13 @@ python .session/scripts/session_complete.py --skip-gate linting
 **Usage:**
 ```bash
 # Full validation
-python .session/scripts/session_validate.py
+sdd validate
 
 # Validate specific work item
-python .session/scripts/session_validate.py --item feature_oauth
+sdd validate --item feature_oauth
 
 # Fix common issues automatically
-python .session/scripts/session_validate.py --fix-issues
+sdd validate --fix-issues
 ```
 
 **Validation Checks:**
@@ -1047,21 +1047,21 @@ python .session/scripts/session_validate.py --fix-issues
 **Usage:**
 ```bash
 # Update status
-python .session/scripts/work_item_update.py feature_oauth --status completed
+sdd work-update feature_oauth --status completed
 
 # Update paths
-python .session/scripts/work_item_update.py feature_oauth \
+sdd work-update feature_oauth \
   --implementation-path auth/oauth.py \
   --test-path tests/test_oauth.py
 
 # List all work items
-python .session/scripts/work_item_update.py --list
+sdd work-update --list
 
 # Show specific work item
-python .session/scripts/work_item_update.py feature_oauth --show
+sdd work-update feature_oauth --show
 
 # Restore from backup
-python .session/scripts/work_item_update.py --restore-backup
+sdd work-update --restore-backup
 ```
 
 **Valid Status Transitions:**
@@ -1087,13 +1087,13 @@ python .session/scripts/work_item_update.py --restore-backup
 **Usage:**
 ```bash
 # Generate and save
-python .session/scripts/generate_stack.py
+sdd generate-stack
 
 # Show changes from last scan
-python .session/scripts/generate_stack.py --show-changes
+sdd generate-stack --show-changes
 
 # Output only (don't save)
-python .session/scripts/generate_stack.py --output-only
+sdd generate-stack --output-only
 ```
 
 **Detection Strategy:**
@@ -1119,16 +1119,16 @@ python .session/scripts/generate_stack.py --output-only
 **Usage:**
 ```bash
 # Generate and save
-python .session/scripts/generate_tree.py
+sdd generate-tree
 
 # Show changes
-python .session/scripts/generate_tree.py --show-changes
+sdd generate-tree --show-changes
 
 # Include hidden files
-python .session/scripts/generate_tree.py --include-hidden
+sdd generate-tree --include-hidden
 
 # Display current tree
-python .session/scripts/generate_tree.py --display-current
+sdd generate-tree --display-current
 ```
 
 **Filtered Items:**
@@ -1153,16 +1153,16 @@ node_modules, .DS_Store, *.egg-info, .mypy_cache,
 **Usage:**
 ```bash
 # Run curation
-python .session/scripts/curate_learnings.py
+sdd learn-curate
 
 # Dry run (show what would change)
-python .session/scripts/curate_learnings.py --dry-run
+sdd learn-curate --dry-run
 
 # Force recategorization of all learnings
-python .session/scripts/curate_learnings.py --recategorize-all
+sdd learn-curate --recategorize-all
 
 # Generate summary report
-python .session/scripts/curate_learnings.py --report
+sdd learn-curate --report
 ```
 
 **Curation Rules:**
@@ -1186,7 +1186,7 @@ User: /start
 **Claude's workflow:**
 1. Read CLAUDE.md (automatic)
 2. Sees `/start` trigger in protocol
-3. Runs: `python .session/scripts/session_init.py --next`
+3. Runs: `sdd start --next`
 4. Validates git status (clean working directory)
 5. Creates or resumes branch for work item
 6. Reads generated briefing file
@@ -1236,7 +1236,7 @@ User: /end
 ```
 
 **Claude's workflow:**
-1. Runs: `python .session/scripts/session_complete.py`
+1. Runs: `sdd end`
 2. Executes:
    - Runs test suite
    - Validates code quality
@@ -1563,7 +1563,7 @@ Validation rules:
 Creating directory structure...
 ✅ .session/ created
 ✅ .session/tracking/ created
-✅ .session/scripts/ installed
+✅ SDD installed (sdd command available)
 ✅ .sessionrc.json created
 ✅ CLAUDE.md generated
 
@@ -2093,7 +2093,7 @@ git commit -m "WIP: Save progress"
 git stash
 
 # Option 3: Skip check (use cautiously)
-python .session/scripts/session_init.py --next --skip-git-check
+sdd start --next --skip-git-check
 ```
 
 #### Issue: "Dependency not completed"
@@ -2116,13 +2116,13 @@ python .session/scripts/session_init.py --next --skip-git-check
 **Solution:**
 ```bash
 # Validate file
-python .session/scripts/work_item_update.py --validate
+sdd work-update --validate
 
 # Restore from backup
-python .session/scripts/work_item_update.py --restore-backup
+sdd work-update --restore-backup
 
 # Fix issues automatically
-python .session/scripts/session_validate.py --fix-issues
+sdd validate --fix-issues
 ```
 
 #### Issue: "Tests failing at session completion"
@@ -2135,10 +2135,10 @@ python .session/scripts/session_validate.py --fix-issues
 pytest -v
 
 # Or force completion (skip tests) - use cautiously
-python .session/scripts/session_complete.py --no-tests
+sdd end --no-tests
 
 # Or complete with failures for WIP commits
-python .session/scripts/session_complete.py --force
+sdd end --force
 ```
 
 #### Issue: "Session briefing unclear"
@@ -2151,14 +2151,14 @@ python .session/scripts/session_complete.py --force
 vim .session/specs/feature_oauth.md
 
 # Regenerate briefing
-python .session/scripts/session_briefing.py --item feature_oauth --regenerate
+sdd generate-briefing --item feature_oauth --regenerate
 ```
 
 ### Debugging SDD Scripts
 
 **Enable verbose output:**
 ```bash
-python .session/scripts/session_init.py --next --verbose
+sdd start --next --verbose
 ```
 
 **Check script logs:**
@@ -2168,7 +2168,7 @@ tail -f .session/logs/session_init.log
 
 **Validate environment:**
 ```bash
-python .session/scripts/session_validate.py --verbose
+sdd validate --verbose
 ```
 
 ---
@@ -2287,15 +2287,15 @@ jobs:
         run: plugin installation
 
       - name: Validate work items
-        run: python .session/scripts/work_item_update.py --validate
+        run: sdd work-update --validate
 
       - name: Check session completeness
-        run: python .session/scripts/session_validate.py
+        run: sdd validate
 
       - name: Verify documentation
         run: |
           if git diff --name-only HEAD~1 | grep -q '.py$'; then
-            python .session/scripts/check_docs_updated.py
+            python scripts/check_docs_updated.py
           fi
 ```
 
@@ -2542,7 +2542,7 @@ Continuing with current implementation...
 
 ```bash
 # Automatic curation runs
-python .session/scripts/curate_learnings.py
+sdd learn-curate
 
 Curation Report:
 ✅ Categorized 8 new learnings
@@ -3014,7 +3014,7 @@ auth/oauth.py:
   Line 67: E722 Bare except (add exception type)
 
 Fix issues manually or use:
-  python .session/scripts/session_complete.py --no-lint
+  sdd end --no-lint
 
 Session completion blocked.
 ```
@@ -3023,13 +3023,13 @@ Session completion blocked.
 
 ```bash
 # Skip linting for this session (use cautiously)
-python .session/scripts/session_complete.py --no-lint
+sdd end --no-lint
 
 # Skip auto-fix, show issues only
-python .session/scripts/session_complete.py --lint-no-fix
+sdd end --lint-no-fix
 
 # Force completion despite lint failures
-python .session/scripts/session_complete.py --force
+sdd end --force
 ```
 
 ### Formatter Integration
@@ -3156,7 +3156,7 @@ Continue with session completion? (y/n): y
 ❌ Type checking failed (blocking)
 
 Fix type errors or:
-  python .session/scripts/session_complete.py --no-type-check
+  sdd end --no-type-check
 
 Session completion blocked.
 ```
@@ -3648,11 +3648,11 @@ Generated: {timestamp}
 
 ## Next Steps
 1. Review this briefing
-2. Run validation: `python .session/scripts/session_validate.py`
+2. Run validation: `sdd validate`
 3. Begin implementation
 4. Update documentation as you go
 5. Run tests frequently
-6. Complete session: `python .session/scripts/session_complete.py`
+6. Complete session: `sdd end`
 
 ---
 **Commands:**

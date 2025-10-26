@@ -7,203 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.0] - 2025-10-25
+## [0.6.0] - 2025-10-26
 
 ### Changed
 - **BREAKING: Package structure migrated to standard Python src/ layout (Phase 5.9)**
-  - Moved all Python modules from flat `scripts/` directory to organized `src/sdd/` package structure
-  - Moved CLI entry point from `sdd_cli.py` to `src/sdd/cli.py`
-  - Moved `templates/` to `src/sdd/templates/`
+  - Moved all Python modules from flat directory to organized `src/sdd/` package structure
   - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
-  - Updated all imports from `scripts.X` pattern to `sdd.X` pattern (43 files updated)
-  - Removed all `sys.path.insert()` hacks (38 instances eliminated)
-  - Updated `pyproject.toml` with proper src layout configuration
-  - Removed `setup.py` (pyproject.toml is now sufficient per PEP 517/518)
+  - Updated all imports from `scripts.X` to `sdd.X` pattern (43 files)
+  - Removed all `sys.path.insert()` hacks (38 instances)
+  - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
   - CLI command remains `sdd` (no user-facing changes)
-  - All 1408 tests pass with new structure
-  - Better IDE support (autocomplete, type checking, navigation)
-  - PyPI-ready package structure
-  - Contributor-friendly standard Python layout
+  - All 1408 tests pass, PyPI-ready structure, better IDE support
+- **Simplified git branch naming** - Branch names now use work item ID directly
+  - Format: `feature_oauth` instead of `session-001-feature_oauth`
+  - Clearer intent, shorter names, backward compatible
+- **Standardized spec validation** - All work item types now use "Acceptance Criteria" section consistently
+  - Updated refactor specs to use "Acceptance Criteria" (was "Success Criteria")
+- **Makefile clean target** - Now removes coverage artifacts (`htmlcov/`, `coverage.xml`, `coverage.json`)
+
+### Added
+- **Work item completion status control** - Explicit control over work item completion during session end
+  - Interactive 3-choice prompt: "Mark completed", "Keep in-progress", "Cancel"
+  - Command-line flags: `--complete` and `--incomplete`
+  - Supports multi-session workflows
+  - 8 unit tests added
+- **Comprehensive test infrastructure** - Test suite reorganization and expansion
+  - 1,408 comprehensive tests (up from 183, 765% increase)
+  - 85% code coverage (up from 30%)
+  - Unit/integration/e2e structure across 35 test files
+  - 4 modules at 100% coverage, 20 modules at 75%+ coverage
+- **Auto git initialization** - `sdd init` now automatically initializes git repository and creates initial commit
+- **Pre-flight commit check** - `sdd end` validates all changes are committed before running quality gates
+- **CHANGELOG workflow improvements** - Git hooks with reminders + smarter branch-level detection
+- **OS-specific .gitignore patterns** - macOS, Windows, and Linux patterns automatically added during `sdd init`
+
+### Fixed
+- **Quality gates test timeout** - Increased from 5 to 10 minutes (1408 tests take ~6 minutes)
+- **Docstring validation** - Fixed pydocstyle configuration to properly validate project docstrings
+- **Bug #25**: Git branch status now finalizes when switching work items (12 unit tests)
+- **Bug #24**: `/start` command now properly handles explicit work item selection (3 unit tests)
+- **Bug #23**: Bug/refactor spec templates now include "Acceptance Criteria" section
+- **Bug #21**: Learning curator no longer extracts test data strings (21 unit tests)
+- **Bug #20**: Multi-line LEARNING statements now captured completely (30 unit tests)
+- **UX improvements**: Auto git init, pre-flight checks, CHANGELOG reminders, clear error messages
 
 ### Removed
-- Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
+- Deleted obsolete development tracking files (`NEXT_SESSION_PROMPT.md`, `TEST_PROGRESS.md`)
 - Removed 38 instances of `sys.path.insert()` manipulation
-- Removed flat `scripts/` directory structure
-- Removed E402 ignore from ruff config (no longer needed without sys.path hacks)
-
-### Added
-- **Work item completion status control** - Added explicit control over work item completion during session end
-  - Interactive 3-choice prompt: "Yes - Mark as completed", "No - Keep as in-progress", "Cancel - Don't end session"
-  - Command-line flags for programmatic control: `--complete` and `--incomplete`
-  - Non-interactive mode defaults to incomplete for safety (prevents accidental completion by automation)
-  - Supports multi-session workflows: incomplete work items auto-resume in next session
-  - Cancel option allows aborting session end without losing work
-  - Updated `scripts/session_complete.py` with new `prompt_work_item_completion()` function
-  - Added 8 unit tests covering all prompt behaviors and edge cases
-  - Updated `.claude/commands/end.md` documentation with examples and usage guidance
-- **Enhancement #11 specification** - Added comprehensive spec for enhanced session briefings with context continuity
-  - Identified need for "Previous Work" section in briefings for in-progress work items
-  - Identified need for "Relevant Learnings" section in all briefings
-  - Documented in `docs/project/ENHANCEMENTS.md` with implementation tasks and examples
-  - High priority enhancement to support multi-session workflow effectiveness
-
-### Changed
-- **Enhancement #6 status** - Marked as IMPLEMENTED in `docs/project/ENHANCEMENTS.md` (completed in Session 11)
-- **Simplified git branch naming** - Branch names now use work item ID directly instead of `session-NNN-work_item_id` format
-  - Changed `scripts/git_integration.py` to create branches with format `work_item_id` instead of `session-{session_num:03d}-{work_item_id}`
-  - Example: `feature_add_authentication` instead of `session-001-feature_add_authentication`
-  - Clearer intent, shorter names, eliminates confusing session number prefix
-  - Backward compatible - existing branches with old naming continue to work
-  - Session numbers still tracked in briefing files and work item metadata where they belong
-- **Standardized spec validation** - Refactor work items now use "Acceptance Criteria" section (consistent with all other work item types)
-  - Updated `scripts/spec_parser.py` to extract "Acceptance Criteria" for refactor specs (was "Success Criteria")
-  - Removed redundant "Success Criteria" section from refactor template
-  - All work item types now consistently use "Acceptance Criteria" for validation
-- **Updated Enhancement #9 documentation** - Corrected test counts and clarified implementation details for Phase 3 src/ layout transition
-  - Updated all test count references from 392 → 1408 tests
-  - Clarified that setup.py will be removed (not "updated or removed")
-  - Clarified that tests/ directory stays at project root
-  - Added __version__.py to spec file acceptance criteria
-  - Spec file now completely self-contained with all 72 detailed tasks across 7 phases
-
-### Fixed
-- **Quality gates test timeout** - Increased test execution timeout from 5 to 10 minutes
-  - Changed timeout in `scripts/quality_gates.py` from 300s to 600s
-  - Full test suite with 1408 tests takes ~6 minutes to complete
-  - Prevents false failures due to timeout when all tests actually pass
-
-### Changed
-- **Makefile clean target** - Enhanced to remove coverage artifacts
-  - Added `htmlcov/` (HTML coverage reports directory)
-  - Added `coverage.xml` and `coverage.json` files
-  - Keeps repository clean after running tests with coverage
-
-### Fixed
-- **Docstring validation** - Fixed pydocstyle configuration and quality gate to properly validate project docstrings
-  - Fixed `.pydocstyle` match-dir regex (previous regex had invalid negative lookahead syntax causing pydocstyle to fail)
-  - Updated match-dir to explicitly check only project directories (scripts, tests, docs) instead of trying to exclude venv
-  - Fixed `scripts/quality_gates.py` to use `sys.executable` instead of `python3` for pydocstyle check (ensures venv Python is used)
-  - Resolves issue where quality gate failed due to python3 not having pydocstyle installed (only venv Python has it)
-- **Test compatibility** - Updated git integration tests to match new branch naming convention
-  - Fixed unit tests: `test_create_branch_success` and `test_create_branch_naming_convention`
-  - Fixed E2E tests: `test_start_creates_git_branch` and `test_session_uses_git_branch`
-  - All tests now expect branch names like `feature_foo` instead of `session-005-feature_foo`
-
-### Added
-- **Comprehensive Test Infrastructure Rewrite** - Complete test suite reorganization and expansion from 183 to 1,401 tests with 85% coverage
-  - Created unit/integration/e2e test structure replacing phase-based organization
-  - **1,401 comprehensive tests** across 35 test files (765% increase from original 183 tests)
-  - **85% code coverage** achieved (up from 30%, +55pp improvement)
-  - **4 modules at 100% coverage**: config_validator, file_ops, logging_config, session_status
-  - **20 modules at 75%+ coverage**: All critical modules comprehensively tested
-  - **100% pass rate**: All 1,401 tests passing, 0 skipped tests
-  - **Unit tests (1,122)**: Comprehensive coverage of 22 core modules
-  - **Integration tests (168)**: 8 major workflow test suites (briefing, deployment, documentation, quality, spec validation, work-item-git integration)
-  - **E2E tests (111)**: 5 complete lifecycle scenarios (core session, work items, dependencies, learning, quality)
-  - **Stricter quality gates**: Enhanced validation for tests, linting, formatting, and coverage
-  - **Shared test infrastructure**: tests/conftest.py with common fixtures and utilities
-  - **TEST_PROGRESS.md**: Comprehensive documentation of 20-session development journey
-  - All tests follow AAA pattern with comprehensive docstrings
-  - Production-ready test infrastructure with fast execution (<1s average per test file)
-- **Auto git initialization** in `sdd init` - automatically initializes git repository if not present
-- **Initial commit creation** in `sdd init` - automatically creates an initial commit with all SDD files after initialization (Enhancement #5)
-- **Pre-flight commit check** in `sdd end` - validates all changes are committed before running quality gates
-- **CHANGELOG workflow improvements** - git hooks with reminders + smarter branch-level detection
-- **OS-specific files in .gitignore** - macOS (.DS_Store, ._*, .Spotlight-V100, .Trashes), Windows (Thumbs.db, Desktop.ini, $RECYCLE.BIN/), and Linux (*~) patterns automatically added during `sdd init`
-- Git prepare-commit-msg hook installed during `sdd init` with CHANGELOG and LEARNING reminders
-- Git repository check with default branch set to 'main'
-- Clear, actionable error messages with step-by-step guidance for uncommitted changes
-- Interactive override option for advanced users (allows bypassing pre-flight check)
-- Test coverage file `coverage.json` now gitignored by default
-- Test templates updated with initial commit verification for Python, JavaScript, and TypeScript projects
-- NOTES.md file for tracking known issues and development notes
-
-### Changed
-- `scripts/init_project.py`: Added `create_initial_commit()` function that creates initial commit after all files are created
-- `scripts/init_project.py`: Added `check_or_init_git()` and `install_git_hooks()` functions called during initialization
-- `scripts/session_complete.py`: Added `check_uncommitted_changes()` function called before quality gates
-- `scripts/quality_gates.py`: Updated `_check_changelog_updated()` to check branch commits instead of working directory
-- `pyproject.toml`: Added E402 to ruff ignore list (module imports after path manipulation are acceptable)
-- CHANGELOG validation now checks `git log main..HEAD` for CHANGELOG.md updates (smarter detection)
-- Error messages for CHANGELOG failures now include actionable examples with proper formatting
-- Improved developer experience by eliminating manual `git init` step and creating initial commit automatically
-- Fail-fast approach prevents wasting time on quality gates when changes aren't committed
-- Test suite reliability improved by marking flaky Phase 5.7 tests as skipped with documentation
-
-### Fixed
-- **Bug #25**: Git branch status not finalized when switching work items - Git status in work_items.json now automatically updates to reflect actual branch state when starting a new work item
-  - Added automatic git status finalization when starting a new work item (not when resuming same work item)
-  - System detects actual git branch state: merged (via `git branch --merged`), PR status (via `gh pr list`), local/remote existence
-  - Status values: "merged", "pr_created", "pr_closed", "ready_for_pr", "deleted", "in_progress"
-  - Only finalizes completed work items with stale git status ("in_progress")
-  - Gracefully handles missing gh CLI (falls back to branch existence checks)
-  - Work items spanning multiple sessions keep "in_progress" status until completed and new work item started
-  - Prevents stale git tracking data, ensures reliable historical reporting
-  - Added `determine_git_branch_final_status()` and `finalize_previous_work_item_git_status()` functions to `scripts/briefing_generator.py`
-  - 12 comprehensive unit tests added covering all status values and edge cases
-- **Bug #24**: `/start` command ignores work item ID argument - Command now properly handles explicit work item selection with conflict detection and dependency validation
-  - Added argparse support to `scripts/briefing_generator.py` for optional `work_item_id` positional argument
-  - Added `--force` flag to override in-progress work item conflicts
-  - Explicit work item selection now validates dependencies and shows clear error messages
-  - In-progress conflict detection warns users and suggests options (complete first, use --force, or cancel)
-  - Automatic selection preserved when no work item ID provided (prioritizes in-progress, then highest priority)
-  - Invalid work item IDs show helpful error with list of available work items
-  - Resuming same in-progress item no longer shows conflict warning
-  - 3 comprehensive unit tests added for argument parsing and validation
-- **Bug #20**: Learning curator extraction bugs - multi-line LEARNING statements now captured completely, documentation files filtered out, and metadata structure standardized across all extraction methods
-  - Multi-line LEARNING statements in commit messages no longer truncated at first newline
-  - Documentation files (.md, .txt, .rst) and template directories excluded from learning extraction
-  - Placeholder content (angle brackets, known placeholders, content < 5 words) rejected during validation
-  - All learning entries now have standardized metadata structure with both `learned_in` and `context` fields
-  - Added JSON schema validation (`LEARNING_SCHEMA`) to ensure consistent learning structure
-  - Added `create_learning_entry()` function for standardized learning creation
-  - Added `is_valid_learning()` validation function to filter garbage entries
-  - 30 comprehensive unit tests added for all bug fixes
-- **Bug #23**: Bug spec template missing acceptance criteria section - Added "Acceptance Criteria" section to both `bug_spec.md` and `refactor_spec.md` templates
-- **Bug #21**: Learning curator extracts test data strings as real learnings - Test files and string literals now properly excluded from learning extraction
-  - Test directories (tests/, test/, __tests__/, spec/) completely excluded from learning extraction
-  - Content validation enhanced to reject code artifacts (`")`, `\"`, `\n`, backticks, etc.)
-  - Regex pattern updated to only match actual `# LEARNING:` comment lines (not string literals)
-  - Prevents test data pollution in learnings.json database
-  - 21 comprehensive unit tests added covering all three fixes
-  - Cleaned learnings.json database of 4 garbage entries created by the bug
-- **Performance**: `sdd validate --fix` now skips tests since they cannot be auto-fixed (much faster)
-- **Spec Parser**: Bug specifications now properly extract acceptance criteria for validation
-- **UX Issue**: Users no longer need to manually run `git init` before `sdd init`
-- **UX Issue**: Users no longer need to manually create initial commit after `sdd init`
-- **UX Issue**: Clear guidance when `/sdd:end` fails due to uncommitted changes
-- **UX Issue**: Documentation quality gates now work on first session (initial commit provides baseline)
-- **Bug**: jsonschema dependency installation issue resolved (installed in venv)
-- **Bug**: Quality gate config inconsistency (context7 enabled:false but required:true) documented in NOTES.md
-- **UX Issue**: Pre-flight check runs before expensive quality gates, saving time
-- **UX Issue**: CHANGELOG reminders now appear automatically in commit message editor
-- **UX Issue**: CHANGELOG check now correctly detects updates anywhere in branch history
-
-### Removed
-- Deleted `NEXT_SESSION_PROMPT.md` - obsolete development tracking file
-- Deleted `TEST_PROGRESS.md` - test development documentation moved to session history
-
-### Technical Details
-- **Test Infrastructure Rewrite**: Complete test suite reorganization across 20 development sessions
-  - **Tests Added**: 1,401 comprehensive tests (1,122 unit + 168 integration + 111 e2e)
-  - **Test Files Created**: 35 new test files organized by domain
-  - **Coverage Achievement**: 30% → 85% (+55pp, exceeding 75% target by 10pp)
-  - **Development Effort**: ~53-73 hours across 20 sessions
-  - **Quality Metrics**: 100% pass rate, 0 skipped tests, all tests with AAA pattern and docstrings
-  - **Implementation**: Sessions 1-7 (reorganization), 8-14 (core coverage), 15-20 (final push to 85%)
-  - **Focus**: Production-ready test infrastructure with comprehensive coverage
-- **Enhancement #1**: Git auto-init (40 lines added to init_project.py)
-- **Enhancement #2**: CHANGELOG workflow improvements (git hook template + smarter checking)
-- **Enhancement #3**: Pre-flight commit check (75 lines added to session_complete.py)
-- **Enhancement #4**: OS-specific gitignore patterns (35 lines added to init_project.py, comprehensive test coverage)
-- **Bug #23**: Template acceptance criteria fix (3 files modified: `templates/bug_spec.md`, `templates/refactor_spec.md`, `docs/reference/spec-template-structure.md`)
-- **Files Modified**: 7 files total across enhancements and bug fixes
-- **Focus**: Developer experience improvements from E2E testing insights
-
-### Planned
-- Spec-Kit integration (Phase 6)
-- Advanced features and polish (Phase 7)
-- Package distribution via PyPI
+- Removed flat directory structure
+- Removed E402 ignore from ruff config
 
 ---
 
@@ -228,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 1 main README (`README.md`)
   - 1 marketplace README (in separate repo)
   - 1 pyproject.toml (version bump)
-- **Breaking Changes**: Command files no longer use `python3 scripts/../sdd_cli.py` - now use `sdd` CLI
+- **Breaking Changes**: Command files no longer use relative Python paths - now use `sdd` CLI
 - **Migration**: Users must run `pip install -e .` if not already done
 
 ### Migration Guide
@@ -520,18 +372,20 @@ Versions follow semantic versioning (MAJOR.MINOR.PATCH):
 - **PATCH**: Bug fixes (backward compatible)
 
 Phase mapping to versions:
-- Phase 0 = v0.0
-- Phase 1 = v0.1
-- Phase 2 = v0.2
-- Phase 3 = v0.3
-- Phase 4 = v0.4
-- Phase 5 = v0.5
-- Phase 5.5 = v0.5.5
-- Phase 5.6 = v0.5.6
-- Phase 5.7 = v0.5.7
-- Phase 6 = v0.6 (planned)
-- Phase 7 = v0.7+ (planned)
-- Future v1.0.0 = Production-ready release
+- Phase 0 = v0.0 (Foundation & documentation)
+- Phase 1 = v0.1 (Core session workflow)
+- Phase 2 = v0.2 (Work item system)
+- Phase 3 = v0.3 (Dependency graphs)
+- Phase 4 = v0.4 (Learning management)
+- Phase 5 = v0.5 (Quality gates)
+- Phase 5.5 = v0.5.5 (Integration testing)
+- Phase 5.6 = v0.5.6 (Deployment support)
+- Phase 5.7 = v0.5.7 (Spec-first architecture)
+- Phase 5.8 = v0.5.8 (Marketplace plugin support)
+- Phase 5.9 = v0.6.0 (Standard Python src/ layout) ✅ **Current**
+- v0.7.0 = PyPI publishing (planned)
+- v0.8.0+ = Advanced features (planned)
+- v1.0.0 = Production-ready public release
 
 ## Links
 

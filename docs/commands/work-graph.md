@@ -69,7 +69,7 @@ Show graph statistics without rendering full graph:
 Parse `$ARGUMENTS` and construct the command:
 
 ```bash
-python3 scripts/dependency_graph.py [OPTIONS]
+sdd work-graph [OPTIONS]
 ```
 
 Replace `[OPTIONS]` with any combination of the arguments above.
@@ -140,7 +140,7 @@ Rendered graph image suitable for documentation, presentations, or embedding in 
 ```
 User: /sdd:work-graph
 
-Claude: [Executes: python3 scripts/dependency_graph.py]
+Claude: [Executes: sdd work-graph]
 
 Work Item Dependency Graph
 ==========================
@@ -174,7 +174,7 @@ Next Recommended: feature-001 (in progress, high priority, critical path)
 ```
 User: /sdd:work-graph --critical-path
 
-Claude: [Executes: python3 scripts/dependency_graph.py --critical-path]
+Claude: [Executes: sdd work-graph --critical-path]
 
 Critical Path Analysis
 =====================
@@ -207,7 +207,7 @@ Timeline:
 ```
 User: /sdd:work-graph --bottlenecks
 
-Claude: [Executes: python3 scripts/dependency_graph.py --bottlenecks]
+Claude: [Executes: sdd work-graph --bottlenecks]
 
 Bottleneck Analysis
 ===================
@@ -244,7 +244,7 @@ Items that block multiple other items (prioritize these!):
 ```
 User: /sdd:work-graph --milestone "Phase 3" --include-completed
 
-Claude: [Executes: python3 scripts/dependency_graph.py --milestone "Phase 3" --include-completed]
+Claude: [Executes: sdd work-graph --milestone "Phase 3" --include-completed]
 
 Phase 3 Dependency Graph
 ========================
@@ -280,7 +280,7 @@ Next Item: feature-012 (in progress)
 ```
 User: /sdd:work-graph --focus feature-002
 
-Claude: [Executes: python3 scripts/dependency_graph.py --focus feature-002]
+Claude: [Executes: sdd work-graph --focus feature-002]
 
 Focused View: feature-002
 =========================
@@ -318,7 +318,7 @@ Impact: Completing feature-002 will unblock 2 items
 ```
 User: /sdd:work-graph --stats
 
-Claude: [Executes: python3 scripts/dependency_graph.py --stats]
+Claude: [Executes: sdd work-graph --stats]
 
 Work Item Graph Statistics
 ==========================
@@ -371,7 +371,7 @@ Next Recommended Items:
 ```
 User: /sdd:work-graph --format svg --output project-dependencies.svg
 
-Claude: [Executes: python3 scripts/dependency_graph.py --format svg --output project-dependencies.svg]
+Claude: [Executes: sdd work-graph --format svg --output project-dependencies.svg]
 
 ✓ Dependency graph generated successfully!
 
@@ -399,7 +399,7 @@ To view: open project-dependencies.svg
 ```
 User: /sdd:work-graph --status not_started --milestone "Phase 3" --type feature
 
-Claude: [Executes: python3 scripts/dependency_graph.py --status not_started --milestone "Phase 3" --type feature]
+Claude: [Executes: sdd work-graph --status not_started --milestone "Phase 3" --type feature]
 
 Filtered Work Items
 ===================
@@ -530,7 +530,7 @@ This command integrates with:
 
 ## Implementation
 
-**Script:** `scripts/dependency_graph.py`
+**Module:** `sdd.visualization.dependency_graph`
 **Algorithm:** DFS-based critical path analysis with Kahn's algorithm for cycle detection
 **Output:** ASCII art with box-drawing characters, DOT language, or SVG via Graphviz
 **Database:** `.session/tracking/work_items.json`

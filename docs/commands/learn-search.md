@@ -29,7 +29,7 @@ The search looks for matches in:
 Extract the query from `$ARGUMENTS` and execute:
 
 ```bash
-python3 scripts/learning_curator.py search "{{query}}"
+sdd learn-search "{{query}}"
 ```
 
 Replace `{{query}}` with the user's search terms (preserve quotes if provided).
@@ -86,7 +86,7 @@ Relevance indicators:
 ```
 User: /sdd:learn-search pytest
 
-Claude: [Executes: python3 scripts/learning_curator.py search "pytest"]
+Claude: [Executes: sdd learn-search "pytest"]
 
 === Search Results for "pytest" ===
 
@@ -121,7 +121,7 @@ Total: 7 learnings found
 ```
 User: /sdd:learn-search fastapi middleware
 
-Claude: [Executes: python3 scripts/learning_curator.py search "fastapi middleware"]
+Claude: [Executes: sdd learn-search "fastapi middleware"]
 
 === Search Results for "fastapi middleware" ===
 
@@ -162,7 +162,7 @@ Total: 3 learnings found
 ```
 User: /sdd:learn-search kubernetes
 
-Claude: [Executes: python3 scripts/learning_curator.py search "kubernetes"]
+Claude: [Executes: sdd learn-search "kubernetes"]
 
 === Search Results for "kubernetes" ===
 
@@ -180,7 +180,7 @@ Suggestions:
 ```
 User: /sdd:learn-search "order matters"
 
-Claude: [Executes: python3 scripts/learning_curator.py search "order matters"]
+Claude: [Executes: sdd learn-search "order matters"]
 
 === Search Results for "order matters" ===
 
@@ -261,7 +261,7 @@ Related learnings you might find useful:
 
 ## Implementation
 
-**Script:** `scripts/learning_curator.py`
+**Module:** `sdd.learning.curator`
 **Subcommand:** `search`
 **Database:** `.session/tracking/learnings.json`
 **Algorithm:** Case-insensitive substring matching with relevance scoring based on match location (tags > content > context)

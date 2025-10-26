@@ -71,4 +71,4 @@ Fix the issues above before running /sdd:end
 
 **Implementation:**
 
-Run: `python scripts/session_validate.py`
+Run: `sdd validate`

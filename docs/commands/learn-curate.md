@@ -52,13 +52,13 @@ The curation process consists of 5 phases:
 ### No arguments (Normal Curation)
 Runs full curation and saves changes:
 ```bash
-python3 scripts/learning_curator.py curate
+sdd learn-curate
 ```
 
 ### `--dry-run` (Preview Mode)
 Shows what would be done without saving changes:
 ```bash
-python3 scripts/learning_curator.py curate --dry-run
+sdd learn-curate --dry-run
 ```
 
 ## Execution
@@ -66,7 +66,7 @@ python3 scripts/learning_curator.py curate --dry-run
 Parse `$ARGUMENTS` to check for `--dry-run` flag, then execute:
 
 ```bash
-python3 scripts/learning_curator.py curate [--dry-run]
+sdd learn-curate [--dry-run]
 ```
 
 ## Output Format
@@ -164,7 +164,7 @@ User: /sdd:learn-curate
 
 Claude: Running learning curation...
 
-[Executes: python3 scripts/learning_curator.py curate]
+[Executes: sdd learn-curate]
 
 === Learning Curation ===
 
@@ -200,7 +200,7 @@ User: /sdd:learn-curate --dry-run
 
 Claude: Previewing curation (no changes will be saved)...
 
-[Executes: python3 scripts/learning_curator.py curate --dry-run]
+[Executes: sdd learn-curate --dry-run]
 
 === Learning Curation (DRY RUN) ===
 
@@ -228,7 +228,7 @@ To apply these changes, run: /sdd:learn-curate (without --dry-run)
 ```
 User: /sdd:learn-curate
 
-Claude: [Executes: python3 scripts/learning_curator.py curate]
+Claude: [Executes: sdd learn-curate]
 
 === Learning Curation ===
 
@@ -338,7 +338,7 @@ This command integrates with:
 
 ## Implementation
 
-**Script:** `scripts/learning_curator.py`
+**Module:** `sdd.learning.curator`
 **Subcommand:** `curate`
 **Database:** `.session/tracking/learnings.json`
 **Configuration:** `.session/config.json`
