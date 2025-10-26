@@ -71,7 +71,7 @@ Starting work on implement_authentication...
 **Implementation Details:**
 
 The command markdown instructs Claude to:
-1. Run script: `python scripts/briefing_generator.py`
+1. Run script: `sdd start`
 2. Read generated briefing
 3. Update work item status
 4. Begin implementation immediately following strict guidelines

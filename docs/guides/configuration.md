@@ -164,7 +164,7 @@ Here's a complete example configuration file:
     },
     "lint": {
       "required": false,
-      "command": "ruff check scripts/ tests/",
+      "command": "ruff check src/ tests/",
       "timeout": 60
     },
     "security": {
@@ -175,7 +175,7 @@ Here's a complete example configuration file:
     "format": {
       "required": false,
       "auto_fix": true,
-      "command": "ruff format scripts/ tests/",
+      "command": "ruff format src/ tests/",
       "timeout": 60
     },
     "documentation": {
@@ -240,11 +240,11 @@ Configuration is automatically validated when loaded. If validation fails:
 You can manually validate your configuration:
 
 ```bash
-# Validate with automatic schema detection
-python3 scripts/config_validator.py .session/config.json
+# Validate using the SDD CLI
+sdd validate-config .session/config.json
 
-# Validate with explicit schema path
-python3 scripts/config_validator.py .session/config.json .session/config.schema.json
+# Or use Python module directly
+python3 -m sdd.config.validator .session/config.json
 ```
 
 ### Common Validation Errors
@@ -295,7 +295,7 @@ If `.session/config.json` doesn't exist or validation fails, SDD uses these defa
     "lint": {
       "enabled": true,
       "required": false,
-      "command": "ruff check scripts/ tests/",
+      "command": "ruff check src/ tests/",
       "timeout": 60
     },
     "security_scan": {
@@ -308,7 +308,7 @@ If `.session/config.json` doesn't exist or validation fails, SDD uses these defa
       "enabled": true,
       "required": false,
       "auto_fix": false,
-      "command": "ruff format --check scripts/ tests/",
+      "command": "ruff format --check src/ tests/",
       "timeout": 60
     },
     "spec_completeness": {
@@ -329,7 +329,7 @@ If `.session/config.json` doesn't exist or validation fails, SDD uses these defa
 To modify configuration:
 
 1. Edit `.session/config.json` directly
-2. Validate using `python3 scripts/config_validator.py .session/config.json`
+2. Validate using `sdd validate-config .session/config.json`
 3. Fix any validation errors
 4. Re-run your session commands
 
@@ -372,7 +372,7 @@ The complete JSON schema is available at `.session/config.schema.json`. The sche
 python3 -m json.tool .session/config.json
 
 # Validate against schema
-python3 scripts/config_validator.py .session/config.json
+sdd validate-config .session/config.json
 ```
 
 ### jsonschema not installed
@@ -396,6 +396,6 @@ cp templates/config.schema.json path/to/your/project/.session/
 ## Related Documentation
 
 - [Session-Driven Development Methodology](./session-driven-development.md)
-- [Quality Gates](../scripts/quality_gates.py)
+- [Quality Gates](../../src/sdd/quality/gates.py)
 - [Learning System](./learning-system.md)
 - [Writing Specs](./writing-specs.md)

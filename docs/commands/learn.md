@@ -53,7 +53,7 @@ After collecting all information:
 2. **Run the learning curator script**:
 
 ```bash
-python3 scripts/learning_curator.py add-learning \
+sdd learn-add \
   --content "{{content}}" \
   --category "{{category}}" \
   --tags "{{tags}}" \
@@ -99,7 +99,7 @@ User: fastapi, cors, middleware
 Claude: Any additional context? (file paths, session notes, or 'none')
 User: Discovered in session 5 while debugging CORS preflight issues
 
-[Executes: python3 scripts/learning_curator.py add-learning ...]
+[Executes: sdd learn-add ...]
 
 Claude: ✓ Learning captured!
   ID: learn-042
@@ -126,7 +126,7 @@ User: none
 Claude: Any context? (or 'none')
 User: none
 
-[Executes: python3 scripts/learning_curator.py add-learning --content "Use ruff instead of black for faster formatting" --category "best_practices" --session "3"]
+[Executes: sdd learn-add --content "Use ruff instead of black for faster formatting" --category "best_practices" --session "3"]
 
 Claude: ✓ Learning captured!
   ID: learn-043
@@ -150,6 +150,6 @@ This command integrates with:
 
 ## Implementation
 
-**Script:** `scripts/learning_curator.py`
+**Module:** `sdd.learning.curator`
 **Subcommand:** `add-learning`
 **Database:** `.session/tracking/learnings.json`

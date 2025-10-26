@@ -75,7 +75,7 @@ Session completed successfully ✓
 **Implementation Details:**
 
 The command markdown instructs Claude to:
-1. Run script: `python scripts/session_complete.py`
+1. Run script: `sdd end`
 2. Review quality gate results
 3. Update work item status
 4. Generate session summary

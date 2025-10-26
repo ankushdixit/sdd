@@ -76,4 +76,4 @@ Next steps:
 
 **Implementation:**
 
-Run: `python scripts/init_project.py`
+Run: `sdd init`

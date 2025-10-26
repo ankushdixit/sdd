@@ -690,7 +690,7 @@ Before starting a session, verify your spec has:
 
 Run validation:
 ```bash
-python3 scripts/spec_validator.py {work_item_id} {type}
+sdd validate-spec {work_item_id} {type}
 ```
 
 ---

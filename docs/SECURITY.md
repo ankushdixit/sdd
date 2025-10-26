@@ -6,8 +6,8 @@ We release patches for security vulnerabilities. Currently supported versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.5.x   | :white_check_mark: |
-| < 0.5   | :x:                |
+| 0.6.x   | :white_check_mark: |
+| < 0.6   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -91,7 +91,7 @@ SDD requires:
 - **Git Operations:** Commit, push, branch management
 - **Shell Execution:** Running quality gate tools (pytest, ruff, etc.)
 
-Review the scripts in `scripts/` directory to understand what operations are performed.
+Review the Python modules in `src/sdd/` directory to understand what operations are performed.
 
 ## Security Updates
 

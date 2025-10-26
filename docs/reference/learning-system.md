@@ -281,7 +281,7 @@ Common words (the, and, or, is, are, etc.) are removed before comparison to focu
 
 ### Statistics Dashboard
 
-View learning statistics with `python3 scripts/learning_curator.py statistics`:
+View learning statistics with `sdd learn-statistics`:
 
 ```
 === Learning Statistics ===
@@ -314,7 +314,7 @@ Sessions with Most Learnings:
 
 ### Timeline View
 
-View learning history by session with `python3 scripts/learning_curator.py timeline`:
+View learning history by session with `sdd learn-timeline`:
 
 ```
 === Learning Timeline (Last 10 Sessions) ===
@@ -342,7 +342,7 @@ Session 010: 5 learning(s)
 Find similar learnings using `curator.get_related_learnings(learning_id)`:
 
 ```python
-from scripts.learning_curator import LearningsCurator
+from sdd.learning.curator import LearningsCurator
 
 curator = LearningsCurator()
 related = curator.get_related_learnings("670b4de7", limit=5)
@@ -443,7 +443,7 @@ Lower values (0.5-0.6) detect more duplicates, higher values (0.7-0.8) are more 
 The learnings file is at `.session/tracking/learnings.json`. If corrupted, you can reset it:
 ```bash
 rm .session/tracking/learnings.json
-python3 scripts/learning_curator.py curate
+sdd learn-curate
 ```
 
 This creates a fresh learnings file.
@@ -495,33 +495,33 @@ All learning commands are also available via CLI:
 
 ```bash
 # Add a learning
-python3 scripts/learning_curator.py add-learning \
+sdd learn-add \
   --content "Your learning here" \
   --category gotchas \
   --tags "tag1,tag2" \
   --session 5
 
 # Show learnings
-python3 scripts/learning_curator.py show-learnings \
+sdd learn-show \
   --category gotchas \
   --tag fastapi \
   --session 5
 
 # Search learnings
-python3 scripts/learning_curator.py search "CORS"
+sdd learn-search "CORS"
 
 # Curate learnings
-python3 scripts/learning_curator.py curate
-python3 scripts/learning_curator.py curate --dry-run
+sdd learn-curate
+sdd learn-curate --dry-run
 
 # Statistics
-python3 scripts/learning_curator.py statistics
+sdd learn-statistics
 
 # Timeline
-python3 scripts/learning_curator.py timeline --sessions 10
+sdd learn-timeline --sessions 10
 
 # Report (legacy)
-python3 scripts/learning_curator.py report
+sdd learn-report
 ```
 
 ## Summary

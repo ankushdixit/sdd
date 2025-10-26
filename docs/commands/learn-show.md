@@ -34,7 +34,7 @@ Example: `5` shows learnings from session 5
 Parse the arguments and execute:
 
 ```bash
-python3 scripts/learning_curator.py show-learnings [OPTIONS]
+sdd learn-show [OPTIONS]
 ```
 
 Where `[OPTIONS]` are any combination of:
@@ -87,7 +87,7 @@ Total: 12 learnings across 4 categories
 ```
 User: /sdd:learn-show
 
-Claude: [Executes: python3 scripts/learning_curator.py show-learnings]
+Claude: [Executes: sdd learn-show]
 
 === Architecture Patterns (5 learnings) ===
 ... displays all architecture learnings ...
@@ -106,7 +106,7 @@ Total: 25 learnings across 3 categories
 ```
 User: /sdd:learn-show --category gotchas
 
-Claude: [Executes: python3 scripts/learning_curator.py show-learnings --category gotchas]
+Claude: [Executes: sdd learn-show --category gotchas]
 
 === Gotchas (8 learnings) ===
 
@@ -132,7 +132,7 @@ Total: 8 gotchas
 ```
 User: /sdd:learn-show --tag fastapi
 
-Claude: [Executes: python3 scripts/learning_curator.py show-learnings --tag fastapi]
+Claude: [Executes: sdd learn-show --tag fastapi]
 
 === Learnings tagged with "fastapi" ===
 
@@ -158,7 +158,7 @@ Total: 5 learnings with tag "fastapi"
 ```
 User: /sdd:learn-show --session 5
 
-Claude: [Executes: python3 scripts/learning_curator.py show-learnings --session 5]
+Claude: [Executes: sdd learn-show --session 5]
 
 === Learnings from Session 5 ===
 
@@ -182,7 +182,7 @@ Total: 3 learnings from session 5
 ```
 User: /sdd:learn-show --category gotchas --tag fastapi
 
-Claude: [Executes: python3 scripts/learning_curator.py show-learnings --category gotchas --tag fastapi]
+Claude: [Executes: sdd learn-show --category gotchas --tag fastapi]
 
 === Gotchas tagged with "fastapi" ===
 
@@ -252,6 +252,6 @@ Recent Growth:
 
 ## Implementation
 
-**Script:** `scripts/learning_curator.py`
+**Module:** `sdd.learning.curator`
 **Subcommand:** `show-learnings`
 **Database:** `.session/tracking/learnings.json`
