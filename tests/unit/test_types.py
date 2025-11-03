@@ -293,25 +293,27 @@ class TestGitStatus:
 
     def test_enum_members(self):
         """Test all enum members are defined."""
-        assert GitStatus.NOT_CREATED.value == "not_created"
-        assert GitStatus.CREATED.value == "created"
-        assert GitStatus.PUSHED.value == "pushed"
+        assert GitStatus.IN_PROGRESS.value == "in_progress"
+        assert GitStatus.READY_TO_MERGE.value == "ready_to_merge"
+        assert GitStatus.READY_FOR_PR.value == "ready_for_pr"
+        assert GitStatus.PR_CREATED.value == "pr_created"
         assert GitStatus.MERGED.value == "merged"
 
     def test_enum_count(self):
         """Test correct number of enum members."""
-        assert len(GitStatus) == 4
+        assert len(GitStatus) == 5
 
     def test_string_representation(self):
         """Test string conversion."""
-        assert str(GitStatus.NOT_CREATED) == "not_created"
+        assert str(GitStatus.IN_PROGRESS) == "in_progress"
         assert str(GitStatus.MERGED) == "merged"
 
     def test_value_validation_valid(self):
         """Test valid value conversion."""
-        assert GitStatus("not_created") == GitStatus.NOT_CREATED
-        assert GitStatus("created") == GitStatus.CREATED
-        assert GitStatus("pushed") == GitStatus.PUSHED
+        assert GitStatus("in_progress") == GitStatus.IN_PROGRESS
+        assert GitStatus("ready_to_merge") == GitStatus.READY_TO_MERGE
+        assert GitStatus("ready_for_pr") == GitStatus.READY_FOR_PR
+        assert GitStatus("pr_created") == GitStatus.PR_CREATED
         assert GitStatus("merged") == GitStatus.MERGED
 
     def test_value_validation_invalid(self):
@@ -326,17 +328,18 @@ class TestGitStatus:
     def test_values_method(self):
         """Test values() returns all valid values."""
         values = GitStatus.values()
-        assert len(values) == 4
-        assert "not_created" in values
-        assert "created" in values
-        assert "pushed" in values
+        assert len(values) == 5
+        assert "in_progress" in values
+        assert "ready_to_merge" in values
+        assert "ready_for_pr" in values
+        assert "pr_created" in values
         assert "merged" in values
 
     def test_json_serialization(self):
         """Test JSON serialization."""
-        data = {"git_status": GitStatus.PUSHED.value}
+        data = {"git_status": GitStatus.PR_CREATED.value}
         json_str = json.dumps(data)
-        assert json_str == '{"git_status": "pushed"}'
+        assert json_str == '{"git_status": "pr_created"}'
 
     def test_json_deserialization(self):
         """Test JSON deserialization."""
@@ -348,12 +351,12 @@ class TestGitStatus:
     def test_enum_iteration(self):
         """Test enum iteration."""
         statuses = list(GitStatus)
-        assert len(statuses) == 4
-        assert GitStatus.NOT_CREATED in statuses
+        assert len(statuses) == 5
+        assert GitStatus.IN_PROGRESS in statuses
         assert GitStatus.MERGED in statuses
 
     def test_enum_equality(self):
         """Test enum equality."""
-        assert GitStatus.CREATED == GitStatus.CREATED
-        assert GitStatus.CREATED != GitStatus.MERGED
-        assert GitStatus("created") == GitStatus.CREATED
+        assert GitStatus.READY_TO_MERGE == GitStatus.READY_TO_MERGE
+        assert GitStatus.READY_TO_MERGE != GitStatus.MERGED
+        assert GitStatus("ready_to_merge") == GitStatus.READY_TO_MERGE
