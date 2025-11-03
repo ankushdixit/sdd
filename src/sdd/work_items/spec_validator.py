@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
+from sdd.core.types import WorkItemType
 from sdd.work_items.spec_parser import (
     extract_checklist,
     extract_subsection,
@@ -31,7 +32,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
         Dictionary with required_sections, optional_sections, and special_requirements
     """
     rules = {
-        "feature": {
+        WorkItemType.FEATURE.value: {
             "required_sections": [
                 "Overview",
                 "Rationale",
@@ -47,7 +48,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
             ],
             "special_requirements": {"acceptance_criteria_min_items": 3},
         },
-        "bug": {
+        WorkItemType.BUG.value: {
             "required_sections": [
                 "Description",
                 "Steps to Reproduce",
@@ -65,7 +66,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
             ],
             "special_requirements": {},
         },
-        "refactor": {
+        WorkItemType.REFACTOR.value: {
             "required_sections": [
                 "Overview",
                 "Current State",
@@ -83,7 +84,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
             ],
             "special_requirements": {},
         },
-        "security": {
+        WorkItemType.SECURITY.value: {
             "required_sections": [
                 "Security Issue",
                 "Threat Model",
@@ -103,7 +104,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
             ],
             "special_requirements": {},
         },
-        "integration_test": {
+        WorkItemType.INTEGRATION_TEST.value: {
             "required_sections": [
                 "Scope",
                 "Test Scenarios",
@@ -117,7 +118,7 @@ def get_validation_rules(work_item_type: str) -> dict[str, Any]:
                 "acceptance_criteria_min_items": 3,
             },
         },
-        "deployment": {
+        WorkItemType.DEPLOYMENT.value: {
             "required_sections": [
                 "Deployment Scope",
                 "Deployment Procedure",

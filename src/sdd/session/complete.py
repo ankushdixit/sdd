@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Add scripts directory to path for imports
+from sdd.core.types import WorkItemStatus, WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_parser import parse_spec_file
 
@@ -320,7 +321,7 @@ def complete_git_workflow(work_item_id, commit_message, session_num):
             data = json.load(f)
 
         work_item = data["work_items"][work_item_id]
-        should_merge = work_item["status"] == "completed"
+        should_merge = work_item["status"] == WorkItemStatus.COMPLETED.value
 
         # Complete work item in git (with session_num for PR creation)
         result = workflow.complete_work_item(
@@ -409,7 +410,7 @@ def generate_commit_message(status, work_item):
         # If spec file not found or invalid, continue without rationale
         pass
 
-    if work_item["status"] == "completed":
+    if work_item["status"] == WorkItemStatus.COMPLETED.value:
         message += "✅ Work item completed\n"
     else:
         message += "🚧 Work in progress\n"
@@ -522,7 +523,7 @@ def generate_integration_test_summary(work_item: dict, gate_results: dict) -> st
     Returns:
         Integration test summary section
     """
-    if work_item.get("type") != "integration_test":
+    if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
         return ""
 
     summary = "\n## Integration Test Results\n\n"
@@ -590,7 +591,7 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
     Returns:
         Deployment summary text
     """
-    if work_item.get("type") != "deployment":
+    if work_item.get("type") != WorkItemType.DEPLOYMENT.value:
         return ""
 
     summary = []
@@ -886,7 +887,7 @@ def main():
 
     # Update work item status
     if is_complete:
-        new_status = "completed"
+        new_status = WorkItemStatus.COMPLETED.value
         work_items_data["work_items"][work_item_id]["status"] = new_status
         if "metadata" not in work_items_data["work_items"][work_item_id]:
             work_items_data["work_items"][work_item_id]["metadata"] = {}
@@ -899,7 +900,7 @@ def main():
             changes.append(f"  status: {previous_status} → {new_status}")
         changes.append(f"  metadata.completed_at: {datetime.now().isoformat()}")
     else:
-        new_status = "in_progress"
+        new_status = WorkItemStatus.IN_PROGRESS.value
         work_items_data["work_items"][work_item_id]["status"] = new_status
 
         # Record changes
@@ -919,13 +920,13 @@ def main():
     work_items = work_items_data.get("work_items", {})
     work_items_data["metadata"]["total_items"] = len(work_items)
     work_items_data["metadata"]["completed"] = sum(
-        1 for item in work_items.values() if item["status"] == "completed"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.COMPLETED.value
     )
     work_items_data["metadata"]["in_progress"] = sum(
-        1 for item in work_items.values() if item["status"] == "in_progress"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.IN_PROGRESS.value
     )
     work_items_data["metadata"]["blocked"] = sum(
-        1 for item in work_items.values() if item["status"] == "blocked"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.BLOCKED.value
     )
     work_items_data["metadata"]["last_updated"] = datetime.now().isoformat()
 
@@ -971,7 +972,7 @@ def main():
     print("=" * 50)
 
     # Update status
-    status["status"] = "completed"
+    status["status"] = WorkItemStatus.COMPLETED.value
     status["completed_at"] = datetime.now().isoformat()
     with open(".session/tracking/status_update.json", "w") as f:
         json.dump(status, f, indent=2)

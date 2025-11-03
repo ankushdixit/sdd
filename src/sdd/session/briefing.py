@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from sdd.core.logging_config import get_logger
+from sdd.core.types import GitStatus, Priority, WorkItemStatus, WorkItemType
 
 logger = get_logger(__name__)
 
@@ -50,18 +51,23 @@ def get_next_work_item(work_items_data):
     Returns item with highest priority among available.
     """
     work_items = work_items_data.get("work_items", {})
-    priority_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+    priority_order = {
+        Priority.CRITICAL.value: 4,
+        Priority.HIGH.value: 3,
+        Priority.MEDIUM.value: 2,
+        Priority.LOW.value: 1,
+    }
 
     # PRIORITY 1: Resume in-progress work
     in_progress_items = []
     for item_id, item in work_items.items():
-        if item["status"] == "in_progress":
+        if item["status"] == WorkItemStatus.IN_PROGRESS.value:
             in_progress_items.append((item_id, item))
 
     if in_progress_items:
         # Sort by priority and return highest
         in_progress_items.sort(
-            key=lambda x: priority_order.get(x[1].get("priority", "medium"), 2),
+            key=lambda x: priority_order.get(x[1].get("priority", Priority.MEDIUM.value), 2),
             reverse=True,
         )
         return in_progress_items[0]
@@ -69,12 +75,12 @@ def get_next_work_item(work_items_data):
     # PRIORITY 2: Start new work
     available = []
     for item_id, item in work_items.items():
-        if item["status"] != "not_started":
+        if item["status"] != WorkItemStatus.NOT_STARTED.value:
             continue
 
         # Check dependencies
         deps_satisfied = all(
-            work_items.get(dep_id, {}).get("status") == "completed"
+            work_items.get(dep_id, {}).get("status") == WorkItemStatus.COMPLETED.value
             for dep_id in item.get("dependencies", [])
         )
 
@@ -86,7 +92,7 @@ def get_next_work_item(work_items_data):
 
     # Sort by priority
     available.sort(
-        key=lambda x: priority_order.get(x[1].get("priority", "medium"), 2),
+        key=lambda x: priority_order.get(x[1].get("priority", Priority.MEDIUM.value), 2),
         reverse=True,
     )
 
@@ -216,7 +222,9 @@ def load_milestone_context(work_item):
     ]
 
     total = len(milestone_items)
-    completed = sum(1 for item in milestone_items if item["status"] == "completed")
+    completed = sum(
+        1 for item in milestone_items if item["status"] == WorkItemStatus.COMPLETED.value
+    )
     percent = int((completed / total) * 100) if total > 0 else 0
 
     return {
@@ -559,7 +567,7 @@ def generate_briefing(item_id, item, learnings_data):
 """
 
     # Add previous work section for in-progress items (Enhancement #11 Phase 3)
-    if item.get("status") == "in_progress":
+    if item.get("status") == WorkItemStatus.IN_PROGRESS.value:
         previous_work = generate_previous_work_section(item_id, item)
         if previous_work:
             briefing += previous_work
@@ -598,7 +606,9 @@ Progress: {milestone_context["progress"]}% ({milestone_context["completed_items"
         # Show other items in same milestone
         for related_item in milestone_context["milestone_items"]:
             if related_item["id"] != item_id:
-                status_icon = "✓" if related_item["status"] == "completed" else "○"
+                status_icon = (
+                    "✓" if related_item["status"] == WorkItemStatus.COMPLETED.value else "○"
+                )
                 briefing += f"- {status_icon} {related_item['id']} - {related_item['title']}\n"
         briefing += "\n"
 
@@ -631,7 +641,7 @@ def generate_integration_test_briefing(work_item: dict) -> str:
     Returns:
         Additional briefing sections for integration tests
     """
-    if work_item.get("type") != "integration_test":
+    if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
         return ""
 
     briefing = "\n## Integration Test Context\n\n"
@@ -718,7 +728,7 @@ def generate_deployment_briefing(work_item: dict) -> str:
     Returns:
         Deployment briefing text
     """
-    if work_item.get("type") != "deployment":
+    if work_item.get("type") != WorkItemType.DEPLOYMENT.value:
         return ""
 
     briefing = []
@@ -886,9 +896,9 @@ def finalize_previous_work_item_git_status(work_items_data, current_work_item_id
 
         # Find work item with git branch in "in_progress" status
         git_info = wi.get("git", {})
-        if git_info.get("status") == "in_progress":
+        if git_info.get("status") == GitStatus.IN_PROGRESS.value:
             # Only finalize if work item itself is completed
-            if wi.get("status") == "completed":
+            if wi.get("status") == WorkItemStatus.COMPLETED.value:
                 previous_work_item = wi
                 previous_work_item_id = wid
                 break
@@ -967,10 +977,10 @@ def main():
             print("\nAvailable work items:")
             for wid, wi in work_items_data.get("work_items", {}).items():
                 status_emoji = {
-                    "not_started": "○",
-                    "in_progress": "◐",
-                    "completed": "✓",
-                    "blocked": "✗",
+                    WorkItemStatus.NOT_STARTED.value: "○",
+                    WorkItemStatus.IN_PROGRESS.value: "◐",
+                    WorkItemStatus.COMPLETED.value: "✓",
+                    WorkItemStatus.BLOCKED.value: "✗",
                 }.get(wi["status"], "○")
                 print(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
             return 1
@@ -979,7 +989,7 @@ def main():
         in_progress = [
             (id, wi)
             for id, wi in work_items_data.get("work_items", {}).items()
-            if wi["status"] == "in_progress" and id != item_id
+            if wi["status"] == WorkItemStatus.IN_PROGRESS.value and id != item_id
         ]
 
         # If another item is in-progress, warn and exit (unless --force)
@@ -1000,7 +1010,8 @@ def main():
 
         # Check dependencies are satisfied
         deps_satisfied = all(
-            work_items_data.get("work_items", {}).get(dep_id, {}).get("status") == "completed"
+            work_items_data.get("work_items", {}).get(dep_id, {}).get("status")
+            == WorkItemStatus.COMPLETED.value
             for dep_id in item.get("dependencies", [])
         )
 
@@ -1045,7 +1056,7 @@ def main():
 
     # Determine session number
     # If work item is already in progress, reuse existing session number
-    if item.get("status") == "in_progress" and item.get("sessions"):
+    if item.get("status") == WorkItemStatus.IN_PROGRESS.value and item.get("sessions"):
         session_num = item["sessions"][-1]["session_num"]
         logger.info("Resuming existing session %d for work item %s", session_num, item_id)
     else:
@@ -1086,7 +1097,7 @@ def main():
         # Update work item status
         if item_id in work_items_data["work_items"]:
             work_item = work_items_data["work_items"][item_id]
-            work_item["status"] = "in_progress"
+            work_item["status"] = WorkItemStatus.IN_PROGRESS.value
             work_item["updated_at"] = datetime.now().isoformat()
 
             # Add session tracking
@@ -1100,13 +1111,17 @@ def main():
             work_items = work_items_data.get("work_items", {})
             work_items_data["metadata"]["total_items"] = len(work_items)
             work_items_data["metadata"]["completed"] = sum(
-                1 for item in work_items.values() if item["status"] == "completed"
+                1
+                for item in work_items.values()
+                if item["status"] == WorkItemStatus.COMPLETED.value
             )
             work_items_data["metadata"]["in_progress"] = sum(
-                1 for item in work_items.values() if item["status"] == "in_progress"
+                1
+                for item in work_items.values()
+                if item["status"] == WorkItemStatus.IN_PROGRESS.value
             )
             work_items_data["metadata"]["blocked"] = sum(
-                1 for item in work_items.values() if item["status"] == "blocked"
+                1 for item in work_items.values() if item["status"] == WorkItemStatus.BLOCKED.value
             )
             work_items_data["metadata"]["last_updated"] = datetime.now().isoformat()
 
@@ -1124,7 +1139,7 @@ def main():
     with open(briefing_file, "w") as f:
         f.write(briefing)
 
-    if item.get("status") == "in_progress":
+    if item.get("status") == WorkItemStatus.IN_PROGRESS.value:
         logger.info("Updated briefing with previous work context: %s", briefing_file)
     else:
         logger.info("Created briefing file: %s", briefing_file)
@@ -1138,7 +1153,7 @@ def main():
         "current_session": session_num,
         "current_work_item": item_id,
         "started_at": datetime.now().isoformat(),
-        "status": "in_progress",
+        "status": WorkItemStatus.IN_PROGRESS.value,
     }
     with open(status_file, "w") as f:
         json.dump(status, f, indent=2)
