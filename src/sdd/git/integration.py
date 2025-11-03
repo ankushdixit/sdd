@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.config import get_config_manager
+
 
 class GitWorkflow:
     """Manage git workflow for sessions."""
@@ -26,24 +28,11 @@ class GitWorkflow:
         self.project_root = project_root or Path.cwd()
         self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
         self.config_file = self.project_root / ".session" / "config.json"
-        self.config = self._load_config()
 
-    def _load_config(self) -> dict:
-        """Load git workflow configuration."""
-        if self.config_file.exists():
-            try:
-                with open(self.config_file) as f:
-                    config = json.load(f)
-                    return config.get("git_workflow", {})
-            except Exception:
-                pass
-        # Default configuration if file doesn't exist
-        return {
-            "mode": "pr",
-            "auto_push": True,
-            "auto_create_pr": True,
-            "delete_branch_after_merge": True,
-        }
+        # Use ConfigManager for centralized config management
+        config_manager = get_config_manager()
+        config_manager.load_config(self.config_file)
+        self.config = config_manager.git_workflow
 
     def check_git_status(self) -> tuple[bool, str]:
         """Check if working directory is clean."""
@@ -266,7 +255,7 @@ class GitWorkflow:
 
     def _format_pr_title(self, work_item: dict, session_num: int) -> str:
         """Format PR title from template."""
-        template = self.config.get("pr_title_template", "{type}: {title}")
+        template = self.config.pr_title_template
         return template.format(
             type=work_item.get("type", "feature").title(),
             title=work_item.get("title", "Work Item"),
@@ -276,10 +265,7 @@ class GitWorkflow:
 
     def _format_pr_body(self, work_item: dict, work_item_id: str, session_num: int) -> str:
         """Format PR body from template."""
-        template = self.config.get(
-            "pr_body_template",
-            "## Work Item: {work_item_id}\n\n{description}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)",
-        )
+        template = self.config.pr_body_template
 
         # Get recent commits for this work item
         commit_messages = ""
@@ -401,7 +387,7 @@ class GitWorkflow:
             }
 
         branch_name = work_item["git"]["branch"]
-        workflow_mode = self.config.get("mode", "pr")
+        workflow_mode = self.config.mode
 
         # Step 1: Commit changes (if there are any)
         success, commit_sha = self.commit_changes(commit_message)
@@ -461,7 +447,7 @@ class GitWorkflow:
                 # PR Mode: Create pull request (no local merge)
                 pr_success, pr_msg = False, "PR creation skipped (auto_create_pr disabled)"
 
-                if self.config.get("auto_create_pr", True):
+                if self.config.auto_create_pr:
                     pr_success, pr_msg = self.create_pull_request(
                         work_item_id, branch_name, work_item, session_num
                     )
@@ -486,7 +472,7 @@ class GitWorkflow:
                     push_main_success, push_main_msg = self.push_main_to_remote(parent_branch)
 
                     # Delete remote branch if configured
-                    if self.config.get("delete_branch_after_merge", True):
+                    if self.config.delete_branch_after_merge:
                         delete_success, delete_msg = self.delete_remote_branch(branch_name)
                     else:
                         delete_msg = "Remote branch kept (delete_branch_after_merge disabled)"

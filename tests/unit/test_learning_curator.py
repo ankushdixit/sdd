@@ -16,6 +16,17 @@ import pytest
 from sdd.learning.curator import LEARNING_SCHEMA, LearningsCurator
 
 
+@pytest.fixture(autouse=True)
+def reset_config_manager():
+    """Reset ConfigManager singleton before each test."""
+    from sdd.core.config import ConfigManager
+
+    ConfigManager._instance = None
+    ConfigManager._config = None
+    ConfigManager._config_path = None
+    yield
+
+
 @pytest.fixture
 def curator():
     """Create LearningsCurator instance for testing.
@@ -1675,43 +1686,6 @@ class TestAddLearning:
         assert result is False
 
 
-class TestCurationConfig:
-    """Test curation configuration."""
-
-    def test_load_curation_config_existing_file(self, temp_project):
-        """Test loading config from existing file."""
-        # Arrange
-        project_root, curator = temp_project
-        config_file = project_root / ".session" / "config.json"
-        config_file.parent.mkdir(parents=True)
-
-        import json
-
-        config_data = {
-            "curation": {
-                "auto_curate": True,
-                "frequency": 3,
-            }
-        }
-        config_file.write_text(json.dumps(config_data))
-
-        # Act
-        config = curator._load_curation_config()
-
-        # Assert
-        assert config["auto_curate"] is True
-        assert config["frequency"] == 3
-
-    def test_load_curation_config_returns_defaults(self, curator):
-        """Test loading config returns defaults when file missing."""
-        # Act
-        config = curator._load_curation_config()
-
-        # Assert
-        assert "auto_curate" in config
-        assert "frequency" in config
-
-
 class TestAutoCuration:
     """Test automatic curation."""
 
@@ -1724,8 +1698,11 @@ class TestAutoCuration:
 
         import json
 
-        config_data = {"curation": {"auto_curate_enabled": False}}
+        config_data = {"curation": {"auto_curate": False}}
         config_file.write_text(json.dumps(config_data))
+
+        # Need to recreate curator to pick up new config
+        curator = LearningsCurator(project_root)
 
         # Act
         result = curator.auto_curate_if_needed()
@@ -1733,16 +1710,17 @@ class TestAutoCuration:
         # Assert
         assert result is False
 
-    def test_auto_curate_if_needed_never_curated(self, temp_project, capsys):
+    def test_auto_curate_if_needed_never_curated(self, tmp_path, capsys):
         """Test auto-curation when never curated."""
         # Arrange
-        project_root, curator = temp_project
+        project_root = tmp_path / "test_project"
+        project_root.mkdir()
         config_file = project_root / ".session" / "config.json"
         config_file.parent.mkdir(parents=True)
 
         import json
 
-        config_data = {"curation": {"auto_curate_enabled": True}}
+        config_data = {"curation": {"auto_curate": True}}
         config_file.write_text(json.dumps(config_data))
 
         learnings_file = project_root / ".session" / "tracking" / "learnings.json"
@@ -1750,8 +1728,14 @@ class TestAutoCuration:
         learnings_data = {"categories": {}, "last_curated": None}
         learnings_file.write_text(json.dumps(learnings_data))
 
+        # Create curator with project_root so it picks up the config
+        curator = LearningsCurator(project_root)
+
         # Act
-        result = curator.auto_curate_if_needed()
+        from unittest.mock import patch
+
+        with patch.object(curator, "curate"):
+            result = curator.auto_curate_if_needed()
 
         # Assert
         assert result is True
@@ -1942,10 +1926,11 @@ class TestCategorizationWorkflow:
 class TestAutoCurationFrequency:
     """Tests for auto-curation frequency checking."""
 
-    def test_auto_curate_if_needed_with_frequency_check(self, temp_project):
+    def test_auto_curate_if_needed_with_frequency_check(self, tmp_path):
         """Test auto-curation triggers based on frequency."""
         # Arrange
-        project_root, curator = temp_project
+        project_root = tmp_path / "test_project"
+        project_root.mkdir()
         config_dir = project_root / ".session"
         config_dir.mkdir(parents=True)
 
@@ -1954,7 +1939,7 @@ class TestAutoCurationFrequency:
 
         # Create config with auto-curation enabled
         config_file = config_dir / "config.json"
-        config_data = {"curation": {"auto_curate_enabled": True, "auto_curate_frequency_days": 7}}
+        config_data = {"curation": {"auto_curate": True, "frequency": 7}}
         config_file.write_text(json.dumps(config_data))
 
         # Create learnings with old curation date
@@ -1967,6 +1952,9 @@ class TestAutoCurationFrequency:
             "metadata": {"total_learnings": 0},
         }
         learnings_file.write_text(json.dumps(learnings_data))
+
+        # Create curator with project_root so it picks up the config
+        curator = LearningsCurator(project_root)
 
         # Act
         from unittest.mock import patch
@@ -2009,27 +1997,6 @@ class TestAutoCurationFrequency:
 
         # Assert
         assert result is False
-
-
-class TestCurationConfigExceptionHandling:
-    """Tests for curation configuration loading."""
-
-    def test_load_curation_config_handles_exception(self, temp_project):
-        """Test that config loading handles exceptions gracefully."""
-        # Arrange
-        project_root, curator = temp_project
-        config_dir = project_root / ".session"
-        config_dir.mkdir(parents=True)
-
-        # Create invalid config file
-        config_file = config_dir / "config.json"
-        config_file.write_text("{ invalid json }")
-
-        # Act
-        config = curator._load_curation_config()
-
-        # Assert - Should return defaults
-        assert "auto_curate" in config or "similarity_threshold" in config
 
 
 class TestSessionSummaryExtraction:
