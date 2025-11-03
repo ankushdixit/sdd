@@ -3196,3 +3196,3706 @@ cost_optimization:
 - Consider business criticality before automated resource shutdown
 
 ---
+
+### Enhancement #32: Custom Work Item Types
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+SDD currently supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). This creates limitations:
+
+1. **No project-specific types**: Different projects need different work item types (spike, research, documentation-task, data-migration, experiment, etc.)
+2. **No extensibility**: Users cannot define custom types for their workflow
+3. **Rigid structure**: Solo developers may want simpler or more specialized types
+4. **Missing common types**: Common software development activities like "spike" (time-boxed investigation) or "research" have no dedicated type
+
+**Example use cases:**
+
+```
+Solo developer working on data-intensive project:
+- Needs: data-migration, data-validation, schema-evolution work item types
+- Current: Must use "feature" or "refactor" which don't fit semantically
+
+Solo developer doing R&D:
+- Needs: spike, research, experiment, proof-of-concept types
+- Current: No appropriate type, forced to use "feature"
+
+Solo developer maintaining docs:
+- Needs: documentation-task, tutorial, guide types
+- Current: No dedicated documentation type
+```
+
+**Proposed Solution:**
+
+Implement **custom work item type system** allowing users to define their own work item types with:
+
+1. **User-Defined Type Schema**
+   - Define custom type name and metadata
+   - Specify required and optional spec sections
+   - Set default priority and milestone behavior
+   - Configure type-specific quality gates
+
+2. **Custom Spec Templates**
+   - Create custom spec templates for each type
+   - Define type-specific validation rules
+   - Include type-specific guidance and examples
+   - Template variables for dynamic content
+
+3. **Type-Specific Quality Gates**
+   - Different quality gate requirements per type
+   - Example: "spike" type may not require tests
+   - Example: "documentation-task" may only require linting and grammar checks
+   - Configurable gate strictness per type
+
+4. **Type Lifecycle Configuration**
+   - Define valid status transitions per type
+   - Set default session behavior (single-session vs multi-session)
+   - Configure completion criteria
+   - Set up type-specific git branch naming patterns
+
+**Implementation:**
+
+**Custom type definition:**
+```yaml
+# .session/config.json - custom_work_item_types section
+{
+  "custom_work_item_types": {
+    "spike": {
+      "display_name": "Spike",
+      "description": "Time-boxed investigation or research task",
+      "template_file": "spike_spec.md",
+      "required_sections": [
+        "Goal",
+        "Time Box",
+        "Questions to Answer",
+        "Findings",
+        "Recommendations"
+      ],
+      "optional_sections": [
+        "References",
+        "Experiments Conducted"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "linting": {"enabled": false, "required": false},
+        "documentation": {"enabled": true, "required": true}
+      },
+      "default_priority": "medium",
+      "typical_duration_days": 2,
+      "multi_session_allowed": false,
+      "branch_prefix": "spike"
+    },
+    "data_migration": {
+      "display_name": "Data Migration",
+      "description": "Database schema or data migration task",
+      "template_file": "data_migration_spec.md",
+      "required_sections": [
+        "Migration Goal",
+        "Current Schema",
+        "Target Schema",
+        "Data Transformation",
+        "Rollback Plan",
+        "Testing Strategy"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": true, "required": true, "coverage_threshold": 95},
+        "integration_tests": {"enabled": true, "required": true},
+        "rollback_test": {"enabled": true, "required": true},
+        "backup_verification": {"enabled": true, "required": true}
+      },
+      "default_priority": "high",
+      "multi_session_allowed": true,
+      "branch_prefix": "migration"
+    },
+    "documentation_task": {
+      "display_name": "Documentation Task",
+      "description": "Documentation writing or updating",
+      "template_file": "documentation_task_spec.md",
+      "required_sections": [
+        "Documentation Goal",
+        "Target Audience",
+        "Content Outline",
+        "Examples Required"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "linting": {"enabled": true, "required": true},
+        "grammar_check": {"enabled": true, "required": true},
+        "link_validation": {"enabled": true, "required": true},
+        "documentation": {"enabled": false, "required": false}
+      },
+      "default_priority": "low",
+      "multi_session_allowed": false,
+      "branch_prefix": "docs"
+    },
+    "experiment": {
+      "display_name": "Experiment",
+      "description": "Experimental feature or proof of concept",
+      "template_file": "experiment_spec.md",
+      "required_sections": [
+        "Hypothesis",
+        "Success Criteria",
+        "Experiment Design",
+        "Results",
+        "Conclusion"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "documentation": {"enabled": true, "required": true}
+      },
+      "default_priority": "low",
+      "typical_duration_days": 3,
+      "multi_session_allowed": false,
+      "branch_prefix": "experiment"
+    }
+  }
+}
+```
+
+**Custom spec template example:**
+```markdown
+# src/sdd/templates/spike_spec.md
+---
+type: spike
+---
+
+# [Spike Title]
+
+**Type:** Spike
+**Time Box:** [e.g., 2 days, 8 hours]
+**Created:** [Auto-generated]
+
+## Goal
+
+What question are you trying to answer? What are you investigating?
+
+## Questions to Answer
+
+1. [Question 1]
+2. [Question 2]
+3. [Question 3]
+
+## Approach
+
+How will you conduct this investigation?
+
+- [ ] Research approach 1
+- [ ] Experiment 2
+- [ ] Prototype 3
+
+## Findings
+
+*(To be filled during/after spike)*
+
+### What We Learned
+
+- Finding 1
+- Finding 2
+
+### What We Don't Know Yet
+
+- Unknown 1
+- Unknown 2
+
+## Recommendations
+
+Based on findings, what should we do next?
+
+- [ ] Recommendation 1: [Create feature work item / Continue research / Abandon approach]
+- [ ] Recommendation 2
+
+## References
+
+- [External resources, articles, documentation]
+
+## Time Tracking
+
+- Time spent: [e.g., 6 hours out of 8 hour time box]
+- Time box respected: [Yes/No]
+```
+
+**Type manager:**
+```python
+# src/sdd/work_items/type_manager.py
+class WorkItemTypeManager:
+    def __init__(self, config_path=".session/config.json"):
+        self.config = self.load_config(config_path)
+        self.built_in_types = self.load_built_in_types()
+        self.custom_types = self.load_custom_types()
+
+    def get_all_types(self):
+        """Return all available work item types (built-in + custom)"""
+        return {**self.built_in_types, **self.custom_types}
+
+    def get_type_config(self, type_name):
+        """Get configuration for a specific work item type"""
+        all_types = self.get_all_types()
+        if type_name not in all_types:
+            raise ValueError(f"Unknown work item type: {type_name}")
+        return all_types[type_name]
+
+    def validate_type_definition(self, type_config):
+        """Validate custom type configuration"""
+        required_fields = ["display_name", "description", "template_file",
+                          "required_sections", "quality_gates"]
+        for field in required_fields:
+            if field not in type_config:
+                raise ValueError(f"Custom type missing required field: {field}")
+
+        # Validate template file exists
+        template_path = Path("src/sdd/templates") / type_config["template_file"]
+        if not template_path.exists():
+            raise FileNotFoundError(f"Template not found: {template_path}")
+
+        return True
+
+    def create_custom_type(self, type_name, type_config):
+        """Create a new custom work item type"""
+        self.validate_type_definition(type_config)
+
+        # Add to config
+        if "custom_work_item_types" not in self.config:
+            self.config["custom_work_item_types"] = {}
+
+        self.config["custom_work_item_types"][type_name] = type_config
+        self.save_config()
+
+        return type_name
+
+    def get_quality_gates_for_type(self, type_name):
+        """Get quality gate configuration for work item type"""
+        type_config = self.get_type_config(type_name)
+        return type_config.get("quality_gates", {})
+
+    def get_required_sections_for_type(self, type_name):
+        """Get required spec sections for work item type"""
+        type_config = self.get_type_config(type_name)
+        return type_config.get("required_sections", [])
+```
+
+**Enhanced work item creation:**
+```python
+# src/sdd/work_items/manager.py (modified)
+def create_work_item(self, work_item_id, work_item_type, **kwargs):
+    """Create work item with support for custom types"""
+    type_manager = WorkItemTypeManager()
+
+    # Validate type exists (built-in or custom)
+    if work_item_type not in type_manager.get_all_types():
+        available_types = ", ".join(type_manager.get_all_types().keys())
+        raise ValueError(f"Unknown type '{work_item_type}'. Available: {available_types}")
+
+    # Get type configuration
+    type_config = type_manager.get_type_config(work_item_type)
+
+    # Create work item with type-specific defaults
+    work_item = {
+        "id": work_item_id,
+        "type": work_item_type,
+        "priority": kwargs.get("priority", type_config.get("default_priority", "medium")),
+        "status": "not_started",
+        # ... rest of work item creation
+    }
+
+    # Generate spec from type-specific template
+    spec_content = self.generate_spec_from_template(
+        template=type_config["template_file"],
+        work_item=work_item
+    )
+
+    # Save spec file
+    spec_path = Path(f".session/specs/{work_item_id}.md")
+    spec_path.write_text(spec_content)
+
+    return work_item
+```
+
+**Quality gates integration:**
+```python
+# src/sdd/quality/gates.py (modified)
+def get_gates_for_work_item(self, work_item):
+    """Get quality gates based on work item type"""
+    type_manager = WorkItemTypeManager()
+    type_config = type_manager.get_type_config(work_item["type"])
+
+    # Get type-specific quality gate configuration
+    type_gates = type_config.get("quality_gates", {})
+
+    # Merge with default gates, type-specific takes precedence
+    gates = self.default_gates.copy()
+    gates.update(type_gates)
+
+    return gates
+```
+
+**Commands:**
+```bash
+# List all available work item types (built-in + custom)
+/sdd:work-types
+
+# Create custom work item type interactively
+/sdd:work-type-create
+
+# Create custom work item type from file
+/sdd:work-type-create --from-file .sdd/custom_types/spike.yml
+
+# Validate custom type definition
+/sdd:work-type-validate --type spike
+
+# Show details of a work item type
+/sdd:work-type-show spike
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/work_items/type_manager.py` - Custom type management
+- `src/sdd/templates/spike_spec.md` - Spike spec template
+- `src/sdd/templates/data_migration_spec.md` - Data migration template
+- `src/sdd/templates/documentation_task_spec.md` - Documentation task template
+- `src/sdd/templates/experiment_spec.md` - Experiment template
+- `.claude/commands/work-types.md` - List types command
+- `.claude/commands/work-type-create.md` - Create custom type command
+- `.claude/commands/work-type-show.md` - Show type details command
+- `tests/unit/test_type_manager.py` - Type manager tests
+- `tests/e2e/test_custom_work_item_types.py` - Custom type E2E tests
+
+**Modified:**
+- `src/sdd/work_items/manager.py` - Support custom types in creation
+- `src/sdd/work_items/spec_validator.py` - Validate against type-specific requirements
+- `src/sdd/quality/gates.py` - Type-specific quality gates
+- `.session/config.json` - Add custom_work_item_types section
+- `.claude/commands/work-new.md` - Document custom type support
+
+**Benefits:**
+
+1. **Project flexibility**: Adapt SDD to any project's workflow and terminology
+2. **Better semantics**: Use work item types that match the actual work being done
+3. **Workflow optimization**: Different quality gates for different work types
+4. **Common patterns**: Support common types like spike, research, experiment
+5. **Solo developer friendly**: Simpler types for simple projects, complex for complex
+6. **Extensibility**: Framework grows with user needs
+7. **Type safety**: Validation ensures custom types are well-formed
+8. **Documentation**: Custom templates guide users through unfamiliar work types
+
+**Priority:** High - Extensibility is foundational for framework adoption
+
+**Notes:**
+- Custom types stored in `.session/config.json` for project-specific customization
+- Built-in types cannot be modified (ensures backward compatibility)
+- Template variables allow dynamic content generation
+- Type-specific quality gates prevent inappropriate requirements (e.g., no tests for documentation)
+- Community could share custom type definitions
+
+---
+
+### Enhancement #33: MCP Server Integration
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Current SDD-Claude Code integration is via slash commands that execute CLI commands and return text output. This creates limitations:
+
+1. **Text-only output**: All SDD data must be formatted as text for stdout/stderr
+2. **No programmatic access**: Claude cannot query SDD state directly
+3. **Parsing overhead**: Claude must parse text output to understand SDD data
+4. **Limited interactivity**: Cannot have rich, interactive conversations about SDD state
+5. **No structured data**: JSON/structured data must be formatted as text then parsed
+6. **Foundation missing**: Cannot build advanced features like inline annotations without programmatic access
+
+**Example of current limitation:**
+
+```
+User: "What learnings are relevant to authentication?"
+
+Current flow:
+1. User must use /learn-search authentication
+2. CLI returns text output
+3. Claude reads and interprets text
+4. Claude formats response to user
+
+Desired flow with MCP:
+1. Claude directly queries: sdd://learnings/search?query=authentication&limit=10
+2. Receives structured JSON response
+3. Claude analyzes and presents insights
+4. Can follow up with related queries programmatically
+```
+
+**Proposed Solution:**
+
+Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD operations as structured tools:
+
+1. **MCP Server Implementation**
+   - Standalone MCP server process
+   - Exposes SDD operations as MCP tools
+   - Returns structured data (JSON) instead of text
+   - Handles concurrent requests
+   - Maintains session state
+
+2. **MCP Tools for SDD Operations**
+   - Work item operations (list, get, create, update, delete)
+   - Learning operations (search, get, create, curate)
+   - Session operations (status, start, end, validate)
+   - Quality gate operations (run, get results)
+   - Visualization operations (dependency graph)
+   - Project operations (status, metrics)
+
+3. **Rich Data Structures**
+   - Typed responses (not string parsing)
+   - Nested objects for complex data
+   - Metadata and context in responses
+   - Error handling with structured error objects
+
+4. **Real-Time State Access**
+   - Query SDD state anytime
+   - No need to run CLI commands
+   - Efficient data access
+   - Caching for performance
+
+**Implementation:**
+
+**MCP Server:**
+```python
+# src/sdd/mcp/server.py
+import asyncio
+from typing import Any, Dict, List
+from mcp import Server, Tool
+
+class SDDMCPServer:
+    def __init__(self):
+        self.server = Server("sdd")
+        self.register_tools()
+
+    def register_tools(self):
+        """Register all SDD tools with MCP server"""
+
+        # Work item tools
+        self.server.add_tool(Tool(
+            name="sdd_work_items_list",
+            description="List all work items with optional filters",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "enum": ["not_started", "in_progress", "blocked", "completed"]},
+                    "type": {"type": "string"},
+                    "milestone": {"type": "string"}
+                }
+            },
+            handler=self.list_work_items
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_work_item_get",
+            description="Get detailed information about a specific work item",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "work_item_id": {"type": "string", "required": True}
+                },
+                "required": ["work_item_id"]
+            },
+            handler=self.get_work_item
+        ))
+
+        # Learning tools
+        self.server.add_tool(Tool(
+            name="sdd_learnings_search",
+            description="Search learnings by keyword or semantic query",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "required": True},
+                    "limit": {"type": "integer", "default": 10},
+                    "category": {"type": "string"},
+                    "semantic": {"type": "boolean", "default": False}
+                },
+                "required": ["query"]
+            },
+            handler=self.search_learnings
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_learnings_relevant",
+            description="Get learnings relevant to a work item or topic",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "work_item_id": {"type": "string"},
+                    "topic": {"type": "string"},
+                    "limit": {"type": "integer", "default": 10}
+                }
+            },
+            handler=self.get_relevant_learnings
+        ))
+
+        # Session tools
+        self.server.add_tool(Tool(
+            name="sdd_session_status",
+            description="Get current session status and progress",
+            parameters={"type": "object", "properties": {}},
+            handler=self.get_session_status
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_quality_gates_results",
+            description="Get quality gate results for current or past sessions",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "string"},
+                    "work_item_id": {"type": "string"}
+                }
+            },
+            handler=self.get_quality_gate_results
+        ))
+
+        # Visualization tools
+        self.server.add_tool(Tool(
+            name="sdd_dependency_graph",
+            description="Get work item dependency graph data",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "format": {"type": "string", "enum": ["json", "ascii", "dot"], "default": "json"},
+                    "focus": {"type": "string"},
+                    "include_completed": {"type": "boolean", "default": False}
+                }
+            },
+            handler=self.get_dependency_graph
+        ))
+
+        # Project metrics tools
+        self.server.add_tool(Tool(
+            name="sdd_project_metrics",
+            description="Get project-level metrics and statistics",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "metric_type": {"type": "string", "enum": ["velocity", "quality", "learnings", "all"], "default": "all"}
+                }
+            },
+            handler=self.get_project_metrics
+        ))
+
+    async def list_work_items(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """List work items with filters"""
+        from sdd.work_items.manager import WorkItemManager
+
+        manager = WorkItemManager()
+        work_items = manager.list_work_items(
+            status=params.get("status"),
+            work_type=params.get("type"),
+            milestone=params.get("milestone")
+        )
+
+        return {
+            "work_items": work_items,
+            "total": len(work_items),
+            "filters_applied": {k: v for k, v in params.items() if v is not None}
+        }
+
+    async def get_work_item(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get detailed work item information"""
+        from sdd.work_items.manager import WorkItemManager
+
+        manager = WorkItemManager()
+        work_item_id = params["work_item_id"]
+
+        # Get work item metadata
+        work_item = manager.get_work_item(work_item_id)
+
+        # Get spec content
+        spec_path = Path(f".session/specs/{work_item_id}.md")
+        spec_content = spec_path.read_text() if spec_path.exists() else None
+
+        # Get session history
+        sessions = manager.get_work_item_sessions(work_item_id)
+
+        return {
+            "work_item": work_item,
+            "spec_content": spec_content,
+            "sessions": sessions,
+            "dependency_info": manager.get_dependency_info(work_item_id)
+        }
+
+    async def search_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Search learnings"""
+        from sdd.learning.curator import LearningCurator
+
+        curator = LearningCurator()
+        query = params["query"]
+        limit = params.get("limit", 10)
+        category = params.get("category")
+        semantic = params.get("semantic", False)
+
+        if semantic:
+            # Use AI-powered semantic search (Enhancement #37)
+            results = curator.semantic_search(query, limit=limit, category=category)
+        else:
+            # Use keyword search
+            results = curator.search(query, limit=limit, category=category)
+
+        return {
+            "learnings": results,
+            "total": len(results),
+            "query": query,
+            "search_type": "semantic" if semantic else "keyword"
+        }
+
+    async def get_relevant_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get learnings relevant to work item or topic"""
+        from sdd.session.briefing import get_relevant_learnings
+
+        work_item_id = params.get("work_item_id")
+        topic = params.get("topic")
+        limit = params.get("limit", 10)
+
+        if work_item_id:
+            # Get learnings for work item
+            learnings = get_relevant_learnings(work_item_id, limit=limit)
+            context = f"work item: {work_item_id}"
+        elif topic:
+            # Get learnings for topic
+            learnings = get_relevant_learnings(topic, limit=limit)
+            context = f"topic: {topic}"
+        else:
+            return {"error": "Must provide work_item_id or topic"}
+
+        return {
+            "learnings": learnings,
+            "total": len(learnings),
+            "context": context
+        }
+
+    async def get_session_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get current session status"""
+        from sdd.session.status import get_session_status
+
+        status = get_session_status()
+
+        return status
+
+    async def get_quality_gate_results(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get quality gate results"""
+        from sdd.quality.gates import QualityGateRunner
+
+        runner = QualityGateRunner()
+        session_id = params.get("session_id")
+        work_item_id = params.get("work_item_id")
+
+        results = runner.get_results(session_id=session_id, work_item_id=work_item_id)
+
+        return {
+            "quality_gate_results": results,
+            "session_id": session_id,
+            "work_item_id": work_item_id
+        }
+
+    async def get_dependency_graph(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get dependency graph"""
+        from sdd.visualization.dependency_graph import DependencyGraph
+
+        graph = DependencyGraph()
+        format_type = params.get("format", "json")
+        focus = params.get("focus")
+        include_completed = params.get("include_completed", False)
+
+        graph_data = graph.generate(
+            format=format_type,
+            focus=focus,
+            include_completed=include_completed
+        )
+
+        return {
+            "graph": graph_data,
+            "format": format_type,
+            "metadata": graph.get_metadata()
+        }
+
+    async def get_project_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get project metrics"""
+        from sdd.improvement.dora_metrics import DORAMetrics
+        from sdd.improvement.velocity_tracker import VelocityTracker
+
+        metric_type = params.get("metric_type", "all")
+
+        metrics = {}
+
+        if metric_type in ["velocity", "all"]:
+            velocity = VelocityTracker()
+            metrics["velocity"] = velocity.get_metrics()
+
+        if metric_type in ["quality", "all"]:
+            dora = DORAMetrics()
+            metrics["dora"] = dora.get_metrics()
+
+        if metric_type in ["learnings", "all"]:
+            from sdd.learning.curator import LearningCurator
+            curator = LearningCurator()
+            metrics["learnings"] = curator.get_statistics()
+
+        return {
+            "metrics": metrics,
+            "metric_type": metric_type
+        }
+
+    async def start(self):
+        """Start MCP server"""
+        await self.server.start()
+
+# Entry point
+async def main():
+    server = SDDMCPServer()
+    await server.start()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Claude Code MCP Configuration:**
+```json
+// ~/.claude/config.json or project-specific config
+{
+  "mcpServers": {
+    "sdd": {
+      "command": "sdd",
+      "args": ["mcp", "serve"],
+      "env": {}
+    }
+  }
+}
+```
+
+**CLI command to start MCP server:**
+```bash
+# Start MCP server
+sdd mcp serve
+
+# Or via Claude Code (auto-started)
+```
+
+**Example usage in Claude Code:**
+```
+User: "What learnings do we have about authentication?"
+
+Claude (internal):
+→ Calls sdd_learnings_search(query="authentication", limit=10, semantic=True)
+→ Receives structured JSON with learnings
+→ Analyzes and presents to user
+
+Claude (to user): "We have 7 learnings about authentication:
+
+1. Always use bcrypt for password hashing (Security - Session 5)
+2. Implement JWT token refresh mechanism (Best Practices - Session 8)
+..."
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/mcp/server.py` - MCP server implementation
+- `src/sdd/mcp/tools.py` - MCP tool definitions
+- `src/sdd/mcp/__init__.py` - MCP module initialization
+- `src/sdd/cli.py` - Add `mcp serve` command
+- `docs/mcp/README.md` - MCP integration documentation
+- `docs/mcp/tools.md` - MCP tools reference
+- `tests/unit/test_mcp_server.py` - MCP server tests
+- `tests/integration/test_mcp_integration.py` - Integration tests
+
+**Modified:**
+- `src/sdd/cli.py` - Add MCP server command
+- `README.md` - Document MCP integration
+- `.claude/config.json` - MCP server configuration example
+
+**Benefits:**
+
+1. **Programmatic access**: Claude can query SDD state directly
+2. **Structured data**: No text parsing, clean JSON responses
+3. **Rich interactions**: Contextual follow-up queries
+4. **Foundation for features**: Enables inline annotations, real-time updates
+5. **Better UX**: Faster, more accurate responses
+6. **Extensibility**: Easy to add new MCP tools
+7. **Standard protocol**: MCP is Claude Code's official integration method
+8. **Stateful**: Server maintains context across queries
+
+**Priority:** High - Foundation for better Claude Code integration (required for Enhancement #35)
+
+**Notes:**
+- Requires Claude Code with MCP support
+- MCP server runs as separate process
+- Server lifecycle managed by Claude Code
+- Backward compatible (slash commands still work)
+- Performance: MCP calls faster than CLI commands
+
+---
+
+### Enhancement #34: Interactive UI Integration
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+SDD currently uses Python's `input()` function for interactive prompts in commands like `/work-new`, `/learn`, and `/end`. This creates UX limitations in Claude Code:
+
+1. **Terminal-style input**: Python's `input()` creates terminal prompts which don't integrate well with Claude Code's UI
+2. **No rich UI components**: Cannot use dropdowns, checkboxes, multi-select, etc.
+3. **Limited validation**: Text-based input with manual validation
+4. **Poor discoverability**: Users don't know what options are available
+5. **Inconsistent UX**: Feels disconnected from Claude Code's interface
+
+**Example of current limitation:**
+
+```python
+# Current interactive prompt (src/sdd/work_items/manager.py)
+work_item_type = input("Enter work item type (feature/bug/refactor): ")
+# User types text, prone to typos, no validation until after input
+```
+
+**Desired UX:**
+```
+Claude Code UI shows:
+┌─────────────────────────────────────┐
+│ Select work item type:              │
+│ ○ Feature                           │
+│ ○ Bug                               │
+│ ○ Refactor                          │
+│ ○ Security                          │
+│ ○ Integration Test                  │
+│ ○ Deployment                        │
+│ [Custom types if defined]           │
+└─────────────────────────────────────┘
+```
+
+**Proposed Solution:**
+
+Integrate with **Claude Code's interactive UI tools** (AskUserQuestion, forms, etc.) for rich interactive experiences:
+
+1. **Use AskUserQuestion Tool**
+   - Replace Python `input()` with Claude Code UI
+   - Radio buttons for single-select
+   - Checkboxes for multi-select
+   - Dropdowns for long lists
+   - Form fields with validation
+
+2. **Interactive Command Flow**
+   - Commands request UI interaction via Claude
+   - Claude renders UI components
+   - User interacts with UI
+   - Results passed back to command
+   - Command continues with validated input
+
+3. **Rich Input Types**
+   - Single-select (work item type, priority)
+   - Multi-select (dependencies, tags)
+   - Text input with validation (title, description)
+   - Number input with ranges (story points)
+   - Date/time pickers (milestones, deadlines)
+
+4. **Validation & Help**
+   - Input validation before submission
+   - Inline help text and examples
+   - Required vs optional fields marked
+   - Error messages in UI
+
+**Implementation:**
+
+**Interactive command adapter:**
+```python
+# src/sdd/ui/interactive.py
+from typing import List, Dict, Any, Optional
+import json
+
+class InteractiveUI:
+    """Adapter for Claude Code interactive UI"""
+
+    def __init__(self, mode="claude_code"):
+        """
+        mode: "claude_code" (use Claude UI) or "terminal" (fallback to input())
+        """
+        self.mode = mode
+
+    def ask_single_select(
+        self,
+        question: str,
+        options: List[Dict[str, str]],
+        header: str,
+        default: Optional[str] = None
+    ) -> str:
+        """Ask user to select one option"""
+        if self.mode == "claude_code":
+            return self._ask_claude_single_select(question, options, header, default)
+        else:
+            return self._ask_terminal_single_select(question, options, default)
+
+    def _ask_claude_single_select(self, question, options, header, default):
+        """Use Claude Code's AskUserQuestion tool"""
+        # Format for Claude Code UI
+        request = {
+            "questions": [{
+                "question": question,
+                "header": header,
+                "multiSelect": False,
+                "options": [
+                    {
+                        "label": opt["label"],
+                        "description": opt.get("description", "")
+                    }
+                    for opt in options
+                ]
+            }]
+        }
+
+        # Output special marker that Claude Code recognizes
+        print(f"__CLAUDE_UI_REQUEST__:{json.dumps(request)}")
+
+        # Read response (Claude Code will provide via stdin or env)
+        response = input()  # This will be intercepted by Claude Code
+        return json.loads(response)["answer"]
+
+    def _ask_terminal_single_select(self, question, options, default):
+        """Fallback to terminal input"""
+        print(f"\n{question}")
+        for i, opt in enumerate(options, 1):
+            label = opt["label"]
+            desc = f" - {opt['description']}" if opt.get("description") else ""
+            default_marker = " (default)" if default == opt["label"] else ""
+            print(f"{i}. {label}{desc}{default_marker}")
+
+        while True:
+            choice = input(f"Select (1-{len(options)}): ").strip()
+            if not choice and default:
+                return default
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(options):
+                    return options[idx]["label"]
+            except ValueError:
+                pass
+            print("Invalid choice. Try again.")
+
+    def ask_multi_select(
+        self,
+        question: str,
+        options: List[Dict[str, str]],
+        header: str
+    ) -> List[str]:
+        """Ask user to select multiple options"""
+        if self.mode == "claude_code":
+            return self._ask_claude_multi_select(question, options, header)
+        else:
+            return self._ask_terminal_multi_select(question, options)
+
+    def ask_text_input(
+        self,
+        question: str,
+        validation: Optional[callable] = None,
+        placeholder: str = "",
+        required: bool = True
+    ) -> str:
+        """Ask user for text input"""
+        if self.mode == "claude_code":
+            return self._ask_claude_text_input(question, validation, placeholder, required)
+        else:
+            return self._ask_terminal_text_input(question, validation, required)
+
+    def ask_number_input(
+        self,
+        question: str,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+        default: Optional[int] = None
+    ) -> int:
+        """Ask user for number input with range validation"""
+        # Implementation for number input with validation
+        pass
+
+    def ask_confirmation(
+        self,
+        question: str,
+        default: bool = False
+    ) -> bool:
+        """Ask yes/no confirmation"""
+        if self.mode == "claude_code":
+            return self._ask_claude_confirmation(question, default)
+        else:
+            return self._ask_terminal_confirmation(question, default)
+
+# Global instance
+ui = InteractiveUI()
+```
+
+**Updated work item creation:**
+```python
+# src/sdd/work_items/manager.py (modified)
+from sdd.ui.interactive import ui
+
+def create_work_item_interactive(self):
+    """Create work item with rich UI interactions"""
+
+    # Get work item type
+    type_manager = WorkItemTypeManager()
+    all_types = type_manager.get_all_types()
+
+    type_options = [
+        {
+            "label": type_config["display_name"],
+            "description": type_config["description"]
+        }
+        for type_name, type_config in all_types.items()
+    ]
+
+    work_item_type = ui.ask_single_select(
+        question="What type of work item do you want to create?",
+        options=type_options,
+        header="Work Item Type"
+    )
+
+    # Get title
+    title = ui.ask_text_input(
+        question="Enter work item title:",
+        validation=lambda t: len(t) >= 5,
+        placeholder="e.g., Add user authentication",
+        required=True
+    )
+
+    # Get priority
+    priority = ui.ask_single_select(
+        question="What is the priority of this work item?",
+        options=[
+            {"label": "Critical", "description": "Must be done immediately"},
+            {"label": "High", "description": "Important, should be done soon"},
+            {"label": "Medium", "description": "Normal priority"},
+            {"label": "Low", "description": "Nice to have, can wait"}
+        ],
+        header="Priority",
+        default="Medium"
+    )
+
+    # Get dependencies (multi-select)
+    existing_work_items = self.list_work_items(status=["not_started", "in_progress"])
+    if existing_work_items:
+        dependency_options = [
+            {
+                "label": wi["id"],
+                "description": f"{wi['title']} ({wi['type']})"
+            }
+            for wi in existing_work_items
+        ]
+
+        dependencies = ui.ask_multi_select(
+            question="Select dependencies (work items that must be completed first):",
+            options=dependency_options,
+            header="Dependencies"
+        )
+    else:
+        dependencies = []
+
+    # Get milestone (if any exist)
+    milestones = self.get_milestones()
+    if milestones:
+        milestone_options = [
+            {"label": "None", "description": "No milestone"}
+        ] + [
+            {"label": m["name"], "description": m.get("description", "")}
+            for m in milestones
+        ]
+
+        milestone = ui.ask_single_select(
+            question="Assign to milestone?",
+            options=milestone_options,
+            header="Milestone",
+            default="None"
+        )
+        milestone = None if milestone == "None" else milestone
+    else:
+        milestone = None
+
+    # Confirmation
+    summary = f"""
+Create work item with:
+- Type: {work_item_type}
+- Title: {title}
+- Priority: {priority}
+- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
+- Milestone: {milestone or 'None'}
+    """
+    print(summary)
+
+    confirmed = ui.ask_confirmation(
+        question="Create this work item?",
+        default=True
+    )
+
+    if not confirmed:
+        print("Work item creation cancelled.")
+        return None
+
+    # Create work item
+    work_item_id = self.generate_work_item_id(title, work_item_type)
+    work_item = self.create_work_item(
+        work_item_id=work_item_id,
+        work_item_type=work_item_type,
+        title=title,
+        priority=priority,
+        dependencies=dependencies,
+        milestone=milestone
+    )
+
+    return work_item
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/ui/interactive.py` - Interactive UI adapter
+- `src/sdd/ui/__init__.py` - UI module initialization
+- `tests/unit/test_interactive_ui.py` - UI adapter tests
+
+**Modified:**
+- `src/sdd/work_items/manager.py` - Use InteractiveUI for `/work-new`
+- `src/sdd/learning/curator.py` - Use InteractiveUI for `/learn`
+- `src/sdd/session/complete.py` - Use InteractiveUI for `/end` confirmation
+- `src/sdd/project/init.py` - Use InteractiveUI for project setup
+- `.claude/commands/work-new.md` - Document improved UX
+- `.claude/commands/learn.md` - Document improved UX
+
+**Benefits:**
+
+1. **Better UX**: Native-feeling UI in Claude Code
+2. **Fewer errors**: Validation before submission
+3. **Discoverability**: See all options upfront
+4. **Faster workflows**: Less typing, more clicking/selecting
+5. **Accessibility**: Better keyboard navigation and screen reader support
+6. **Consistency**: Matches Claude Code's UI patterns
+7. **Graceful fallback**: Still works in terminal mode
+8. **Professional feel**: Polished, modern interface
+
+**Priority:** Medium - UX improvement, nice to have but not critical
+
+**Notes:**
+- Requires coordination with Claude Code team for UI integration points
+- Fallback to terminal `input()` ensures backward compatibility
+- Could be implemented incrementally (start with most-used commands)
+- May need custom protocol/API from Claude Code side
+
+---
+
+### Enhancement #35: Inline Editor Annotations (via MCP)
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+When working on a work item, developers have no real-time visibility of SDD state in their editor:
+
+1. **No work item status visibility**: Can't see if current file relates to an active work item
+2. **No learning hints**: Relevant learnings not shown in context
+3. **No quality gate indicators**: Must run `/validate` manually to see issues
+4. **Context switching**: Must switch to terminal to check SDD state
+5. **Lost context**: May forget which work item is active
+
+**Example scenario:**
+
+```
+Developer opens: src/auth/jwt.py
+
+Current experience:
+- No indication this relates to work_item_authentication
+- No reminder of relevant learnings about JWT
+- No warning about quality gate failures
+- Must run /status or /validate to see any SDD info
+
+Desired experience:
+Editor shows inline annotations:
+┌───────────────────────────────────────────────┐
+│ src/auth/jwt.py                               │
+│                                               │
+│ 📋 Work Item: feature_jwt_authentication      │
+│    Status: In Progress (Session 15)           │
+│    Priority: High                             │
+│                                               │
+│ 💡 Relevant Learnings (3):                    │
+│    • Always validate JWT signature            │
+│    • Use short token expiry (15min)           │
+│    • Implement token refresh mechanism        │
+│                                               │
+│ ⚠️ Quality Gates:                             │
+│    ✓ Tests passing (87% coverage)             │
+│    ✗ Linting: 2 issues (click to fix)         │
+│                                               │
+│ def generate_token(user_id):                  │
+│     """Generate JWT token"""                  │
+│     # ... code ...                            │
+└───────────────────────────────────────────────┘
+```
+
+**Proposed Solution:**
+
+Implement **inline editor annotations** that display SDD state contextually in the editor:
+
+1. **Work Item Status Annotations**
+   - Show active work item in files being edited
+   - Display work item status, priority, progress
+   - Link to full work item spec
+   - Indicate if file is part of work item scope
+
+2. **Learning Snippets on Hover**
+   - Detect relevant learnings based on file/function
+   - Show learning snippets on hover
+   - Link to full learning details
+   - "Learn more" expands learning context
+
+3. **Quality Gate Indicators**
+   - Show quality gate status inline
+   - Highlight failing tests in test files
+   - Show linting errors with quick fixes
+   - Display coverage gaps
+
+4. **Dependency Warnings**
+   - Warn if editing file that's part of blocked work item
+   - Show dependency chain
+   - Suggest unblocking actions
+
+5. **Session Context**
+   - Show current session info
+   - Display session time/progress
+   - Link to session briefing
+   - Quick access to `/end` or `/validate`
+
+**Implementation:**
+
+**Requires Enhancement #33 (MCP Server) as foundation**
+
+**MCP-based annotation provider:**
+```python
+# src/sdd/mcp/annotations.py
+from pathlib import Path
+from typing import List, Dict, Any
+
+class AnnotationProvider:
+    """Provide annotations for editor via MCP"""
+
+    def get_annotations_for_file(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get all annotations for a file"""
+        annotations = []
+
+        # Work item annotations
+        work_item_annotations = self.get_work_item_annotations(file_path)
+        annotations.extend(work_item_annotations)
+
+        # Learning annotations
+        learning_annotations = self.get_learning_annotations(file_path)
+        annotations.extend(learning_annotations)
+
+        # Quality gate annotations
+        quality_annotations = self.get_quality_gate_annotations(file_path)
+        annotations.extend(quality_annotations)
+
+        return annotations
+
+    def get_work_item_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get work item status annotations"""
+        from sdd.session.status import get_session_status
+        from sdd.work_items.manager import WorkItemManager
+
+        # Check if there's an active session
+        status = get_session_status()
+        if not status.get("active_work_item"):
+            return []
+
+        work_item_id = status["active_work_item"]
+        manager = WorkItemManager()
+        work_item = manager.get_work_item(work_item_id)
+
+        # Check if file is in work item's git branch commits
+        if not self.file_in_work_item_scope(file_path, work_item_id):
+            return []
+
+        return [{
+            "type": "info",
+            "position": {"line": 0, "character": 0},
+            "message": f"📋 Work Item: {work_item['title']}",
+            "details": {
+                "work_item_id": work_item_id,
+                "status": work_item["status"],
+                "priority": work_item["priority"],
+                "session": status.get("session_number")
+            },
+            "actions": [
+                {"label": "View Spec", "command": f"sdd:work-show {work_item_id}"},
+                {"label": "End Session", "command": "sdd:end"}
+            ]
+        }]
+
+    def get_learning_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get relevant learning annotations"""
+        from sdd.session.briefing import get_relevant_learnings
+
+        # Analyze file to determine topic
+        topic = self.extract_topic_from_file(file_path)
+        if not topic:
+            return []
+
+        # Get relevant learnings
+        learnings = get_relevant_learnings(topic, limit=3)
+        if not learnings:
+            return []
+
+        # Create annotation
+        learning_texts = [
+            f"• {learning['content'][:80]}..."
+            for learning in learnings[:3]
+        ]
+
+        return [{
+            "type": "info",
+            "position": {"line": 0, "character": 0},
+            "message": f"💡 Relevant Learnings ({len(learnings)}):",
+            "details": {
+                "learnings": learnings,
+                "topic": topic
+            },
+            "hover_content": "\n".join(learning_texts),
+            "actions": [
+                {"label": "View All", "command": f"sdd:learn-search {topic}"}
+            ]
+        }]
+
+    def get_quality_gate_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get quality gate status annotations"""
+        from sdd.quality.gates import QualityGateRunner
+
+        runner = QualityGateRunner()
+
+        # Get latest quality gate results
+        results = runner.get_latest_results()
+        if not results:
+            return []
+
+        annotations = []
+
+        # Check if file has linting issues
+        if "linting" in results and not results["linting"]["passed"]:
+            linting_issues = self.get_linting_issues_for_file(file_path, results["linting"])
+            for issue in linting_issues:
+                annotations.append({
+                    "type": "warning",
+                    "position": {"line": issue["line"], "character": issue["column"]},
+                    "message": f"⚠️ Lint: {issue['message']}",
+                    "details": issue,
+                    "actions": [
+                        {"label": "Fix", "command": f"sdd:validate --fix"}
+                    ] if issue.get("fixable") else []
+                })
+
+        # Check if file has test coverage gaps
+        if "tests" in results:
+            coverage_gaps = self.get_coverage_gaps_for_file(file_path, results["tests"])
+            if coverage_gaps:
+                annotations.append({
+                    "type": "info",
+                    "position": {"line": 0, "character": 0},
+                    "message": f"📊 Coverage: {coverage_gaps['percentage']}% (target: {coverage_gaps['target']}%)",
+                    "details": coverage_gaps,
+                    "hover_content": f"Uncovered lines: {coverage_gaps['uncovered_lines']}"
+                })
+
+        return annotations
+
+    def extract_topic_from_file(self, file_path: str) -> str:
+        """Extract main topic/keywords from file"""
+        path = Path(file_path)
+
+        # Use file name and path components as topic
+        parts = path.stem.split("_")
+        parent_parts = path.parent.name.split("_")
+
+        topic = " ".join(parts + parent_parts)
+        return topic
+
+    def file_in_work_item_scope(self, file_path: str, work_item_id: str) -> bool:
+        """Check if file was modified in work item's branch"""
+        # Implementation: check git log for work item's branch
+        pass
+
+# MCP tool for annotations
+async def get_file_annotations(params: Dict[str, Any]) -> Dict[str, Any]:
+    """MCP tool to get annotations for a file"""
+    file_path = params["file_path"]
+
+    provider = AnnotationProvider()
+    annotations = provider.get_annotations_for_file(file_path)
+
+    return {
+        "file_path": file_path,
+        "annotations": annotations,
+        "count": len(annotations)
+    }
+```
+
+**Claude Code MCP Tool Registration:**
+```python
+# Add to src/sdd/mcp/server.py
+self.server.add_tool(Tool(
+    name="sdd_file_annotations",
+    description="Get SDD annotations for a file (work item status, learnings, quality gates)",
+    parameters={
+        "type": "object",
+        "properties": {
+            "file_path": {"type": "string", "required": True}
+        },
+        "required": ["file_path"]
+    },
+    handler=get_file_annotations
+))
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/mcp/annotations.py` - Annotation provider
+- `tests/unit/test_annotations.py` - Annotation tests
+
+**Modified:**
+- `src/sdd/mcp/server.py` - Add annotation MCP tool
+- `docs/mcp/tools.md` - Document annotation tool
+
+**Benefits:**
+
+1. **Context awareness**: See SDD state without leaving editor
+2. **Learning reminders**: Relevant learnings shown in context
+3. **Proactive quality**: See issues as you code
+4. **Reduced context switching**: Less terminal usage
+5. **Better focus**: All info in one place
+6. **Discoverability**: Learn about SDD features through annotations
+7. **Productivity**: Faster access to relevant information
+
+**Priority:** Medium - Nice to have, enhances developer experience
+
+**Dependencies:**
+- **Requires Enhancement #33 (MCP Server)** - Foundation for annotations
+- Requires Claude Code support for displaying annotations (may need API/protocol discussion with Anthropic)
+
+**Notes:**
+- Implementation depends on Claude Code's annotation/diagnostic API
+- May need custom protocol if Claude Code doesn't have annotation support yet
+- Could start with simpler "status bar" annotations before full inline support
+- Performance: Annotations should be computed lazily and cached
+
+---
+
+### Enhancement #36: JSON Schema Spec Validation
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Current spec validation only checks for section presence (completeness checking). This creates issues:
+
+1. **No structure validation**: Sections may be present but empty or malformed
+2. **No type checking**: Cannot enforce that "Priority" is one of [critical, high, medium, low]
+3. **Late error detection**: Structural issues found during `/start` or `/end`
+4. **Poor error messages**: "Section missing" but not "Section has wrong format"
+5. **No schema evolution**: Cannot version spec formats or migrate old specs
+
+**Example of current validation gap:**
+
+```markdown
+# Current spec file - PASSES current validation
+## Acceptance Criteria
+(empty section)
+
+## Implementation Details
+not a list, just a paragraph
+
+## Priority
+Super Urgent!!!  ← Not a valid priority value
+
+Current validator: ✓ All sections present, validation passes
+Desired validator: ✗ Multiple schema violations detected
+```
+
+**Proposed Solution:**
+
+Implement **JSON Schema-based spec validation** for rigorous spec structure checking:
+
+1. **Schema Definitions**
+   - Define JSON Schema for each work item type
+   - Validate section structure, content types, enums
+   - Support required vs optional fields
+   - Version schemas for backward compatibility
+
+2. **Markdown-to-Structure Parser**
+   - Parse markdown specs into structured data
+   - Extract sections, lists, metadata
+   - Convert to JSON for schema validation
+   - Preserve original markdown for human readability
+
+3. **Comprehensive Validation**
+   - Schema validation (structure, types, enums)
+   - Cross-field validation (dependencies must exist)
+   - Custom business rules (time box reasonable for spike)
+   - Reference validation (links, file paths)
+
+4. **Better Error Messages**
+   - Precise error location (line number, section)
+   - Explain what's wrong and how to fix
+   - Suggest corrections
+   - Examples of correct format
+
+5. **Schema Migration**
+   - Detect spec version
+   - Migrate old specs to new schema
+   - Preserve content during migration
+   - Log migration actions
+
+**Implementation:**
+
+**JSON Schema definitions:**
+```json
+// src/sdd/templates/schemas/feature_spec_schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sdd.dev/schemas/feature_spec.json",
+  "title": "Feature Spec",
+  "description": "Schema for feature work item specifications",
+  "type": "object",
+  "required": ["title", "type", "overview", "rationale", "acceptance_criteria"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 200,
+      "description": "Feature title"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["feature"],
+      "description": "Work item type"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "default": "medium",
+      "description": "Feature priority"
+    },
+    "overview": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Feature overview (what, why, for whom)"
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Why this feature is needed"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 5
+      },
+      "description": "List of acceptance criteria"
+    },
+    "implementation_details": {
+      "type": "object",
+      "properties": {
+        "approach": {"type": "string"},
+        "files_to_modify": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "new_files": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^[a-z_]+$"}
+        }
+      }
+    },
+    "testing_strategy": {
+      "type": "object",
+      "properties": {
+        "unit_tests": {"type": "array", "items": {"type": "string"}},
+        "integration_tests": {"type": "array", "items": {"type": "string"}},
+        "test_coverage_target": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(feature|bug|refactor|security|integration_test|deployment)_[a-z0-9_]+$"
+      },
+      "description": "Work item dependencies (must exist)"
+    }
+  }
+}
+```
+
+**Spec parser:**
+```python
+# src/sdd/work_items/spec_parser.py (enhanced)
+import yaml
+import json
+import jsonschema
+from pathlib import Path
+from typing import Dict, Any, List
+
+class SpecParser:
+    """Parse and validate markdown specs against JSON schemas"""
+
+    def __init__(self):
+        self.schema_dir = Path("src/sdd/templates/schemas")
+        self.schemas = self.load_schemas()
+
+    def load_schemas(self) -> Dict[str, Dict]:
+        """Load all JSON schemas"""
+        schemas = {}
+        for schema_file in self.schema_dir.glob("*_schema.json"):
+            work_item_type = schema_file.stem.replace("_spec_schema", "")
+            with open(schema_file) as f:
+                schemas[work_item_type] = json.load(f)
+        return schemas
+
+    def parse_spec_to_structure(self, spec_path: Path) -> Dict[str, Any]:
+        """Parse markdown spec into structured data"""
+        content = spec_path.read_text()
+
+        # Extract frontmatter (YAML)
+        frontmatter = {}
+        if content.startswith("---"):
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                frontmatter = yaml.safe_load(parts[1])
+                content = parts[2]
+
+        # Parse markdown sections
+        sections = self.parse_markdown_sections(content)
+
+        # Combine frontmatter and sections
+        structure = {**frontmatter, **sections}
+
+        return structure
+
+    def parse_markdown_sections(self, content: str) -> Dict[str, Any]:
+        """Parse markdown sections into structured data"""
+        sections = {}
+        current_section = None
+        current_content = []
+
+        for line in content.split("\n"):
+            # Detect section headers
+            if line.startswith("##"):
+                # Save previous section
+                if current_section:
+                    sections[current_section] = self.parse_section_content(
+                        current_section, "\n".join(current_content)
+                    )
+
+                # Start new section
+                current_section = line.replace("##", "").strip().lower().replace(" ", "_")
+                current_content = []
+            else:
+                current_content.append(line)
+
+        # Save last section
+        if current_section:
+            sections[current_section] = self.parse_section_content(
+                current_section, "\n".join(current_content)
+            )
+
+        return sections
+
+    def parse_section_content(self, section_name: str, content: str) -> Any:
+        """Parse section content based on expected type"""
+        content = content.strip()
+
+        # List sections (bullet points)
+        if section_name in ["acceptance_criteria", "implementation_steps", "test_cases"]:
+            items = []
+            for line in content.split("\n"):
+                line = line.strip()
+                if line.startswith("-") or line.startswith("*"):
+                    items.append(line[1:].strip())
+                elif line.startswith("- [ ]") or line.startswith("- [x]"):
+                    items.append(line[5:].strip())
+            return items if items else content
+
+        # Object sections (key-value pairs)
+        elif section_name in ["implementation_details", "testing_strategy"]:
+            # Try to parse as structured data
+            try:
+                return self.parse_structured_section(content)
+            except:
+                return {"raw": content}
+
+        # String sections
+        else:
+            return content
+
+    def parse_structured_section(self, content: str) -> Dict[str, Any]:
+        """Parse structured section content (key: value format)"""
+        result = {}
+        current_key = None
+        current_value = []
+
+        for line in content.split("\n"):
+            if ":" in line and not line.startswith(" "):
+                # Save previous key-value
+                if current_key:
+                    result[current_key] = "\n".join(current_value).strip()
+
+                # Start new key
+                key, value = line.split(":", 1)
+                current_key = key.strip().lower().replace(" ", "_")
+                current_value = [value.strip()] if value.strip() else []
+            else:
+                current_value.append(line)
+
+        # Save last key-value
+        if current_key:
+            result[current_key] = "\n".join(current_value).strip()
+
+        return result
+
+    def validate_spec_structure(
+        self,
+        spec_path: Path,
+        work_item_type: str
+    ) -> tuple[bool, List[str]]:
+        """Validate spec against JSON schema"""
+
+        # Get schema
+        if work_item_type not in self.schemas:
+            return False, [f"No schema found for type: {work_item_type}"]
+
+        schema = self.schemas[work_item_type]
+
+        # Parse spec to structure
+        try:
+            structure = self.parse_spec_to_structure(spec_path)
+        except Exception as e:
+            return False, [f"Failed to parse spec: {str(e)}"]
+
+        # Validate against schema
+        errors = []
+        try:
+            jsonschema.validate(instance=structure, schema=schema)
+            return True, []
+        except jsonschema.ValidationError as e:
+            errors.append(self.format_validation_error(e))
+        except jsonschema.SchemaError as e:
+            errors.append(f"Schema error: {str(e)}")
+
+        return False, errors
+
+    def format_validation_error(self, error: jsonschema.ValidationError) -> str:
+        """Format validation error with helpful message"""
+        path = " → ".join(str(p) for p in error.path) if error.path else "root"
+
+        message = f"Validation error at '{path}':\n"
+        message += f"  Issue: {error.message}\n"
+
+        # Add helpful suggestions
+        if error.validator == "required":
+            message += f"  Fix: Add the required field '{error.validator_value}'\n"
+        elif error.validator == "enum":
+            message += f"  Fix: Use one of: {', '.join(error.validator_value)}\n"
+        elif error.validator == "minLength":
+            message += f"  Fix: Provide at least {error.validator_value} characters\n"
+        elif error.validator == "minItems":
+            message += f"  Fix: Provide at least {error.validator_value} items\n"
+
+        return message
+
+    def validate_cross_references(
+        self,
+        spec_path: Path,
+        work_item_id: str
+    ) -> tuple[bool, List[str]]:
+        """Validate cross-references (dependencies exist, files exist, etc.)"""
+        from sdd.work_items.manager import WorkItemManager
+
+        structure = self.parse_spec_to_structure(spec_path)
+        errors = []
+
+        # Validate dependencies exist
+        dependencies = structure.get("dependencies", [])
+        if dependencies:
+            manager = WorkItemManager()
+            existing_work_items = {wi["id"] for wi in manager.list_work_items()}
+
+            for dep in dependencies:
+                if dep not in existing_work_items:
+                    errors.append(f"Dependency '{dep}' does not exist")
+                elif dep == work_item_id:
+                    errors.append(f"Work item cannot depend on itself")
+
+        # Validate file references (if mentioned)
+        files_to_modify = structure.get("implementation_details", {}).get("files_to_modify", [])
+        for file_path in files_to_modify:
+            if not Path(file_path).exists():
+                errors.append(f"File to modify does not exist: {file_path}")
+
+        return len(errors) == 0, errors
+```
+
+**Enhanced spec validator:**
+```python
+# src/sdd/work_items/spec_validator.py (enhanced)
+class SpecValidator:
+    def __init__(self):
+        self.parser = SpecParser()
+
+    def validate_spec(
+        self,
+        spec_path: Path,
+        work_item_type: str,
+        work_item_id: str
+    ) -> tuple[bool, List[str]]:
+        """Comprehensive spec validation"""
+        all_errors = []
+
+        # 1. Schema validation
+        schema_valid, schema_errors = self.parser.validate_spec_structure(
+            spec_path, work_item_type
+        )
+        all_errors.extend(schema_errors)
+
+        # 2. Cross-reference validation
+        refs_valid, ref_errors = self.parser.validate_cross_references(
+            spec_path, work_item_id
+        )
+        all_errors.extend(ref_errors)
+
+        # 3. Custom business rules
+        rules_valid, rule_errors = self.validate_business_rules(
+            spec_path, work_item_type
+        )
+        all_errors.extend(rule_errors)
+
+        return len(all_errors) == 0, all_errors
+
+    def validate_business_rules(
+        self,
+        spec_path: Path,
+        work_item_type: str
+    ) -> tuple[bool, List[str]]:
+        """Validate custom business rules"""
+        structure = self.parser.parse_spec_to_structure(spec_path)
+        errors = []
+
+        # Spike-specific rules
+        if work_item_type == "spike":
+            time_box = structure.get("time_box", "")
+            if not time_box:
+                errors.append("Spike must have a time box defined")
+            elif self.parse_time_box_hours(time_box) > 40:
+                errors.append(f"Spike time box too long: {time_box} (max 40 hours)")
+
+        # Security work item rules
+        if work_item_type == "security":
+            threat_model = structure.get("threat_model", "")
+            if not threat_model or len(threat_model) < 50:
+                errors.append("Security work item must have detailed threat model")
+
+        return len(errors) == 0, errors
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/templates/schemas/feature_spec_schema.json` - Feature spec schema
+- `src/sdd/templates/schemas/bug_spec_schema.json` - Bug spec schema
+- `src/sdd/templates/schemas/refactor_spec_schema.json` - Refactor spec schema
+- `src/sdd/templates/schemas/security_spec_schema.json` - Security spec schema
+- `src/sdd/templates/schemas/integration_test_spec_schema.json` - Integration test schema
+- `src/sdd/templates/schemas/deployment_spec_schema.json` - Deployment spec schema
+- `tests/unit/test_spec_parser_schema.py` - Schema validation tests
+- `tests/fixtures/specs/` - Test spec fixtures
+
+**Modified:**
+- `src/sdd/work_items/spec_parser.py` - Enhanced with schema validation
+- `src/sdd/work_items/spec_validator.py` - Use schema validation
+- `src/sdd/work_items/manager.py` - Validate on work item creation
+- `pyproject.toml` - Add jsonschema dependency
+
+**Benefits:**
+
+1. **Earlier error detection**: Catch spec issues during creation, not during session
+2. **Better error messages**: Precise location and suggested fixes
+3. **Type safety**: Ensure fields have correct types and formats
+4. **Consistency**: All specs follow standard structure
+5. **Extensibility**: Easy to add new validation rules
+6. **Migration support**: Can evolve spec format over time
+7. **Documentation**: Schema serves as spec documentation
+8. **IDE support**: Schemas enable autocomplete in IDEs
+
+**Priority:** Medium-High - Quality improvement, prevents errors
+
+**Notes:**
+- Backward compatible: Existing specs validated, warnings shown but not blocked
+- Migration tool can convert old specs to new schema
+- Schemas can evolve with version numbers
+- Custom types (Enhancement #32) can define their own schemas
+
+---
+
+### Enhancement #37: AI-Enhanced Learning System
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Current learning system uses keyword-based algorithms with limitations:
+
+1. **Learning Curation (Deduplication)**:
+   - Uses Jaccard similarity for duplicate detection
+   - Misses semantically similar learnings with different wording
+   - Example: "Use async/await for better performance" vs "Prefer promises over callbacks" are similar but Jaccard doesn't detect
+
+2. **Learning Relevance Scoring**:
+   - Uses keyword matching to find relevant learnings
+   - Misses semantically related learnings
+   - Example: Work item "Implement JWT authentication" → Learning "Always validate tokens on server side" scores low (no "JWT" keyword) but is highly relevant
+
+3. **Learning Categorization**:
+   - Keyword-based category assignment
+   - May miscategorize learnings with ambiguous keywords
+   - Example: "Cache invalidation is hard" → Could be "performance" or "architecture" or "gotchas"
+
+**Proposed Solution:**
+
+Implement **AI-powered learning system** using Claude API for semantic understanding:
+
+1. **AI-Powered Deduplication**
+   - Use Claude API to detect semantically similar learnings
+   - Understand meaning, not just word overlap
+   - Smarter merging of similar learnings
+   - Preserve unique insights
+
+2. **Semantic Relevance Scoring**
+   - Use Claude API to score learning relevance to work items
+   - Understand context and semantic relationships
+   - Find relevant learnings even without keyword matches
+   - Context-aware recommendations
+
+3. **Intelligent Categorization**
+   - Use Claude API to categorize learnings
+   - Understand nuance and context
+   - Multi-category support (learning can fit multiple categories)
+   - Confidence scores for categories
+
+4. **Learning Summarization**
+   - Generate summaries of long learnings
+   - Extract key insights
+   - Create learning digests
+
+5. **Learning Relationships**
+   - Detect relationships between learnings
+   - Build knowledge graph
+   - Suggest related learnings
+
+**Implementation:**
+
+**AI-powered learning curator:**
+```python
+# src/sdd/learning/ai_curator.py
+import anthropic
+from typing import List, Dict, Any, Tuple
+import json
+
+class AILearningCurator:
+    """AI-powered learning curation using Claude API"""
+
+    def __init__(self, api_key: str = None):
+        self.client = anthropic.Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
+        self.model = "claude-sonnet-4-5-20250929"
+
+    def detect_semantic_similarity(
+        self,
+        learning1: Dict[str, Any],
+        learning2: Dict[str, Any]
+    ) -> Tuple[bool, float, str]:
+        """
+        Detect if two learnings are semantically similar.
+
+        Returns:
+            (is_similar, similarity_score, reasoning)
+        """
+        prompt = f"""Analyze if these two learnings are semantically similar:
+
+Learning 1: {learning1['content']}
+Category 1: {learning1.get('category', 'unknown')}
+
+Learning 2: {learning2['content']}
+Category 2: {learning2.get('category', 'unknown')}
+
+Respond in JSON format:
+{{
+  "similar": true/false,
+  "similarity_score": 0.0-1.0,
+  "reasoning": "brief explanation",
+  "recommendation": "keep_both" | "merge" | "mark_as_related"
+}}
+
+Consider:
+- Do they convey the same core insight?
+- Are they about the same problem/solution?
+- Would a developer benefit from seeing both separately?
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return result["similar"], result["similarity_score"], result["reasoning"]
+
+    def score_learning_relevance(
+        self,
+        learning: Dict[str, Any],
+        work_item_title: str,
+        work_item_spec: str,
+        work_item_type: str
+    ) -> Tuple[float, str]:
+        """
+        Score how relevant a learning is to a work item.
+
+        Returns:
+            (relevance_score, reasoning)
+        """
+        prompt = f"""Rate how relevant this learning is to the work item (0.0-1.0):
+
+Work Item:
+- Title: {work_item_title}
+- Type: {work_item_type}
+- Spec: {work_item_spec[:500]}...
+
+Learning: {learning['content']}
+Category: {learning.get('category', 'unknown')}
+
+Respond in JSON format:
+{{
+  "relevance_score": 0.0-1.0,
+  "reasoning": "brief explanation of why/why not relevant",
+  "key_connections": ["connection 1", "connection 2"]
+}}
+
+Consider:
+- Does it help solve the work item's problem?
+- Does it prevent common mistakes in this type of work?
+- Is it about related technologies/patterns?
+- Would a developer benefit from knowing this?
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return result["relevance_score"], result["reasoning"]
+
+    def categorize_learning(
+        self,
+        learning_content: str
+    ) -> List[Tuple[str, float]]:
+        """
+        Categorize a learning using AI.
+
+        Returns:
+            List of (category, confidence) tuples
+        """
+        categories = [
+            "architecture", "gotchas", "best_practices",
+            "technical_debt", "performance", "security"
+        ]
+
+        prompt = f"""Categorize this learning. It may fit multiple categories.
+
+Learning: {learning_content}
+
+Available categories:
+- architecture: Architectural patterns and design decisions
+- gotchas: Pitfalls, traps, common mistakes
+- best_practices: Conventions, standards, recommendations
+- technical_debt: Refactoring needs, workarounds, TODOs
+- performance: Optimization insights, benchmarks
+- security: Security considerations and hardening
+
+Respond in JSON format:
+{{
+  "categories": [
+    {{"name": "category", "confidence": 0.0-1.0, "reasoning": "brief explanation"}},
+    ...
+  ],
+  "primary_category": "category"
+}}
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return [
+            (cat["name"], cat["confidence"])
+            for cat in result["categories"]
+        ]
+
+    def summarize_learning(
+        self,
+        learning_content: str,
+        max_length: int = 80
+    ) -> str:
+        """Generate a concise summary of a learning"""
+        prompt = f"""Summarize this learning in {max_length} characters or less:
+
+Learning: {learning_content}
+
+Provide a concise summary that captures the key insight.
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        summary = response.content[0].text.strip()
+        return summary[:max_length]
+
+    def suggest_merge(
+        self,
+        learnings: List[Dict[str, Any]]
+    ) -> str:
+        """Suggest how to merge similar learnings"""
+        prompt = f"""These learnings are similar. Suggest how to merge them into one comprehensive learning:
+
+Learnings:
+{json.dumps([l['content'] for l in learnings], indent=2)}
+
+Provide a merged learning that:
+1. Captures all unique insights
+2. Is concise and clear
+3. Preserves important details
+4. Uses consistent terminology
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        return response.content[0].text.strip()
+
+    def find_related_learnings(
+        self,
+        learning: Dict[str, Any],
+        all_learnings: List[Dict[str, Any]],
+        limit: int = 5
+    ) -> List[Tuple[Dict, float, str]]:
+        """Find learnings related to this one"""
+        prompt = f"""Find learnings related to this one:
+
+Main Learning: {learning['content']}
+
+Other Learnings:
+{json.dumps([{"id": i, "content": l['content']} for i, l in enumerate(all_learnings[:20])], indent=2)}
+
+Respond in JSON format:
+{{
+  "related": [
+    {{
+      "id": learning_id,
+      "relatedness": 0.0-1.0,
+      "relationship": "brief description of how they relate"
+    }},
+    ...
+  ]
+}}
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        related = [
+            (all_learnings[r["id"]], r["relatedness"], r["relationship"])
+            for r in result["related"]
+        ]
+        return sorted(related, key=lambda x: x[1], reverse=True)[:limit]
+```
+
+**Enhanced learning curator:**
+```python
+# src/sdd/learning/curator.py (enhanced)
+class LearningCurator:
+    def __init__(self):
+        self.learnings_file = Path(".session/tracking/learnings.json")
+        self.ai_curator = AILearningCurator() if self.has_api_key() else None
+
+    def has_api_key(self) -> bool:
+        """Check if Anthropic API key is available"""
+        return bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+    def curate_learnings(self, use_ai: bool = True):
+        """Curate learnings with optional AI enhancement"""
+        learnings = self.load_learnings()
+
+        if use_ai and self.ai_curator:
+            print("Using AI-powered curation...")
+            self.ai_curate_learnings(learnings)
+        else:
+            print("Using keyword-based curation...")
+            self.keyword_curate_learnings(learnings)
+
+    def ai_curate_learnings(self, learnings: List[Dict]):
+        """AI-powered curation"""
+
+        # 1. Categorize uncategorized learnings
+        for learning in learnings:
+            if not learning.get("category"):
+                categories = self.ai_curator.categorize_learning(learning["content"])
+                learning["category"] = categories[0][0]  # Primary category
+                learning["categories_all"] = categories  # All categories with confidence
+
+        # 2. Find and merge similar learnings
+        merged_count = 0
+        i = 0
+        while i < len(learnings):
+            j = i + 1
+            while j < len(learnings):
+                similar, score, reasoning = self.ai_curator.detect_semantic_similarity(
+                    learnings[i], learnings[j]
+                )
+
+                if similar and score > 0.8:
+                    # Merge learnings
+                    merged_content = self.ai_curator.suggest_merge([learnings[i], learnings[j]])
+                    learnings[i]["content"] = merged_content
+                    learnings[i]["merged_from"] = learnings[i].get("merged_from", []) + [learnings[j]["id"]]
+                    learnings.pop(j)
+                    merged_count += 1
+                    print(f"Merged similar learnings: {reasoning}")
+                else:
+                    j += 1
+            i += 1
+
+        print(f"Merged {merged_count} similar learnings")
+
+        # 3. Find learning relationships
+        for i, learning in enumerate(learnings):
+            related = self.ai_curator.find_related_learnings(
+                learning, learnings[:i] + learnings[i+1:], limit=3
+            )
+            learning["related_learnings"] = [
+                {"id": r[0]["id"], "relationship": r[2]}
+                for r in related
+            ]
+
+        self.save_learnings(learnings)
+
+    def semantic_search(
+        self,
+        query: str,
+        limit: int = 10,
+        category: str = None
+    ) -> List[Dict]:
+        """Semantic search using AI"""
+        learnings = self.load_learnings()
+
+        if category:
+            learnings = [l for l in learnings if l.get("category") == category]
+
+        # Use AI to score relevance
+        scored_learnings = []
+        for learning in learnings:
+            score, reasoning = self.ai_curator.score_learning_relevance(
+                learning,
+                work_item_title=query,
+                work_item_spec=query,
+                work_item_type="feature"
+            )
+            scored_learnings.append((learning, score, reasoning))
+
+        # Sort by relevance
+        scored_learnings.sort(key=lambda x: x[1], reverse=True)
+
+        return [
+            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
+            for l in scored_learnings[:limit]
+        ]
+```
+
+**Enhanced session briefing:**
+```python
+# src/sdd/session/briefing.py (enhanced)
+def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
+    """Get relevant learnings using AI-powered scoring"""
+    from sdd.work_items.manager import WorkItemManager
+    from sdd.learning.curator import LearningCurator
+
+    # Get work item
+    manager = WorkItemManager()
+    work_item = manager.get_work_item(work_item_id)
+
+    # Get spec
+    spec_path = Path(f".session/specs/{work_item_id}.md")
+    spec_content = spec_path.read_text() if spec_path.exists() else ""
+
+    # Get all learnings
+    curator = LearningCurator()
+    learnings = curator.load_learnings()
+
+    if curator.ai_curator:
+        # Use AI scoring
+        scored_learnings = []
+        for learning in learnings:
+            score, reasoning = curator.ai_curator.score_learning_relevance(
+                learning,
+                work_item_title=work_item["title"],
+                work_item_spec=spec_content,
+                work_item_type=work_item["type"]
+            )
+            scored_learnings.append((learning, score, reasoning))
+
+        # Sort by relevance
+        scored_learnings.sort(key=lambda x: x[1], reverse=True)
+
+        return [
+            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
+            for l in scored_learnings[:limit]
+        ]
+    else:
+        # Fallback to keyword-based scoring
+        return get_relevant_learnings(work_item_id, limit)
+```
+
+**Configuration:**
+```json
+// .session/config.json
+{
+  "learning_system": {
+    "use_ai_curation": true,
+    "use_ai_relevance": true,
+    "ai_curation_frequency": "weekly",  // or "every_n_sessions": 5
+    "semantic_search_enabled": true,
+    "min_similarity_threshold": 0.8,
+    "api_provider": "anthropic",
+    "model": "claude-sonnet-4-5-20250929"
+  }
+}
+```
+
+**Commands:**
+```bash
+# Use AI curation
+/sdd:learn-curate --ai
+
+# Semantic search
+/sdd:learn-search "authentication" --semantic
+
+# Find related learnings
+/sdd:learn-related <learning_id>
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/learning/ai_curator.py` - AI-powered curation
+- `tests/unit/test_ai_curator.py` - AI curator tests
+- `tests/fixtures/sample_learnings.json` - Test learnings
+
+**Modified:**
+- `src/sdd/learning/curator.py` - Integrate AI curation
+- `src/sdd/session/briefing.py` - Use AI relevance scoring
+- `.session/config.json` - Add AI learning configuration
+- `pyproject.toml` - Add anthropic SDK dependency
+- `.claude/commands/learn-curate.md` - Document AI curation
+- `.claude/commands/learn-search.md` - Document semantic search
+
+**Benefits:**
+
+1. **Better deduplication**: Catches semantically similar learnings
+2. **Smarter relevance**: Finds relevant learnings without keyword matches
+3. **Improved categorization**: Understands nuance and context
+4. **Knowledge graph**: Relationships between learnings
+5. **Summarization**: Concise summaries for quick scanning
+6. **Higher quality**: Cleaner, more useful knowledge base
+7. **Better context loading**: More relevant learnings in session briefings
+8. **Learning evolution**: Merge and refine learnings over time
+
+**Priority:** High - Enhances core SDD feature (learning system)
+
+**Notes:**
+- Requires Anthropic API key (set via ANTHROPIC_API_KEY env variable)
+- Graceful fallback to keyword-based methods if API key not available
+- API costs should be monitored (curation is infrequent, so cost is low)
+- Can be disabled per project if API access not desired
+- Considers privacy: learnings stay local, only sent to API during curation
+
+---
+
+### Enhancement #38: Context-Aware MCP Server Management
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+MCP (Model Context Protocol) servers provide valuable capabilities like accessing documentation (context7), visual testing (playwright), database querying, and more. However, they have significant limitations:
+
+1. **Token Consumption**:
+   - MCP servers consume context tokens even when idle
+   - Not all servers are relevant to every work item
+   - Context window fills up with unused server definitions
+   - Reduces space available for code and briefing content
+
+2. **Manual Management**:
+   - Developers must manually configure MCP servers per project
+   - Must remember which servers are useful for which tasks
+   - No systematic way to enable/disable servers per session
+   - Server selection is reactive, not proactive
+
+3. **No Context Awareness**:
+   - Same servers enabled for frontend and backend work
+   - Playwright enabled during database optimization work (irrelevant)
+   - Documentation servers for wrong tech stack
+   - No intelligent server selection based on work context
+
+4. **Setup Friction**:
+   - Setting up MCP servers requires manual configuration
+   - No project templates include MCP server setup
+   - Developers may not know which servers are useful
+   - Configuration is project-specific but not automated
+
+**Proposed Solution:**
+
+Implement **context-aware MCP server management** that automatically enables relevant servers based on work item context:
+
+1. **Project-Level Server Registry**
+   - Define available MCP servers during `sdd init`
+   - Servers registered but not enabled by default (zero token cost)
+   - Server metadata: name, purpose, tech stack, use cases
+   - Template-based server recommendations
+
+2. **Context-Aware Enablement**
+   - `sdd start` analyzes work item and enables relevant servers
+   - Smart matching based on work item type, tags, tech stack, dependencies
+   - Token budgeting: enable servers within context budget
+   - Priority-based selection when budget is limited
+
+3. **Intelligent Server Selection**
+   - Frontend work → Enable playwright, context7 (frontend frameworks)
+   - Backend work → Enable database tools, API testing tools
+   - Security work → Enable security scanning tools
+   - Documentation work → Enable context7 for all relevant frameworks
+
+4. **Manual Override**
+   - Explicit enable/disable via flags
+   - Session-specific server configuration
+   - Persistent preferences for specific work item types
+
+**Implementation:**
+
+**MCP server registry schema:**
+```json
+// .session/mcp_servers.json
+{
+  "servers": [
+    {
+      "id": "context7",
+      "name": "Context7",
+      "description": "Access up-to-date documentation for any framework or library",
+      "command": "npx",
+      "args": ["-y", "@context7/mcp"],
+      "enabled_by_default": false,
+      "relevance_rules": {
+        "work_item_types": ["feature", "bug", "refactor"],
+        "tech_stack": ["*"],  // All tech stacks
+        "tags": ["documentation", "learning", "new-technology"],
+        "priority": "high"
+      },
+      "token_cost_estimate": 500,
+      "env": {}
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright MCP",
+      "description": "Visual testing and screenshot capture for frontend work",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp-server"],
+      "enabled_by_default": false,
+      "relevance_rules": {
+        "work_item_types": ["feature", "bug"],
+        "tech_stack": ["react", "vue", "svelte", "angular", "next.js", "nuxt"],
+        "tags": ["frontend", "ui", "visual", "responsive"],
+        "keywords": ["layout", "design", "visual", "ui", "component", "page"],
+        "priority": "high"
+      },
+      "token_cost_estimate": 800,
+      "env": {}
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL MCP",
+      "description": "Query and inspect PostgreSQL databases",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "enabled_by_default": false,
+      "relevance_rules": {
+        "work_item_types": ["feature", "bug", "refactor", "performance"],
+        "tech_stack": ["postgresql", "postgres"],
+        "tags": ["database", "backend", "data", "migration"],
+        "keywords": ["query", "database", "sql", "migration", "schema"],
+        "priority": "medium"
+      },
+      "token_cost_estimate": 600,
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "postgresql://user:password@localhost:5432/db"
+      }
+    },
+    {
+      "id": "filesystem",
+      "name": "Filesystem MCP",
+      "description": "Read and manipulate files across the project",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "enabled_by_default": false,
+      "relevance_rules": {
+        "work_item_types": ["feature", "bug", "refactor"],
+        "tech_stack": ["*"],
+        "tags": ["refactoring", "large-changes"],
+        "priority": "low"
+      },
+      "token_cost_estimate": 400,
+      "env": {}
+    }
+  ],
+  "global_config": {
+    "max_token_budget": 2000,
+    "auto_enable": true,
+    "prefer_higher_priority": true
+  }
+}
+```
+
+**Server selection algorithm:**
+```python
+# src/sdd/mcp/server_manager.py
+from typing import List, Dict, Any
+from pathlib import Path
+import json
+
+class MCPServerManager:
+    """Manage MCP server lifecycle and context-aware enablement"""
+
+    def __init__(self, session_dir: Path = Path(".session")):
+        self.session_dir = session_dir
+        self.registry_path = session_dir / "mcp_servers.json"
+
+    def load_registry(self) -> Dict[str, Any]:
+        """Load MCP server registry"""
+        if not self.registry_path.exists():
+            return {"servers": [], "global_config": {}}
+        return json.loads(self.registry_path.read_text())
+
+    def save_registry(self, registry: Dict[str, Any]):
+        """Save MCP server registry"""
+        self.registry_path.write_text(json.dumps(registry, indent=2))
+
+    def select_servers_for_work_item(
+        self,
+        work_item: Dict[str, Any],
+        work_item_spec: str,
+        tech_stack: List[str]
+    ) -> List[Dict[str, Any]]:
+        """
+        Select relevant MCP servers based on work item context.
+
+        Returns list of servers to enable, sorted by priority.
+        """
+        registry = self.load_registry()
+        servers = registry.get("servers", [])
+        global_config = registry.get("global_config", {})
+
+        if not global_config.get("auto_enable", True):
+            return []
+
+        # Score each server based on relevance
+        scored_servers = []
+        for server in servers:
+            score = self._score_server_relevance(
+                server,
+                work_item,
+                work_item_spec,
+                tech_stack
+            )
+            if score > 0:
+                scored_servers.append((server, score))
+
+        # Sort by score (higher = more relevant)
+        scored_servers.sort(key=lambda x: x[1], reverse=True)
+
+        # Apply token budget
+        max_budget = global_config.get("max_token_budget", 2000)
+        selected_servers = []
+        total_tokens = 0
+
+        for server, score in scored_servers:
+            token_cost = server.get("token_cost_estimate", 500)
+            if total_tokens + token_cost <= max_budget:
+                selected_servers.append({
+                    **server,
+                    "relevance_score": score
+                })
+                total_tokens += token_cost
+            elif global_config.get("prefer_higher_priority", True):
+                # Skip if over budget
+                continue
+
+        return selected_servers
+
+    def _score_server_relevance(
+        self,
+        server: Dict[str, Any],
+        work_item: Dict[str, Any],
+        work_item_spec: str,
+        tech_stack: List[str]
+    ) -> float:
+        """
+        Score server relevance (0.0-1.0) based on multiple factors.
+        """
+        rules = server.get("relevance_rules", {})
+        score = 0.0
+
+        # Work item type match
+        if work_item["type"] in rules.get("work_item_types", []):
+            score += 0.3
+
+        # Tech stack match
+        server_stack = rules.get("tech_stack", [])
+        if "*" in server_stack or any(t in tech_stack for t in server_stack):
+            score += 0.3
+
+        # Tags match
+        work_item_tags = work_item.get("tags", [])
+        server_tags = rules.get("tags", [])
+        tag_overlap = len(set(work_item_tags) & set(server_tags))
+        if tag_overlap > 0:
+            score += 0.2 * min(tag_overlap / len(server_tags), 1.0)
+
+        # Keyword match in title or spec
+        keywords = rules.get("keywords", [])
+        text = f"{work_item['title']} {work_item_spec}".lower()
+        keyword_matches = sum(1 for kw in keywords if kw.lower() in text)
+        if keyword_matches > 0:
+            score += 0.2 * min(keyword_matches / len(keywords), 1.0)
+
+        # Priority boost
+        priority_boost = {
+            "critical": 0.3,
+            "high": 0.2,
+            "medium": 0.1,
+            "low": 0.0
+        }
+        score += priority_boost.get(rules.get("priority", "low"), 0.0)
+
+        return min(score, 1.0)
+
+    def enable_servers(self, server_ids: List[str]) -> Dict[str, Any]:
+        """
+        Generate MCP configuration for enabled servers.
+
+        Returns Claude Code MCP config dict.
+        """
+        registry = self.load_registry()
+        servers = registry.get("servers", [])
+
+        mcp_config = {"mcpServers": {}}
+        for server in servers:
+            if server["id"] in server_ids:
+                mcp_config["mcpServers"][server["id"]] = {
+                    "command": server["command"],
+                    "args": server["args"],
+                    "env": server.get("env", {})
+                }
+
+        return mcp_config
+
+    def initialize_default_servers(self, tech_stack: List[str]):
+        """Initialize server registry with recommended servers for tech stack"""
+        default_servers = self._get_default_servers_for_stack(tech_stack)
+        registry = {
+            "servers": default_servers,
+            "global_config": {
+                "max_token_budget": 2000,
+                "auto_enable": True,
+                "prefer_higher_priority": True
+            }
+        }
+        self.save_registry(registry)
+
+    def _get_default_servers_for_stack(self, tech_stack: List[str]) -> List[Dict]:
+        """Get recommended MCP servers based on tech stack"""
+        # Always include context7 (universal documentation)
+        servers = [
+            {
+                "id": "context7",
+                "name": "Context7",
+                "description": "Access up-to-date documentation",
+                "command": "npx",
+                "args": ["-y", "@context7/mcp"],
+                "enabled_by_default": False,
+                "relevance_rules": {
+                    "work_item_types": ["feature", "bug", "refactor"],
+                    "tech_stack": ["*"],
+                    "tags": ["documentation", "learning"],
+                    "priority": "high"
+                },
+                "token_cost_estimate": 500,
+                "env": {}
+            }
+        ]
+
+        # Add playwright for frontend stacks
+        frontend_stacks = ["react", "vue", "svelte", "angular", "next.js", "nuxt"]
+        if any(stack in tech_stack for stack in frontend_stacks):
+            servers.append({
+                "id": "playwright",
+                "name": "Playwright MCP",
+                "description": "Visual testing and screenshots",
+                "command": "npx",
+                "args": ["-y", "@playwright/mcp-server"],
+                "enabled_by_default": False,
+                "relevance_rules": {
+                    "work_item_types": ["feature", "bug"],
+                    "tech_stack": frontend_stacks,
+                    "tags": ["frontend", "ui", "visual"],
+                    "keywords": ["layout", "design", "ui", "component"],
+                    "priority": "high"
+                },
+                "token_cost_estimate": 800,
+                "env": {}
+            })
+
+        # Add database servers
+        if "postgresql" in tech_stack or "postgres" in tech_stack:
+            servers.append({
+                "id": "postgres",
+                "name": "PostgreSQL MCP",
+                "description": "Query PostgreSQL databases",
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-postgres"],
+                "enabled_by_default": False,
+                "relevance_rules": {
+                    "work_item_types": ["feature", "bug", "refactor"],
+                    "tech_stack": ["postgresql", "postgres"],
+                    "tags": ["database", "backend"],
+                    "keywords": ["query", "database", "sql"],
+                    "priority": "medium"
+                },
+                "token_cost_estimate": 600,
+                "env": {}
+            })
+
+        return servers
+```
+
+**Integration with session start:**
+```python
+# src/sdd/session/start.py (enhanced)
+def start_session(work_item_id: str, enable_servers: List[str] = None, disable_servers: List[str] = None):
+    """Start development session with context-aware MCP server enablement"""
+    from sdd.work_items.manager import WorkItemManager
+    from sdd.mcp.server_manager import MCPServerManager
+    from sdd.project.stack import detect_tech_stack
+
+    # Get work item
+    manager = WorkItemManager()
+    work_item = manager.get_work_item(work_item_id)
+
+    # Get spec
+    spec_path = Path(f".session/specs/{work_item_id}.md")
+    spec_content = spec_path.read_text() if spec_path.exists() else ""
+
+    # Detect tech stack
+    tech_stack = detect_tech_stack()
+
+    # Select relevant MCP servers
+    mcp_manager = MCPServerManager()
+
+    if enable_servers:
+        # Manual override
+        selected_servers = [s for s in mcp_manager.load_registry()["servers"] if s["id"] in enable_servers]
+    else:
+        # Automatic selection
+        selected_servers = mcp_manager.select_servers_for_work_item(
+            work_item,
+            spec_content,
+            tech_stack
+        )
+
+    # Apply disable list
+    if disable_servers:
+        selected_servers = [s for s in selected_servers if s["id"] not in disable_servers]
+
+    # Generate briefing with MCP server info
+    briefing = generate_briefing(work_item_id)
+
+    # Add MCP server section
+    if selected_servers:
+        briefing += "\n\n## Enabled MCP Servers\n\n"
+        briefing += "The following MCP servers are enabled for this session:\n\n"
+        for server in selected_servers:
+            briefing += f"- **{server['name']}**: {server['description']}\n"
+            briefing += f"  - Relevance: {server.get('relevance_score', 0.0):.2f}\n"
+        briefing += "\nThese servers were automatically selected based on the work item context.\n"
+
+    # Generate MCP config (for potential future auto-configuration)
+    mcp_config = mcp_manager.enable_servers([s["id"] for s in selected_servers])
+
+    # Save session state
+    save_session_state({
+        "work_item_id": work_item_id,
+        "enabled_mcp_servers": [s["id"] for s in selected_servers],
+        "mcp_config": mcp_config
+    })
+
+    return briefing
+```
+
+**Integration with sdd init:**
+```python
+# src/sdd/project/init.py (enhanced)
+def initialize_project(template: str = None):
+    """Initialize SDD project with MCP server recommendations"""
+    from sdd.mcp.server_manager import MCPServerManager
+    from sdd.project.stack import detect_tech_stack
+
+    # Create .session directory
+    session_dir = Path(".session")
+    session_dir.mkdir(exist_ok=True)
+
+    # Detect tech stack
+    tech_stack = detect_tech_stack()
+
+    # Initialize MCP server registry with recommendations
+    mcp_manager = MCPServerManager(session_dir)
+    mcp_manager.initialize_default_servers(tech_stack)
+
+    print("\n✓ MCP Server Registry initialized")
+    print(f"  Recommended servers for {', '.join(tech_stack)}:")
+
+    registry = mcp_manager.load_registry()
+    for server in registry["servers"]:
+        print(f"  - {server['name']}: {server['description']}")
+
+    print("\n  Servers are disabled by default to save context tokens.")
+    print("  They will be automatically enabled during 'sdd start' based on work item context.")
+
+    # ... rest of initialization
+```
+
+**Commands:**
+```bash
+# Start session with automatic server selection
+/sdd:start WI-001
+
+# Start with manual server override
+/sdd:start WI-001 --enable-servers context7,playwright
+
+# Start with specific servers disabled
+/sdd:start WI-001 --disable-servers postgres
+
+# List available MCP servers
+/sdd:mcp-list
+
+# Add custom MCP server
+/sdd:mcp-add --id custom-server --command npx --args "-y,my-mcp-server" --priority high
+
+# Test server relevance for work item
+/sdd:mcp-test WI-001
+
+# Show currently enabled servers
+/sdd:status  # (includes MCP server section)
+```
+
+**Configuration:**
+```json
+// .session/config.json (enhanced)
+{
+  "mcp_server_management": {
+    "enabled": true,
+    "auto_enable": true,
+    "max_token_budget": 2000,
+    "prefer_higher_priority": true,
+    "manual_overrides": {
+      "WI-001": {
+        "enabled_servers": ["context7", "playwright"],
+        "disabled_servers": []
+      }
+    }
+  }
+}
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/mcp/` - New module
+- `src/sdd/mcp/__init__.py` - Module init
+- `src/sdd/mcp/server_manager.py` - MCP server management
+- `.session/mcp_servers.json` - Server registry (created per project)
+- `tests/unit/test_mcp_server_manager.py` - Unit tests
+- `tests/integration/test_mcp_integration.py` - Integration tests
+- `.claude/commands/mcp-list.md` - List servers command
+- `.claude/commands/mcp-add.md` - Add server command
+- `.claude/commands/mcp-test.md` - Test relevance command
+
+**Modified:**
+- `src/sdd/session/start.py` - Add MCP server selection
+- `src/sdd/session/briefing.py` - Include MCP server info in briefing
+- `src/sdd/project/init.py` - Initialize MCP server registry
+- `src/sdd/templates/config.schema.json` - Add MCP config schema
+- `.claude/commands/start.md` - Document server flags
+- `.claude/commands/status.md` - Show enabled servers
+- `README.md` - Document MCP server management
+
+**Benefits:**
+
+1. **Context Efficiency**: Only enable relevant servers, save thousands of context tokens
+2. **Intelligent Selection**: Automatic server selection based on work context
+3. **Zero Configuration**: Servers recommended and configured during init
+4. **Manual Control**: Override automatic selection when needed
+5. **Token Budgeting**: Respect context window limits with smart budgeting
+6. **Discoverability**: Developers learn about useful MCP servers through recommendations
+7. **Template Integration**: Project templates include optimal MCP server setups
+8. **Session Awareness**: Briefings show which servers are available and why
+9. **Extensibility**: Easy to add custom project-specific MCP servers
+10. **Cost Control**: Reduce API costs from unused MCP server context
+
+**Priority:** High
+
+**Justification:**
+- Directly improves context window efficiency (critical for large projects)
+- Enhances developer experience with intelligent automation
+- Enables better use of MCP ecosystem
+- Foundation for advanced MCP integration features
+- Aligns with SDD's philosophy of intelligent automation
+
+**Notes:**
+- MCP servers are registered but disabled by default (zero cost)
+- Server selection is context-aware but can be overridden
+- Token cost estimates should be calibrated based on actual usage
+- Server relevance scoring can be enhanced with AI (future: use Enhancement #37's AI capabilities)
+- Works with Enhancement #13 (Template-Based Init) - templates include MCP server recommendations
+- Complements Enhancement #14 (Session Briefing Optimization) - reduces context usage
+- Related to Enhancement #33 (MCP Server Integration) - both use MCP but for different purposes (#33 makes SDD an MCP server, #38 manages other MCP servers)
+
+---
+
+### Enhancement #39: Frontend Quality & Design System Compliance
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Frontend code has unique quality concerns that general linting and testing don't address. Projects with design systems document standards but lack automated enforcement:
+
+1. **Design System Non-Compliance**:
+   - Developers accidentally use hardcoded colors instead of design tokens
+   - Inconsistent spacing values (13px, 17px) instead of standard scale (8px, 16px, 24px)
+   - Custom font sizes instead of typography scale
+   - Direct HTML elements instead of design system components
+   - Design debt accumulates silently
+
+2. **Framework-Specific Issues**:
+   - React hooks violations (dependencies, conditional usage)
+   - Vue composition API anti-patterns
+   - Next.js Image component not used (missing optimization)
+   - Framework best practices not enforced
+
+3. **Responsive Design Problems**:
+   - Non-standard breakpoints used inconsistently
+   - Fixed widths without max-width
+   - Missing mobile-first CSS
+   - Inconsistent responsive patterns
+
+4. **Accessibility Gaps**:
+   - Non-semantic HTML (divs instead of buttons, headings)
+   - Missing ARIA attributes
+   - Poor color contrast
+   - Keyboard navigation broken
+   - Current testing (#25) only catches regressions, not initial violations
+
+5. **Bundle Size Bloat**:
+   - No monitoring of bundle size over time
+   - Large dependencies added without review
+   - Missing code-splitting for large components
+   - Performance budget violations
+
+6. **CSS Quality Issues**:
+   - Overuse of !important
+   - High CSS specificity causing maintainability issues
+   - Duplicate selectors
+   - Inconsistent naming conventions
+
+**Proposed Solution:**
+
+Implement **frontend-specific quality gates** that enforce design system compliance, framework best practices, responsive design patterns, accessibility standards, and bundle size limits:
+
+1. **Design Token Compliance**
+   - Parse design tokens from CSS/SCSS/JS/Tailwind config
+   - Detect hardcoded values in code
+   - Validate against approved token values
+   - Auto-fix where possible
+
+2. **Component Library Enforcement**
+   - Detect direct HTML when component exists
+   - Validate component prop usage
+   - Detect deprecated components
+   - Suggest correct component variants
+
+3. **Framework Best Practices**
+   - React: hooks rules, memo usage, key props
+   - Vue: composition API patterns, reactivity
+   - Next.js: Image, Link, font optimization
+   - Svelte: reactive statement patterns
+
+4. **Responsive Design Validation**
+   - Enforce standard breakpoints only
+   - Validate mobile-first approach
+   - Detect problematic fixed widths
+   - CSS ordering validation
+
+5. **Accessibility Enforcement**
+   - Semantic HTML requirements
+   - ARIA attribute validation
+   - Color contrast checking (build-time)
+   - Keyboard navigation testing
+   - Focus management validation
+
+6. **Bundle Size Monitoring**
+   - Track bundle size over time
+   - Alert on size increases > threshold
+   - Identify large dependencies
+   - Enforce code-splitting requirements
+
+7. **CSS Quality Standards**
+   - !important usage limits
+   - Naming convention enforcement
+   - Specificity limits
+   - Duplicate selector detection
+
+**Implementation:**
+
+**Design token validation:**
+```python
+# src/sdd/quality/frontend/design_tokens.py
+from typing import Dict, List, Any
+import re
+from pathlib import Path
+import json
+
+class DesignTokenValidator:
+    """Validate frontend code against design tokens"""
+
+    def __init__(self, tokens_file: Path):
+        self.tokens = self._load_tokens(tokens_file)
+        self.violations = []
+
+    def _load_tokens(self, tokens_file: Path) -> Dict[str, Any]:
+        """Load design tokens from JSON/JS file"""
+        if not tokens_file.exists():
+            return {}
+
+        content = tokens_file.read_text()
+
+        # Handle both JSON and JS exports
+        if tokens_file.suffix == ".json":
+            return json.loads(content)
+        elif tokens_file.suffix in [".js", ".ts"]:
+            # Extract tokens from JS/TS export
+            # This is simplified - production would use AST parsing
+            match = re.search(r'export\s+(?:default\s+)?({.*})', content, re.DOTALL)
+            if match:
+                return json.loads(match.group(1))
+
+        return {}
+
+    def validate_file(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Validate a single file for design token compliance"""
+        content = file_path.read_text()
+        violations = []
+
+        # Check for hardcoded colors
+        color_pattern = r'(?:color|background|border-color):\s*#([0-9a-fA-F]{3,6}|rgba?\([^)]+\))'
+        for match in re.finditer(color_pattern, content):
+            line_num = content[:match.start()].count('\n') + 1
+            violations.append({
+                "file": str(file_path),
+                "line": line_num,
+                "type": "hardcoded_color",
+                "value": match.group(0),
+                "message": f"Hardcoded color found. Use design token from colors.{self._suggest_color_token(match.group(1))}",
+                "severity": "error"
+            })
+
+        # Check for hardcoded spacing
+        spacing_pattern = r'(?:margin|padding|gap):\s*(\d+)px'
+        for match in re.finditer(spacing_pattern, content):
+            spacing_value = int(match.group(1))
+            if spacing_value not in self.tokens.get("spacing", {}).values():
+                line_num = content[:match.start()].count('\n') + 1
+                violations.append({
+                    "file": str(file_path),
+                    "line": line_num,
+                    "type": "hardcoded_spacing",
+                    "value": f"{spacing_value}px",
+                    "message": f"Non-standard spacing. Use spacing scale: {list(self.tokens.get('spacing', {}).values())}",
+                    "severity": "error"
+                })
+
+        # Check for hardcoded font sizes
+        font_pattern = r'font-size:\s*(\d+)px'
+        for match in re.finditer(font_pattern, content):
+            font_size = int(match.group(1))
+            if font_size not in self.tokens.get("typography", {}).get("sizes", {}).values():
+                line_num = content[:match.start()].count('\n') + 1
+                violations.append({
+                    "file": str(file_path),
+                    "line": line_num,
+                    "type": "hardcoded_font_size",
+                    "value": f"{font_size}px",
+                    "message": f"Non-standard font size. Use typography scale: {list(self.tokens.get('typography', {}).get('sizes', {}).values())}",
+                    "severity": "error"
+                })
+
+        return violations
+
+    def _suggest_color_token(self, color_value: str) -> str:
+        """Suggest appropriate color token for a value"""
+        # Simplified - production would do color similarity matching
+        colors = self.tokens.get("colors", {})
+        if color_value.lower() in colors.values():
+            return next(k for k, v in colors.items() if v.lower() == color_value.lower())
+        return "primary|secondary|error|..."
+
+class ComponentLibraryValidator:
+    """Validate component library usage"""
+
+    def __init__(self, component_library: str):
+        self.component_library = component_library
+        self.violations = []
+
+    def validate_file(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Validate component library usage"""
+        content = file_path.read_text()
+        violations = []
+
+        # Detect raw HTML buttons instead of Button component
+        button_pattern = r'<button[^>]*>'
+        for match in re.finditer(button_pattern, content):
+            # Check if this is inside a custom Button component definition
+            if not self._is_in_component_definition(content, match.start(), "Button"):
+                line_num = content[:match.start()].count('\n') + 1
+                violations.append({
+                    "file": str(file_path),
+                    "line": line_num,
+                    "type": "raw_html_element",
+                    "element": "button",
+                    "message": f"Use <Button> from {self.component_library} instead of raw <button>",
+                    "severity": "error"
+                })
+
+        # Detect raw links instead of Link component
+        link_pattern = r'<a\s+href='
+        for match in re.finditer(link_pattern, content):
+            if not self._is_in_component_definition(content, match.start(), "Link"):
+                line_num = content[:match.start()].count('\n') + 1
+                violations.append({
+                    "file": str(file_path),
+                    "line": line_num,
+                    "type": "raw_html_element",
+                    "element": "a",
+                    "message": f"Use <Link> from {self.component_library} for internal navigation",
+                    "severity": "warning"
+                })
+
+        return violations
+
+    def _is_in_component_definition(self, content: str, position: int, component_name: str) -> bool:
+        """Check if position is inside a component definition"""
+        # Simplified - production would use AST
+        before = content[:position]
+        return f"function {component_name}" in before or f"const {component_name} =" in before
+```
+
+**Bundle size monitoring:**
+```python
+# src/sdd/quality/frontend/bundle_size.py
+from typing import Dict, List, Any
+from pathlib import Path
+import json
+import subprocess
+
+class BundleSizeMonitor:
+    """Monitor and enforce bundle size limits"""
+
+    def __init__(self, config: Dict[str, Any]):
+        self.max_size_mb = config.get("max_size_mb", 0.5)
+        self.max_increase_percent = config.get("max_increase_percent", 5)
+        self.history_file = Path(".session/bundle_size_history.json")
+
+    def check_bundle_size(self, build_dir: Path) -> Dict[str, Any]:
+        """Check current bundle size against limits"""
+        current_sizes = self._get_bundle_sizes(build_dir)
+        history = self._load_history()
+
+        violations = []
+
+        for bundle_name, current_size in current_sizes.items():
+            # Check absolute size
+            size_mb = current_size / (1024 * 1024)
+            if size_mb > self.max_size_mb:
+                violations.append({
+                    "bundle": bundle_name,
+                    "type": "size_limit_exceeded",
+                    "current_size_mb": size_mb,
+                    "max_size_mb": self.max_size_mb,
+                    "message": f"Bundle size ({size_mb:.2f}MB) exceeds limit ({self.max_size_mb}MB)",
+                    "severity": "error"
+                })
+
+            # Check size increase
+            if bundle_name in history:
+                previous_size = history[bundle_name]
+                increase_percent = ((current_size - previous_size) / previous_size) * 100
+
+                if increase_percent > self.max_increase_percent:
+                    violations.append({
+                        "bundle": bundle_name,
+                        "type": "size_increase_exceeded",
+                        "increase_percent": increase_percent,
+                        "max_increase_percent": self.max_increase_percent,
+                        "previous_size_mb": previous_size / (1024 * 1024),
+                        "current_size_mb": size_mb,
+                        "message": f"Bundle size increased by {increase_percent:.1f}% (limit: {self.max_increase_percent}%)",
+                        "severity": "warning"
+                    })
+
+        # Update history
+        self._save_history(current_sizes)
+
+        return {
+            "violations": violations,
+            "current_sizes": current_sizes,
+            "analysis": self._analyze_bundle(build_dir)
+        }
+
+    def _get_bundle_sizes(self, build_dir: Path) -> Dict[str, int]:
+        """Get sizes of all bundles"""
+        sizes = {}
+
+        # Find all JS files in build directory
+        for js_file in build_dir.rglob("*.js"):
+            if js_file.is_file():
+                sizes[js_file.name] = js_file.stat().st_size
+
+        return sizes
+
+    def _analyze_bundle(self, build_dir: Path) -> Dict[str, Any]:
+        """Analyze bundle composition"""
+        # Run webpack-bundle-analyzer or similar
+        # This is simplified - production would integrate with bundler
+        return {
+            "largest_dependencies": [],
+            "duplicate_code": [],
+            "recommendations": []
+        }
+
+    def _load_history(self) -> Dict[str, int]:
+        """Load bundle size history"""
+        if not self.history_file.exists():
+            return {}
+        return json.loads(self.history_file.read_text())
+
+    def _save_history(self, sizes: Dict[str, int]):
+        """Save current sizes to history"""
+        self.history_file.parent.mkdir(parents=True, exist_ok=True)
+        self.history_file.write_text(json.dumps(sizes, indent=2))
+```
+
+**Accessibility validation:**
+```python
+# src/sdd/quality/frontend/accessibility.py
+from typing import List, Dict, Any
+from pathlib import Path
+import subprocess
+
+class AccessibilityValidator:
+    """Validate accessibility standards"""
+
+    def __init__(self, config: Dict[str, Any]):
+        self.wcag_level = config.get("wcag_level", "AA")
+        self.check_color_contrast = config.get("check_color_contrast", True)
+
+    def validate_semantic_html(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Validate semantic HTML usage"""
+        content = file_path.read_text()
+        violations = []
+
+        # Check for divs that should be buttons
+        div_click_pattern = r'<div[^>]*onClick'
+        for match in re.finditer(div_click_pattern, content):
+            line_num = content[:match.start()].count('\n') + 1
+            violations.append({
+                "file": str(file_path),
+                "line": line_num,
+                "type": "non_semantic_html",
+                "message": "Use <button> instead of <div onClick>. Divs are not keyboard accessible.",
+                "severity": "error",
+                "wcag": "WCAG 2.1.1 (Keyboard)"
+            })
+
+        # Check for missing alt text on images
+        img_pattern = r'<img(?![^>]*alt=)'
+        for match in re.finditer(img_pattern, content):
+            line_num = content[:match.start()].count('\n') + 1
+            violations.append({
+                "file": str(file_path),
+                "line": line_num,
+                "type": "missing_alt_text",
+                "message": "Image missing alt attribute",
+                "severity": "error",
+                "wcag": "WCAG 1.1.1 (Non-text Content)"
+            })
+
+        return violations
+
+    def run_axe_core(self, url: str) -> Dict[str, Any]:
+        """Run axe-core accessibility tests"""
+        # Use playwright or similar to run axe-core
+        result = subprocess.run(
+            ["npx", "pa11y", "--standard", f"WCAG2{self.wcag_level}", url],
+            capture_output=True,
+            text=True
+        )
+
+        return {
+            "passed": result.returncode == 0,
+            "violations": self._parse_pa11y_output(result.stdout)
+        }
+
+    def _parse_pa11y_output(self, output: str) -> List[Dict[str, Any]]:
+        """Parse pa11y output into violations"""
+        # Simplified parser
+        violations = []
+        for line in output.split('\n'):
+            if 'Error:' in line:
+                violations.append({
+                    "message": line.strip(),
+                    "severity": "error"
+                })
+        return violations
+```
+
+**Frontend quality gate integration:**
+```python
+# src/sdd/quality/gates.py (enhanced)
+class FrontendQualityGate:
+    """Frontend-specific quality gate"""
+
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config.get("frontend", {})
+        self.design_system_config = self.config.get("design_system", {})
+        self.bundle_size_config = self.config.get("bundle_size", {})
+        self.accessibility_config = self.config.get("accessibility", {})
+
+    def validate(self) -> Dict[str, Any]:
+        """Run all frontend quality checks"""
+        results = {
+            "passed": True,
+            "checks": {}
+        }
+
+        # Design token compliance
+        if self.design_system_config.get("enabled"):
+            token_validator = DesignTokenValidator(
+                Path(self.design_system_config["tokens_file"])
+            )
+            violations = []
+            for file in self._get_frontend_files():
+                violations.extend(token_validator.validate_file(file))
+
+            results["checks"]["design_tokens"] = {
+                "passed": len(violations) == 0,
+                "violations": violations
+            }
+            if violations:
+                results["passed"] = False
+
+        # Component library compliance
+        if self.design_system_config.get("component_library"):
+            component_validator = ComponentLibraryValidator(
+                self.design_system_config["component_library"]
+            )
+            violations = []
+            for file in self._get_frontend_files():
+                violations.extend(component_validator.validate_file(file))
+
+            results["checks"]["component_library"] = {
+                "passed": len(violations) == 0,
+                "violations": violations
+            }
+            if violations:
+                results["passed"] = False
+
+        # Bundle size
+        if self.bundle_size_config.get("enabled"):
+            bundle_monitor = BundleSizeMonitor(self.bundle_size_config)
+            build_dir = Path(self.bundle_size_config.get("build_dir", "build"))
+            bundle_result = bundle_monitor.check_bundle_size(build_dir)
+
+            results["checks"]["bundle_size"] = bundle_result
+            if bundle_result["violations"]:
+                results["passed"] = False
+
+        # Accessibility
+        if self.accessibility_config.get("enabled"):
+            a11y_validator = AccessibilityValidator(self.accessibility_config)
+            violations = []
+            for file in self._get_frontend_files():
+                violations.extend(a11y_validator.validate_semantic_html(file))
+
+            results["checks"]["accessibility"] = {
+                "passed": len(violations) == 0,
+                "violations": violations
+            }
+            if violations:
+                results["passed"] = False
+
+        # Framework-specific linting (run via ESLint plugins)
+        results["checks"]["framework_linting"] = self._run_framework_linting()
+        if not results["checks"]["framework_linting"]["passed"]:
+            results["passed"] = False
+
+        return results
+
+    def _get_frontend_files(self) -> List[Path]:
+        """Get all frontend source files"""
+        extensions = [".jsx", ".tsx", ".vue", ".svelte", ".css", ".scss"]
+        files = []
+        src_dir = Path("src")
+        if src_dir.exists():
+            for ext in extensions:
+                files.extend(src_dir.rglob(f"*{ext}"))
+        return files
+
+    def _run_framework_linting(self) -> Dict[str, Any]:
+        """Run framework-specific ESLint rules"""
+        result = subprocess.run(
+            ["npx", "eslint", "src/", "--format", "json"],
+            capture_output=True,
+            text=True
+        )
+
+        try:
+            lint_results = json.loads(result.stdout)
+            error_count = sum(r["errorCount"] for r in lint_results)
+            return {
+                "passed": error_count == 0,
+                "results": lint_results
+            }
+        except:
+            return {"passed": True, "results": []}
+```
+
+**Configuration:**
+```json
+// .session/config.json (enhanced)
+{
+  "quality_gates": {
+    "frontend": {
+      "enabled": true,
+      "design_system": {
+        "enabled": true,
+        "tokens_file": "src/design-tokens.json",
+        "strict_mode": true,
+        "allowed_exceptions": ["src/legacy/**"],
+        "component_library": "@company/design-system"
+      },
+      "component_library": {
+        "enabled": true,
+        "library": "@company/design-system",
+        "enforce_usage": true
+      },
+      "bundle_size": {
+        "enabled": true,
+        "max_size_mb": 0.5,
+        "max_increase_percent": 5,
+        "build_dir": "build"
+      },
+      "responsive": {
+        "enabled": true,
+        "breakpoints": ["640px", "768px", "1024px", "1280px"],
+        "mobile_first": true
+      },
+      "accessibility": {
+        "enabled": true,
+        "wcag_level": "AA",
+        "check_color_contrast": true,
+        "semantic_html_required": true
+      },
+      "framework_linting": {
+        "enabled": true,
+        "framework": "react",
+        "rules": {
+          "react-hooks": "error",
+          "jsx-a11y": "error"
+        }
+      }
+    }
+  }
+}
+```
+
+**ESLint configuration (.eslintrc.json):**
+```json
+{
+  "extends": [
+    "react-app",
+    "plugin:jsx-a11y/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "plugins": ["jsx-a11y", "react-hooks"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-is-valid": "error",
+    "jsx-a11y/click-events-have-key-events": "error",
+    "jsx-a11y/no-static-element-interactions": "error"
+  }
+}
+```
+
+**StyleLint configuration (.stylelintrc.json):**
+```json
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-use-design-tokens"],
+  "rules": {
+    "scale-unlimited/declaration-strict-value": [
+      ["/color/", "fill", "stroke"],
+      {
+        "ignoreValues": ["transparent", "inherit", "currentColor"]
+      }
+    ],
+    "declaration-no-important": true,
+    "selector-max-specificity": "0,4,0",
+    "max-nesting-depth": 3
+  }
+}
+```
+
+**Commands:**
+```bash
+# Run frontend quality gates
+/sdd:validate --frontend
+
+# Run specific frontend checks
+/sdd:frontend-check --design-tokens
+/sdd:frontend-check --bundle-size
+/sdd:frontend-check --accessibility
+
+# Analyze bundle size
+/sdd:bundle-analyze
+
+# Check design token compliance
+/sdd:design-tokens-check
+
+# Auto-fix design token violations (where possible)
+/sdd:design-tokens-fix
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/quality/frontend/` - New module
+- `src/sdd/quality/frontend/__init__.py` - Module init
+- `src/sdd/quality/frontend/design_tokens.py` - Design token validation
+- `src/sdd/quality/frontend/component_library.py` - Component library validation
+- `src/sdd/quality/frontend/bundle_size.py` - Bundle size monitoring
+- `src/sdd/quality/frontend/accessibility.py` - Accessibility validation
+- `src/sdd/quality/frontend/responsive.py` - Responsive design validation
+- `.session/bundle_size_history.json` - Bundle size tracking
+- `tests/unit/test_frontend_quality.py` - Unit tests
+- `tests/integration/test_frontend_gates.py` - Integration tests
+- `.claude/commands/frontend-check.md` - Frontend check command
+- `.claude/commands/bundle-analyze.md` - Bundle analysis command
+- `.claude/commands/design-tokens-check.md` - Design token check command
+
+**Modified:**
+- `src/sdd/quality/gates.py` - Add frontend quality gate
+- `src/sdd/templates/config.schema.json` - Add frontend quality config schema
+- `.claude/commands/validate.md` - Document frontend validation
+- `README.md` - Document frontend quality gates
+
+**Benefits:**
+
+1. **Automated Design System Enforcement**: No manual reviews needed for design token compliance
+2. **Prevents Design Debt**: Catch violations before they accumulate
+3. **Framework Best Practices**: Enforce React hooks rules, Next.js optimizations, etc.
+4. **Accessibility Built-In**: WCAG compliance validated automatically
+5. **Bundle Size Control**: Prevent performance regressions from bloat
+6. **Consistent Frontend Code**: Uniform patterns across the codebase
+7. **Faster Reviews**: Automated checks reduce manual review time
+8. **Learning Tool**: Developers learn design system through validation messages
+9. **Responsive Design Consistency**: Standardized breakpoints and patterns
+10. **CSS Quality**: Clean, maintainable stylesheets
+
+**Priority:** Medium-High (High for design system projects)
+
+**Justification:**
+- Fills significant gap in frontend code quality
+- Essential for projects with design systems
+- Prevents technical debt accumulation
+- Improves accessibility compliance
+- Aligns with modern frontend development practices
+
+**Notes:**
+- Design token validation requires design tokens to be defined in a parseable format
+- Component library validation requires consistent naming conventions
+- Bundle size monitoring requires a build step
+- Accessibility checks complement but don't replace manual testing
+- Framework-specific rules depend on ESLint plugins being installed
+- Can be disabled for projects without design systems
+- Works well with Enhancement #25 (Advanced Testing Types) - visual regression testing
+- Related to Enhancement #18 (Advanced Code Quality Gates) - extends code quality to frontend specifics
+- Can integrate with Enhancement #38 (MCP Server Management) - playwright MCP for visual validation
+- Template-based init (Enhancement #13) can include framework-specific frontend configurations
+
+---
