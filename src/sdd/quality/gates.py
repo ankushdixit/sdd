@@ -21,6 +21,7 @@ from sdd.core.config import get_config_manager
 
 # Import logging
 from sdd.core.logging_config import get_logger
+from sdd.core.types import WorkItemType
 from sdd.work_items import spec_parser
 
 logger = get_logger(__name__)
@@ -754,7 +755,7 @@ class QualityGates:
             return True, {"status": "skipped", "reason": "disabled"}
 
         # Only run for integration_test work items
-        if work_item.get("type") != "integration_test":
+        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
             return True, {"status": "skipped", "reason": "not integration test"}
 
         print("Running integration test quality gates...")
@@ -837,7 +838,7 @@ class QualityGates:
         Returns:
             (passed: bool, results: dict)
         """
-        if work_item.get("type") != "integration_test":
+        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
             return True, {"status": "skipped"}
 
         env_requirements = work_item.get("environment_requirements", {})
@@ -893,7 +894,7 @@ class QualityGates:
         Returns:
             (passed: bool, results: dict)
         """
-        if work_item.get("type") != "integration_test":
+        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
             return True, {"status": "skipped"}
 
         # Get integration documentation config

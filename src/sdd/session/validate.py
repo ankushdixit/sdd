@@ -13,6 +13,7 @@ import json
 import subprocess
 from pathlib import Path
 
+from sdd.core.types import WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items import spec_parser
 
@@ -202,19 +203,19 @@ class SessionValidator:
             missing_sections.append("Acceptance Criteria (at least 3 items)")
 
         # Type-specific sections
-        if work_type == "feature":
+        if work_type == WorkItemType.FEATURE.value:
             if not parsed_spec.get("overview"):
                 missing_sections.append("Overview")
             if not parsed_spec.get("implementation_details"):
                 missing_sections.append("Implementation Details")
 
-        elif work_type == "bug":
+        elif work_type == WorkItemType.BUG.value:
             if not parsed_spec.get("description"):
                 missing_sections.append("Description")
             if not parsed_spec.get("fix_approach"):
                 missing_sections.append("Fix Approach")
 
-        elif work_type == "integration_test":
+        elif work_type == WorkItemType.INTEGRATION_TEST.value:
             if not parsed_spec.get("scope"):
                 missing_sections.append("Scope")
             if (
@@ -223,7 +224,7 @@ class SessionValidator:
             ):
                 missing_sections.append("Test Scenarios (at least 1)")
 
-        elif work_type == "deployment":
+        elif work_type == WorkItemType.DEPLOYMENT.value:
             if not parsed_spec.get("deployment_scope"):
                 missing_sections.append("Deployment Scope")
             if not parsed_spec.get("deployment_procedure"):

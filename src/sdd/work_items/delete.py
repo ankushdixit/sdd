@@ -11,6 +11,7 @@ from typing import Optional
 
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.core.types import WorkItemStatus
 
 logger = get_logger(__name__)
 
@@ -153,13 +154,13 @@ def delete_work_item(
 
     work_items_data["metadata"]["total_items"] = len(work_items)
     work_items_data["metadata"]["completed"] = sum(
-        1 for item in work_items.values() if item["status"] == "completed"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.COMPLETED.value
     )
     work_items_data["metadata"]["in_progress"] = sum(
-        1 for item in work_items.values() if item["status"] == "in_progress"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.IN_PROGRESS.value
     )
     work_items_data["metadata"]["blocked"] = sum(
-        1 for item in work_items.values() if item["status"] == "blocked"
+        1 for item in work_items.values() if item["status"] == WorkItemStatus.BLOCKED.value
     )
 
     # Save work items

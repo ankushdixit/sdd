@@ -13,6 +13,7 @@ from typing import Optional
 
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.core.types import Priority, WorkItemStatus, WorkItemType
 from sdd.work_items import spec_parser
 
 logger = get_logger(__name__)
@@ -21,16 +22,8 @@ logger = get_logger(__name__)
 class WorkItemManager:
     """Manage work items."""
 
-    WORK_ITEM_TYPES = [
-        "feature",
-        "bug",
-        "refactor",
-        "security",
-        "integration_test",
-        "deployment",
-    ]
-
-    PRIORITIES = ["critical", "high", "medium", "low"]
+    WORK_ITEM_TYPES = WorkItemType.values()
+    PRIORITIES = Priority.values()
 
     def __init__(self, project_root: Path = None):
         """Initialize WorkItemManager with project root path."""
@@ -123,7 +116,7 @@ class WorkItemManager:
         print(f"\nID: {work_id}")
         print(f"Type: {work_type}")
         print(f"Priority: {priority}")
-        print("Status: not_started")
+        print(f"Status: {WorkItemStatus.NOT_STARTED.value}")
         if dependencies:
             print(f"Dependencies: {', '.join(dependencies)}")
 
@@ -195,7 +188,7 @@ class WorkItemManager:
         print(f"\nID: {work_id}")
         print(f"Type: {work_type}")
         print(f"Priority: {priority}")
-        print("Status: not_started")
+        print(f"Status: {WorkItemStatus.NOT_STARTED.value}")
         if dep_list:
             print(f"Dependencies: {', '.join(dep_list)}")
 
@@ -363,7 +356,7 @@ class WorkItemManager:
             "id": work_id,
             "type": work_type,
             "title": title,
-            "status": "not_started",
+            "status": WorkItemStatus.NOT_STARTED.value,
             "priority": priority,
             "dependencies": dependencies,
             "milestone": "",
@@ -382,13 +375,13 @@ class WorkItemManager:
         work_items = data.get("work_items", {})
         data["metadata"]["total_items"] = len(work_items)
         data["metadata"]["completed"] = sum(
-            1 for item in work_items.values() if item["status"] == "completed"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.COMPLETED.value
         )
         data["metadata"]["in_progress"] = sum(
-            1 for item in work_items.values() if item["status"] == "in_progress"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.IN_PROGRESS.value
         )
         data["metadata"]["blocked"] = sum(
-            1 for item in work_items.values() if item["status"] == "blocked"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.BLOCKED.value
         )
         data["metadata"]["last_updated"] = datetime.now().isoformat()
 
@@ -578,7 +571,9 @@ class WorkItemManager:
         # Check dependency status for each item
         for work_id, item in filtered_items.items():
             item["_blocked"] = self._is_blocked(item, items)
-            item["_ready"] = not item["_blocked"] and item["status"] == "not_started"
+            item["_ready"] = (
+                not item["_blocked"] and item["status"] == WorkItemStatus.NOT_STARTED.value
+            )
 
         # Sort items
         sorted_items = self._sort_items(filtered_items)
@@ -590,7 +585,7 @@ class WorkItemManager:
 
     def _is_blocked(self, item: dict, all_items: dict) -> bool:
         """Check if work item is blocked by dependencies."""
-        if item["status"] != "not_started":
+        if item["status"] != WorkItemStatus.NOT_STARTED.value:
             return False
 
         dependencies = item.get("dependencies", [])
@@ -600,14 +595,19 @@ class WorkItemManager:
         for dep_id in dependencies:
             if dep_id not in all_items:
                 continue
-            if all_items[dep_id]["status"] != "completed":
+            if all_items[dep_id]["status"] != WorkItemStatus.COMPLETED.value:
                 return True
 
         return False
 
     def _sort_items(self, items: dict) -> list[dict]:
         """Sort items by priority, dependency status, and date."""
-        priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        priority_order = {
+            Priority.CRITICAL.value: 0,
+            Priority.HIGH.value: 1,
+            Priority.MEDIUM.value: 2,
+            Priority.LOW.value: 3,
+        }
 
         items_list = list(items.values())
 
@@ -620,7 +620,7 @@ class WorkItemManager:
             key=lambda x: (
                 priority_order.get(x["priority"], 99),
                 x.get("_blocked", False),
-                0 if x["status"] == "in_progress" else 1,
+                0 if x["status"] == WorkItemStatus.IN_PROGRESS.value else 1,
                 x.get("created_at", ""),
             )
         )
@@ -635,15 +635,15 @@ class WorkItemManager:
 
         # Count by status
         status_counts = {
-            "not_started": 0,
-            "in_progress": 0,
-            "blocked": 0,
-            "completed": 0,
+            WorkItemStatus.NOT_STARTED.value: 0,
+            WorkItemStatus.IN_PROGRESS.value: 0,
+            WorkItemStatus.BLOCKED.value: 0,
+            WorkItemStatus.COMPLETED.value: 0,
         }
 
         for item in items:
             if item.get("_blocked"):
-                status_counts["blocked"] += 1
+                status_counts[WorkItemStatus.BLOCKED.value] += 1
             else:
                 status_counts[item["status"]] += 1
 
@@ -651,22 +651,37 @@ class WorkItemManager:
         total = len(items)
         print(
             f"\nWork Items ({total} total, "
-            f"{status_counts['in_progress']} in progress, "
-            f"{status_counts['not_started']} not started, "
-            f"{status_counts['completed']} completed)\n"
+            f"{status_counts[WorkItemStatus.IN_PROGRESS.value]} in progress, "
+            f"{status_counts[WorkItemStatus.NOT_STARTED.value]} not started, "
+            f"{status_counts[WorkItemStatus.COMPLETED.value]} completed)\n"
         )
 
         # Group by priority
-        priority_groups = {"critical": [], "high": [], "medium": [], "low": []}
+        priority_groups = {
+            Priority.CRITICAL.value: [],
+            Priority.HIGH.value: [],
+            Priority.MEDIUM.value: [],
+            Priority.LOW.value: [],
+        }
 
         for item in items:
-            priority = item.get("priority", "medium")
+            priority = item.get("priority", Priority.MEDIUM.value)
             priority_groups[priority].append(item)
 
         # Display each priority group
-        priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        priority_emoji = {
+            Priority.CRITICAL.value: "🔴",
+            Priority.HIGH.value: "🟠",
+            Priority.MEDIUM.value: "🟡",
+            Priority.LOW.value: "🟢",
+        }
 
-        for priority in ["critical", "high", "medium", "low"]:
+        for priority in [
+            Priority.CRITICAL.value,
+            Priority.HIGH.value,
+            Priority.MEDIUM.value,
+            Priority.LOW.value,
+        ]:
             group_items = priority_groups[priority]
             if not group_items:
                 continue
@@ -682,10 +697,10 @@ class WorkItemManager:
                     # Show blocking dependencies
                     deps = item.get("dependencies", [])[:2]
                     status_str = f"(blocked - waiting on: {', '.join(deps)}) 🚫"
-                elif item["status"] == "in_progress":
+                elif item["status"] == WorkItemStatus.IN_PROGRESS.value:
                     sessions = len(item.get("sessions", []))
                     status_str = f"(in progress, session {sessions})"
-                elif item["status"] == "completed":
+                elif item["status"] == WorkItemStatus.COMPLETED.value:
                     sessions = len(item.get("sessions", []))
                     status_str = f"(completed, {sessions} session{'s' if sessions != 1 else ''})"
                 elif item.get("_ready"):
@@ -708,9 +723,9 @@ class WorkItemManager:
 
     def _get_status_icon(self, item: dict) -> str:
         """Get status icon for work item."""
-        if item["status"] == "completed":
+        if item["status"] == WorkItemStatus.COMPLETED.value:
             return "[✓]"
-        elif item["status"] == "in_progress":
+        elif item["status"] == WorkItemStatus.IN_PROGRESS.value:
             return "[>>]"
         else:
             return "[  ]"
@@ -752,7 +767,7 @@ class WorkItemManager:
             for dep_id in item["dependencies"]:
                 if dep_id in items:
                     dep_status = items[dep_id]["status"]
-                    icon = "✓" if dep_status == "completed" else "✗"
+                    icon = "✓" if dep_status == WorkItemStatus.COMPLETED.value else "✗"
                     print(f"  {icon} {dep_id} ({dep_status})")
                 else:
                     print(f"  ? {dep_id} (not found)")
@@ -794,19 +809,19 @@ class WorkItemManager:
 
         # Next steps
         print("Next Steps:")
-        if item["status"] == "not_started":
+        if item["status"] == WorkItemStatus.NOT_STARTED.value:
             # Check dependencies
             blocked = any(
-                items.get(dep_id, {}).get("status") != "completed"
+                items.get(dep_id, {}).get("status") != WorkItemStatus.COMPLETED.value
                 for dep_id in item.get("dependencies", [])
             )
             if blocked:
                 print("- Waiting on dependencies to complete")
             else:
                 print("- Start working: /start")
-        elif item["status"] == "in_progress":
+        elif item["status"] == WorkItemStatus.IN_PROGRESS.value:
             print("- Continue working: /start")
-        elif item["status"] == "completed":
+        elif item["status"] == WorkItemStatus.COMPLETED.value:
             print("- Work item is complete")
 
         print(f"- Update fields: /work-update {work_id}")
@@ -835,7 +850,7 @@ class WorkItemManager:
         # Apply updates
         for field, value in updates.items():
             if field == "status":
-                if value not in ["not_started", "in_progress", "blocked", "completed"]:
+                if value not in WorkItemStatus.values():
                     print(f"⚠️  Invalid status: {value}")
                     continue
                 old_value = item["status"]
@@ -891,13 +906,13 @@ class WorkItemManager:
         work_items = data.get("work_items", {})
         data["metadata"]["total_items"] = len(work_items)
         data["metadata"]["completed"] = sum(
-            1 for item in work_items.values() if item["status"] == "completed"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.COMPLETED.value
         )
         data["metadata"]["in_progress"] = sum(
-            1 for item in work_items.values() if item["status"] == "in_progress"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.IN_PROGRESS.value
         )
         data["metadata"]["blocked"] = sum(
-            1 for item in work_items.values() if item["status"] == "blocked"
+            1 for item in work_items.values() if item["status"] == WorkItemStatus.BLOCKED.value
         )
         data["metadata"]["last_updated"] = datetime.now().isoformat()
 
@@ -987,7 +1002,11 @@ class WorkItemManager:
         items = data.get("work_items", {})
 
         # Filter to not_started items
-        not_started = {wid: item for wid, item in items.items() if item["status"] == "not_started"}
+        not_started = {
+            wid: item
+            for wid, item in items.items()
+            if item["status"] == WorkItemStatus.NOT_STARTED.value
+        }
 
         if not not_started:
             print("No work items available to start.")
@@ -1005,7 +1024,7 @@ class WorkItemManager:
                 blocking = [
                     dep_id
                     for dep_id in item.get("dependencies", [])
-                    if items.get(dep_id, {}).get("status") != "completed"
+                    if items.get(dep_id, {}).get("status") != WorkItemStatus.COMPLETED.value
                 ]
                 blocked_items.append((work_id, item, blocking))
             else:
@@ -1019,7 +1038,12 @@ class WorkItemManager:
             return None
 
         # Sort ready items by priority
-        priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        priority_order = {
+            Priority.CRITICAL.value: 0,
+            Priority.HIGH.value: 1,
+            Priority.MEDIUM.value: 2,
+            Priority.LOW.value: 3,
+        }
         ready_items.sort(key=lambda x: priority_order.get(x[1]["priority"], 99))
 
         # Get top item
@@ -1030,7 +1054,12 @@ class WorkItemManager:
         print("=" * 80)
         print()
 
-        priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        priority_emoji = {
+            Priority.CRITICAL.value: "🔴",
+            Priority.HIGH.value: "🟠",
+            Priority.MEDIUM.value: "🟡",
+            Priority.LOW.value: "🟢",
+        }
 
         emoji = priority_emoji.get(next_item["priority"], "")
         print(f"{emoji} {next_item['priority'].upper()}: {next_item['title']}")
@@ -1124,9 +1153,15 @@ class WorkItemManager:
             }
 
         total = len(milestone_items)
-        completed = sum(1 for item in milestone_items if item["status"] == "completed")
-        in_progress = sum(1 for item in milestone_items if item["status"] == "in_progress")
-        not_started = sum(1 for item in milestone_items if item["status"] == "not_started")
+        completed = sum(
+            1 for item in milestone_items if item["status"] == WorkItemStatus.COMPLETED.value
+        )
+        in_progress = sum(
+            1 for item in milestone_items if item["status"] == WorkItemStatus.IN_PROGRESS.value
+        )
+        not_started = sum(
+            1 for item in milestone_items if item["status"] == WorkItemStatus.NOT_STARTED.value
+        )
         percent = int((completed / total) * 100) if total > 0 else 0
 
         return {

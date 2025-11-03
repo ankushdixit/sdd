@@ -21,6 +21,7 @@ from pathlib import Path
 
 # Import logging configuration
 from sdd.core.logging_config import setup_logging
+from sdd.core.types import Priority
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
@@ -106,7 +107,7 @@ def parse_work_new_args(args):
     parser.add_argument(
         "--priority",
         "-p",
-        default="high",
+        default=Priority.HIGH.value,
         help="Priority (critical, high, medium, low). Default: high",
     )
     parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")

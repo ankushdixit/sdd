@@ -6,6 +6,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.types import Priority, WorkItemStatus
+
 
 def get_session_status():
     """Get current session status."""
@@ -97,11 +99,17 @@ def get_session_status():
                 i for i in data["work_items"].values() if i.get("milestone") == milestone_name
             ]
             total = len(milestone_items)
-            completed = sum(1 for i in milestone_items if i["status"] == "completed")
+            completed = sum(
+                1 for i in milestone_items if i["status"] == WorkItemStatus.COMPLETED.value
+            )
             percent = int((completed / total) * 100) if total > 0 else 0
 
-            in_prog = sum(1 for i in milestone_items if i["status"] == "in_progress")
-            not_started = sum(1 for i in milestone_items if i["status"] == "not_started")
+            in_prog = sum(
+                1 for i in milestone_items if i["status"] == WorkItemStatus.IN_PROGRESS.value
+            )
+            not_started = sum(
+                1 for i in milestone_items if i["status"] == WorkItemStatus.NOT_STARTED.value
+            )
 
             print(f"Milestone: {milestone_name} ({percent}% complete)")
             print(f"  Related items: {in_prog} in progress, {not_started} not started")
@@ -110,15 +118,22 @@ def get_session_status():
     # Next items
     print("Next up:")
     items = data["work_items"]
-    not_started = [(wid, i) for wid, i in items.items() if i["status"] == "not_started"][:3]
+    not_started = [
+        (wid, i) for wid, i in items.items() if i["status"] == WorkItemStatus.NOT_STARTED.value
+    ][:3]
 
-    priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+    priority_emoji = {
+        Priority.CRITICAL.value: "🔴",
+        Priority.HIGH.value: "🟠",
+        Priority.MEDIUM.value: "🟡",
+        Priority.LOW.value: "🟢",
+    }
 
     for wid, i in not_started:
         emoji = priority_emoji.get(i["priority"], "")
         # Check if blocked
         blocked = any(
-            items.get(dep_id, {}).get("status") != "completed"
+            items.get(dep_id, {}).get("status") != WorkItemStatus.COMPLETED.value
             for dep_id in i.get("dependencies", [])
         )
         status_str = "(blocked)" if blocked else "(ready)"

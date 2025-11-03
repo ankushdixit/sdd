@@ -12,6 +12,8 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.types import WorkItemStatus
+
 
 class DependencyGraphVisualizer:
     """Visualizes work item dependency graphs"""
@@ -55,7 +57,9 @@ class DependencyGraphVisualizer:
 
         # Apply filters
         if not include_completed:
-            work_items = [wi for wi in work_items if wi.get("status") != "completed"]
+            work_items = [
+                wi for wi in work_items if wi.get("status") != WorkItemStatus.COMPLETED.value
+            ]
 
         if status_filter:
             work_items = [wi for wi in work_items if wi.get("status") == status_filter]
@@ -260,9 +264,15 @@ class DependencyGraphVisualizer:
             Dictionary with statistics
         """
         total = len(work_items)
-        completed = len([wi for wi in work_items if wi.get("status") == "completed"])
-        in_progress = len([wi for wi in work_items if wi.get("status") == "in_progress"])
-        not_started = len([wi for wi in work_items if wi.get("status") == "not_started"])
+        completed = len(
+            [wi for wi in work_items if wi.get("status") == WorkItemStatus.COMPLETED.value]
+        )
+        in_progress = len(
+            [wi for wi in work_items if wi.get("status") == WorkItemStatus.IN_PROGRESS.value]
+        )
+        not_started = len(
+            [wi for wi in work_items if wi.get("status") == WorkItemStatus.NOT_STARTED.value]
+        )
 
         return {
             "total_items": total,
@@ -356,20 +366,20 @@ class DependencyGraphVisualizer:
         """Get node color based on status and critical path"""
         if item["id"] in critical_items:
             return "red"
-        elif item.get("status") == "completed":
+        elif item.get("status") == WorkItemStatus.COMPLETED.value:
             return "green"
-        elif item.get("status") == "in_progress":
+        elif item.get("status") == WorkItemStatus.IN_PROGRESS.value:
             return "blue"
-        elif item.get("status") == "blocked":
+        elif item.get("status") == WorkItemStatus.BLOCKED.value:
             return "orange"
         else:
             return "black"
 
     def _get_node_style(self, item: dict) -> str:
         """Get node style based on status"""
-        if item.get("status") == "completed":
+        if item.get("status") == WorkItemStatus.COMPLETED.value:
             return "rounded,filled"
-        elif item.get("status") == "in_progress":
+        elif item.get("status") == WorkItemStatus.IN_PROGRESS.value:
             return "rounded,bold"
         else:
             return "rounded"
@@ -383,16 +393,16 @@ class DependencyGraphVisualizer:
         if len(title) > 30:
             title = title[:27] + "..."
 
-        status = item.get("status", "not_started")
+        status = item.get("status", WorkItemStatus.NOT_STARTED.value)
         return f"{item['id']}\\n{title}\\n[{status}]"
 
     def _get_status_icon(self, item: dict) -> str:
         """Get ASCII icon for work item status"""
         icons = {
-            "not_started": "○",
-            "in_progress": "◐",
-            "completed": "●",
-            "blocked": "✗",
+            WorkItemStatus.NOT_STARTED.value: "○",
+            WorkItemStatus.IN_PROGRESS.value: "◐",
+            WorkItemStatus.COMPLETED.value: "●",
+            WorkItemStatus.BLOCKED.value: "✗",
         }
         return icons.get(item.get("status"), "○")
 
@@ -453,13 +463,19 @@ class DependencyGraphVisualizer:
 
             if level_items:
                 completed_count = sum(
-                    1 for item in level_items if item.get("status") == "completed"
+                    1
+                    for item in level_items
+                    if item.get("status") == WorkItemStatus.COMPLETED.value
                 )
                 in_progress_count = sum(
-                    1 for item in level_items if item.get("status") == "in_progress"
+                    1
+                    for item in level_items
+                    if item.get("status") == WorkItemStatus.IN_PROGRESS.value
                 )
                 not_started_count = sum(
-                    1 for item in level_items if item.get("status") == "not_started"
+                    1
+                    for item in level_items
+                    if item.get("status") == WorkItemStatus.NOT_STARTED.value
                 )
 
                 lines.append(
@@ -494,7 +510,7 @@ def main():
     # Filters
     parser.add_argument(
         "--status",
-        choices=["not_started", "in_progress", "completed", "blocked"],
+        choices=WorkItemStatus.values(),
         help="Filter by status",
     )
     parser.add_argument("--milestone", help="Filter by milestone")

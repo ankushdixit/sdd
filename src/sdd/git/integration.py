@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.config import get_config_manager
+from sdd.core.types import GitStatus, WorkItemStatus, WorkItemType
 
 
 class GitWorkflow:
@@ -257,7 +258,7 @@ class GitWorkflow:
         """Format PR title from template."""
         template = self.config.pr_title_template
         return template.format(
-            type=work_item.get("type", "feature").title(),
+            type=work_item.get("type", WorkItemType.FEATURE.value).title(),
             title=work_item.get("title", "Work Item"),
             work_item_id=work_item.get("id", "unknown"),
             session_num=session_num,
@@ -276,7 +277,7 @@ class GitWorkflow:
 
         return template.format(
             work_item_id=work_item_id,
-            type=work_item.get("type", "feature"),
+            type=work_item.get("type", WorkItemType.FEATURE.value),
             title=work_item.get("title", ""),
             description=work_item.get("description", ""),
             session_num=session_num,
@@ -327,7 +328,7 @@ class GitWorkflow:
         work_item = data["work_items"][work_item_id]
 
         # Check if work item already has a branch
-        if "git" in work_item and work_item["git"].get("status") == "in_progress":
+        if "git" in work_item and work_item["git"].get("status") == GitStatus.IN_PROGRESS.value:
             # Resume existing branch
             branch_name = work_item["git"]["branch"]
             success, msg = self.checkout_branch(branch_name)
@@ -348,7 +349,7 @@ class GitWorkflow:
                     "branch": branch_name,
                     "parent_branch": parent_branch,  # Store parent for merging
                     "created_at": datetime.now().isoformat(),
-                    "status": "in_progress",
+                    "status": GitStatus.IN_PROGRESS.value,
                     "commits": [],
                 }
 
@@ -442,7 +443,7 @@ class GitWorkflow:
         push_success, push_msg = self.push_branch(branch_name)
 
         # Step 3: Handle completion based on workflow mode
-        if merge and work_item["status"] == "completed":
+        if merge and work_item["status"] == WorkItemStatus.COMPLETED.value:
             if workflow_mode == "pr":
                 # PR Mode: Create pull request (no local merge)
                 pr_success, pr_msg = False, "PR creation skipped (auto_create_pr disabled)"
@@ -453,10 +454,10 @@ class GitWorkflow:
                     )
 
                 if pr_success:
-                    work_item["git"]["status"] = "pr_created"
+                    work_item["git"]["status"] = GitStatus.PR_CREATED.value
                     work_item["git"]["pr_url"] = pr_msg.split(": ")[-1] if ": " in pr_msg else ""
                 else:
-                    work_item["git"]["status"] = "ready_for_pr"
+                    work_item["git"]["status"] = GitStatus.READY_FOR_PR.value
 
                 message = f"Committed {commit_sha}, Pushed to remote. {pr_msg}"
 
@@ -477,15 +478,17 @@ class GitWorkflow:
                     else:
                         delete_msg = "Remote branch kept (delete_branch_after_merge disabled)"
 
-                    work_item["git"]["status"] = "merged"
+                    work_item["git"]["status"] = GitStatus.MERGED.value
                     message = f"Committed {commit_sha}, {merge_msg}, {push_main_msg}, {delete_msg}"
                 else:
-                    work_item["git"]["status"] = "ready_to_merge"
+                    work_item["git"]["status"] = GitStatus.READY_TO_MERGE.value
                     message = f"Committed {commit_sha}, ⚠️  {merge_msg} - Manual merge required"
         else:
             # Work not complete or merge not requested
             work_item["git"]["status"] = (
-                "ready_to_merge" if work_item["status"] == "completed" else "in_progress"
+                GitStatus.READY_TO_MERGE.value
+                if work_item["status"] == WorkItemStatus.COMPLETED.value
+                else GitStatus.IN_PROGRESS.value
             )
             message = f"Committed {commit_sha}, {push_msg}"
 

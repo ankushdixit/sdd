@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from sdd.core.logging_config import get_logger
+from sdd.core.types import WorkItemType
 
 logger = get_logger(__name__)
 
@@ -734,12 +735,12 @@ def parse_spec_file(work_item) -> dict[str, Any]:
 
     # Parse based on work item type
     parsers = {
-        "feature": parse_feature_spec,
-        "bug": parse_bug_spec,
-        "refactor": parse_refactor_spec,
-        "security": parse_security_spec,
-        "integration_test": parse_integration_test_spec,
-        "deployment": parse_deployment_spec,
+        WorkItemType.FEATURE.value: parse_feature_spec,
+        WorkItemType.BUG.value: parse_bug_spec,
+        WorkItemType.REFACTOR.value: parse_refactor_spec,
+        WorkItemType.SECURITY.value: parse_security_spec,
+        WorkItemType.INTEGRATION_TEST.value: parse_integration_test_spec,
+        WorkItemType.DEPLOYMENT.value: parse_deployment_spec,
     }
 
     parser = parsers.get(work_type)
