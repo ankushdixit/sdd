@@ -83,11 +83,11 @@ class SessionValidator:
 
         # Skip tests when auto_fix=True since they cannot be automatically fixed
         # Use QualityGates to run tests (respects config)
-        test_config = self.quality_gates.config.get("test_execution", {})
-        if test_config.get("enabled", True) and not auto_fix:
+        test_config = self.quality_gates.config.test_execution
+        if test_config.enabled and not auto_fix:
             test_passed, test_results = self.quality_gates.run_tests()
             # Check if tests are required
-            if test_config.get("required", True):
+            if test_config.required:
                 gates["tests"] = {
                     "passed": test_passed,
                     "message": test_results.get(
@@ -102,10 +102,10 @@ class SessionValidator:
                 }
 
         # Use QualityGates for linting (respects config)
-        lint_config = self.quality_gates.config.get("linting", {})
-        if lint_config.get("enabled", True):
+        lint_config = self.quality_gates.config.linting
+        if lint_config.enabled:
             lint_passed, lint_results = self.quality_gates.run_linting(auto_fix=auto_fix)
-            if lint_config.get("required", False):
+            if lint_config.required:
                 message = "No linting issues" if lint_passed else "Linting issues found"
                 if auto_fix and lint_results.get("fixed"):
                     message = "Linting issues auto-fixed"
@@ -120,10 +120,10 @@ class SessionValidator:
                 }
 
         # Use QualityGates for formatting (respects config)
-        fmt_config = self.quality_gates.config.get("formatting", {})
-        if fmt_config.get("enabled", True):
+        fmt_config = self.quality_gates.config.formatting
+        if fmt_config.enabled:
             fmt_passed, fmt_results = self.quality_gates.run_formatting(auto_fix=auto_fix)
-            if fmt_config.get("required", False):
+            if fmt_config.required:
                 message = "All files properly formatted" if fmt_passed else "Files need formatting"
                 if auto_fix and fmt_results.get("formatted"):
                     message = "Files auto-formatted"

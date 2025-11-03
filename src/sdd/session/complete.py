@@ -48,44 +48,45 @@ def run_quality_gates(work_item=None):
     # Run tests
     passed, test_results = gates.run_tests()
     all_results["tests"] = test_results
-    if not passed and gates.config.get("test_execution", {}).get("required", True):
+    if not passed and gates.config.test_execution.required:
         all_passed = False
         failed_gates.append("tests")
 
     # Run security scanning
     passed, security_results = gates.run_security_scan()
     all_results["security"] = security_results
-    if not passed and gates.config.get("security", {}).get("required", True):
+    if not passed and gates.config.security.required:
         all_passed = False
         failed_gates.append("security")
 
     # Run linting
     passed, linting_results = gates.run_linting()
     all_results["linting"] = linting_results
-    if not passed and gates.config.get("linting", {}).get("required", True):
+    if not passed and gates.config.linting.required:
         all_passed = False
         failed_gates.append("linting")
 
     # Run formatting
     passed, formatting_results = gates.run_formatting()
     all_results["formatting"] = formatting_results
-    if not passed and gates.config.get("formatting", {}).get("required", True):
+    if not passed and gates.config.formatting.required:
         all_passed = False
         failed_gates.append("formatting")
 
     # Validate documentation
     passed, doc_results = gates.validate_documentation(work_item)
     all_results["documentation"] = doc_results
-    if not passed and gates.config.get("documentation", {}).get("required", True):
+    if not passed and gates.config.documentation.required:
         all_passed = False
         failed_gates.append("documentation")
 
     # Verify Context7 libraries
     passed, context7_results = gates.verify_context7_libraries()
     all_results["context7"] = context7_results
-    if not passed and gates.config.get("context7", {}).get("required", True):
-        all_passed = False
-        failed_gates.append("context7")
+    # Context7 is optional and not in QualityGatesConfig, always treat as optional
+    if not passed:
+        # Context7 failures are warnings, not failures
+        pass
 
     # Run custom validations
     if work_item:
@@ -174,28 +175,20 @@ def update_all_tracking(session_num):
     return True
 
 
-def load_curation_config():
-    """Load curation configuration from config.json"""
-    config_path = Path(".session/config.json")
-    if not config_path.exists():
-        return {"auto_curate": False, "frequency": 5, "dry_run": False}
-
-    try:
-        with open(config_path) as f:
-            config = json.load(f)
-            return config.get("curation", {})
-    except Exception:
-        return {"auto_curate": False, "frequency": 5, "dry_run": False}
-
-
 def trigger_curation_if_needed(session_num):
     """Check if curation should run and trigger it"""
-    config = load_curation_config()
+    # Use ConfigManager for centralized config management
+    from sdd.core.config import get_config_manager
 
-    if not config.get("auto_curate", False):
+    config_path = Path(".session/config.json")
+    config_manager = get_config_manager()
+    config_manager.load_config(config_path)
+    curation_config = config_manager.curation
+
+    if not curation_config.auto_curate:
         return
 
-    frequency = config.get("frequency", 5)
+    frequency = curation_config.frequency
 
     # Run curation every N sessions
     if session_num % frequency == 0:

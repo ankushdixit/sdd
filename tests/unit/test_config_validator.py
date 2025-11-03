@@ -45,7 +45,7 @@ def full_sdd_schema(tmp_path):
     Returns:
         Path: Path to full SDD schema, or skips test if schema not found.
     """
-    repo_schema = Path("templates/config.schema.json")
+    repo_schema = Path("src/sdd/templates/config.schema.json")
     if repo_schema.exists():
         schema_content = repo_schema.read_text()
         path = tmp_path / "config.schema.json"

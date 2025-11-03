@@ -21,6 +21,7 @@ from pathlib import Path
 
 import jsonschema
 
+from sdd.core.config import get_config_manager
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 
@@ -54,6 +55,12 @@ class LearningsCurator:
         self.project_root = project_root
         self.session_dir = project_root / ".session"
         self.learnings_path = self.session_dir / "tracking" / "learnings.json"
+
+        # Use ConfigManager for centralized config management
+        config_path = self.session_dir / "config.json"
+        config_manager = get_config_manager()
+        config_manager.load_config(config_path)
+        self.config = config_manager.curation
 
     def curate(self, dry_run: bool = False) -> None:
         """Curate learnings"""
@@ -481,9 +488,7 @@ class LearningsCurator:
 
     def auto_curate_if_needed(self) -> bool:
         """Auto-curate based on configuration and last curation time"""
-        config = self._load_curation_config()
-
-        if not config.get("auto_curate_enabled", False):
+        if not self.config.auto_curate:
             return False
 
         learnings = self._load_learnings()
@@ -499,7 +504,7 @@ class LearningsCurator:
         last_date = datetime.fromisoformat(last_curated)
         days_since = (datetime.now() - last_date).days
 
-        frequency_days = config.get("auto_curate_frequency_days", 7)
+        frequency_days = self.config.frequency
 
         if days_since >= frequency_days:
             print(f"Auto-curating (last curated {days_since} days ago)...\n")
@@ -507,25 +512,6 @@ class LearningsCurator:
             return True
 
         return False
-
-    def _load_curation_config(self) -> dict:
-        """Load curation configuration from .session/config.json"""
-        config_path = self.session_dir / "config.json"
-
-        if config_path.exists():
-            try:
-                config = load_json(config_path)
-                return config.get("curation", {})
-            except Exception:
-                pass
-
-        # Return defaults
-        return {
-            "auto_curate": False,
-            "frequency": 5,
-            "dry_run": False,
-            "similarity_threshold": 0.7,
-        }
 
     def extract_from_session_summary(self, session_file: Path) -> list[dict]:
         """Extract learnings from session summary file"""

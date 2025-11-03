@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Refactor: Centralized configuration management with ConfigManager**
+  - Created `core/config.py` with singleton ConfigManager for centralized config loading
+  - Type-safe dataclasses for all config sections (QualityGatesConfig, CurationConfig, GitConfig)
+  - Caching mechanism to avoid redundant file reads with invalidation support
+  - Refactored 5 modules to use ConfigManager: `quality/gates.py`, `git/integration.py`, `learning/curator.py`, `session/complete.py`, `session/validate.py`
+  - 21 comprehensive unit tests for ConfigManager with 98% coverage
+  - Fixed 8 previously skipped tests in test suite
+  - Removed 3 obsolete test classes (duplicate config loading tests)
+  - All 1256 unit tests pass (up from 1248) with 0 skipped tests
+  - Net reduction of 183 lines of code through deduplication
+  - Eliminated duplicate config loading logic across modules
+
 - **Refactor: Consolidated JSON file I/O operations**
   - Centralized all JSON file operations in `core/file_ops.py` with `JSONFileOperations` class
   - Added `FileOperationError` exception for consistent error handling

@@ -3,9 +3,31 @@
 import json
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
+from sdd.core.config import ConfigManager, GitWorkflowConfig
 from sdd.git.integration import GitWorkflow
+
+
+@pytest.fixture
+def mock_config_manager():
+    """Mock ConfigManager for tests that don't need file-based config."""
+    mock_manager = MagicMock()
+    mock_manager.git_workflow = GitWorkflowConfig()
+    with patch("sdd.git.integration.get_config_manager", return_value=mock_manager):
+        yield mock_manager
+
+
+@pytest.fixture(autouse=True)
+def reset_config_manager():
+    """Reset ConfigManager singleton before each test."""
+    ConfigManager._instance = None
+    ConfigManager._config = None
+    ConfigManager._config_path = None
+    yield
+
 
 # ============================================================================
 # Test GitWorkflow Initialization
@@ -20,7 +42,7 @@ class TestGitWorkflowInit:
         # Arrange & Act
         with (
             patch.object(Path, "cwd", return_value=Path("/test/root")),
-            patch.object(GitWorkflow, "_load_config", return_value={}),
+            patch("sdd.git.integration.get_config_manager"),
         ):
             workflow = GitWorkflow()
 
@@ -35,7 +57,7 @@ class TestGitWorkflowInit:
         custom_root = Path("/custom/path")
 
         # Act
-        with patch.object(GitWorkflow, "_load_config", return_value={}):
+        with patch("sdd.git.integration.get_config_manager"):
             workflow = GitWorkflow(project_root=custom_root)
 
         # Assert
@@ -45,80 +67,13 @@ class TestGitWorkflowInit:
 
     def test_init_loads_config(self):
         """Test that GitWorkflow initialization loads configuration."""
-        # Arrange
-        mock_config = {"mode": "pr", "auto_push": True}
-
-        # Act
-        with patch.object(GitWorkflow, "_load_config", return_value=mock_config):
-            workflow = GitWorkflow(Path("/test"))
-
-        # Assert
-        assert workflow.config == mock_config
-
-
-# ============================================================================
-# Test Config Loading
-# ============================================================================
-
-
-class TestLoadConfig:
-    """Tests for _load_config method."""
-
-    def test_load_config_file_exists(self, tmp_path):
-        """Test loading config from existing file."""
-        # Arrange
-        config_data = {
-            "git_workflow": {"mode": "local", "auto_push": False, "auto_create_pr": False}
-        }
-        config_file = tmp_path / ".session" / "config.json"
-        config_file.parent.mkdir(parents=True)
-        config_file.write_text(json.dumps(config_data))
-
-        # Act
-        workflow = GitWorkflow(project_root=tmp_path)
-
-        # Assert
-        assert workflow.config["mode"] == "local"
-        assert workflow.config["auto_push"] is False
-
-    def test_load_config_file_missing(self, tmp_path):
-        """Test loading default config when file doesn't exist."""
         # Arrange & Act
-        workflow = GitWorkflow(project_root=tmp_path)
+        workflow = GitWorkflow(Path("/test"))
 
-        # Assert
-        assert workflow.config["mode"] == "pr"
-        assert workflow.config["auto_push"] is True
-        assert workflow.config["auto_create_pr"] is True
-        assert workflow.config["delete_branch_after_merge"] is True
-
-    def test_load_config_file_invalid_json(self, tmp_path):
-        """Test loading default config when JSON is invalid."""
-        # Arrange
-        config_file = tmp_path / ".session" / "config.json"
-        config_file.parent.mkdir(parents=True)
-        config_file.write_text("invalid json{")
-
-        # Act
-        workflow = GitWorkflow(project_root=tmp_path)
-
-        # Assert - should fall back to defaults
-        assert workflow.config["mode"] == "pr"
-        assert workflow.config["auto_push"] is True
-
-    def test_load_config_missing_git_workflow_key(self, tmp_path):
-        """Test loading config when git_workflow key is missing."""
-        # Arrange
-        config_data = {"other_config": {"key": "value"}}
-        config_file = tmp_path / ".session" / "config.json"
-        config_file.parent.mkdir(parents=True)
-        config_file.write_text(json.dumps(config_data))
-
-        # Act
-        workflow = GitWorkflow(project_root=tmp_path)
-
-        # Assert - should return empty dict from .get()
-        assert workflow.config == {}
+        # Assert - config should be a GitWorkflowConfig instance
+        assert isinstance(workflow.config, GitWorkflowConfig)
+        assert workflow.config.mode == "pr"
+        assert workflow.config.auto_push is True
 
 
 # ============================================================================

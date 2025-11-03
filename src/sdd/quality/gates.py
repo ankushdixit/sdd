@@ -17,21 +17,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from sdd.core.config import get_config_manager
+
 # Import logging
 from sdd.core.logging_config import get_logger
 from sdd.work_items import spec_parser
 
 logger = get_logger(__name__)
-
-# Import config validator for schema validation
-try:
-    from sdd.core.config_validator import load_and_validate_config
-except ImportError:
-    # Fallback if running from different location
-    try:
-        from sdd.core.config_validator import load_and_validate_config
-    except ImportError:
-        load_and_validate_config = None
 
 # Import spec validator for spec completeness quality gate
 try:
@@ -48,85 +40,21 @@ class QualityGates:
         if config_path is None:
             config_path = Path(".session/config.json")
         self._config_path = config_path
-        self.config = self._load_config(config_path)
 
-    def _load_config(self, config_path: Path) -> dict:
-        """Load quality gate configuration with validation."""
-        if not config_path.exists():
-            logger.debug("Config file not found, using defaults: %s", config_path)
-            return self._default_config()
+        # Use ConfigManager for centralized config management
+        config_manager = get_config_manager()
+        config_manager.load_config(config_path)
+        self.config = config_manager.quality_gates  # QualityGatesConfig dataclass
 
-        logger.debug("Loading quality gates config from: %s", config_path)
-        schema_path = config_path.parent / "config.schema.json"
-
-        # Try to validate if schema and validator available
-        if load_and_validate_config is not None and schema_path.exists():
+    def _load_full_config(self) -> dict:
+        """Load full configuration file for optional sections (context7, custom_validations, etc.)."""
+        if self._config_path.exists():
             try:
-                config = load_and_validate_config(config_path, schema_path)
-                logger.info("Quality gates config loaded and validated successfully")
-                return config.get("quality_gates", self._default_config())
-            except ValueError as e:
-                logger.error("Config validation failed: %s", e)
-                print(f"❌ {e}")
-                print("Using default configuration")
-                return self._default_config()
-        else:
-            # Fallback to simple load without validation
-            logger.warning("Loading config without validation (schema or validator not available)")
-            with open(config_path) as f:
-                config = json.load(f)
-            return config.get("quality_gates", self._default_config())
-
-    def _default_config(self) -> dict:
-        """Default quality gate configuration."""
-        return {
-            "test_execution": {
-                "enabled": True,
-                "required": True,
-                "coverage_threshold": 80,
-                "commands": {
-                    "python": "pytest --cov --cov-report=json",
-                    "javascript": "npm test -- --coverage",
-                    "typescript": "npm test -- --coverage",
-                },
-            },
-            "linting": {
-                "enabled": True,
-                "required": False,
-                "auto_fix": True,
-                "commands": {
-                    "python": "ruff check .",
-                    "javascript": "npx eslint .",
-                    "typescript": "npx eslint .",
-                },
-            },
-            "formatting": {
-                "enabled": True,
-                "required": False,
-                "auto_fix": True,
-                "commands": {
-                    "python": "ruff format .",
-                    "javascript": "npx prettier .",
-                    "typescript": "npx prettier .",
-                },
-            },
-            "security": {
-                "enabled": True,
-                "required": True,
-                "fail_on": "high",  # critical, high, medium, low
-            },
-            "documentation": {
-                "enabled": True,
-                "required": False,
-                "check_changelog": True,
-                "check_docstrings": True,
-                "check_readme": False,
-            },
-            "spec_completeness": {
-                "enabled": True,
-                "required": True,
-            },
-        }
+                with open(self._config_path) as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
 
     def run_tests(self, language: str = None) -> tuple[bool, dict]:
         """
@@ -136,9 +64,9 @@ class QualityGates:
             (passed: bool, results: dict)
         """
         logger.info("Running test quality gate")
-        config = self.config.get("test_execution", {})
+        config = self.config.test_execution
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             logger.debug("Test execution is disabled")
             return True, {"status": "skipped", "reason": "disabled"}
 
@@ -148,7 +76,7 @@ class QualityGates:
             logger.debug("Detected language: %s", language)
 
         # Get test command for language
-        command = config.get("commands", {}).get(language)
+        command = config.commands.get(language)
         if not command:
             logger.warning("No test command configured for language: %s", language)
             return True, {"status": "skipped", "reason": f"no command for {language}"}
@@ -186,7 +114,7 @@ class QualityGates:
             }
 
             # Check coverage threshold
-            threshold = config.get("coverage_threshold", 80)
+            threshold = config.coverage_threshold
             if coverage and coverage < threshold:
                 results["status"] = "failed"
                 results["reason"] = f"Coverage {coverage}% below threshold {threshold}%"
@@ -240,9 +168,9 @@ class QualityGates:
         Returns:
             (passed: bool, results: dict)
         """
-        config = self.config.get("security", {})
+        config = self.config.security
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             return True, {"status": "skipped"}
 
         if language is None:
@@ -338,7 +266,7 @@ class QualityGates:
                 pass  # npm not available
 
         # Check if passed based on fail_on threshold
-        fail_on = config.get("fail_on", "high").upper()
+        fail_on = config.fail_on.upper()
         severity_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
         if fail_on not in severity_levels:
@@ -364,18 +292,18 @@ class QualityGates:
 
     def run_linting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
         """Run linting with optional auto-fix."""
-        config = self.config.get("linting", {})
+        config = self.config.linting
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             return True, {"status": "skipped"}
 
         if language is None:
             language = self._detect_language()
 
         if auto_fix is None:
-            auto_fix = config.get("auto_fix", True)
+            auto_fix = config.auto_fix
 
-        command = config.get("commands", {}).get(language)
+        command = config.commands.get(language)
         if not command:
             return True, {"status": "skipped"}
 
@@ -398,8 +326,7 @@ class QualityGates:
             }
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             # If gate is required but tool not found, treat as failure
-            is_required = config.get("required", False)
-            if is_required:
+            if config.required:
                 return False, {
                     "status": "failed",
                     "reason": f"Required linting tool not found: {str(e)}",
@@ -408,18 +335,18 @@ class QualityGates:
 
     def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
         """Run code formatting."""
-        config = self.config.get("formatting", {})
+        config = self.config.formatting
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             return True, {"status": "skipped"}
 
         if language is None:
             language = self._detect_language()
 
         if auto_fix is None:
-            auto_fix = config.get("auto_fix", True)
+            auto_fix = config.auto_fix
 
-        command = config.get("commands", {}).get(language)
+        command = config.commands.get(language)
         if not command:
             return True, {"status": "skipped"}
 
@@ -445,8 +372,7 @@ class QualityGates:
             }
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             # If gate is required but tool not found, treat as failure
-            is_required = config.get("required", False)
-            if is_required:
+            if config.required:
                 return False, {
                     "status": "failed",
                     "reason": f"Required formatting tool not found: {str(e)}",
@@ -455,22 +381,22 @@ class QualityGates:
 
     def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
         """Validate documentation requirements."""
-        config = self.config.get("documentation", {})
+        config = self.config.documentation
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             return True, {"status": "skipped"}
 
         results = {"checks": [], "passed": True}
 
         # Check CHANGELOG updated
-        if config.get("check_changelog", True):
+        if config.check_changelog:
             changelog_updated = self._check_changelog_updated()
             results["checks"].append({"name": "CHANGELOG updated", "passed": changelog_updated})
             if not changelog_updated:
                 results["passed"] = False
 
         # Check docstrings for Python
-        if config.get("check_docstrings", True):
+        if config.check_docstrings:
             language = self._detect_language()
             if language == "python":
                 docstrings_present = self._check_python_docstrings()
@@ -481,7 +407,7 @@ class QualityGates:
                     results["passed"] = False
 
         # Check README current
-        if config.get("check_readme", False):
+        if config.check_readme:
             readme_current = self._check_readme_current(work_item)
             results["checks"].append({"name": "README current", "passed": readme_current})
             if not readme_current:
@@ -570,9 +496,9 @@ class QualityGates:
         Returns:
             Tuple of (passed, results)
         """
-        config = self.config.get("spec_completeness", {})
+        config = self.config.spec_completeness
 
-        if not config.get("enabled", True):
+        if not config.enabled:
             return True, {"status": "skipped"}
 
         if validate_spec_file is None:
@@ -608,7 +534,10 @@ class QualityGates:
 
     def verify_context7_libraries(self) -> tuple[bool, dict]:
         """Verify important libraries via Context7 MCP."""
-        config = self.config.get("context7", {})
+        # Context7 is not in the main quality_gates config, load from full config
+        # This is optional and might not be present
+        full_config = self._load_full_config()
+        config = full_config.get("context7", {})
 
         if not config.get("enabled", False):
             return True, {"status": "skipped", "reason": "not enabled"}
@@ -702,8 +631,9 @@ class QualityGates:
         # Get custom rules from work item
         custom_rules = work_item.get("validation_rules", []) if work_item else []
 
-        # Get project-level rules
-        project_rules = self.config.get("custom_validations", {}).get("rules", [])
+        # Get project-level rules from full config (custom_validations is optional)
+        full_config = self._load_full_config()
+        project_rules = full_config.get("custom_validations", {}).get("rules", [])
 
         # Combine rules
         all_rules = custom_rules + project_rules
@@ -780,8 +710,18 @@ class QualityGates:
         """
         missing = []
 
-        for gate_name, gate_config in self.config.items():
-            if gate_config.get("required", False) and not gate_config.get("enabled", False):
+        # Check each quality gate
+        gates = {
+            "test_execution": self.config.test_execution,
+            "linting": self.config.linting,
+            "formatting": self.config.formatting,
+            "security": self.config.security,
+            "documentation": self.config.documentation,
+            "spec_completeness": self.config.spec_completeness,
+        }
+
+        for gate_name, gate_config in gates.items():
+            if gate_config.required and not gate_config.enabled:
                 missing.append(gate_name)
 
         return len(missing) == 0, missing

@@ -29,7 +29,7 @@ from sdd.session.complete import (
     generate_deployment_summary,
     generate_integration_test_summary,
     generate_summary,
-    load_curation_config,
+    # load_curation_config,  # Removed - now in ConfigManager (tested in test_config.py)
     load_status,
     load_work_items,
     main,
@@ -179,16 +179,11 @@ class TestRunQualityGates:
     def test_run_quality_gates_test_failure(self, mock_gates_class):
         """Test run_quality_gates when tests fail."""
         # Arrange
+        from sdd.core.config import QualityGatesConfig
+
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
-        mock_gates.config = {
-            "test_execution": {"required": True},
-            "security": {"required": True},
-            "linting": {"required": True},
-            "formatting": {"required": True},
-            "documentation": {"required": True},
-            "context7": {"required": True},
-        }
+        mock_gates.config = QualityGatesConfig()  # Uses default values with all required=True
 
         mock_gates.run_tests.return_value = (False, {"status": "failed", "failed": 5})
         mock_gates.run_security_scan.return_value = (True, {"status": "passed"})
@@ -211,16 +206,11 @@ class TestRunQualityGates:
     def test_run_quality_gates_security_failure(self, mock_gates_class):
         """Test run_quality_gates when security scan fails."""
         # Arrange
+        from sdd.core.config import QualityGatesConfig
+
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
-        mock_gates.config = {
-            "test_execution": {"required": True},
-            "security": {"required": True},
-            "linting": {"required": True},
-            "formatting": {"required": True},
-            "documentation": {"required": True},
-            "context7": {"required": True},
-        }
+        mock_gates.config = QualityGatesConfig()  # Uses default values with all required=True
 
         mock_gates.run_tests.return_value = (True, {"status": "passed"})
         mock_gates.run_security_scan.return_value = (False, {"status": "failed", "issues": 3})
@@ -243,16 +233,20 @@ class TestRunQualityGates:
     def test_run_quality_gates_multiple_failures(self, mock_gates_class):
         """Test run_quality_gates with multiple gate failures."""
         # Arrange
+        from dataclasses import replace
+
+        from sdd.core.config import QualityGatesConfig
+
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
-        mock_gates.config = {
-            "test_execution": {"required": True},
-            "security": {"required": True},
-            "linting": {"required": True},
-            "formatting": {"required": True},
-            "documentation": {"required": True},
-            "context7": {"required": True},
-        }
+        # Make linting and formatting required for this test
+        config = QualityGatesConfig()
+        config = replace(
+            config,
+            linting=replace(config.linting, required=True),
+            formatting=replace(config.formatting, required=True),
+        )
+        mock_gates.config = config
 
         mock_gates.run_tests.return_value = (False, {"status": "failed"})
         mock_gates.run_security_scan.return_value = (True, {"status": "passed"})
@@ -311,16 +305,16 @@ class TestRunQualityGates:
     def test_run_quality_gates_non_required_gate_failure(self, mock_gates_class):
         """Test run_quality_gates when non-required gate fails."""
         # Arrange
+        from dataclasses import replace
+
+        from sdd.core.config import QualityGatesConfig
+
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
-        mock_gates.config = {
-            "test_execution": {"required": True},
-            "security": {"required": False},  # Not required
-            "linting": {"required": True},
-            "formatting": {"required": True},
-            "documentation": {"required": True},
-            "context7": {"required": True},
-        }
+        # Make security not required for this test
+        config = QualityGatesConfig()
+        config = replace(config, security=replace(config.security, required=False))
+        mock_gates.config = config
 
         mock_gates.run_tests.return_value = (True, {"status": "passed"})
         mock_gates.run_security_scan.return_value = (
@@ -436,95 +430,36 @@ class TestUpdateAllTracking:
         assert result is True  # Function continues despite exception
 
 
-class TestLoadCurationConfig:
-    """Tests for load_curation_config function."""
-
-    def test_load_curation_config_success(self, tmp_path, monkeypatch):
-        """Test successful loading of curation config."""
-        # Arrange
-        monkeypatch.chdir(tmp_path)
-        session_dir = tmp_path / ".session"
-        session_dir.mkdir()
-        config_file = session_dir / "config.json"
-
-        config_data = {"curation": {"auto_curate": True, "frequency": 3, "dry_run": False}}
-        config_file.write_text(json.dumps(config_data))
-
-        # Act
-        result = load_curation_config()
-
-        # Assert
-        assert result["auto_curate"] is True
-        assert result["frequency"] == 3
-        assert result["dry_run"] is False
-
-    def test_load_curation_config_missing_file(self, tmp_path, monkeypatch):
-        """Test load_curation_config returns defaults when file doesn't exist."""
-        # Arrange
-        monkeypatch.chdir(tmp_path)
-
-        # Act
-        result = load_curation_config()
-
-        # Assert
-        assert result["auto_curate"] is False
-        assert result["frequency"] == 5
-        assert result["dry_run"] is False
-
-    def test_load_curation_config_invalid_json(self, tmp_path, monkeypatch):
-        """Test load_curation_config returns defaults for invalid JSON."""
-        # Arrange
-        monkeypatch.chdir(tmp_path)
-        session_dir = tmp_path / ".session"
-        session_dir.mkdir()
-        config_file = session_dir / "config.json"
-        config_file.write_text("invalid json")
-
-        # Act
-        result = load_curation_config()
-
-        # Assert
-        assert result["auto_curate"] is False
-        assert result["frequency"] == 5
-
-    def test_load_curation_config_missing_curation_key(self, tmp_path, monkeypatch):
-        """Test load_curation_config when config exists but curation key missing."""
-        # Arrange
-        monkeypatch.chdir(tmp_path)
-        session_dir = tmp_path / ".session"
-        session_dir.mkdir()
-        config_file = session_dir / "config.json"
-
-        config_data = {"other_config": "value"}
-        config_file.write_text(json.dumps(config_data))
-
-        # Act
-        result = load_curation_config()
-
-        # Assert
-        assert result == {}
-
-
 class TestTriggerCurationIfNeeded:
     """Tests for trigger_curation_if_needed function."""
 
-    @patch("sdd.session.complete.load_curation_config")
-    def test_trigger_curation_disabled(self, mock_load_config):
+    @patch("sdd.core.config.get_config_manager")
+    def test_trigger_curation_disabled(self, mock_get_config_manager):
         """Test trigger_curation_if_needed when auto_curate is disabled."""
         # Arrange
-        mock_load_config.return_value = {"auto_curate": False}
+        from sdd.core.config import CurationConfig
+
+        mock_config_manager = MagicMock()
+        mock_config_manager.curation = CurationConfig(auto_curate=False)
+        mock_get_config_manager.return_value = mock_config_manager
 
         # Act
         trigger_curation_if_needed(5)
 
         # Assert - should return early, no subprocess call
+        mock_config_manager.load_config.assert_called_once()
 
     @patch("sdd.session.complete.subprocess.run")
-    @patch("sdd.session.complete.load_curation_config")
-    def test_trigger_curation_triggered(self, mock_load_config, mock_run):
+    @patch("sdd.core.config.get_config_manager")
+    def test_trigger_curation_triggered(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed triggers curation."""
         # Arrange
-        mock_load_config.return_value = {"auto_curate": True, "frequency": 5}
+        from sdd.core.config import CurationConfig
+
+        mock_config_manager = MagicMock()
+        mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
+        mock_get_config_manager.return_value = mock_config_manager
+
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stdout = "Curation completed"
@@ -539,11 +474,15 @@ class TestTriggerCurationIfNeeded:
         assert "learning_curator.py" in str(mock_run.call_args)
 
     @patch("sdd.session.complete.subprocess.run")
-    @patch("sdd.session.complete.load_curation_config")
-    def test_trigger_curation_not_time_yet(self, mock_load_config, mock_run):
+    @patch("sdd.core.config.get_config_manager")
+    def test_trigger_curation_not_time_yet(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed when not time to curate."""
         # Arrange
-        mock_load_config.return_value = {"auto_curate": True, "frequency": 5}
+        from sdd.core.config import CurationConfig
+
+        mock_config_manager = MagicMock()
+        mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
+        mock_get_config_manager.return_value = mock_config_manager
 
         # Act
         trigger_curation_if_needed(3)  # 3 % 5 != 0
@@ -552,11 +491,16 @@ class TestTriggerCurationIfNeeded:
         mock_run.assert_not_called()
 
     @patch("sdd.session.complete.subprocess.run")
-    @patch("sdd.session.complete.load_curation_config")
-    def test_trigger_curation_failure(self, mock_load_config, mock_run):
+    @patch("sdd.core.config.get_config_manager")
+    def test_trigger_curation_failure(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed handles subprocess failure."""
         # Arrange
-        mock_load_config.return_value = {"auto_curate": True, "frequency": 5}
+        from sdd.core.config import CurationConfig
+
+        mock_config_manager = MagicMock()
+        mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
+        mock_get_config_manager.return_value = mock_config_manager
+
         mock_result = MagicMock()
         mock_result.returncode = 1
         mock_result.stderr = "Curation error"
@@ -569,11 +513,16 @@ class TestTriggerCurationIfNeeded:
         mock_run.assert_called_once()
 
     @patch("sdd.session.complete.subprocess.run")
-    @patch("sdd.session.complete.load_curation_config")
-    def test_trigger_curation_exception(self, mock_load_config, mock_run):
+    @patch("sdd.core.config.get_config_manager")
+    def test_trigger_curation_exception(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed handles exceptions gracefully."""
         # Arrange
-        mock_load_config.return_value = {"auto_curate": True, "frequency": 5}
+        from sdd.core.config import CurationConfig
+
+        mock_config_manager = MagicMock()
+        mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
+        mock_get_config_manager.return_value = mock_config_manager
+
         mock_run.side_effect = subprocess.TimeoutExpired("python3", 60)
 
         # Act

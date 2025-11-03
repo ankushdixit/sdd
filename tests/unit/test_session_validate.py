@@ -51,12 +51,10 @@ def mock_quality_gates():
     Returns:
         Mock: Mock QualityGates instance with basic methods.
     """
+    from sdd.core.config import QualityGatesConfig
+
     mock_qg = Mock()
-    mock_qg.config = {
-        "test_execution": {"enabled": True, "required": True},
-        "linting": {"enabled": True, "required": False},
-        "formatting": {"enabled": True, "required": False},
-    }
+    mock_qg.config = QualityGatesConfig()  # Uses default values
     mock_qg.run_tests.return_value = (True, {"status": "passed", "reason": "All tests passed"})
     mock_qg.run_linting.return_value = (True, {"status": "passed"})
     mock_qg.run_formatting.return_value = (True, {"status": "passed"})
@@ -271,8 +269,14 @@ class TestPreviewQualityGates:
     ):
         """Test preview_quality_gates marks optional tests as passed even if they fail."""
         # Arrange
+        from dataclasses import replace
+
         project_root = temp_session_dir.parent
-        mock_quality_gates.config["test_execution"]["required"] = False
+        # Make test_execution not required
+        mock_quality_gates.config = replace(
+            mock_quality_gates.config,
+            test_execution=replace(mock_quality_gates.config.test_execution, required=False),
+        )
         mock_quality_gates.run_tests.return_value = (False, {"status": "failed"})
 
         with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
@@ -290,8 +294,14 @@ class TestPreviewQualityGates:
     ):
         """Test preview_quality_gates skips disabled quality gates."""
         # Arrange
+        from dataclasses import replace
+
         project_root = temp_session_dir.parent
-        mock_quality_gates.config["test_execution"]["enabled"] = False
+        # Disable test_execution
+        mock_quality_gates.config = replace(
+            mock_quality_gates.config,
+            test_execution=replace(mock_quality_gates.config.test_execution, enabled=False),
+        )
 
         with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
@@ -306,9 +316,13 @@ class TestPreviewQualityGates:
     def test_preview_quality_gates_auto_fix_linting(self, temp_session_dir, mock_quality_gates):
         """Test preview_quality_gates passes auto_fix parameter to linting."""
         # Arrange
+        from dataclasses import replace
+
         project_root = temp_session_dir.parent
-        mock_quality_gates.config["linting"]["required"] = (
-            True  # Make required to see auto-fix message
+        # Make linting required to see auto-fix message
+        mock_quality_gates.config = replace(
+            mock_quality_gates.config,
+            linting=replace(mock_quality_gates.config.linting, required=True),
         )
         mock_quality_gates.run_linting.return_value = (True, {"status": "passed", "fixed": True})
 
@@ -325,9 +339,13 @@ class TestPreviewQualityGates:
     def test_preview_quality_gates_auto_fix_formatting(self, temp_session_dir, mock_quality_gates):
         """Test preview_quality_gates passes auto_fix parameter to formatting."""
         # Arrange
+        from dataclasses import replace
+
         project_root = temp_session_dir.parent
-        mock_quality_gates.config["formatting"]["required"] = (
-            True  # Make required to see auto-fix message
+        # Make formatting required to see auto-fix message
+        mock_quality_gates.config = replace(
+            mock_quality_gates.config,
+            formatting=replace(mock_quality_gates.config.formatting, required=True),
         )
         mock_quality_gates.run_formatting.return_value = (
             True,

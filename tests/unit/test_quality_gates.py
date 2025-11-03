@@ -7,6 +7,7 @@ security scanning, documentation validation, and custom checks.
 
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
@@ -46,10 +47,10 @@ class TestQualityGatesInit:
         # Act
         gates = QualityGates(config_path=config_path)
 
-        # Assert
-        assert gates.config["test_execution"]["enabled"] is True
-        assert gates.config["test_execution"]["coverage_threshold"] == 80
-        assert gates.config["linting"]["enabled"] is True
+        # Assert - config is now a dataclass
+        assert gates.config.test_execution.enabled is True
+        assert gates.config.test_execution.coverage_threshold == 80
+        assert gates.config.linting.enabled is True
 
     def test_load_config_with_valid_json(self, temp_dir):
         """Test loading config from valid JSON file."""
@@ -64,12 +65,11 @@ class TestQualityGatesInit:
         config_path.write_text(json.dumps(config_data))
 
         # Act
-        with patch("sdd.quality.gates.load_and_validate_config", None):
-            gates = QualityGates(config_path=config_path)
+        gates = QualityGates(config_path=config_path)
 
-        # Assert
-        assert gates.config["test_execution"]["coverage_threshold"] == 90
-        assert gates.config["linting"]["enabled"] is False
+        # Assert - config is now a dataclass
+        assert gates.config.test_execution.coverage_threshold == 90
+        assert gates.config.linting.enabled is False
 
     def test_load_config_with_validation_success(self, temp_dir):
         """Test loading config with successful schema validation."""
@@ -82,15 +82,11 @@ class TestQualityGatesInit:
         config_path.write_text(json.dumps(config_data))
         schema_path.write_text("{}")
 
-        mock_validator = Mock(return_value=config_data)
+        # Act - ConfigManager now handles loading
+        gates = QualityGates(config_path=config_path)
 
-        # Act
-        with patch("sdd.quality.gates.load_and_validate_config", mock_validator):
-            gates = QualityGates(config_path=config_path)
-
-        # Assert
-        mock_validator.assert_called_once()
-        assert gates.config["test_execution"]["coverage_threshold"] == 85
+        # Assert - config is now a dataclass
+        assert gates.config.test_execution.coverage_threshold == 85
 
     def test_load_config_with_validation_failure_uses_defaults(self, temp_dir):
         """Test loading config falls back to defaults when validation fails."""
@@ -100,14 +96,11 @@ class TestQualityGatesInit:
         config_path.write_text('{"quality_gates": {}}')
         schema_path.write_text("{}")
 
-        mock_validator = Mock(side_effect=ValueError("Invalid config"))
+        # Act - ConfigManager handles validation
+        gates = QualityGates(config_path=config_path)
 
-        # Act
-        with patch("sdd.quality.gates.load_and_validate_config", mock_validator):
-            gates = QualityGates(config_path=config_path)
-
-        # Assert
-        assert gates.config["test_execution"]["coverage_threshold"] == 80
+        # Assert - config is now a dataclass with defaults
+        assert gates.config.test_execution.coverage_threshold == 80
 
     def test_default_config_structure(self):
         """Test default configuration has all required sections."""
@@ -115,13 +108,13 @@ class TestQualityGatesInit:
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
-        # Assert
-        assert "test_execution" in gates.config
-        assert "linting" in gates.config
-        assert "formatting" in gates.config
-        assert "security" in gates.config
-        assert "documentation" in gates.config
-        assert "spec_completeness" in gates.config
+        # Assert - config is now a dataclass with attributes
+        assert hasattr(gates.config, "test_execution")
+        assert hasattr(gates.config, "linting")
+        assert hasattr(gates.config, "formatting")
+        assert hasattr(gates.config, "security")
+        assert hasattr(gates.config, "documentation")
+        assert hasattr(gates.config, "spec_completeness")
 
     def test_default_config_test_execution_settings(self):
         """Test default test execution configuration."""
@@ -129,13 +122,13 @@ class TestQualityGatesInit:
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
-        # Assert
-        test_config = gates.config["test_execution"]
-        assert test_config["enabled"] is True
-        assert test_config["required"] is True
-        assert test_config["coverage_threshold"] == 80
-        assert "python" in test_config["commands"]
-        assert "javascript" in test_config["commands"]
+        # Assert - config is now a dataclass
+        test_config = gates.config.test_execution
+        assert test_config.enabled is True
+        assert test_config.required is True
+        assert test_config.coverage_threshold == 80
+        assert "python" in test_config.commands
+        assert "javascript" in test_config.commands
 
 
 class TestQualityGatesLanguageDetection:
@@ -334,7 +327,10 @@ class TestQualityGatesTestExecution:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["test_execution"]["enabled"] = False
+        # Update config using dataclasses.replace
+        gates.config = replace(
+            gates.config, test_execution=replace(gates.config.test_execution, enabled=False)
+        )
 
         # Act
         passed, results = gates.run_tests()
@@ -563,7 +559,8 @@ class TestQualityGatesSecurityScan:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["security"]["enabled"] = False
+        # Update config using dataclasses.replace
+        gates.config = replace(gates.config, security=replace(gates.config.security, enabled=False))
 
         # Act
         passed, results = gates.run_security_scan()
@@ -586,7 +583,9 @@ class TestQualityGatesSecurityScan:
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
-            gates.config["security"]["fail_on"] = "medium"
+            gates.config = replace(
+                gates.config, security=replace(gates.config.security, fail_on="medium")
+            )
 
             # Act
             passed, results = gates.run_security_scan(language="python")
@@ -672,7 +671,7 @@ class TestQualityGatesLinting:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["linting"]["enabled"] = False
+        gates.config = replace(gates.config, linting=replace(gates.config.linting, enabled=False))
 
         # Act
         passed, results = gates.run_linting()
@@ -689,7 +688,7 @@ class TestQualityGatesLinting:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["linting"]["required"] = True
+        gates.config = replace(gates.config, linting=replace(gates.config.linting, required=True))
 
         # Act
         passed, results = gates.run_linting(language="python")
@@ -707,7 +706,7 @@ class TestQualityGatesLinting:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["linting"]["required"] = False
+        gates.config = replace(gates.config, linting=replace(gates.config.linting, required=False))
 
         # Act
         passed, results = gates.run_linting(language="python")
@@ -826,7 +825,9 @@ class TestQualityGatesFormatting:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["formatting"]["enabled"] = False
+        gates.config = replace(
+            gates.config, formatting=replace(gates.config.formatting, enabled=False)
+        )
 
         # Act
         passed, results = gates.run_formatting()
@@ -843,7 +844,9 @@ class TestQualityGatesFormatting:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["formatting"]["required"] = True
+        gates.config = replace(
+            gates.config, formatting=replace(gates.config.formatting, required=True)
+        )
 
         # Act
         passed, results = gates.run_formatting(language="python")
@@ -881,7 +884,9 @@ class TestQualityGatesDocumentation:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["documentation"]["enabled"] = False
+        gates.config = replace(
+            gates.config, documentation=replace(gates.config.documentation, enabled=False)
+        )
 
         # Act
         passed, results = gates.validate_documentation()
@@ -1061,7 +1066,9 @@ class TestQualityGatesSpecCompleteness:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["spec_completeness"]["enabled"] = False
+        gates.config = replace(
+            gates.config, spec_completeness=replace(gates.config.spec_completeness, enabled=False)
+        )
 
         # Act
         passed, results = gates.validate_spec_completeness(work_item)
@@ -1299,8 +1306,12 @@ class TestQualityGatesRequiredGates:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["test_execution"]["enabled"] = False
-        gates.config["test_execution"]["required"] = True
+        gates.config = replace(
+            gates.config, test_execution=replace(gates.config.test_execution, enabled=False)
+        )
+        gates.config = replace(
+            gates.config, test_execution=replace(gates.config.test_execution, required=True)
+        )
 
         # Act
         all_met, missing = gates.check_required_gates()
@@ -1475,11 +1486,11 @@ class TestQualityGatesContext7:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["context7"] = {"enabled": True}
-
-        # Act
-        with patch.object(Path, "exists", return_value=False):
-            passed, results = gates.verify_context7_libraries()
+        # Mock _load_full_config to return context7 config
+        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
+            # Act
+            with patch.object(Path, "exists", return_value=False):
+                passed, results = gates.verify_context7_libraries()
 
         # Assert
         assert passed is True
@@ -2174,7 +2185,9 @@ class TestQualityGatesAdditionalCoverage:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["security"]["fail_on"] = "invalid_level"
+        gates.config = replace(
+            gates.config, security=replace(gates.config.security, fail_on="invalid_level")
+        )
 
         # Act
         passed, results = gates.run_security_scan(language="python")
@@ -2191,7 +2204,7 @@ class TestQualityGatesAdditionalCoverage:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["linting"]["required"] = False
+        gates.config = replace(gates.config, linting=replace(gates.config.linting, required=False))
 
         # Act
         passed, results = gates.run_linting(language="python")
@@ -2208,7 +2221,9 @@ class TestQualityGatesAdditionalCoverage:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["formatting"]["required"] = False
+        gates.config = replace(
+            gates.config, formatting=replace(gates.config.formatting, required=False)
+        )
 
         # Act
         passed, results = gates.run_formatting(language="python")
@@ -2269,7 +2284,9 @@ class TestQualityGatesAdditionalCoverage:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["documentation"]["check_readme"] = True
+        gates.config = replace(
+            gates.config, documentation=replace(gates.config.documentation, check_readme=True)
+        )
 
         # Act
         with patch.object(gates, "_check_changelog_updated", return_value=True):
@@ -2286,16 +2303,16 @@ class TestQualityGatesAdditionalCoverage:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["context7"] = {"enabled": True}
 
         stack_content = "Python 3.11\npytest 7.4.0\nruff 0.1.0\n"
 
         # Act
-        with patch.object(Path, "exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data=stack_content)):
-                with patch.object(gates, "_should_verify_library", return_value=True):
-                    with patch.object(gates, "_query_context7", return_value=True):
-                        passed, results = gates.verify_context7_libraries()
+        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
+            with patch.object(Path, "exists", return_value=True):
+                with patch("builtins.open", mock_open(read_data=stack_content)):
+                    with patch.object(gates, "_should_verify_library", return_value=True):
+                        with patch.object(gates, "_query_context7", return_value=True):
+                            passed, results = gates.verify_context7_libraries()
 
         # Assert
         assert passed is True
@@ -2307,16 +2324,16 @@ class TestQualityGatesAdditionalCoverage:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["context7"] = {"enabled": True}
 
         stack_content = "Python 3.11\npytest 7.4.0\n"
 
         # Act
-        with patch.object(Path, "exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data=stack_content)):
-                with patch.object(gates, "_should_verify_library", return_value=True):
-                    with patch.object(gates, "_query_context7", return_value=False):
-                        passed, results = gates.verify_context7_libraries()
+        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
+            with patch.object(Path, "exists", return_value=True):
+                with patch("builtins.open", mock_open(read_data=stack_content)):
+                    with patch.object(gates, "_should_verify_library", return_value=True):
+                        with patch.object(gates, "_query_context7", return_value=False):
+                            passed, results = gates.verify_context7_libraries()
 
         # Assert
         assert passed is False
@@ -2374,14 +2391,20 @@ class TestQualityGatesAdditionalCoverage:
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
-        gates.config["custom_validations"] = {
-            "rules": [{"type": "file_exists", "path": "/test/file", "name": "Test file"}]
-        }
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
-            mock_path.return_value.exists.return_value = True
-            passed, results = gates.run_custom_validations(work_item)
+        with patch.object(
+            gates,
+            "_load_full_config",
+            return_value={
+                "custom_validations": {
+                    "rules": [{"type": "file_exists", "path": "/test/file", "name": "Test file"}]
+                }
+            },
+        ):
+            with patch("sdd.quality.gates.Path") as mock_path:
+                mock_path.return_value.exists.return_value = True
+                passed, results = gates.run_custom_validations(work_item)
 
         # Assert
         assert passed is True
