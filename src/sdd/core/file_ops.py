@@ -7,7 +7,7 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ class JSONFileOperations:
     @staticmethod
     def load_json(
         file_path: Path,
-        default: dict[str, Any] | None = None,
-        validator: Callable[[dict], bool] | None = None,
+        default: Optional[dict[str, Any]] = None,
+        validator: Optional[Callable[[dict], bool]] = None,
     ) -> dict[str, Any]:
         """
         Load JSON file with optional default and validation
