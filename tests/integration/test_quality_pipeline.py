@@ -27,7 +27,7 @@ class TestQualityGatesInit:
         # Assert
         assert gates is not None
         assert gates.config is not None
-        assert "test_execution" in gates.config
+        assert hasattr(gates.config, "test_execution")
 
     def test_init_with_custom_config(self, temp_dir):
         """Test that QualityGates initializes with custom config from file."""
@@ -43,7 +43,7 @@ class TestQualityGatesInit:
         gates = QualityGates(config_path=config_file)
 
         # Assert
-        assert gates.config["test_execution"]["enabled"] is False
+        assert gates.config.test_execution.enabled is False
 
     def test_init_loads_full_config(self, temp_dir):
         """Test that QualityGates stores config path for later access to full config."""
