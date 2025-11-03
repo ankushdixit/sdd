@@ -43,7 +43,7 @@ SDD automatically captures and curates knowledge from development sessions:
 Python package organized by domain in `src/sdd/`:
 
 **Core (`sdd.core`):**
-- **file_ops.py** - File operations
+- **file_ops.py** - Centralized JSON file I/O operations with atomic writes, validation hooks, and consistent error handling
 - **logging_config.py** - Logging configuration
 - **config_validator.py** - Configuration validation
 

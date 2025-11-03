@@ -12,7 +12,6 @@ Curates and organizes accumulated learnings:
 
 import argparse
 import hashlib
-import json
 import re
 import subprocess
 import sys
@@ -22,6 +21,7 @@ from pathlib import Path
 
 import jsonschema
 
+from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -94,7 +94,7 @@ class LearningsCurator:
         print(f"\nFinal learnings: {final_count}\n")
 
         if not dry_run:
-            self._save_json(self.learnings_path, learnings)
+            save_json(self.learnings_path, learnings)
             print("✓ Learnings saved\n")
         else:
             print("Dry run - no changes saved\n")
@@ -102,7 +102,7 @@ class LearningsCurator:
     def _load_learnings(self) -> dict:
         """Load learnings file"""
         if self.learnings_path.exists():
-            data = self._load_json(self.learnings_path)
+            data = load_json(self.learnings_path)
             # Ensure metadata exists
             if "metadata" not in data:
                 data["metadata"] = {
@@ -181,7 +181,7 @@ class LearningsCurator:
         # Look for session summary files
         for summary_file in summaries_dir.glob("session_*.json"):
             try:
-                summary_data = self._load_json(summary_file)
+                summary_data = load_json(summary_file)
 
                 # Extract learnings from various fields
                 session_id = summary_file.stem.replace("session_", "")
@@ -456,7 +456,7 @@ class LearningsCurator:
         try:
             work_items_path = self.session_dir / "tracking" / "work_items.json"
             if work_items_path.exists():
-                data = self._load_json(work_items_path)
+                data = load_json(work_items_path)
                 # Find max session number across all work items
                 max_session = 0
                 for item in data.get("work_items", {}).values():
@@ -514,7 +514,7 @@ class LearningsCurator:
 
         if config_path.exists():
             try:
-                config = self._load_json(config_path)
+                config = load_json(config_path)
                 return config.get("curation", {})
             except Exception:
                 pass
@@ -827,7 +827,7 @@ class LearningsCurator:
         self._update_total_learnings(learnings)
 
         # Save
-        self._save_json(self.learnings_path, learnings)
+        save_json(self.learnings_path, learnings)
 
         return True  # Successfully added
 
@@ -906,7 +906,7 @@ class LearningsCurator:
         self._update_total_learnings(learnings)
 
         # Save
-        self._save_json(self.learnings_path, learnings)
+        save_json(self.learnings_path, learnings)
 
         print("\n✓ Learning captured!")
         print(f"  ID: {learning_id}")
@@ -1203,22 +1203,6 @@ class LearningsCurator:
                 print(f"  ... and {len(session_learnings) - 3} more")
 
             print()
-
-    def _load_json(self, file_path: Path) -> dict:
-        """Load JSON file"""
-        with open(file_path) as f:
-            return json.load(f)
-
-    def _save_json(self, file_path: Path, data: dict, indent: int = 2) -> None:
-        """Save data to JSON file with atomic write"""
-        # Write to temp file first
-        temp_path = file_path.with_suffix(".tmp")
-
-        with open(temp_path, "w") as f:
-            json.dump(data, f, indent=indent, default=str)
-
-        # Atomic rename
-        temp_path.replace(file_path)
 
 
 def main():

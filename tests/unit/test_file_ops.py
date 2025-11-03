@@ -8,6 +8,8 @@ import json
 import pytest
 
 from sdd.core.file_ops import (
+    FileOperationError,
+    JSONFileOperations,
     backup_file,
     ensure_directory,
     load_json,
@@ -34,12 +36,12 @@ class TestLoadJson:
         assert result == test_data
 
     def test_load_json_file_not_found(self, tmp_path):
-        """Test loading non-existent file raises FileNotFoundError."""
+        """Test loading non-existent file raises FileOperationError."""
         # Arrange
         non_existent = tmp_path / "nonexistent.json"
 
         # Act & Assert
-        with pytest.raises(FileNotFoundError, match="File not found"):
+        with pytest.raises(FileOperationError, match="File not found"):
             load_json(non_existent)
 
     def test_load_json_complex_data(self, tmp_path):
@@ -329,3 +331,270 @@ class TestWriteFile:
 
         # Assert
         assert test_file.read_text() == content
+
+
+class TestJSONFileOperations:
+    """Tests for JSONFileOperations class."""
+
+    class TestLoadJson:
+        """Tests for JSONFileOperations.load_json method."""
+
+        def test_load_json_success(self, tmp_path):
+            """Test loading valid JSON file."""
+            # Arrange
+            test_file = tmp_path / "test.json"
+            test_data = {"key": "value", "number": 42}
+            test_file.write_text(json.dumps(test_data))
+
+            # Act
+            result = JSONFileOperations.load_json(test_file)
+
+            # Assert
+            assert result == test_data
+
+        def test_load_json_with_default_missing_file(self, tmp_path):
+            """Test loading missing file returns default."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+            default_value = {"default": True}
+
+            # Act
+            result = JSONFileOperations.load_json(non_existent, default=default_value)
+
+            # Assert
+            assert result == default_value
+
+        def test_load_json_without_default_missing_file(self, tmp_path):
+            """Test loading missing file without default raises error."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+
+            # Act & Assert
+            with pytest.raises(FileOperationError, match="File not found"):
+                JSONFileOperations.load_json(non_existent)
+
+        def test_load_json_invalid_json(self, tmp_path):
+            """Test loading invalid JSON raises error."""
+            # Arrange
+            test_file = tmp_path / "invalid.json"
+            test_file.write_text("{invalid json")
+
+            # Act & Assert
+            with pytest.raises(FileOperationError, match="Invalid JSON"):
+                JSONFileOperations.load_json(test_file)
+
+        def test_load_json_with_validator_pass(self, tmp_path):
+            """Test loading JSON with validator that passes."""
+            # Arrange
+            test_file = tmp_path / "data.json"
+            test_data = {"version": "1.0", "data": "test"}
+            test_file.write_text(json.dumps(test_data))
+
+            def validator(d):
+                return "version" in d
+
+            # Act
+            result = JSONFileOperations.load_json(test_file, validator=validator)
+
+            # Assert
+            assert result == test_data
+
+        def test_load_json_with_validator_fail(self, tmp_path):
+            """Test loading JSON with validator that fails."""
+            # Arrange
+            test_file = tmp_path / "data.json"
+            test_data = {"data": "test"}
+            test_file.write_text(json.dumps(test_data))
+
+            def validator(d):
+                return "version" in d
+
+            # Act & Assert
+            with pytest.raises(FileOperationError, match="Validation failed"):
+                JSONFileOperations.load_json(test_file, validator=validator)
+
+        def test_load_json_empty_dict_default(self, tmp_path):
+            """Test loading missing file with empty dict default."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+
+            # Act
+            result = JSONFileOperations.load_json(non_existent, default={})
+
+            # Assert
+            assert result == {}
+            assert isinstance(result, dict)
+
+    class TestSaveJson:
+        """Tests for JSONFileOperations.save_json method."""
+
+        def test_save_json_atomic_default(self, tmp_path):
+            """Test save_json uses atomic write by default."""
+            # Arrange
+            test_file = tmp_path / "atomic.json"
+            test_data = {"atomic": True}
+
+            # Act
+            JSONFileOperations.save_json(test_file, test_data)
+
+            # Assert
+            assert test_file.exists()
+            # Temp file should be cleaned up
+            temp_file = test_file.with_suffix(test_file.suffix + ".tmp")
+            assert not temp_file.exists()
+            # Data should be correct
+            loaded = json.loads(test_file.read_text())
+            assert loaded == test_data
+
+        def test_save_json_non_atomic(self, tmp_path):
+            """Test save_json with atomic=False."""
+            # Arrange
+            test_file = tmp_path / "direct.json"
+            test_data = {"atomic": False}
+
+            # Act
+            JSONFileOperations.save_json(test_file, test_data, atomic=False)
+
+            # Assert
+            assert test_file.exists()
+            loaded = json.loads(test_file.read_text())
+            assert loaded == test_data
+
+        def test_save_json_creates_parent_dirs(self, tmp_path):
+            """Test save_json creates parent directories."""
+            # Arrange
+            nested_file = tmp_path / "level1" / "level2" / "data.json"
+            test_data = {"nested": True}
+
+            # Act
+            JSONFileOperations.save_json(nested_file, test_data)
+
+            # Assert
+            assert nested_file.exists()
+            assert nested_file.parent.exists()
+            loaded = json.loads(nested_file.read_text())
+            assert loaded == test_data
+
+        def test_save_json_without_creating_dirs(self, tmp_path):
+            """Test save_json with create_dirs=False raises error for missing dirs."""
+            # Arrange
+            nested_file = tmp_path / "missing" / "data.json"
+            test_data = {"data": "test"}
+
+            # Act & Assert
+            with pytest.raises(FileOperationError, match="Error saving"):
+                JSONFileOperations.save_json(nested_file, test_data, create_dirs=False)
+
+        def test_save_json_custom_indent(self, tmp_path):
+            """Test save_json with custom indentation."""
+            # Arrange
+            test_file = tmp_path / "indented.json"
+            test_data = {"key": "value"}
+
+            # Act
+            JSONFileOperations.save_json(test_file, test_data, indent=4)
+
+            # Assert
+            content = test_file.read_text()
+            assert "    " in content  # 4 spaces
+
+        def test_save_json_with_datetime(self, tmp_path):
+            """Test save_json handles datetime with default=str."""
+            # Arrange
+            from datetime import datetime
+
+            test_file = tmp_path / "datetime.json"
+            test_data = {"timestamp": datetime(2025, 1, 1, 12, 0, 0)}
+
+            # Act
+            JSONFileOperations.save_json(test_file, test_data)
+
+            # Assert
+            assert test_file.exists()
+            content = test_file.read_text()
+            assert "2025" in content
+
+        def test_save_json_overwrites_existing(self, tmp_path):
+            """Test save_json overwrites existing file."""
+            # Arrange
+            test_file = tmp_path / "overwrite.json"
+            old_data = {"old": "data"}
+            new_data = {"new": "data"}
+            test_file.write_text(json.dumps(old_data))
+
+            # Act
+            JSONFileOperations.save_json(test_file, new_data)
+
+            # Assert
+            loaded = json.loads(test_file.read_text())
+            assert loaded == new_data
+            assert "old" not in loaded
+
+    class TestLoadJsonSafe:
+        """Tests for JSONFileOperations.load_json_safe method."""
+
+        def test_load_json_safe_success(self, tmp_path):
+            """Test load_json_safe loads valid file."""
+            # Arrange
+            test_file = tmp_path / "valid.json"
+            test_data = {"key": "value"}
+            test_file.write_text(json.dumps(test_data))
+            default = {"default": True}
+
+            # Act
+            result = JSONFileOperations.load_json_safe(test_file, default)
+
+            # Assert
+            assert result == test_data
+
+        def test_load_json_safe_missing_file_returns_default(self, tmp_path):
+            """Test load_json_safe returns default for missing file."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+            default = {"default": True}
+
+            # Act
+            result = JSONFileOperations.load_json_safe(non_existent, default)
+
+            # Assert
+            assert result == default
+
+        def test_load_json_safe_invalid_json_returns_default(self, tmp_path):
+            """Test load_json_safe returns default for invalid JSON."""
+            # Arrange
+            test_file = tmp_path / "invalid.json"
+            test_file.write_text("{invalid json")
+            default = {"default": True}
+
+            # Act
+            result = JSONFileOperations.load_json_safe(test_file, default)
+
+            # Assert
+            assert result == default
+
+        def test_load_json_safe_never_raises(self, tmp_path):
+            """Test load_json_safe never raises exceptions."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+            invalid_file = tmp_path / "invalid.json"
+            invalid_file.write_text("not json")
+            default = {}
+
+            # Act & Assert - should not raise
+            result1 = JSONFileOperations.load_json_safe(non_existent, default)
+            result2 = JSONFileOperations.load_json_safe(invalid_file, default)
+
+            assert result1 == default
+            assert result2 == default
+
+        def test_load_json_safe_empty_dict_default(self, tmp_path):
+            """Test load_json_safe with empty dict as default."""
+            # Arrange
+            non_existent = tmp_path / "missing.json"
+
+            # Act
+            result = JSONFileOperations.load_json_safe(non_existent, {})
+
+            # Assert
+            assert result == {}
+            assert isinstance(result, dict)

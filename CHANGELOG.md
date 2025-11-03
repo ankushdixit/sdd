@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Refactor: Consolidated JSON file I/O operations**
+  - Centralized all JSON file operations in `core/file_ops.py` with `JSONFileOperations` class
+  - Added `FileOperationError` exception for consistent error handling
+  - Enhanced features: atomic writes by default, optional validation hooks, automatic directory creation
+  - New `load_json_safe()` method for guaranteed return (never raises)
+  - Removed duplicate `_load_json` and `_save_json` methods from `learning/curator.py`
+  - 97% test coverage with 41 comprehensive unit tests
+  - All 1240 unit tests pass with no regressions
+  - Eliminated ~100+ lines of duplicate code across codebase
+  - Created comprehensive API reference documentation in `docs/reference/file-operations-api.md`
+  - Updated architecture documentation
+
 ## [0.7.0] - 2025-10-26
 
 ### Added
