@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Investigated
+- **Dataclass Migration Analysis**
+  - Investigated replacing dictionary-based data structures with Python dataclasses across the codebase
+  - Analysis identified 1,260 dictionary patterns across 57 files requiring migration
+  - Estimated effort: 30-35 hours with high risk of introducing bugs
+  - Decision: Deferred indefinitely - current dict-based approach is stable and well-tested
+  - Rationale: Low ROI for a working CLI tool, prefer TypedDict for gradual type improvements
+  - All 1,471 tests passing (1,333 unit + 138 integration)
+
 ### Changed
 - **Refactor: Consolidate subprocess execution with CommandRunner**
   - Replaced all direct `subprocess.run()` calls with centralized `CommandRunner` class
