@@ -8,6 +8,7 @@ from sdd.core.config import (
     ConfigManager,
     CurationConfig,
     DocumentationConfig,
+    ExecutionConfig,
     FormattingConfig,
     GitWorkflowConfig,
     LintingConfig,
@@ -15,7 +16,6 @@ from sdd.core.config import (
     SDDConfig,
     SecurityConfig,
     SpecCompletenessConfig,
-    TestExecutionConfig,
     get_config_manager,
 )
 
@@ -285,7 +285,7 @@ class TestConfigManager:
         config = manager.get_config()
 
         # Test quality gates nested configs
-        assert isinstance(config.quality_gates.test_execution, TestExecutionConfig)
+        assert isinstance(config.quality_gates.test_execution, ExecutionConfig)
         assert isinstance(config.quality_gates.linting, LintingConfig)
         assert isinstance(config.quality_gates.formatting, FormattingConfig)
         assert isinstance(config.quality_gates.security, SecurityConfig)

@@ -6,11 +6,11 @@ security scanning, documentation validation, and custom checks.
 """
 
 import json
-import subprocess
 from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
+from sdd.core.command_runner import CommandResult
 from sdd.quality.gates import QualityGates
 
 
@@ -209,13 +209,19 @@ class TestQualityGatesLanguageDetection:
 class TestQualityGatesTestExecution:
     """Tests for test execution and coverage validation."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_success_with_coverage(self, mock_run):
         """Test running tests successfully with coverage above threshold."""
         # Arrange
-        mock_run.return_value = Mock(
-            returncode=0, stdout="pytest output\n100% tests passed", stderr=""
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout="pytest output\n100% tests passed",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
         )
+        mock_run.return_value = mock_runner
 
         coverage_data = {"totals": {"percent_covered": 85.5}}
 
@@ -232,11 +238,21 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "passed"
         assert results["coverage"] == 85.5
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_failure(self, mock_run):
         """Test running tests that fail."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1, stdout="test failures", stderr="errors")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1,
+            stdout="test failures",
+            stderr="errors",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -250,11 +266,17 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert results["returncode"] == 1
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_coverage_below_threshold(self, mock_run):
         """Test running tests with coverage below threshold."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         coverage_data = {"totals": {"percent_covered": 60.0}}
 
@@ -271,11 +293,17 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert "Coverage 60.0% below threshold 80%" in results["reason"]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_no_tests_collected(self, mock_run):
         """Test running tests when no tests are collected (exit code 5)."""
         # Arrange
-        mock_run.return_value = Mock(returncode=5, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=5, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -288,11 +316,22 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "skipped"
         assert results["reason"] == "no tests collected"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_timeout(self, mock_run):
         """Test running tests that timeout."""
         # Arrange
-        mock_run.side_effect = subprocess.TimeoutExpired("pytest", 300)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["pytest"],
+            duration_seconds=300.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -305,11 +344,21 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert results["reason"] == "timeout"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_pytest_not_available(self, mock_run):
         """Test running tests when pytest is not available."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("pytest not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="pytest not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -354,11 +403,17 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "skipped"
         assert "no command for ruby" in results["reason"]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_auto_detect_language(self, mock_run):
         """Test running tests with auto-detected language."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -368,7 +423,7 @@ class TestQualityGatesTestExecution:
             passed, results = gates.run_tests()
 
         # Assert
-        mock_run.assert_called_once()
+        mock_runner.run.assert_called_once()
 
 
 class TestQualityGatesCoverageParsing:
@@ -451,7 +506,7 @@ class TestQualityGatesCoverageParsing:
 class TestQualityGatesSecurityScan:
     """Tests for security vulnerability scanning."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_bandit_no_issues(self, mock_close, mock_run, temp_dir):
         """Test running security scan with bandit finding no issues."""
@@ -461,7 +516,13 @@ class TestQualityGatesSecurityScan:
         temp_file.write_text(json.dumps(bandit_data))
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -474,7 +535,7 @@ class TestQualityGatesSecurityScan:
         assert results["status"] == "passed"
         mock_close.assert_called_once_with(999)
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_bandit_high_severity(self, mock_close, mock_run, temp_dir):
         """Test running security scan with high severity issues."""
@@ -484,7 +545,13 @@ class TestQualityGatesSecurityScan:
         temp_file.write_text(json.dumps(bandit_data))
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=1, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -497,7 +564,7 @@ class TestQualityGatesSecurityScan:
         assert "HIGH" in results["by_severity"]
         assert results["by_severity"]["HIGH"] == 1
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_low_severity_passes(self, mock_close, mock_run, temp_dir):
         """Test running security scan with low severity issues passes."""
@@ -507,7 +574,13 @@ class TestQualityGatesSecurityScan:
         temp_file.write_text(json.dumps(bandit_data))
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -519,11 +592,21 @@ class TestQualityGatesSecurityScan:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_security_scan_bandit_not_available(self, mock_run):
         """Test running security scan when bandit is not available."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("bandit not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="bandit not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -534,14 +617,22 @@ class TestQualityGatesSecurityScan:
         # Assert
         assert passed is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_security_scan_javascript_npm_audit(self, mock_run):
         """Test running security scan for JavaScript with npm audit."""
         # Arrange
         audit_data = {
             "vulnerabilities": {"lodash": {"severity": "high"}, "express": {"severity": "low"}}
         }
-        mock_run.return_value = Mock(returncode=1, stdout=json.dumps(audit_data), stderr="")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout=json.dumps(audit_data),
+            stderr="",
+            command=["npm"],
+            duration_seconds=0.1,
+        )
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -569,7 +660,7 @@ class TestQualityGatesSecurityScan:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_custom_fail_threshold_medium(self, mock_close, mock_run, temp_dir):
         """Test security scan with custom fail threshold at medium."""
@@ -579,7 +670,13 @@ class TestQualityGatesSecurityScan:
         temp_file.write_text(json.dumps(bandit_data))
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -598,11 +695,21 @@ class TestQualityGatesSecurityScan:
 class TestQualityGatesLinting:
     """Tests for code linting validation."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_success(self, mock_run):
         """Test running linting successfully with no issues."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="All checks passed", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout="All checks passed",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -614,11 +721,21 @@ class TestQualityGatesLinting:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_with_issues(self, mock_run):
         """Test running linting with issues found."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1, stdout="Found 5 linting issues", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1,
+            stdout="Found 5 linting issues",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -631,11 +748,17 @@ class TestQualityGatesLinting:
         assert results["status"] == "failed"
         assert results["issues_found"] == 1
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_with_auto_fix(self, mock_run):
         """Test running linting with auto-fix enabled."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -646,14 +769,20 @@ class TestQualityGatesLinting:
         # Assert
         assert passed is True
         assert results["fixed"] is True
-        mock_run.assert_called_once()
-        assert "--fix" in mock_run.call_args[0][0]
+        mock_runner.run.assert_called_once()
+        assert "--fix" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_javascript_with_auto_fix(self, mock_run):
         """Test running linting for JavaScript with auto-fix."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -663,8 +792,8 @@ class TestQualityGatesLinting:
 
         # Assert
         assert passed is True
-        mock_run.assert_called_once()
-        assert "--fix" in mock_run.call_args[0][0]
+        mock_runner.run.assert_called_once()
+        assert "--fix" in mock_runner.run.call_args[0][0]
 
     def test_run_linting_disabled(self):
         """Test running linting when disabled."""
@@ -680,11 +809,21 @@ class TestQualityGatesLinting:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_tool_not_found_required(self, mock_run):
         """Test running linting when tool not found and gate is required."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("ruff not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="ruff not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -698,11 +837,21 @@ class TestQualityGatesLinting:
         assert results["status"] == "failed"
         assert "Required linting tool not found" in results["reason"]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_tool_not_found_optional(self, mock_run):
         """Test running linting when tool not found and gate is optional."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("ruff not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="ruff not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -719,11 +868,21 @@ class TestQualityGatesLinting:
 class TestQualityGatesFormatting:
     """Tests for code formatting validation."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_success(self, mock_run):
         """Test running formatting check successfully."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="All files formatted", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout="All files formatted",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -735,11 +894,17 @@ class TestQualityGatesFormatting:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_python_check_mode(self, mock_run):
         """Test running Python formatting in check mode (no auto-fix)."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -749,14 +914,20 @@ class TestQualityGatesFormatting:
 
         # Assert
         assert passed is True
-        mock_run.assert_called_once()
-        assert "--check" in mock_run.call_args[0][0]
+        mock_runner.run.assert_called_once()
+        assert "--check" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_python_auto_fix(self, mock_run):
         """Test running Python formatting with auto-fix."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -768,13 +939,19 @@ class TestQualityGatesFormatting:
         assert passed is True
         assert results["formatted"] is True
         # Should not have --check flag when auto_fix is True
-        assert "--check" not in str(mock_run.call_args)
+        assert "--check" not in str(mock_runner.run.call_args)
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_javascript_auto_fix(self, mock_run):
         """Test running JavaScript formatting with auto-fix."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -784,14 +961,20 @@ class TestQualityGatesFormatting:
 
         # Assert
         assert passed is True
-        mock_run.assert_called_once()
-        assert "--write" in mock_run.call_args[0][0]
+        mock_runner.run.assert_called_once()
+        assert "--write" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_javascript_check_mode(self, mock_run):
         """Test running JavaScript formatting in check mode."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -801,14 +984,24 @@ class TestQualityGatesFormatting:
 
         # Assert
         assert passed is True
-        mock_run.assert_called_once()
-        assert "--check" in mock_run.call_args[0][0]
+        mock_runner.run.assert_called_once()
+        assert "--check" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_unformatted_files(self, mock_run):
         """Test running formatting when files are not formatted."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1, stdout="Would reformat 3 files", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1,
+            stdout="Would reformat 3 files",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -836,11 +1029,21 @@ class TestQualityGatesFormatting:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_tool_not_found_required(self, mock_run):
         """Test running formatting when tool not found and gate is required."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("ruff not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="ruff not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -859,15 +1062,31 @@ class TestQualityGatesFormatting:
 class TestQualityGatesDocumentation:
     """Tests for documentation validation."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_validate_documentation_all_checks_pass(self, mock_run):
         """Test validating documentation when all checks pass."""
         # Arrange
-        mock_run.side_effect = [
-            Mock(returncode=0, stdout="feature/my-feature", stderr=""),  # git rev-parse
-            Mock(returncode=0, stdout="CHANGELOG.md", stderr=""),  # git log
-            Mock(returncode=0, stdout="", stderr=""),  # pydocstyle
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            CommandResult(
+                returncode=0,
+                stdout="feature/my-feature",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
+            CommandResult(
+                returncode=0,
+                stdout="CHANGELOG.md",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["pydocstyle"], duration_seconds=0.1
+            ),
         ]
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -895,14 +1114,28 @@ class TestQualityGatesDocumentation:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_changelog_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG updated on feature branch."""
         # Arrange
-        mock_run.side_effect = [
-            Mock(returncode=0, stdout="feature/my-feature", stderr=""),
-            Mock(returncode=0, stdout="CHANGELOG.md\nfile.py", stderr=""),
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            CommandResult(
+                returncode=0,
+                stdout="feature/my-feature",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
+            CommandResult(
+                returncode=0,
+                stdout="CHANGELOG.md\nfile.py",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
         ]
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -913,14 +1146,28 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_changelog_not_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG not updated on feature branch."""
         # Arrange
-        mock_run.side_effect = [
-            Mock(returncode=0, stdout="feature/my-feature", stderr=""),
-            Mock(returncode=0, stdout="file.py\ntest.py", stderr=""),
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            CommandResult(
+                returncode=0,
+                stdout="feature/my-feature",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
+            CommandResult(
+                returncode=0,
+                stdout="file.py\ntest.py",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
         ]
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -931,11 +1178,17 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_changelog_on_main_branch_skipped(self, mock_run):
         """Test checking CHANGELOG on main branch is skipped."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="main", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="main", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -946,11 +1199,17 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_python_docstrings_pass(self, mock_run):
         """Test checking Python docstrings when all present."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -961,11 +1220,21 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_python_docstrings_missing(self, mock_run):
         """Test checking Python docstrings when some are missing."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1, stdout="Missing docstrings", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1,
+            stdout="Missing docstrings",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -976,11 +1245,21 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_python_docstrings_tool_not_available(self, mock_run):
         """Test checking Python docstrings when pydocstyle not available."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError("pydocstyle not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="pydocstyle not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -991,11 +1270,21 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True  # Skip check if tool not available
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_readme_current_updated(self, mock_run):
         """Test checking README was updated."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="README.md\nfile.py", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout="README.md\nfile.py",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -1006,11 +1295,21 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_readme_current_not_updated(self, mock_run):
         """Test checking README was not updated."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="file.py\ntest.py", stderr="")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0,
+            stdout="file.py\ntest.py",
+            stderr="",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -1113,11 +1412,17 @@ class TestQualityGatesSpecCompleteness:
 class TestQualityGatesCustomValidations:
     """Tests for custom validation rules."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_custom_validations_command_success(self, mock_run):
         """Test running custom command validation successfully."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         work_item = {
             "validation_rules": [
                 {"type": "command", "command": "echo test", "name": "Test command"}
@@ -1134,11 +1439,17 @@ class TestQualityGatesCustomValidations:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_custom_validations_command_failure(self, mock_run):
         """Test running custom command validation that fails."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         work_item = {
             "validation_rules": [
                 {
@@ -1208,11 +1519,17 @@ class TestQualityGatesCustomValidations:
         # Assert
         assert passed is False
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_custom_validations_grep_pattern_found(self, mock_run):
         """Test grep validation when pattern is found."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         work_item = {
             "validation_rules": [
                 {
@@ -1233,11 +1550,17 @@ class TestQualityGatesCustomValidations:
         # Assert
         assert passed is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_custom_validations_grep_pattern_not_found(self, mock_run):
         """Test grep validation when pattern is not found."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         work_item = {
             "validation_rules": [
                 {
@@ -1626,7 +1949,7 @@ class TestQualityGatesIntegration:
         assert results["status"] == "skipped"
         assert results["reason"] == "not integration test"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_validate_integration_environment_docker_available(self, mock_run):
         """Test validating integration environment with Docker available."""
         # Arrange
@@ -1638,10 +1961,16 @@ class TestQualityGatesIntegration:
             },
         }
 
-        mock_run.side_effect = [
-            Mock(returncode=0),  # docker --version
-            Mock(returncode=0),  # docker-compose --version
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["docker"], duration_seconds=0.1
+            ),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["docker-compose"], duration_seconds=0.1
+            ),
         ]
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -1655,7 +1984,7 @@ class TestQualityGatesIntegration:
         assert results["docker_available"] is True
         assert results["docker_compose_available"] is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_validate_integration_environment_docker_not_available(self, mock_run):
         """Test validating integration environment without Docker."""
         # Arrange
@@ -1664,7 +1993,17 @@ class TestQualityGatesIntegration:
             "environment_requirements": {"config_files": []},
         }
 
-        mock_run.side_effect = FileNotFoundError("docker not found")
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="docker not found",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -1677,7 +2016,8 @@ class TestQualityGatesIntegration:
         assert passed is False
         assert results["docker_available"] is False
 
-    def test_validate_integration_environment_missing_config_files(self):
+    @patch("sdd.quality.gates.CommandRunner")
+    def test_validate_integration_environment_missing_config_files(self, mock_run):
         """Test validating integration environment with missing config files."""
         # Arrange
         work_item = {
@@ -1688,14 +2028,23 @@ class TestQualityGatesIntegration:
             },
         }
 
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["docker"], duration_seconds=0.1
+            ),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["docker-compose"], duration_seconds=0.1
+            ),
+        ]
+        mock_run.return_value = mock_runner
+
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
-            with patch.object(Path, "exists", return_value=False):
-                passed, results = gates.validate_integration_environment(work_item)
+        with patch.object(Path, "exists", return_value=False):
+            passed, results = gates.validate_integration_environment(work_item)
 
         # Assert
         assert passed is False
@@ -1917,11 +2266,17 @@ class TestQualityGatesDeployment:
 class TestQualityGatesHelperMethods:
     """Tests for helper methods and edge cases."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_command_validation_success(self, mock_run):
         """Test running command validation successfully."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         rule = {"command": "echo test"}
 
         with patch.object(Path, "exists", return_value=False):
@@ -1933,11 +2288,17 @@ class TestQualityGatesHelperMethods:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_command_validation_failure(self, mock_run):
         """Test running command validation that fails."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         rule = {"command": "false"}
 
         with patch.object(Path, "exists", return_value=False):
@@ -1949,11 +2310,19 @@ class TestQualityGatesHelperMethods:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_command_validation_exception(self, mock_run):
         """Test running command validation with exception."""
         # Arrange
-        mock_run.side_effect = Exception("Command failed")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Command failed",
+            command=["invalid"],
+            duration_seconds=0.1,
+        )
+        mock_run.return_value = mock_runner
         rule = {"command": "invalid"}
 
         with patch.object(Path, "exists", return_value=False):
@@ -2027,11 +2396,17 @@ class TestQualityGatesHelperMethods:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_grep_validation_pattern_found(self, mock_run):
         """Test running grep validation when pattern is found."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         rule = {"pattern": "TODO", "files": "."}
 
         with patch.object(Path, "exists", return_value=False):
@@ -2043,11 +2418,17 @@ class TestQualityGatesHelperMethods:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_grep_validation_pattern_not_found(self, mock_run):
         """Test running grep validation when pattern is not found."""
         # Arrange
-        mock_run.return_value = Mock(returncode=1)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+        )
+
+        mock_run.return_value = mock_runner
         rule = {"pattern": "NOTFOUND", "files": "."}
 
         with patch.object(Path, "exists", return_value=False):
@@ -2059,11 +2440,15 @@ class TestQualityGatesHelperMethods:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_grep_validation_exception(self, mock_run):
         """Test running grep validation with exception."""
         # Arrange
-        mock_run.side_effect = Exception("grep failed")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1, stdout="", stderr="grep failed", command=["grep"], duration_seconds=0.1
+        )
+        mock_run.return_value = mock_runner
         rule = {"pattern": "test", "files": "."}
 
         with patch.object(Path, "exists", return_value=False):
@@ -2093,11 +2478,19 @@ class TestQualityGatesHelperMethods:
 class TestQualityGatesAdditionalCoverage:
     """Additional tests to increase coverage for quality_gates.py."""
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_tests_general_exception(self, mock_run):
         """Test running tests with general exception."""
         # Arrange
-        mock_run.side_effect = Exception("Unexpected error")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Unexpected error",
+            command=["pytest"],
+            duration_seconds=0.1,
+        )
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2108,9 +2501,9 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert passed is False
         assert results["status"] == "failed"
-        assert "Unexpected error" in results["reason"]
+        assert "Unexpected error" in results["errors"]
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_bandit_invalid_json(self, mock_close, mock_run, temp_dir):
         """Test security scan with invalid JSON in bandit output."""
@@ -2119,7 +2512,13 @@ class TestQualityGatesAdditionalCoverage:
         temp_file.write_text("invalid json content")
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -2130,7 +2529,7 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert passed is True  # Should pass since invalid JSON is skipped
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_bandit_empty_file(self, mock_close, mock_run, temp_dir):
         """Test security scan with empty bandit output file."""
@@ -2139,7 +2538,13 @@ class TestQualityGatesAdditionalCoverage:
         temp_file.write_text("")
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+            mock_runner = Mock()
+
+            mock_runner.run.return_value = CommandResult(
+                returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            )
+
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -2150,7 +2555,7 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert passed is True  # Should pass since empty file is skipped
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_with_safety_results(self, mock_close, mock_run, temp_dir):
         """Test security scan with both bandit and safety results."""
@@ -2162,10 +2567,20 @@ class TestQualityGatesAdditionalCoverage:
         safety_data = [{"vulnerability": "CVE-2023-1234", "severity": "high"}]
 
         with patch("tempfile.mkstemp", return_value=(999, str(temp_file))):
-            mock_run.side_effect = [
-                Mock(returncode=0, stdout="", stderr=""),  # bandit
-                Mock(returncode=1, stdout=json.dumps(safety_data), stderr=""),  # safety
+            mock_runner = Mock()
+            mock_runner.run.side_effect = [
+                CommandResult(
+                    returncode=0, stdout="", stderr="", command=["bandit"], duration_seconds=0.1
+                ),
+                CommandResult(
+                    returncode=0,
+                    stdout=json.dumps(safety_data),
+                    stderr="",
+                    command=["safety"],
+                    duration_seconds=0.1,
+                ),
             ]
+            mock_run.return_value = mock_runner
 
             with patch.object(Path, "exists", return_value=False):
                 gates = QualityGates()
@@ -2177,11 +2592,19 @@ class TestQualityGatesAdditionalCoverage:
         assert "safety" in results
         assert len(results["vulnerabilities"]) > 0
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_security_scan_invalid_fail_on_threshold(self, mock_run):
         """Test security scan with invalid fail_on threshold."""
         # Arrange
-        mock_run.side_effect = FileNotFoundError()
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="bandit not found",
+            command=["bandit"],
+            duration_seconds=0.1,
+        )
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2196,11 +2619,22 @@ class TestQualityGatesAdditionalCoverage:
         # Should default to "HIGH" when invalid threshold specified
         assert passed is True
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_timeout(self, mock_run):
         """Test linting with timeout exception."""
         # Arrange
-        mock_run.side_effect = subprocess.TimeoutExpired("ruff", 120)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["pytest"],
+            duration_seconds=300.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2213,11 +2647,22 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_run_formatting_timeout(self, mock_run):
         """Test formatting with timeout exception."""
         # Arrange
-        mock_run.side_effect = subprocess.TimeoutExpired("ruff", 120)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["pytest"],
+            duration_seconds=300.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2232,11 +2677,15 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_changelog_git_exception(self, mock_run):
         """Test CHANGELOG check with git exception."""
         # Arrange
-        mock_run.side_effect = Exception("git error")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1, stdout="", stderr="git error", command=["git"], duration_seconds=0.1
+        )
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2247,11 +2696,22 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert result is True  # Should skip check on error
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_python_docstrings_timeout(self, mock_run):
         """Test Python docstring check with timeout."""
         # Arrange
-        mock_run.side_effect = subprocess.TimeoutExpired("pydocstyle", 30)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["pytest"],
+            duration_seconds=300.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2262,11 +2722,15 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert result is True  # Should skip check on timeout
 
-    @patch("sdd.quality.gates.subprocess.run")
+    @patch("sdd.quality.gates.CommandRunner")
     def test_check_readme_current_exception(self, mock_run):
         """Test README check with exception."""
         # Arrange
-        mock_run.side_effect = Exception("git error")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1, stdout="", stderr="git error", command=["git"], duration_seconds=0.1
+        )
+        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
@@ -2410,20 +2874,27 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert len(results["validations"]) == 1
 
-    def test_run_command_validation_timeout(self):
+    @patch("sdd.quality.gates.CommandRunner")
+    def test_run_command_validation_timeout(self, mock_run):
         """Test command validation with timeout."""
         # Arrange
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="",
+            timed_out=True,
+            command=["sleep"],
+            duration_seconds=60.0,
+        )
+        mock_run.return_value = mock_runner
         rule = {"command": "sleep 100"}
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
         # Act
-        with patch(
-            "sdd.quality.gates.subprocess.run",
-            side_effect=subprocess.TimeoutExpired("sleep", 60),
-        ):
-            result = gates._run_command_validation(rule)
+        result = gates._run_command_validation(rule)
 
         # Assert
         assert result is False

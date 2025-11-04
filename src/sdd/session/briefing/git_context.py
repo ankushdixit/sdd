@@ -5,10 +5,10 @@ Part of the briefing module decomposition.
 """
 
 import json
-import subprocess
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.logging_config import get_logger
 from sdd.core.types import GitStatus, WorkItemStatus
 
@@ -20,7 +20,7 @@ class GitContext:
 
     def __init__(self):
         """Initialize git context handler."""
-        pass
+        self.runner = CommandRunner(default_timeout=5)
 
     def check_git_status(self) -> dict[str, any]:
         """Check git status for session start.
@@ -53,38 +53,27 @@ class GitContext:
         parent_branch = git_info.get("parent_branch", "main")
 
         # Check 1: Is branch merged?
-        try:
-            result = subprocess.run(
-                ["git", "branch", "--merged", parent_branch],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0 and branch_name in result.stdout:
-                logger.debug(f"Branch {branch_name} is merged to {parent_branch}")
-                return GitStatus.MERGED.value
-        except Exception as e:
-            logger.debug(f"Error checking if branch merged: {e}")
+        result = self.runner.run(["git", "branch", "--merged", parent_branch])
+        if result.success and branch_name in result.stdout:
+            logger.debug(f"Branch {branch_name} is merged to {parent_branch}")
+            return GitStatus.MERGED.value
 
         # Check 2: Does PR exist? (requires gh CLI)
-        try:
-            result = subprocess.run(
-                [
-                    "gh",
-                    "pr",
-                    "list",
-                    "--head",
-                    branch_name,
-                    "--state",
-                    "all",
-                    "--json",
-                    "number,state",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0 and result.stdout.strip():
+        result = self.runner.run(
+            [
+                "gh",
+                "pr",
+                "list",
+                "--head",
+                branch_name,
+                "--state",
+                "all",
+                "--json",
+                "number,state",
+            ]
+        )
+        if result.success and result.stdout.strip():
+            try:
                 prs = json.loads(result.stdout)
                 if prs:
                     pr = prs[0]  # Get first/most recent PR
@@ -99,40 +88,24 @@ class GitContext:
                     elif pr_state == "OPEN":
                         logger.debug(f"Branch {branch_name} has open PR")
                         return GitStatus.PR_CREATED.value
-        except FileNotFoundError:
-            logger.debug("gh CLI not available, skipping PR status check")
-        except Exception as e:
-            logger.debug(f"Error checking PR status: {e}")
+            except json.JSONDecodeError as e:
+                logger.debug(f"Error parsing PR JSON: {e}")
+        else:
+            logger.debug("gh CLI not available or no PRs found")
 
         # Check 3: Does branch still exist locally?
-        try:
-            result = subprocess.run(
-                ["git", "show-ref", "--verify", f"refs/heads/{branch_name}"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                logger.debug(f"Branch {branch_name} exists locally")
-                # Branch exists locally, no PR found
-                return GitStatus.READY_FOR_PR.value
-        except Exception as e:
-            logger.debug(f"Error checking local branch: {e}")
+        result = self.runner.run(["git", "show-ref", "--verify", f"refs/heads/{branch_name}"])
+        if result.success:
+            logger.debug(f"Branch {branch_name} exists locally")
+            # Branch exists locally, no PR found
+            return GitStatus.READY_FOR_PR.value
 
         # Check 4: Does branch exist remotely?
-        try:
-            result = subprocess.run(
-                ["git", "ls-remote", "--heads", "origin", branch_name],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                logger.debug(f"Branch {branch_name} exists remotely")
-                # Branch exists remotely, no PR found
-                return GitStatus.READY_FOR_PR.value
-        except Exception as e:
-            logger.debug(f"Error checking remote branch: {e}")
+        result = self.runner.run(["git", "ls-remote", "--heads", "origin", branch_name])
+        if result.success and result.stdout.strip():
+            logger.debug(f"Branch {branch_name} exists remotely")
+            # Branch exists remotely, no PR found
+            return GitStatus.READY_FOR_PR.value
 
         # Branch doesn't exist and no PR found
         logger.debug(f"Branch {branch_name} not found locally or remotely")

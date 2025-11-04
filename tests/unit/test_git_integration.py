@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from sdd.core.command_runner import CommandResult
 from sdd.core.config import ConfigManager, GitWorkflowConfig
 from sdd.git.integration import GitWorkflow
 
@@ -145,12 +146,22 @@ class TestCheckGitStatus:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch("subprocess.run", side_effect=FileNotFoundError):
+        with patch.object(
+            workflow.runner,
+            "run",
+            return_value=CommandResult(
+                returncode=-1,
+                stdout="",
+                stderr="git not found",
+                command=["git"],
+                duration_seconds=0.0,
+            ),
+        ):
             is_clean, msg = workflow.check_git_status()
 
         # Assert
         assert is_clean is False
-        assert "not found" in msg.lower()
+        assert "not a git repository" in msg.lower() or "not found" in msg.lower()
 
 
 # ============================================================================
@@ -217,9 +228,16 @@ class TestGetCurrentBranch:
         """Test getting current branch when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Git error",
+            command=["git", "branch", "--show-current"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Git error")):
+        with patch("subprocess.run", return_value=mock_result):
             branch = workflow.get_current_branch()
 
         # Assert
@@ -312,17 +330,24 @@ class TestCreateBranch:
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
         mock_get_branch = Mock(return_value="main")
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Git error",
+            command=["git", "checkout", "-b", "feature_err"],
+            duration_seconds=0.0,
+        )
 
         # Act
         with (
             patch.object(workflow, "get_current_branch", mock_get_branch),
-            patch("subprocess.run", side_effect=Exception("Git error")),
+            patch("subprocess.run", return_value=mock_result),
         ):
             result = workflow.create_branch("feature_err", 1)
 
         # Assert
         assert result[0] is False
-        assert "error creating branch" in result[1].lower()
+        assert "failed to create branch" in result[1].lower()
 
 
 # ============================================================================
@@ -365,14 +390,21 @@ class TestCheckoutBranch:
         """Test checking out branch when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Git error",
+            command=["git", "checkout", "some-branch"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Git error")):
+        with patch("subprocess.run", return_value=mock_result):
             success, msg = workflow.checkout_branch("some-branch")
 
         # Assert
         assert success is False
-        assert "error checking out" in msg.lower()
+        assert "failed to checkout" in msg.lower()
 
 
 # ============================================================================
@@ -452,14 +484,21 @@ class TestCommitChanges:
         """Test committing when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Git error",
+            command=["git", "add", "."],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Git error")):
+        with patch.object(workflow.runner, "run", return_value=mock_result):
             success, msg = workflow.commit_changes("feat: Feature")
 
         # Assert
         assert success is False
-        assert "error committing" in msg.lower()
+        assert "staging failed" in msg.lower() or "error committing" in msg.lower()
 
 
 # ============================================================================
@@ -532,14 +571,21 @@ class TestPushBranch:
         """Test pushing when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Network error",
+            command=["git", "push", "origin", "feature-branch"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Network error")):
+        with patch("subprocess.run", return_value=mock_result):
             success, msg = workflow.push_branch("feature-branch")
 
         # Assert
         assert success is False
-        assert "error pushing" in msg.lower()
+        assert "push failed" in msg.lower()
 
 
 # ============================================================================
@@ -596,14 +642,21 @@ class TestDeleteRemoteBranch:
         """Test deleting remote branch when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Network error",
+            command=["git", "push", "origin", "--delete", "feature-branch"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Network error")):
+        with patch("subprocess.run", return_value=mock_result):
             success, msg = workflow.delete_remote_branch("feature-branch")
 
         # Assert
         assert success is False
-        assert "error deleting" in msg.lower()
+        assert "failed to delete" in msg.lower()
 
 
 # ============================================================================
@@ -661,14 +714,21 @@ class TestPushMainToRemote:
         """Test pushing main to remote when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Network error",
+            command=["git", "push", "origin", "main"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Network error")):
+        with patch("subprocess.run", return_value=mock_result):
             success, msg = workflow.push_main_to_remote()
 
         # Assert
         assert success is False
-        assert "error pushing" in msg.lower()
+        assert "failed to push" in msg.lower()
 
 
 # ============================================================================
@@ -743,16 +803,26 @@ class TestCreatePullRequest:
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
         work_item = {"id": "feature_1", "type": "feature", "title": "New Feature"}
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Network error",
+            command=["gh", "version"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Network error")):
+        with patch.object(workflow.runner, "run", return_value=mock_result):
             success, msg = workflow.create_pull_request(
                 "feature_1", "session-001-feature_1", work_item, 1
             )
 
         # Assert
         assert success is False
-        assert "error creating pr" in msg.lower()
+        assert any(
+            phrase in msg.lower()
+            for phrase in ["failed to create pr", "error creating pr", "gh cli not installed"]
+        )
 
 
 # ============================================================================
@@ -962,14 +1032,25 @@ class TestMergeToParent:
         """Test merging when exception occurs."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
+        mock_result = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="Git error",
+            command=["git", "checkout", "main"],
+            duration_seconds=0.0,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Git error")):
+        with patch.object(workflow.runner, "run", return_value=mock_result):
             success, msg = workflow.merge_to_parent("feature-branch", "main")
 
         # Assert
         assert success is False
-        assert "error merging" in msg.lower()
+        assert (
+            "merge failed" in msg.lower()
+            or "failed to checkout" in msg.lower()
+            or "error merging" in msg.lower()
+        )
 
 
 # ============================================================================

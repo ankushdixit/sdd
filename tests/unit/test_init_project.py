@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from sdd.core.command_runner import CommandResult
 from sdd.project.init import (
     check_or_init_git,
     create_initial_commit,
@@ -95,7 +96,9 @@ class TestCheckOrInitGit:
     def test_git_initialization_success(self, mock_run, temp_project, capsys):
         """Test successful git initialization."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0)
+        mock_run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git", "init"], duration_seconds=0.0
+        )
 
         # Act
         result = check_or_init_git(temp_project)
@@ -455,7 +458,13 @@ class TestInstallDependencies:
         """Test successful npm dependency installation."""
         # Arrange
         monkeypatch.chdir(temp_project)
-        mock_run.return_value = Mock(returncode=0)
+        mock_run.return_value = CommandResult(
+            returncode=0,
+            stdout="",
+            stderr="",
+            command=["npm", "install"],
+            duration_seconds=0.0,
+        )
 
         # Act
         install_dependencies("typescript")
@@ -464,7 +473,9 @@ class TestInstallDependencies:
         # Assert
         assert "Installing npm dependencies" in captured.out
         assert "Dependencies installed" in captured.out
-        mock_run.assert_called_once_with(["npm", "install"], check=True)
+        # CommandRunner.run() is called with different signature than subprocess.run()
+        mock_run.assert_called_once()
+        assert mock_run.call_args[0][0] == ["npm", "install"]
 
     @patch("subprocess.run")
     def test_install_npm_dependencies_failure(self, mock_run, temp_project, monkeypatch, capsys):
@@ -496,8 +507,9 @@ class TestInstallDependencies:
                 venv_dir.mkdir()
                 pip_path.parent.mkdir(parents=True)
                 pip_path.write_text("#!/usr/bin/env python")
-                return Mock(returncode=0)
-            return Mock(returncode=0)
+            return CommandResult(
+                returncode=0, stdout="", stderr="", command=cmd, duration_seconds=0.0
+            )
 
         mock_run.side_effect = run_side_effect
 
@@ -522,7 +534,9 @@ class TestInstallDependencies:
         pip_path = venv_dir / "bin" / "pip"
         pip_path.parent.mkdir(parents=True)
         pip_path.write_text("#!/usr/bin/env python")
-        mock_run.return_value = Mock(returncode=0)
+        mock_run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["pip", "install"], duration_seconds=0.0
+        )
 
         # Act
         install_dependencies("python")
@@ -641,7 +655,9 @@ class TestRunInitialScans:
         """Test successful initial scans."""
         # Arrange
         monkeypatch.chdir(temp_project)
-        mock_run.return_value = Mock(returncode=0, stderr="")
+        mock_run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["python"], duration_seconds=0.0
+        )
 
         # Act
         run_initial_scans()
@@ -659,7 +675,9 @@ class TestRunInitialScans:
         monkeypatch.chdir(temp_project)
         mock_run.side_effect = [
             subprocess.CalledProcessError(1, "generate_stack.py", stderr="Error"),
-            Mock(returncode=0),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["python"], duration_seconds=0.0
+            ),
         ]
 
         # Act
@@ -667,7 +685,7 @@ class TestRunInitialScans:
         captured = capsys.readouterr()
 
         # Assert
-        assert "Could not generate stack.txt" in captured.out
+        assert "Stack generation failed" in captured.out
 
     @patch("subprocess.run")
     def test_run_initial_scans_timeout(self, mock_run, temp_project, monkeypatch, capsys):
@@ -681,7 +699,8 @@ class TestRunInitialScans:
         captured = capsys.readouterr()
 
         # Assert
-        assert "Stack generation timed out" in captured.out
+        assert "Stack generation failed" in captured.out
+        assert "timed out" in captured.out
 
 
 class TestEnsureGitignoreEntries:
@@ -789,8 +808,12 @@ class TestCreateInitialCommit:
         # Third call creates commit
         mock_run.side_effect = [
             subprocess.CalledProcessError(128, "git rev-list"),  # No commits yet
-            Mock(returncode=0),  # git add
-            Mock(returncode=0),  # git commit
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["git", "add"], duration_seconds=0.0
+            ),  # git add
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["git", "commit"], duration_seconds=0.0
+            ),  # git commit
         ]
 
         # Act
@@ -806,7 +829,9 @@ class TestCreateInitialCommit:
     def test_create_initial_commit_already_has_commits(self, mock_run, temp_project, capsys):
         """Test when repository already has commits."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="5\n")
+        mock_run.return_value = CommandResult(
+            returncode=0, stdout="5\n", stderr="", command=["git", "rev-list"], duration_seconds=0.0
+        )
 
         # Act
         result = create_initial_commit(temp_project)
@@ -823,7 +848,9 @@ class TestCreateInitialCommit:
         # Arrange
         mock_run.side_effect = [
             subprocess.CalledProcessError(128, "git rev-list"),  # No commits
-            Mock(returncode=0),  # git add succeeds
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["git", "add"], duration_seconds=0.0
+            ),  # git add succeeds
             subprocess.CalledProcessError(1, "git commit"),  # commit fails
         ]
 
@@ -841,8 +868,12 @@ class TestCreateInitialCommit:
         # Arrange
         mock_run.side_effect = [
             subprocess.CalledProcessError(128, "git rev-list"),
-            Mock(returncode=0),
-            Mock(returncode=0),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["git", "add"], duration_seconds=0.0
+            ),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["git", "commit"], duration_seconds=0.0
+            ),
         ]
 
         # Act

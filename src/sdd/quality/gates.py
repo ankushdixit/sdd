@@ -13,10 +13,10 @@ Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
 """
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
 
 # Import logging
@@ -46,6 +46,9 @@ class QualityGates:
         config_manager = get_config_manager()
         config_manager.load_config(config_path)
         self.config = config_manager.quality_gates  # QualityGatesConfig dataclass
+
+        # Initialize command runner
+        self.runner = CommandRunner(default_timeout=120)
 
     def _load_full_config(self) -> dict:
         """Load full configuration file for optional sections (context7, custom_validations, etc.)."""
@@ -83,53 +86,51 @@ class QualityGates:
             return True, {"status": "skipped", "reason": f"no command for {language}"}
 
         # Run tests
-        try:
-            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=1200)
+        result = self.runner.run(command.split(), timeout=1200)
 
-            # pytest exit codes:
-            # 0 = all tests passed
-            # 1 = tests were collected and run but some failed
-            # 2 = test execution was interrupted
-            # 3 = internal error
-            # 4 = pytest command line usage error
-            # 5 = no tests were collected
+        # pytest exit codes:
+        # 0 = all tests passed
+        # 1 = tests were collected and run but some failed
+        # 2 = test execution was interrupted
+        # 3 = internal error
+        # 4 = pytest command line usage error
+        # 5 = no tests were collected
 
-            # Treat "no tests collected" (exit code 5) as skipped, not failed
-            if result.returncode == 5:
-                return True, {
-                    "status": "skipped",
-                    "reason": "no tests collected",
-                    "returncode": result.returncode,
-                }
+        if result.timed_out:
+            return False, {"status": "failed", "reason": "timeout"}
 
-            # Parse results
-            passed = result.returncode == 0
-            coverage = self._parse_coverage(language)
+        # Command not found (pytest not available)
+        if result.returncode == -1 and "not found" in result.stderr.lower():
+            return True, {"status": "skipped", "reason": "pytest not available"}
 
-            results = {
-                "status": "passed" if passed else "failed",
+        # Treat "no tests collected" (exit code 5) as skipped, not failed
+        if result.returncode == 5:
+            return True, {
+                "status": "skipped",
+                "reason": "no tests collected",
                 "returncode": result.returncode,
-                "coverage": coverage,
-                "output": result.stdout,
-                "errors": result.stderr,
             }
 
-            # Check coverage threshold
-            threshold = config.coverage_threshold
-            if coverage and coverage < threshold:
-                results["status"] = "failed"
-                results["reason"] = f"Coverage {coverage}% below threshold {threshold}%"
-                passed = False
+        # Parse results
+        passed = result.returncode == 0
+        coverage = self._parse_coverage(language)
 
-            return passed, results
+        results = {
+            "status": "passed" if passed else "failed",
+            "returncode": result.returncode,
+            "coverage": coverage,
+            "output": result.stdout,
+            "errors": result.stderr,
+        }
 
-        except subprocess.TimeoutExpired:
-            return False, {"status": "failed", "reason": "timeout"}
-        except FileNotFoundError:
-            # pytest not available - skip test gate
-            return True, {"status": "skipped", "reason": "pytest not available"}
-        except Exception as e:
-            return False, {"status": "failed", "reason": str(e)}
+        # Check coverage threshold
+        threshold = config.coverage_threshold
+        if coverage and coverage < threshold:
+            results["status"] = "failed"
+            results["reason"] = f"Coverage {coverage}% below threshold {threshold}%"
+            passed = False
+
+        return passed, results
 
     def _detect_language(self) -> str:
         """Detect primary project language."""
@@ -191,7 +192,7 @@ class QualityGates:
                 os.close(fd)  # Close file descriptor, bandit will write to the path
 
                 try:
-                    subprocess.run(
+                    self.runner.run(
                         [
                             "bandit",
                             "-r",
@@ -201,7 +202,6 @@ class QualityGates:
                             "-o",
                             bandit_report_path,
                         ],
-                        capture_output=True,
                         timeout=60,
                     )
 
@@ -228,32 +228,29 @@ class QualityGates:
                         Path(bandit_report_path).unlink()
                     except Exception:
                         pass
-            except (FileNotFoundError, subprocess.TimeoutExpired):
+            except Exception:
                 pass  # bandit not available
 
             # Run safety (scan only project requirements, not entire environment)
-            try:
-                safety_result = subprocess.run(
-                    ["safety", "check", "--file", "requirements.txt", "--json"],
-                    capture_output=True,
-                    timeout=60,
-                )
+            safety_result = self.runner.run(
+                ["safety", "check", "--file", "requirements.txt", "--json"],
+                timeout=60,
+            )
 
-                if safety_result.stdout:
+            if safety_result.success and safety_result.stdout:
+                try:
                     safety_data = json.loads(safety_result.stdout)
                     results["safety"] = safety_data
                     results["vulnerabilities"].extend(safety_data)
-            except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
-                pass  # safety not available
+                except json.JSONDecodeError:
+                    pass  # Invalid JSON from safety
 
         # JavaScript/TypeScript: npm audit
         elif language in ["javascript", "typescript"]:
-            try:
-                audit_result = subprocess.run(
-                    ["npm", "audit", "--json"], capture_output=True, timeout=60
-                )
+            audit_result = self.runner.run(["npm", "audit", "--json"], timeout=60)
 
-                if audit_result.stdout:
+            if audit_result.success and audit_result.stdout:
+                try:
                     audit_data = json.loads(audit_result.stdout)
                     results["npm_audit"] = audit_data
 
@@ -263,8 +260,8 @@ class QualityGates:
                         results["by_severity"][severity] = (
                             results["by_severity"].get(severity, 0) + 1
                         )
-            except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
-                pass  # npm not available
+                except json.JSONDecodeError:
+                    pass  # Invalid JSON from npm audit
 
         # Check if passed based on fail_on threshold
         fail_on = config.fail_on.upper()
@@ -314,25 +311,27 @@ class QualityGates:
         elif auto_fix and language in ["javascript", "typescript"]:
             command += " --fix"
 
-        try:
-            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
+        result = self.runner.run(command.split(), timeout=120)
 
-            passed = result.returncode == 0
-
-            return passed, {
-                "status": "passed" if passed else "failed",
-                "issues_found": result.returncode,
-                "output": result.stdout,
-                "fixed": auto_fix,
-            }
-        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-            # If gate is required but tool not found, treat as failure
+        if result.timed_out:
             if config.required:
-                return False, {
-                    "status": "failed",
-                    "reason": f"Required linting tool not found: {str(e)}",
-                }
-            return True, {"status": "skipped", "reason": str(e)}
+                return False, {"status": "failed", "reason": "Linting timed out"}
+            return True, {"status": "skipped", "reason": "timeout"}
+
+        # Tool not found
+        if result.returncode == -1:
+            if config.required:
+                return False, {"status": "failed", "reason": "Required linting tool not found"}
+            return True, {"status": "skipped", "reason": "linting tool not available"}
+
+        passed = result.returncode == 0
+
+        return passed, {
+            "status": "passed" if passed else "failed",
+            "issues_found": result.returncode,
+            "output": result.stdout,
+            "fixed": auto_fix,
+        }
 
     def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
         """Run code formatting."""
@@ -361,24 +360,26 @@ class QualityGates:
             else:
                 command += " --check"
 
-        try:
-            result = subprocess.run(command.split(), capture_output=True, text=True, timeout=120)
+        result = self.runner.run(command.split(), timeout=120)
 
-            passed = result.returncode == 0
-
-            return passed, {
-                "status": "passed" if passed else "failed",
-                "formatted": auto_fix,
-                "output": result.stdout,
-            }
-        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
-            # If gate is required but tool not found, treat as failure
+        if result.timed_out:
             if config.required:
-                return False, {
-                    "status": "failed",
-                    "reason": f"Required formatting tool not found: {str(e)}",
-                }
-            return True, {"status": "skipped", "reason": str(e)}
+                return False, {"status": "failed", "reason": "Formatting timed out"}
+            return True, {"status": "skipped", "reason": "timeout"}
+
+        # Tool not found
+        if result.returncode == -1:
+            if config.required:
+                return False, {"status": "failed", "reason": "Required formatting tool not found"}
+            return True, {"status": "skipped", "reason": "formatting tool not available"}
+
+        passed = result.returncode == 0
+
+        return passed, {
+            "status": "passed" if passed else "failed",
+            "formatted": auto_fix,
+            "output": result.stdout,
+        }
 
     def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
         """Validate documentation requirements."""
@@ -419,71 +420,52 @@ class QualityGates:
 
     def _check_changelog_updated(self) -> bool:
         """Check if CHANGELOG was updated in the current branch."""
-        try:
-            # Get the current branch name
-            result = subprocess.run(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            current_branch = result.stdout.strip()
-
-            # Don't check if we're on main/master
-            if current_branch in ["main", "master"]:
-                logger.debug("On main/master branch, skipping CHANGELOG check")
-                return True
-
-            # Check if CHANGELOG.md was modified in any commit on this branch
-            result = subprocess.run(
-                ["git", "log", "--name-only", "--pretty=format:", "main..HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            if "CHANGELOG.md" in result.stdout:
-                logger.debug("CHANGELOG updated in branch")
-                return True
-            else:
-                logger.debug("CHANGELOG not updated in branch")
-                return False
-        except Exception as e:
-            logger.debug(f"Could not check CHANGELOG: {e}")
+        # Get the current branch name
+        result = self.runner.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=10)
+        if not result.success:
+            logger.debug("Could not check CHANGELOG: git not available")
             return True  # Skip check if git not available
+
+        current_branch = result.stdout.strip()
+
+        # Don't check if we're on main/master
+        if current_branch in ["main", "master"]:
+            logger.debug("On main/master branch, skipping CHANGELOG check")
+            return True
+
+        # Check if CHANGELOG.md was modified in any commit on this branch
+        result = self.runner.run(
+            ["git", "log", "--name-only", "--pretty=format:", "main..HEAD"],
+            timeout=10,
+        )
+
+        if result.success and "CHANGELOG.md" in result.stdout:
+            logger.debug("CHANGELOG updated in branch")
+            return True
+        else:
+            logger.debug("CHANGELOG not updated in branch")
+            return False
 
     def _check_python_docstrings(self) -> bool:
         """Check if Python functions have docstrings."""
-        try:
-            result = subprocess.run(
-                [sys.executable, "-m", "pydocstyle", "--count"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+        result = self.runner.run([sys.executable, "-m", "pydocstyle", "--count"], timeout=30)
 
-            # If no issues found, return True
-            return result.returncode == 0
-        except FileNotFoundError:
-            # pydocstyle not available, skip check
+        # If pydocstyle not available or timeout, skip check
+        if result.timed_out or result.returncode == -1:
             return True
-        except subprocess.TimeoutExpired:
-            return True
+
+        # If no issues found, return True
+        return result.returncode == 0
 
     def _check_readme_current(self, work_item: dict = None) -> bool:
         """Check if README was updated (optional check)."""
-        try:
-            result = subprocess.run(
-                ["git", "diff", "--name-only", "HEAD~1..HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
+        result = self.runner.run(["git", "diff", "--name-only", "HEAD~1..HEAD"], timeout=10)
 
-            changed_files = result.stdout.strip().split("\n")
-            return any("README" in f.upper() for f in changed_files)
-        except Exception:
+        if not result.success:
             return True  # Skip check if git not available
+
+        changed_files = result.stdout.strip().split("\n")
+        return any("README" in f.upper() for f in changed_files)
 
     def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict]:
         """
@@ -673,11 +655,8 @@ class QualityGates:
         if not command:
             return True
 
-        try:
-            result = subprocess.run(command.split(), capture_output=True, timeout=60)
-            return result.returncode == 0
-        except Exception:
-            return False
+        result = self.runner.run(command.split(), timeout=60)
+        return result.success
 
     def _check_file_exists(self, rule: dict) -> bool:
         """Check if file exists at path."""
@@ -695,12 +674,9 @@ class QualityGates:
         if not pattern:
             return True
 
-        try:
-            result = subprocess.run(["grep", "-r", pattern, files], capture_output=True, timeout=30)
-            # grep returns 0 if pattern found
-            return result.returncode == 0
-        except Exception:
-            return False
+        result = self.runner.run(["grep", "-r", pattern, files], timeout=30)
+        # grep returns 0 if pattern found
+        return result.success
 
     def check_required_gates(self) -> tuple[bool, list[str]]:
         """
@@ -851,18 +827,12 @@ class QualityGates:
         }
 
         # Check Docker available
-        try:
-            result = subprocess.run(["docker", "--version"], capture_output=True, timeout=5)
-            results["docker_available"] = result.returncode == 0
-        except Exception:
-            results["docker_available"] = False
+        result = self.runner.run(["docker", "--version"], timeout=5)
+        results["docker_available"] = result.success
 
         # Check Docker Compose available
-        try:
-            result = subprocess.run(["docker-compose", "--version"], capture_output=True, timeout=5)
-            results["docker_compose_available"] = result.returncode == 0
-        except Exception:
-            results["docker_compose_available"] = False
+        result = self.runner.run(["docker-compose", "--version"], timeout=5)
+        results["docker_compose_available"] = result.success
 
         # Check compose file exists
         compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")

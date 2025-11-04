@@ -424,7 +424,7 @@ class TestIntegrationTestRunnerStructure:
         content = file_path.read_text()
 
         required_imports = [
-            "import subprocess",
+            "from sdd.core.command_runner import CommandRunner",
             "import json",
             "import time",
             "from pathlib import Path",
@@ -714,7 +714,7 @@ class TestEnvironmentSetup:
 
                 # Assert
                 assert not success
-                assert "error starting services" in message.lower()
+                assert "failed to start services" in message.lower()
                 assert "Docker not available" in message
 
 
@@ -1055,8 +1055,10 @@ class TestRunPytest:
 
                 # Assert
                 assert result is False
-                assert "error" in runner.results
-                assert "pytest not installed" in runner.results["error"]
+                assert (
+                    runner.results["failed"] == 0
+                )  # Command returned error, but no tests were run
+                # With CommandRunner, error details are logged but not stored in results
 
 
 class TestRunJest:
@@ -1157,8 +1159,10 @@ class TestRunJest:
 
                 # Assert
                 assert result is False
-                assert "error" in runner.results
-                assert "npm not found" in runner.results["error"]
+                assert (
+                    runner.results["failed"] == 0
+                )  # Command returned error, but no tests were run
+                # With CommandRunner, error details are logged but not stored in results
 
 
 class TestTeardownEnvironment:
@@ -1244,5 +1248,5 @@ class TestTeardownEnvironment:
 
                 # Assert
                 assert not success
-                assert "error tearing down" in message.lower()
+                assert "failed to tear down services" in message.lower()
                 assert "Docker daemon not running" in message

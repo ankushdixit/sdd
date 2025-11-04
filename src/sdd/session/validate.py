@@ -10,9 +10,9 @@ Updated in Phase 5.7.3 to use spec_parser for checking work item completeness.
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.types import WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items import spec_parser
@@ -26,30 +26,19 @@ class SessionValidator:
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
         self.quality_gates = QualityGates(self.session_dir / "config.json")
+        self.runner = CommandRunner(default_timeout=5, working_dir=self.project_root)
 
     def check_git_status(self) -> dict:
         """Check git working directory status."""
         try:
             # Check if clean or has expected changes
-            result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+            result = self.runner.run(["git", "status", "--porcelain"])
 
-            if result.returncode != 0:
+            if not result.success:
                 return {"passed": False, "message": "Not a git repository or git error"}
 
             # Check branch
-            branch_result = subprocess.run(
-                ["git", "branch", "--show-current"],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+            branch_result = self.runner.run(["git", "branch", "--show-current"])
             current_branch = branch_result.stdout.strip()
 
             # Get status lines

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class TestExecutionConfig:
+class ExecutionConfig:
     """Test execution configuration."""
 
     enabled: bool = True
@@ -94,7 +94,7 @@ class SpecCompletenessConfig:
 class QualityGatesConfig:
     """Quality gates configuration."""
 
-    test_execution: TestExecutionConfig = field(default_factory=TestExecutionConfig)
+    test_execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     linting: LintingConfig = field(default_factory=LintingConfig)
     formatting: FormattingConfig = field(default_factory=FormattingConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
@@ -235,9 +235,9 @@ class ConfigManager:
             spec_completeness_data = data.get("spec_completeness", {})
 
             return QualityGatesConfig(
-                test_execution=TestExecutionConfig(**test_exec_data)
+                test_execution=ExecutionConfig(**test_exec_data)
                 if test_exec_data
-                else TestExecutionConfig(),
+                else ExecutionConfig(),
                 linting=LintingConfig(**linting_data) if linting_data else LintingConfig(),
                 formatting=FormattingConfig(**formatting_data)
                 if formatting_data
