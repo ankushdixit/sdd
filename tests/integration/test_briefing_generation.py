@@ -551,12 +551,13 @@ class TestBriefingGeneratorFileStructure:
     """Test that briefing_generator.py file has required functions."""
 
     def test_briefing_generator_has_integration_briefing_function(self):
-        """Test that briefing_generator.py contains integration briefing function.
+        """Test that briefing formatter contains integration briefing function.
 
+        After refactoring, this function is in the formatter module.
         The module should export generate_integration_test_briefing function.
         """
         # Arrange
-        briefing_file = Path("src/sdd/session/briefing.py")
+        briefing_file = Path("src/sdd/session/briefing/formatter.py")
 
         # Act
         content = briefing_file.read_text()
@@ -566,13 +567,14 @@ class TestBriefingGeneratorFileStructure:
         assert "def generate_integration_test_briefing" in content
 
     def test_briefing_generator_has_check_command_exists_function(self):
-        """Test that briefing_generator.py contains check_command_exists utility.
+        """Test that briefing formatter contains check_command_exists utility.
 
+        After refactoring, this function is in the formatter module.
         The module should export check_command_exists function for checking
         if required commands are available.
         """
         # Arrange
-        briefing_file = Path("src/sdd/session/briefing.py")
+        briefing_file = Path("src/sdd/session/briefing/formatter.py")
 
         # Act
         content = briefing_file.read_text()

@@ -123,7 +123,9 @@ class GitStatus(str, Enum):
     READY_TO_MERGE = "ready_to_merge"
     READY_FOR_PR = "ready_for_pr"
     PR_CREATED = "pr_created"
+    PR_CLOSED = "pr_closed"
     MERGED = "merged"
+    DELETED = "deleted"
 
     def __str__(self) -> str:
         """Return the string value of the enum."""
