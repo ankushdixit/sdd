@@ -1118,7 +1118,7 @@ class TestGenerateBriefing:
 
         # Assert
         assert "Environment Status" in result
-        assert "Python: 3.11" in result
+        assert "Python: " in result  # Accept any Python version
         assert "Git: git version" in result  # Accept any git version format
 
     @patch("sdd.session.briefing.load_project_docs")
