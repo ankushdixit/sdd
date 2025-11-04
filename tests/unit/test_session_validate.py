@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from sdd.core.command_runner import CommandResult
 from sdd.session.validate import SessionValidator
 
 
@@ -112,15 +113,20 @@ class TestCheckGitStatus:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        mock_result = Mock()
-        mock_result.returncode = 0
-        mock_result.stdout = ""  # Clean directory
+        mock_status = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
+        )
 
-        mock_branch = Mock()
-        mock_branch.stdout = "main\n"
+        mock_branch = CommandResult(
+            returncode=0,
+            stdout="main\n",
+            stderr="",
+            command=["git", "branch"],
+            duration_seconds=0.1,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=[mock_result, mock_branch]):
+        with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
             result = validator.check_git_status()
 
         # Assert
@@ -136,15 +142,24 @@ class TestCheckGitStatus:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        mock_result = Mock()
-        mock_result.returncode = 0
-        mock_result.stdout = " M src/main.py\n M tests/test_foo.py\n"
+        mock_status = CommandResult(
+            returncode=0,
+            stdout=" M src/main.py\n M tests/test_foo.py\n",
+            stderr="",
+            command=["git", "status"],
+            duration_seconds=0.1,
+        )
 
-        mock_branch = Mock()
-        mock_branch.stdout = "feature-branch\n"
+        mock_branch = CommandResult(
+            returncode=0,
+            stdout="feature-branch\n",
+            stderr="",
+            command=["git", "branch"],
+            duration_seconds=0.1,
+        )
 
         # Act
-        with patch("subprocess.run", side_effect=[mock_result, mock_branch]):
+        with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
             result = validator.check_git_status()
 
         # Assert
@@ -159,14 +174,16 @@ class TestCheckGitStatus:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        mock_result = Mock()
-        mock_result.returncode = 0
-        mock_result.stdout = (
-            " M .session/tracking/status_update.json\n M .session/tracking/work_items.json\n"
+        mock_status = CommandResult(
+            returncode=0,
+            stdout=" M .session/tracking/status_update.json\n M .session/tracking/work_items.json\n",
+            stderr="",
+            command=["git", "status"],
+            duration_seconds=0.1,
         )
 
         # Act
-        with patch("subprocess.run", return_value=mock_result):
+        with patch.object(validator.runner, "run", return_value=mock_status):
             result = validator.check_git_status()
 
         # Assert
@@ -181,11 +198,16 @@ class TestCheckGitStatus:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        mock_result = Mock()
-        mock_result.returncode = 128  # Git error code for "not a git repository"
+        mock_status = CommandResult(
+            returncode=128,  # Git error code for "not a git repository"
+            stdout="",
+            stderr="",
+            command=["git", "status"],
+            duration_seconds=0.1,
+        )
 
         # Act
-        with patch("subprocess.run", return_value=mock_result):
+        with patch.object(validator.runner, "run", return_value=mock_status):
             result = validator.check_git_status()
 
         # Assert
@@ -200,7 +222,7 @@ class TestCheckGitStatus:
             validator = SessionValidator(project_root=project_root)
 
         # Act
-        with patch("subprocess.run", side_effect=Exception("Git command failed")):
+        with patch.object(validator.runner, "run", side_effect=Exception("Git command failed")):
             result = validator.check_git_status()
 
         # Assert
@@ -743,12 +765,17 @@ class TestValidate:
             validator = SessionValidator(project_root=project_root)
 
         # Mock all checks to pass
-        mock_git_result = Mock()
-        mock_git_result.returncode = 0
-        mock_git_result.stdout = ""
+        mock_status = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
+        )
 
-        mock_branch = Mock()
-        mock_branch.stdout = "main\n"
+        mock_branch = CommandResult(
+            returncode=0,
+            stdout="main\n",
+            stderr="",
+            command=["git", "branch"],
+            duration_seconds=0.1,
+        )
 
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"],
@@ -757,7 +784,7 @@ class TestValidate:
         }
 
         # Act
-        with patch("subprocess.run", side_effect=[mock_git_result, mock_branch]):
+        with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
             with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 result = validator.validate()
 
@@ -778,11 +805,12 @@ class TestValidate:
             validator = SessionValidator(project_root=project_root)
 
         # Mock git check to fail
-        mock_git_result = Mock()
-        mock_git_result.returncode = 128
+        mock_status = CommandResult(
+            returncode=128, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
+        )
 
         # Act
-        with patch("subprocess.run", return_value=mock_git_result):
+        with patch.object(validator.runner, "run", return_value=mock_status):
             result = validator.validate()
 
         # Assert
@@ -820,12 +848,17 @@ class TestValidate:
             validator = SessionValidator(project_root=project_root)
 
         # Mock git
-        mock_git_result = Mock()
-        mock_git_result.returncode = 0
-        mock_git_result.stdout = ""
+        mock_status = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
+        )
 
-        mock_branch = Mock()
-        mock_branch.stdout = "main\n"
+        mock_branch = CommandResult(
+            returncode=0,
+            stdout="main\n",
+            stderr="",
+            command=["git", "branch"],
+            duration_seconds=0.1,
+        )
 
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"],
@@ -834,7 +867,7 @@ class TestValidate:
         }
 
         # Act
-        with patch("subprocess.run", side_effect=[mock_git_result, mock_branch]):
+        with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
             with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 validator.validate(auto_fix=True)
 

@@ -6,9 +6,10 @@ Tracks structural changes to the project with reasoning.
 """
 
 import json
-import subprocess
 from datetime import datetime
 from pathlib import Path
+
+from sdd.core.command_runner import CommandRunner
 
 
 class TreeGenerator:
@@ -19,6 +20,7 @@ class TreeGenerator:
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
         self.updates_file = self.project_root / ".session" / "tracking" / "tree_updates.json"
+        self.runner = CommandRunner(default_timeout=30, working_dir=self.project_root)
 
         # Items to ignore
         self.ignore_patterns = [
@@ -65,20 +67,14 @@ class TreeGenerator:
             for pattern in self.ignore_patterns:
                 ignore_args.extend(["-I", pattern])
 
-            result = subprocess.run(
-                ["tree", "-a", "--dirsfirst"] + ignore_args,
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=30,
-            )
+            result = self.runner.run(["tree", "-a", "--dirsfirst"] + ignore_args)
 
-            if result.returncode == 0:
+            if result.success:
                 return result.stdout
             else:
                 return self._generate_tree_fallback()
 
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+        except Exception:
             # tree command not available, use fallback
             return self._generate_tree_fallback()
 

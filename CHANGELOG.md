@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Refactor: Consolidate subprocess execution with CommandRunner**
+  - Replaced all direct `subprocess.run()` calls with centralized `CommandRunner` class
+  - Updated 10 production files to use `CommandRunner` for consistent command execution:
+    - `visualization/dependency_graph.py` - Graphviz SVG generation
+    - `session/validate.py` - Git status validation
+    - `session/status.py` - Git diff operations
+    - `session/complete.py` - Stack/tree updates and git operations
+    - `learning/curator.py` - Git log extraction
+    - `testing/performance.py` - wrk load testing and docker operations
+    - `testing/integration_runner.py` - Docker-compose and test execution
+    - `project/tree.py` - Tree command execution
+    - `project/stack.py` - Language version detection
+    - `project/init.py` - Git init and dependency installation
+  - Updated 9 test files with proper `CommandRunner` mocking patterns using `CommandResult` objects
+  - Benefits: consistent error handling, timeout management, retry logic, and centralized logging
+  - Fixed pytest collection warning by renaming `TestExecutionConfig` to `ExecutionConfig`
+  - All 1,563 tests passing with zero warnings
+
 - **Refactor: Decompose briefing.py god-class into modular package**
   - Decomposed monolithic 1,166-line `session/briefing.py` into focused package structure with 9 modules
   - Created `session/briefing/` package with single-responsibility modules averaging ~150 lines each:

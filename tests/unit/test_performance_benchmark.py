@@ -541,7 +541,7 @@ class TestFileStructure:
         content = file_path.read_text()
 
         required_imports = [
-            "import subprocess",
+            "from sdd.core.command_runner import CommandRunner",
             "from pathlib import Path",
             "from datetime import datetime",
             "from sdd.core.file_ops import",
@@ -833,8 +833,8 @@ class TestMeasureResourceUsage:
             result = benchmark._measure_resource_usage()
 
         # Assert
-        assert "failing_service" in result
-        assert "error" in result["failing_service"]
+        assert result == {}  # Command failed, no resource data collected
+        # With CommandRunner, error details are logged but not returned in results dict
 
 
 class TestStoreBaseline:

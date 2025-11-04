@@ -5,9 +5,8 @@ dependency graphs for work items with various visualization and analysis feature
 """
 
 import json
-import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -401,14 +400,22 @@ class TestGenerateAscii:
 class TestGenerateSvg:
     """Tests for generate_svg method."""
 
-    @patch("subprocess.run")
+    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_success(self, mock_run, tmp_path):
         """Test that generate_svg successfully generates SVG file."""
         # Arrange
+        from sdd.core.command_runner import CommandResult
+
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
         dot_content = "digraph { a -> b; }"
-        mock_run.return_value = Mock(returncode=0)
+        mock_run.return_value = CommandResult(
+            returncode=0,
+            stdout="",
+            stderr="",
+            command=["dot", "-Tsvg"],
+            duration_seconds=0.0,
+        )
 
         # Act
         result = viz.generate_svg(dot_content, output_file)
@@ -416,13 +423,14 @@ class TestGenerateSvg:
         # Assert
         assert result is True
         mock_run.assert_called_once()
-        call_args = mock_run.call_args
-        assert call_args[0][0] == ["dot", "-Tsvg", "-o", str(output_file)]
-        assert call_args[1]["input"] == dot_content
-        assert call_args[1]["text"] is True
-        assert call_args[1]["timeout"] == 30
+        # Check that the command includes dot, -Tsvg, and the output file
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0] == "dot"
+        assert "-Tsvg" in call_args
+        assert "-o" in call_args
+        assert str(output_file) in call_args
 
-    @patch("subprocess.run")
+    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_graphviz_not_found(self, mock_run, tmp_path):
         """Test that generate_svg handles Graphviz not installed."""
         # Arrange
@@ -437,14 +445,23 @@ class TestGenerateSvg:
         # Assert
         assert result is False
 
-    @patch("subprocess.run")
+    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_timeout(self, mock_run, tmp_path):
         """Test that generate_svg handles timeout gracefully."""
         # Arrange
+        from sdd.core.command_runner import CommandResult
+
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
         dot_content = "digraph { a -> b; }"
-        mock_run.side_effect = subprocess.TimeoutExpired("dot", 30)
+        mock_run.return_value = CommandResult(
+            returncode=-1,
+            stdout="",
+            stderr="",
+            command=["dot", "-Tsvg"],
+            duration_seconds=0.0,
+            timed_out=True,
+        )
 
         # Act
         result = viz.generate_svg(dot_content, output_file)
@@ -452,14 +469,22 @@ class TestGenerateSvg:
         # Assert
         assert result is False
 
-    @patch("subprocess.run")
+    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_nonzero_exit(self, mock_run, tmp_path):
         """Test that generate_svg handles non-zero exit code."""
         # Arrange
+        from sdd.core.command_runner import CommandResult
+
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
         dot_content = "digraph { a -> b; }"
-        mock_run.return_value = Mock(returncode=1)
+        mock_run.return_value = CommandResult(
+            returncode=1,
+            stdout="",
+            stderr="error",
+            command=["dot", "-Tsvg"],
+            duration_seconds=0.0,
+        )
 
         # Act
         result = viz.generate_svg(dot_content, output_file)

@@ -13,12 +13,12 @@ Updated in Phase 5.7.3 to use spec_parser for reading test specifications.
 """
 
 import json
-import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.command_runner import CommandRunner
 from sdd.work_items import spec_parser
 
 
@@ -67,6 +67,9 @@ class IntegrationTestRunner:
             "failed": 0,
             "skipped": 0,
         }
+
+        # Initialize CommandRunner
+        self.runner = CommandRunner(default_timeout=600)
 
     def _parse_environment_requirements(self, env_text: str) -> dict:
         """
@@ -133,19 +136,17 @@ class IntegrationTestRunner:
 
         # Start services
         try:
-            result = subprocess.run(
+            result = self.runner.run(
                 ["docker-compose", "-f", compose_file, "up", "-d"],
-                capture_output=True,
-                text=True,
                 timeout=180,
             )
 
-            if result.returncode != 0:
+            if not result.success:
+                if result.timed_out:
+                    return False, "Timeout starting services (>3 minutes)"
                 return False, f"Failed to start services: {result.stderr}"
 
             print(f"✓ Services started from {compose_file}")
-        except subprocess.TimeoutExpired:
-            return False, "Timeout starting services (>3 minutes)"
         except Exception as e:
             return False, f"Error starting services: {str(e)}"
 
@@ -179,28 +180,21 @@ class IntegrationTestRunner:
 
         while time.time() - start_time < timeout:
             try:
-                result = subprocess.run(
-                    ["docker-compose", "ps", "-q", service],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                )
+                result = self.runner.run(["docker-compose", "ps", "-q", service], timeout=5)
 
-                if result.returncode == 0 and result.stdout.strip():
+                if result.success and result.stdout.strip():
                     # Check health status
-                    health_result = subprocess.run(
+                    health_result = self.runner.run(
                         [
                             "docker",
                             "inspect",
                             "--format='{{.State.Health.Status}}'",
                             result.stdout.strip(),
                         ],
-                        capture_output=True,
-                        text=True,
                         timeout=5,
                     )
 
-                    if "healthy" in health_result.stdout:
+                    if health_result.success and "healthy" in health_result.stdout:
                         return True
 
                 time.sleep(2)
@@ -221,8 +215,12 @@ class IntegrationTestRunner:
 
             # Execute fixture loading script
             try:
-                subprocess.run(["python", str(fixture_path)], check=True, timeout=30)
-                print(f"✓ Loaded fixture: {fixture}")
+                result = self.runner.run(["python", str(fixture_path)], timeout=30, check=True)
+                if result.success:
+                    print(f"✓ Loaded fixture: {fixture}")
+                else:
+                    print(f"✗ Failed to load fixture {fixture}")
+                    return False
             except Exception as e:
                 print(f"✗ Failed to load fixture {fixture}: {e}")
                 return False
@@ -269,7 +267,7 @@ class IntegrationTestRunner:
         test_dir = self.work_item.get("test_directory", "tests/integration")
 
         try:
-            result = subprocess.run(
+            result = self.runner.run(
                 [
                     "pytest",
                     test_dir,
@@ -278,8 +276,6 @@ class IntegrationTestRunner:
                     "--json-report",
                     "--json-report-file=integration-test-results.json",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=600,  # 10 minute timeout
             )
 
@@ -294,11 +290,12 @@ class IntegrationTestRunner:
                 self.results["skipped"] = test_data.get("summary", {}).get("skipped", 0)
                 self.results["tests"] = test_data.get("tests", [])
 
-            return result.returncode == 0
+            if result.timed_out:
+                self.results["error"] = "Tests timed out after 10 minutes"
+                return False
 
-        except subprocess.TimeoutExpired:
-            self.results["error"] = "Tests timed out after 10 minutes"
-            return False
+            return result.success
+
         except Exception as e:
             self.results["error"] = str(e)
             return False
@@ -306,7 +303,7 @@ class IntegrationTestRunner:
     def _run_jest(self) -> bool:
         """Run integration tests using Jest."""
         try:
-            result = subprocess.run(
+            result = self.runner.run(
                 [
                     "npm",
                     "test",
@@ -315,8 +312,6 @@ class IntegrationTestRunner:
                     "--json",
                     "--outputFile=integration-test-results.json",
                 ],
-                capture_output=True,
-                text=True,
                 timeout=600,
             )
 
@@ -330,11 +325,12 @@ class IntegrationTestRunner:
                 self.results["failed"] = test_data.get("numFailedTests", 0)
                 self.results["skipped"] = test_data.get("numPendingTests", 0)
 
-            return result.returncode == 0
+            if result.timed_out:
+                self.results["error"] = "Tests timed out after 10 minutes"
+                return False
 
-        except subprocess.TimeoutExpired:
-            self.results["error"] = "Tests timed out after 10 minutes"
-            return False
+            return result.success
+
         except Exception as e:
             self.results["error"] = str(e)
             return False
@@ -362,14 +358,14 @@ class IntegrationTestRunner:
 
         try:
             # Stop and remove services
-            result = subprocess.run(
+            result = self.runner.run(
                 ["docker-compose", "-f", compose_file, "down", "-v"],
-                capture_output=True,
-                text=True,
                 timeout=60,
             )
 
-            if result.returncode != 0:
+            if not result.success:
+                if result.timed_out:
+                    return False, "Timeout tearing down services"
                 return False, f"Failed to tear down services: {result.stderr}"
 
             print("✓ Services stopped and removed")
@@ -377,8 +373,6 @@ class IntegrationTestRunner:
 
             return True, "Environment teardown successful"
 
-        except subprocess.TimeoutExpired:
-            return False, "Timeout tearing down services"
         except Exception as e:
             return False, f"Error tearing down services: {str(e)}"
 

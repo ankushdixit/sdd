@@ -12,11 +12,11 @@ Tests the session status display functionality including:
 """
 
 import json
-import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
+from sdd.core.command_runner import CommandResult
 from sdd.session.status import get_session_status
 
 
@@ -217,9 +217,13 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
                     # Mock git diff to return no changes
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                    mock_runner = Mock()
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -260,8 +264,14 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -297,8 +307,14 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -343,8 +359,14 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     with patch("sdd.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
@@ -389,8 +411,14 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     with patch("sdd.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
@@ -430,8 +458,14 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -473,8 +507,16 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=0, stdout=git_output)
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=0,
+                        stdout=git_output,
+                        stderr="",
+                        command=["git"],
+                        duration_seconds=0.1,
+                    )
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -516,8 +558,16 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=0, stdout=git_output)
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=0,
+                        stdout=git_output,
+                        stderr="",
+                        command=["git"],
+                        duration_seconds=0.1,
+                    )
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -557,8 +607,17 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.side_effect = subprocess.TimeoutExpired("git", 5)
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=124,
+                        stdout="",
+                        stderr="Command timed out",
+                        command=["git"],
+                        duration_seconds=5.0,
+                        timed_out=True,
+                    )
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -594,8 +653,14 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=0, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=0, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -631,8 +696,18 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="some output")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1,
+                        stdout="some output",
+                        stderr="",
+                        command=["git"],
+                        duration_seconds=0.1,
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -676,8 +751,14 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -715,8 +796,14 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -753,8 +840,14 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -815,8 +908,14 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -862,8 +961,14 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -908,8 +1013,14 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -946,8 +1057,14 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -985,8 +1102,14 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1039,8 +1162,14 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1084,8 +1213,14 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1139,8 +1274,14 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1200,8 +1341,14 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1243,8 +1390,14 @@ class TestGetSessionStatusQuickActions:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()
@@ -1287,8 +1440,14 @@ class TestGetSessionStatusMainEntry:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(returncode=1, stdout="")
+                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                    mock_runner = Mock()
+
+                    mock_runner.run.return_value = CommandResult(
+                        returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+                    )
+
+                    mock_run_class.return_value = mock_runner
 
                     # Act
                     result = get_session_status()

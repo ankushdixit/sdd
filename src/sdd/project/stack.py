@@ -70,6 +70,8 @@ class StackGenerator:
 
     def _detect_language_version(self, language: str) -> str:
         """Detect language version from environment."""
+        from sdd.core.command_runner import CommandRunner
+
         version_commands = {
             "python": ["python", "--version"],
             "node": ["node", "--version"],
@@ -79,15 +81,9 @@ class StackGenerator:
 
         if language in version_commands:
             try:
-                import subprocess
-
-                result = subprocess.run(
-                    version_commands[language],
-                    capture_output=True,
-                    text=True,
-                    timeout=2,
-                )
-                if result.returncode == 0:
+                runner = CommandRunner(default_timeout=2)
+                result = runner.run(version_commands[language])
+                if result.success:
                     # Extract version number
                     version_match = re.search(r"(\d+\.\d+(?:\.\d+)?)", result.stdout)
                     if version_match:

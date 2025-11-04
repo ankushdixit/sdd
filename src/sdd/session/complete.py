@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 # Add scripts directory to path for imports
+from sdd.core.command_runner import CommandRunner
 from sdd.core.types import WorkItemStatus, WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_parser import parse_spec_file
@@ -117,21 +117,20 @@ def update_all_tracking(session_num):
     script_dir = Path(__file__).parent
     project_dir = script_dir.parent / "project"
 
+    runner = CommandRunner(default_timeout=30)
+
     # Update stack
     try:
-        result = subprocess.run(
+        result = runner.run(
             [
                 "python",
                 str(project_dir / "stack.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
+            ]
         )
-        if result.returncode == 0:
+        if result.success:
             print("✓ Stack updated")
             # Print output if there were changes
             if result.stdout.strip():
@@ -147,19 +146,16 @@ def update_all_tracking(session_num):
 
     # Update tree
     try:
-        result = subprocess.run(
+        result = runner.run(
             [
                 "python",
                 str(project_dir / "tree.py"),
                 "--session",
                 str(session_num),
                 "--non-interactive",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
+            ]
         )
-        if result.returncode == 0:
+        if result.success:
             print("✓ Tree updated")
             # Print output if there were changes
             if result.stdout.strip():
@@ -198,14 +194,10 @@ def trigger_curation_if_needed(session_num):
         print(f"{'=' * 50}\n")
 
         try:
-            result = subprocess.run(
-                ["python3", "scripts/learning_curator.py", "curate"],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
+            runner = CommandRunner(default_timeout=60)
+            result = runner.run(["python3", "scripts/learning_curator.py", "curate"])
 
-            if result.returncode == 0:
+            if result.success:
                 print(result.stdout)
                 print("✓ Learning curation completed\n")
             else:
@@ -352,14 +344,12 @@ def record_session_commits(work_item_id):
             return
 
         # Get commits on session branch that aren't in parent branch
-        result = subprocess.run(
-            ["git", "log", "--pretty=format:%H|%s|%ai", f"{parent_branch}..{branch_name}"],
-            capture_output=True,
-            text=True,
-            timeout=10,
+        runner = CommandRunner(default_timeout=10)
+        result = runner.run(
+            ["git", "log", "--pretty=format:%H|%s|%ai", f"{parent_branch}..{branch_name}"]
         )
 
-        if result.returncode != 0:
+        if not result.success:
             # Branch might not exist or other git error - skip silently
             return
 
@@ -455,13 +445,9 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
 
             # Get file stats using git diff
             try:
-                result = subprocess.run(
-                    ["git", "diff", "--stat", f"{commit['sha']}^..{commit['sha']}"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                if result.returncode == 0 and result.stdout.strip():
+                runner = CommandRunner(default_timeout=10)
+                result = runner.run(["git", "diff", "--stat", f"{commit['sha']}^..{commit['sha']}"])
+                if result.success and result.stdout.strip():
                     summary += "\nFiles changed:\n```\n"
                     summary += result.stdout
                     summary += "```\n\n"
@@ -643,12 +629,8 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
 def check_uncommitted_changes() -> bool:
     """Check for uncommitted changes and guide user to commit first."""
     try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True,
-            text=True,
-            cwd=Path.cwd(),
-        )
+        runner = CommandRunner(default_timeout=5, working_dir=Path.cwd())
+        result = runner.run(["git", "status", "--porcelain"])
 
         uncommitted = [line for line in result.stdout.split("\n") if line.strip()]
 

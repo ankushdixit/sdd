@@ -6,9 +6,10 @@ Philosophy: Don't check and warn - CREATE and FIX.
 
 import json
 import shutil
-import subprocess
 import sys
 from pathlib import Path
+
+from sdd.core.command_runner import CommandRunner
 
 
 def check_or_init_git(project_root: Path = None) -> bool:
@@ -23,23 +24,21 @@ def check_or_init_git(project_root: Path = None) -> bool:
         return True
 
     try:
+        runner = CommandRunner(default_timeout=5, working_dir=project_root)
+
         # Initialize git
-        subprocess.run(
-            ["git", "init"],
-            cwd=project_root,
-            check=True,
-            capture_output=True,
-        )
-        print("✓ Initialized git repository")
+        result = runner.run(["git", "init"], check=True)
+        if result.success:
+            print("✓ Initialized git repository")
+        else:
+            raise Exception(f"Git init failed: {result.stderr}")
 
         # Set default branch to main (modern convention)
-        subprocess.run(
-            ["git", "branch", "-m", "main"],
-            cwd=project_root,
-            check=True,
-            capture_output=True,
-        )
-        print("✓ Set default branch to 'main'")
+        result = runner.run(["git", "branch", "-m", "main"], check=True)
+        if result.success:
+            print("✓ Set default branch to 'main'")
+        else:
+            raise Exception(f"Branch rename failed: {result.stderr}")
 
         return True
     except Exception as e:
@@ -262,9 +261,13 @@ def install_dependencies(project_type: str):
         # Always run npm install to ensure new devDependencies are installed
         print("\nInstalling npm dependencies...")
         try:
-            subprocess.run(["npm", "install"], check=True)
-            print("✓ Dependencies installed")
-        except subprocess.CalledProcessError:
+            runner = CommandRunner(default_timeout=300)
+            result = runner.run(["npm", "install"], check=True)
+            if result.success:
+                print("✓ Dependencies installed")
+            else:
+                print("⚠️  npm install failed - you may need to run it manually")
+        except Exception:
             print("⚠️  npm install failed - you may need to run it manually")
 
     elif project_type == "python":
@@ -272,12 +275,17 @@ def install_dependencies(project_type: str):
         if not (Path("venv").exists() or Path(".venv").exists()):
             print("\nCreating Python virtual environment...")
             try:
-                subprocess.run([sys.executable, "-m", "venv", "venv"], check=True)
-                print("✓ Created venv/")
-                print(
-                    "  Activate with: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)"
-                )
-            except subprocess.CalledProcessError:
+                runner = CommandRunner(default_timeout=60)
+                result = runner.run([sys.executable, "-m", "venv", "venv"], check=True)
+                if result.success:
+                    print("✓ Created venv/")
+                    print(
+                        "  Activate with: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)"
+                    )
+                else:
+                    print("⚠️  venv creation failed")
+                    return
+            except Exception:
                 print("⚠️  venv creation failed")
                 return
 
@@ -286,9 +294,15 @@ def install_dependencies(project_type: str):
         pip_cmd = "venv/bin/pip" if Path("venv").exists() else ".venv/bin/pip"
         if Path(pip_cmd).exists():
             try:
-                subprocess.run([pip_cmd, "install", "-e", ".[dev]"], check=True)
-                print("✓ Dependencies installed")
-            except subprocess.CalledProcessError:
+                runner = CommandRunner(default_timeout=300)
+                result = runner.run([pip_cmd, "install", "-e", ".[dev]"], check=True)
+                if result.success:
+                    print("✓ Dependencies installed")
+                else:
+                    print(
+                        "⚠️  pip install failed - you may need to activate venv and install manually"
+                    )
+            except Exception:
                 print("⚠️  pip install failed - you may need to activate venv and install manually")
         else:
             print("⚠️  Please activate virtual environment and run: pip install -e .[dev]")
@@ -502,40 +516,31 @@ def run_initial_scans():
 
     # Get SDD installation directory
     script_dir = Path(__file__).parent
+    runner = CommandRunner(default_timeout=30)
 
     # Run stack.py with absolute path
     try:
-        subprocess.run(
-            ["python", str(script_dir / "stack.py")],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        print("✓ Generated stack.txt")
-    except subprocess.CalledProcessError as e:
-        print("⚠️  Could not generate stack.txt")
-        if e.stderr:
-            print(f"  Error: {e.stderr.strip()}")
-    except subprocess.TimeoutExpired:
-        print("⚠️  Stack generation timed out")
+        result = runner.run(["python", str(script_dir / "stack.py")], check=True)
+        if result.success:
+            print("✓ Generated stack.txt")
+        else:
+            print("⚠️  Could not generate stack.txt")
+            if result.stderr:
+                print(f"  Error: {result.stderr.strip()}")
+    except Exception as e:
+        print(f"⚠️  Stack generation failed: {e}")
 
     # Run tree.py with absolute path
     try:
-        subprocess.run(
-            ["python", str(script_dir / "tree.py")],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        print("✓ Generated tree.txt")
-    except subprocess.CalledProcessError as e:
-        print("⚠️  Could not generate tree.txt")
-        if e.stderr:
-            print(f"  Error: {e.stderr.strip()}")
-    except subprocess.TimeoutExpired:
-        print("⚠️  Tree generation timed out")
+        result = runner.run(["python", str(script_dir / "tree.py")], check=True)
+        if result.success:
+            print("✓ Generated tree.txt")
+        else:
+            print("⚠️  Could not generate tree.txt")
+            if result.stderr:
+                print(f"  Error: {result.stderr.strip()}")
+    except Exception as e:
+        print(f"⚠️  Tree generation failed: {e}")
 
 
 def ensure_gitignore_entries():
@@ -621,18 +626,14 @@ def create_initial_commit(project_root: Path = None):
     if project_root is None:
         project_root = Path.cwd()
 
+    runner = CommandRunner(default_timeout=10, working_dir=project_root)
+
     try:
         # Check if there are already commits in the repository
-        result = subprocess.run(
-            ["git", "rev-list", "--count", "HEAD"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
+        result = runner.run(["git", "rev-list", "--count", "HEAD"])
 
         # If command succeeds, there are commits
-        if result.returncode == 0 and int(result.stdout.strip()) > 0:
+        if result.success and int(result.stdout.strip()) > 0:
             print("✓ Git repository already has commits, skipping initial commit")
             return True
 
@@ -642,12 +643,9 @@ def create_initial_commit(project_root: Path = None):
 
     try:
         # Stage all initialized files
-        subprocess.run(
-            ["git", "add", "-A"],
-            cwd=project_root,
-            check=True,
-            capture_output=True,
-        )
+        result = runner.run(["git", "add", "-A"], check=True)
+        if not result.success:
+            raise Exception(f"Git add failed: {result.stderr}")
 
         # Create initial commit
         commit_message = """chore: Initialize project with Session-Driven Development
@@ -662,12 +660,9 @@ Project initialized with SDD framework including:
 
 Co-Authored-By: Claude <noreply@anthropic.com>"""
 
-        subprocess.run(
-            ["git", "commit", "-m", commit_message],
-            cwd=project_root,
-            check=True,
-            capture_output=True,
-        )
+        result = runner.run(["git", "commit", "-m", commit_message], check=True)
+        if not result.success:
+            raise Exception(f"Git commit failed: {result.stderr}")
 
         print("✓ Created initial commit on main branch")
         return True

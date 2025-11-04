@@ -8,10 +8,10 @@ Supports DOT format, SVG, and ASCII art output.
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.types import WorkItemStatus
 
 
@@ -28,6 +28,7 @@ class DependencyGraphVisualizer:
         if work_items_file is None:
             work_items_file = Path(".session/tracking/work_items.json")
         self.work_items_file = work_items_file
+        self.runner = CommandRunner(default_timeout=30)
 
     def load_work_items(
         self,
@@ -175,16 +176,21 @@ class DependencyGraphVisualizer:
         Returns:
             True if successful, False otherwise
         """
+        # Use stdin input via temporary file approach since CommandRunner doesn't support stdin input directly
+        import tempfile
+
         try:
-            result = subprocess.run(
-                ["dot", "-Tsvg", "-o", str(output_file)],
-                input=dot_content,
-                text=True,
-                capture_output=True,
-                timeout=30,
-            )
-            return result.returncode == 0
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".dot", delete=False) as f:
+                f.write(dot_content)
+                temp_file = f.name
+
+            result = self.runner.run(["dot", "-Tsvg", temp_file, "-o", str(output_file)])
+
+            # Clean up temp file
+            Path(temp_file).unlink()
+
+            return result.success
+        except Exception:
             return False
 
     def get_bottlenecks(self, work_items: list[dict]) -> list[dict]:

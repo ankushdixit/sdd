@@ -9,11 +9,11 @@ Tracks:
 - Regression detection
 """
 
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.file_ops import load_json, save_json
 
 
@@ -31,6 +31,7 @@ class PerformanceBenchmark:
         self.benchmarks = work_item.get("performance_benchmarks", {})
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
         self.results = {}
+        self.runner = CommandRunner(default_timeout=300)
 
     def run_benchmarks(self, test_endpoint: str = None) -> tuple[bool, dict]:
         """
@@ -84,7 +85,7 @@ class PerformanceBenchmark:
 
         try:
             # Using wrk for load testing
-            result = subprocess.run(
+            result = self.runner.run(
                 [
                     "wrk",
                     "-t",
@@ -96,17 +97,16 @@ class PerformanceBenchmark:
                     "--latency",
                     endpoint,
                 ],
-                capture_output=True,
-                text=True,
                 timeout=duration + 30,
             )
 
-            # Parse wrk output
-            return self._parse_wrk_output(result.stdout)
+            if result.success:
+                # Parse wrk output
+                return self._parse_wrk_output(result.stdout)
+            else:
+                # wrk not installed, try using Python requests as fallback
+                return self._run_simple_load_test(endpoint, duration)
 
-        except FileNotFoundError:
-            # wrk not installed, try using Python requests as fallback
-            return self._run_simple_load_test(endpoint, duration)
         except Exception as e:
             return {"error": str(e)}
 
@@ -194,19 +194,14 @@ class PerformanceBenchmark:
         for service in services:
             try:
                 # Get container ID
-                result = subprocess.run(
-                    ["docker-compose", "ps", "-q", service],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                )
+                result = self.runner.run(["docker-compose", "ps", "-q", service], timeout=5)
 
                 container_id = result.stdout.strip()
                 if not container_id:
                     continue
 
                 # Get resource stats
-                stats_result = subprocess.run(
+                stats_result = self.runner.run(
                     [
                         "docker",
                         "stats",
@@ -215,12 +210,10 @@ class PerformanceBenchmark:
                         "--format",
                         "{{.CPUPerc}},{{.MemUsage}}",
                     ],
-                    capture_output=True,
-                    text=True,
                     timeout=10,
                 )
 
-                if stats_result.returncode == 0:
+                if stats_result.success:
                     parts = stats_result.stdout.strip().split(",")
                     resource_usage[service] = {
                         "cpu_percent": parts[0].rstrip("%"),

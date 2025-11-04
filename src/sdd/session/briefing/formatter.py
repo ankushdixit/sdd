@@ -4,11 +4,11 @@ Briefing formatting and generation.
 Part of the briefing module decomposition.
 """
 
-import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus, WorkItemType
 
@@ -20,7 +20,7 @@ class BriefingFormatter:
 
     def __init__(self):
         """Initialize briefing formatter."""
-        pass
+        self.runner = CommandRunner(default_timeout=5)
 
     def shift_heading_levels(self, markdown_content: str, shift: int) -> str:
         r"""Shift all markdown heading levels by a specified amount.
@@ -143,13 +143,10 @@ class BriefingFormatter:
         checks.append(f"Python: {sys.version.split()[0]}")
 
         # Check git
-        try:
-            result = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                checks.append(f"Git: {result.stdout.strip()}")
-            else:
-                checks.append("Git: NOT FOUND")
-        except:  # noqa: E722
+        result = self.runner.run(["git", "--version"])
+        if result.success:
+            checks.append(f"Git: {result.stdout.strip()}")
+        else:
             checks.append("Git: NOT FOUND")
 
         return checks
@@ -163,11 +160,8 @@ class BriefingFormatter:
         Returns:
             True if command exists, False otherwise
         """
-        try:
-            subprocess.run([command, "--version"], capture_output=True, timeout=5)
-            return True
-        except Exception:
-            return False
+        result = self.runner.run([command, "--version"])
+        return result.success
 
     def generate_integration_test_briefing(self, work_item: dict) -> str:
         """Generate integration test specific briefing sections.

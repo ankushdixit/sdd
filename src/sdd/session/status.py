@@ -2,10 +2,10 @@
 """Display current session status."""
 
 import json
-import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.types import Priority, WorkItemStatus
 
 
@@ -61,14 +61,10 @@ def get_session_status():
 
     # Git changes
     try:
-        result = subprocess.run(
-            ["git", "diff", "--name-status", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
+        runner = CommandRunner(default_timeout=5)
+        result = runner.run(["git", "diff", "--name-status", "HEAD"])
 
-        if result.returncode == 0 and result.stdout:
+        if result.success and result.stdout:
             lines = result.stdout.strip().split("\n")
             print(f"Files Changed ({len(lines)}):")
             for line in lines[:10]:  # Show first 10

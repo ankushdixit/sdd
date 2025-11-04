@@ -13,7 +13,6 @@ Curates and organizes accumulated learnings:
 import argparse
 import hashlib
 import re
-import subprocess
 import sys
 import uuid
 from datetime import datetime
@@ -21,6 +20,7 @@ from pathlib import Path
 
 import jsonschema
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
@@ -61,6 +61,9 @@ class LearningsCurator:
         config_manager = get_config_manager()
         config_manager.load_config(config_path)
         self.config = config_manager.curation
+
+        # Initialize CommandRunner
+        self.runner = CommandRunner(default_timeout=10, working_dir=self.project_root)
 
     def curate(self, dry_run: bool = False) -> None:
         """Curate learnings"""
@@ -565,15 +568,9 @@ class LearningsCurator:
         """Extract learnings from git commit messages with standardized metadata"""
         try:
             # Get recent commits
-            result = subprocess.run(
-                ["git", "log", "--format=%H|||%B", "-n", "100"],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=10,
-            )
+            result = self.runner.run(["git", "log", "--format=%H|||%B", "-n", "100"])
 
-            if result.returncode != 0:
+            if not result.success:
                 return []
 
             learnings = []
@@ -625,15 +622,9 @@ class LearningsCurator:
         if changed_files is None:
             # Get recently changed files from git
             try:
-                result = subprocess.run(
-                    ["git", "diff", "--name-only", "HEAD~5", "HEAD"],
-                    capture_output=True,
-                    text=True,
-                    cwd=self.project_root,
-                    timeout=10,
-                )
+                result = self.runner.run(["git", "diff", "--name-only", "HEAD~5", "HEAD"])
 
-                if result.returncode == 0:
+                if result.success:
                     changed_files = [
                         self.project_root / f.strip()
                         for f in result.stdout.split("\n")

@@ -14,12 +14,12 @@ Tests cover:
 """
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 
+from sdd.core.command_runner import CommandResult
 from sdd.session.complete import (
     auto_extract_learnings,
     check_uncommitted_changes,
@@ -338,26 +338,33 @@ class TestRunQualityGates:
 class TestUpdateAllTracking:
     """Tests for update_all_tracking function."""
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.session.complete.Path")
     def test_update_tracking_success(self, mock_path, mock_run):
         """Test successful tracking update."""
         # Arrange
         mock_path.return_value.parent = Path("/fake/scripts")
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Stack updated successfully"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
+        mock_result = CommandResult(
+            returncode=0,
+            stdout="Stack updated successfully",
+            stderr="",
+            command=["python"],
+            duration_seconds=0.1,
+        )
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = update_all_tracking(5)
 
         # Assert
         assert result is True
-        assert mock_run.call_count == 2  # stack and tree
+        assert mock_runner.run.call_count == 2  # stack and tree
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.session.complete.Path")
     def test_update_tracking_stack_failure(self, mock_path, mock_run):
         """Test tracking update when stack update fails."""
@@ -366,19 +373,29 @@ class TestUpdateAllTracking:
 
         def run_side_effect(*args, **kwargs):
             if "generate_stack.py" in str(args[0]):
-                result = MagicMock()
-                result.returncode = 1
-                result.stderr = "Stack update error"
-                result.stdout = ""
+                result = CommandResult(
+                    returncode=1,
+                    stdout="",
+                    stderr="Stack update error",
+                    command=["python"],
+                    duration_seconds=0.1,
+                )
                 return result
             else:
-                result = MagicMock()
-                result.returncode = 0
-                result.stdout = "Tree updated"
-                result.stderr = ""
+                result = CommandResult(
+                    returncode=0,
+                    stdout="Tree updated",
+                    stderr="",
+                    command=["python"],
+                    duration_seconds=0.1,
+                )
                 return result
 
-        mock_run.side_effect = run_side_effect
+        mock_runner = Mock()
+
+        mock_runner.run.side_effect = run_side_effect
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = update_all_tracking(5)
@@ -386,7 +403,7 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True  # Function returns True even on failure
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.session.complete.Path")
     def test_update_tracking_tree_failure(self, mock_path, mock_run):
         """Test tracking update when tree update fails."""
@@ -395,19 +412,29 @@ class TestUpdateAllTracking:
 
         def run_side_effect(*args, **kwargs):
             if "generate_tree.py" in str(args[0]):
-                result = MagicMock()
-                result.returncode = 1
-                result.stderr = "Tree update error"
-                result.stdout = ""
+                result = CommandResult(
+                    returncode=1,
+                    stdout="",
+                    stderr="Tree update error",
+                    command=["python"],
+                    duration_seconds=0.1,
+                )
                 return result
             else:
-                result = MagicMock()
-                result.returncode = 0
-                result.stdout = "Stack updated"
-                result.stderr = ""
+                result = CommandResult(
+                    returncode=0,
+                    stdout="Stack updated",
+                    stderr="",
+                    command=["python"],
+                    duration_seconds=0.1,
+                )
                 return result
 
-        mock_run.side_effect = run_side_effect
+        mock_runner = Mock()
+
+        mock_runner.run.side_effect = run_side_effect
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = update_all_tracking(5)
@@ -415,13 +442,24 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.session.complete.Path")
     def test_update_tracking_timeout(self, mock_path, mock_run):
         """Test tracking update handles timeout exception."""
         # Arrange
         mock_path.return_value.parent = Path("/fake/scripts")
-        mock_run.side_effect = subprocess.TimeoutExpired("python", 30)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["python"],
+            duration_seconds=30.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = update_all_tracking(5)
@@ -449,7 +487,7 @@ class TestTriggerCurationIfNeeded:
         # Assert - should return early, no subprocess call
         mock_config_manager.load_config.assert_called_once()
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
     def test_trigger_curation_triggered(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed triggers curation."""
@@ -460,20 +498,27 @@ class TestTriggerCurationIfNeeded:
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
         mock_get_config_manager.return_value = mock_config_manager
 
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Curation completed"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
+        mock_result = CommandResult(
+            returncode=0,
+            stdout="Curation completed",
+            stderr="",
+            command=["python"],
+            duration_seconds=0.1,
+        )
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         trigger_curation_if_needed(5)  # 5 % 5 == 0
 
         # Assert
-        mock_run.assert_called_once()
-        assert "learning_curator.py" in str(mock_run.call_args)
+        mock_runner.run.assert_called_once()
+        assert "learning_curator.py" in str(mock_runner.run.call_args)
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
     def test_trigger_curation_not_time_yet(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed when not time to curate."""
@@ -484,13 +529,16 @@ class TestTriggerCurationIfNeeded:
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
         mock_get_config_manager.return_value = mock_config_manager
 
+        mock_runner = Mock()
+        mock_run.return_value = mock_runner
+
         # Act
         trigger_curation_if_needed(3)  # 3 % 5 != 0
 
         # Assert
-        mock_run.assert_not_called()
+        mock_runner.run.assert_not_called()
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
     def test_trigger_curation_failure(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed handles subprocess failure."""
@@ -504,15 +552,19 @@ class TestTriggerCurationIfNeeded:
         mock_result = MagicMock()
         mock_result.returncode = 1
         mock_result.stderr = "Curation error"
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         trigger_curation_if_needed(5)
 
         # Assert - should not raise exception
-        mock_run.assert_called_once()
+        mock_runner.run.assert_called_once()
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
     def test_trigger_curation_exception(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed handles exceptions gracefully."""
@@ -523,7 +575,18 @@ class TestTriggerCurationIfNeeded:
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
         mock_get_config_manager.return_value = mock_config_manager
 
-        mock_run.side_effect = subprocess.TimeoutExpired("python3", 60)
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = CommandResult(
+            returncode=124,
+            stdout="",
+            stderr="Timeout",
+            command=["python"],
+            duration_seconds=30.0,
+            timed_out=True,
+        )
+
+        mock_run.return_value = mock_runner
 
         # Act
         trigger_curation_if_needed(5)
@@ -812,7 +875,7 @@ class TestCompleteGitWorkflow:
 class TestRecordSessionCommits:
     """Tests for record_session_commits function."""
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_record_commits_success(self, mock_run, tmp_path, monkeypatch):
         """Test successful recording of session commits."""
         # Arrange
@@ -831,7 +894,11 @@ class TestRecordSessionCommits:
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stdout = "abc123|Commit message|2025-01-15 10:00:00"
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         record_session_commits("feature-001")
@@ -842,7 +909,7 @@ class TestRecordSessionCommits:
         assert "commits" in updated_data["work_items"]["feature-001"]["git"]
         assert len(updated_data["work_items"]["feature-001"]["git"]["commits"]) == 1
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_record_commits_no_branch(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits when work item has no git branch."""
         # Arrange
@@ -860,13 +927,16 @@ class TestRecordSessionCommits:
         }
         work_items_file.write_text(json.dumps(work_items_data))
 
+        mock_runner = Mock()
+        mock_run.return_value = mock_runner
+
         # Act
         record_session_commits("feature-001")
 
         # Assert - should return silently without calling git
-        mock_run.assert_not_called()
+        mock_runner.run.assert_not_called()
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_record_commits_git_error(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits handles git errors silently."""
         # Arrange
@@ -884,14 +954,18 @@ class TestRecordSessionCommits:
 
         mock_result = MagicMock()
         mock_result.returncode = 1
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         record_session_commits("feature-001")
 
         # Assert - should not raise exception
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_record_commits_parsing(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits parses multiple commits correctly."""
         # Arrange
@@ -912,7 +986,11 @@ class TestRecordSessionCommits:
         mock_result.stdout = (
             "abc123|Commit 1|2025-01-15 10:00:00\ndef456|Commit 2|2025-01-15 11:00:00"
         )
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         record_session_commits("feature-001")
@@ -1073,7 +1151,7 @@ class TestGenerateSummary:
         # Assert
         assert "Linting: ⊘ SKIPPED" in result
 
-    @patch("subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_generate_summary_with_commits(self, mock_run):
         """Test summary includes commit details (Enhancement #11)."""
         # Arrange
@@ -1098,10 +1176,15 @@ class TestGenerateSummary:
         gate_results = {"tests": {"status": "passed"}}
 
         # Mock git diff --stat
-        mock_run.return_value = Mock(
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
             returncode=0,
             stdout=" file1.py | 10 +++++-----\n 1 file changed, 5 insertions(+), 5 deletions(-)",
+            stderr="",
+            command=["git"],
+            duration_seconds=0.1,
         )
+        mock_run.return_value = mock_runner
 
         # Act
         result = generate_summary(status, work_items_data, gate_results, None)
@@ -1113,7 +1196,7 @@ class TestGenerateSummary:
         assert "Files changed:" in result
         assert "file1.py" in result
 
-    @patch("subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_generate_summary_with_multiline_commit(self, mock_run):
         """Test summary preserves multi-line commit messages (Enhancement #11)."""
         # Arrange
@@ -1136,7 +1219,11 @@ class TestGenerateSummary:
             }
         }
         gate_results = {"tests": {"status": "passed"}}
-        mock_run.return_value = Mock(returncode=0, stdout="")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git"], duration_seconds=0.1
+        )
+        mock_run.return_value = mock_runner
 
         # Act
         result = generate_summary(status, work_items_data, gate_results, None)
@@ -1163,7 +1250,7 @@ class TestGenerateSummary:
         assert "Commits Made" not in result
         assert "Session 1 Summary" in result  # Summary still generated
 
-    @patch("subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_generate_summary_git_diff_fails_gracefully(self, mock_run):
         """Test summary handles git diff failure gracefully (Enhancement #11)."""
         # Arrange
@@ -1188,7 +1275,11 @@ class TestGenerateSummary:
         gate_results = {"tests": {"status": "passed"}}
 
         # Mock git diff failure
-        mock_run.return_value = Mock(returncode=1, stdout="")
+        mock_runner = Mock()
+        mock_runner.run.return_value = CommandResult(
+            returncode=1, stdout="", stderr="", command=["git"], duration_seconds=0.1
+        )
+        mock_run.return_value = mock_runner
 
         # Act
         result = generate_summary(status, work_items_data, gate_results, None)
@@ -1338,13 +1429,17 @@ class TestGenerateDeploymentSummary:
 class TestCheckUncommittedChanges:
     """Tests for check_uncommitted_changes function."""
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_no_uncommitted_changes(self, mock_run):
         """Test check_uncommitted_changes returns True when no changes."""
         # Arrange
         mock_result = MagicMock()
         mock_result.stdout = ""
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()
@@ -1354,13 +1449,17 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="y")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_uncommitted_changes_user_override(self, mock_run, mock_isatty, mock_input):
         """Test user can override uncommitted changes check."""
         # Arrange
         mock_result = MagicMock()
         mock_result.stdout = " M src/main.py\n"
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()
@@ -1370,13 +1469,17 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="n")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_uncommitted_changes_user_abort(self, mock_run, mock_isatty, mock_input):
         """Test user can abort on uncommitted changes."""
         # Arrange
         mock_result = MagicMock()
         mock_result.stdout = " M src/main.py\n"
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()
@@ -1385,13 +1488,17 @@ class TestCheckUncommittedChanges:
         assert result is False
 
     @patch("sys.stdin.isatty", return_value=False)
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_uncommitted_changes_non_interactive(self, mock_run, mock_isatty):
         """Test non-interactive mode returns False on uncommitted changes."""
         # Arrange
         mock_result = MagicMock()
         mock_result.stdout = " M src/main.py\n"
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()
@@ -1399,7 +1506,7 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is False
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_uncommitted_changes_only_session_tracking(self, mock_run):
         """Test check passes when only session tracking files changed."""
         # Arrange
@@ -1407,7 +1514,11 @@ class TestCheckUncommittedChanges:
         mock_result.stdout = (
             " M .session/tracking/status_update.json\n M .session/briefings/session_005.md\n"
         )
-        mock_run.return_value = mock_result
+        mock_runner = Mock()
+
+        mock_runner.run.return_value = mock_result
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()
@@ -1415,11 +1526,15 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is True
 
-    @patch("sdd.session.complete.subprocess.run")
+    @patch("sdd.session.complete.CommandRunner")
     def test_uncommitted_changes_exception(self, mock_run):
         """Test check returns True on exception."""
         # Arrange
-        mock_run.side_effect = subprocess.SubprocessError("Git error")
+        mock_runner = Mock()
+
+        mock_runner.run.side_effect = Exception("Git error")
+
+        mock_run.return_value = mock_runner
 
         # Act
         result = check_uncommitted_changes()

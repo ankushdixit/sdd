@@ -12,11 +12,11 @@ Handles:
 """
 
 import json
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
 from sdd.core.types import GitStatus, WorkItemStatus, WorkItemType
 
@@ -35,48 +35,27 @@ class GitWorkflow:
         config_manager.load_config(self.config_file)
         self.config = config_manager.git_workflow
 
+        # Initialize command runner
+        self.runner = CommandRunner(default_timeout=30, working_dir=self.project_root)
+
     def check_git_status(self) -> tuple[bool, str]:
         """Check if working directory is clean."""
-        try:
-            result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+        result = self.runner.run(["git", "status", "--porcelain"], timeout=5)
 
-            if result.returncode != 0:
-                return False, "Not a git repository"
+        if not result.success:
+            if result.timed_out:
+                return False, "Git command timed out"
+            return False, "Not a git repository"
 
-            if result.stdout.strip():
-                return False, "Working directory not clean (uncommitted changes)"
+        if result.stdout.strip():
+            return False, "Working directory not clean (uncommitted changes)"
 
-            return True, "Clean"
-
-        except subprocess.TimeoutExpired:
-            return False, "Git command timed out"
-        except FileNotFoundError:
-            return False, "Git not found"
+        return True, "Clean"
 
     def get_current_branch(self) -> Optional[str]:
         """Get current git branch name."""
-        try:
-            result = subprocess.run(
-                ["git", "branch", "--show-current"],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
-
-            if result.returncode == 0:
-                return result.stdout.strip()
-
-        except:  # noqa: E722
-            pass
-
-        return None
+        result = self.runner.run(["git", "branch", "--show-current"], timeout=5)
+        return result.stdout.strip() if result.success else None
 
     def create_branch(self, work_item_id: str, session_num: int) -> tuple[bool, str, Optional[str]]:
         """Create a new branch for work item. Returns (success, branch_name, parent_branch)."""
@@ -84,175 +63,98 @@ class GitWorkflow:
         parent_branch = self.get_current_branch()
         branch_name = work_item_id
 
-        try:
-            # Create and checkout branch
-            result = subprocess.run(
-                ["git", "checkout", "-b", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+        # Create and checkout branch
+        result = self.runner.run(["git", "checkout", "-b", branch_name], timeout=5)
 
-            if result.returncode == 0:
-                return True, branch_name, parent_branch
-            else:
-                return False, f"Failed to create branch: {result.stderr}", None
-
-        except Exception as e:
-            return False, f"Error creating branch: {e}"
+        if result.success:
+            return True, branch_name, parent_branch
+        else:
+            return False, f"Failed to create branch: {result.stderr}", None
 
     def checkout_branch(self, branch_name: str) -> tuple[bool, str]:
         """Checkout existing branch."""
-        try:
-            result = subprocess.run(
-                ["git", "checkout", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+        result = self.runner.run(["git", "checkout", branch_name], timeout=5)
 
-            if result.returncode == 0:
-                return True, f"Switched to branch {branch_name}"
-            else:
-                return False, f"Failed to checkout branch: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error checking out branch: {e}"
+        if result.success:
+            return True, f"Switched to branch {branch_name}"
+        else:
+            return False, f"Failed to checkout branch: {result.stderr}"
 
     def commit_changes(self, message: str) -> tuple[bool, str]:
         """Stage all changes and commit."""
-        try:
-            # Stage all changes
-            subprocess.run(["git", "add", "."], cwd=self.project_root, timeout=10, check=True)
+        # Stage all changes
+        stage_result = self.runner.run(["git", "add", "."], timeout=10)
+        if not stage_result.success:
+            return False, f"Staging failed: {stage_result.stderr}"
 
-            # Commit
-            result = subprocess.run(
-                ["git", "commit", "-m", message],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=10,
-            )
+        # Commit
+        result = self.runner.run(["git", "commit", "-m", message], timeout=10)
 
-            if result.returncode == 0:
-                # Get commit SHA
-                sha_result = subprocess.run(
-                    ["git", "rev-parse", "HEAD"],
-                    capture_output=True,
-                    text=True,
-                    cwd=self.project_root,
-                    timeout=5,
-                )
-                commit_sha = sha_result.stdout.strip()[:7]
-                return True, commit_sha
-            else:
-                return False, f"Commit failed: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error committing: {e}"
+        if result.success:
+            # Get commit SHA
+            sha_result = self.runner.run(["git", "rev-parse", "HEAD"], timeout=5)
+            commit_sha = sha_result.stdout.strip()[:7] if sha_result.success else "unknown"
+            return True, commit_sha
+        else:
+            return False, f"Commit failed: {result.stderr}"
 
     def push_branch(self, branch_name: str) -> tuple[bool, str]:
         """Push branch to remote."""
-        try:
-            result = subprocess.run(
-                ["git", "push", "-u", "origin", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=30,
-            )
+        result = self.runner.run(["git", "push", "-u", "origin", branch_name], timeout=30)
 
-            if result.returncode == 0:
-                return True, "Pushed to remote"
-            else:
-                # Check if it's just "no upstream" error
-                if "no upstream" in result.stderr.lower() or "no remote" in result.stderr.lower():
-                    return True, "No remote configured (local only)"
-                return False, f"Push failed: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error pushing: {e}"
+        if result.success:
+            return True, "Pushed to remote"
+        else:
+            # Check if it's just "no upstream" error
+            if "no upstream" in result.stderr.lower() or "no remote" in result.stderr.lower():
+                return True, "No remote configured (local only)"
+            return False, f"Push failed: {result.stderr}"
 
     def delete_remote_branch(self, branch_name: str) -> tuple[bool, str]:
         """Delete branch from remote."""
-        try:
-            result = subprocess.run(
-                ["git", "push", "origin", "--delete", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=10,
-            )
+        result = self.runner.run(["git", "push", "origin", "--delete", branch_name], timeout=10)
 
-            if result.returncode == 0:
-                return True, f"Deleted remote branch {branch_name}"
-            else:
-                # Not an error if branch doesn't exist on remote
-                if "remote ref does not exist" in result.stderr.lower():
-                    return True, f"Remote branch {branch_name} doesn't exist (already deleted?)"
-                return False, f"Failed to delete remote branch: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error deleting remote branch: {e}"
+        if result.success:
+            return True, f"Deleted remote branch {branch_name}"
+        else:
+            # Not an error if branch doesn't exist on remote
+            if "remote ref does not exist" in result.stderr.lower():
+                return True, f"Remote branch {branch_name} doesn't exist (already deleted?)"
+            return False, f"Failed to delete remote branch: {result.stderr}"
 
     def push_main_to_remote(self, branch_name: str = "main") -> tuple[bool, str]:
         """Push main (or other parent branch) to remote after local merge."""
-        try:
-            result = subprocess.run(
-                ["git", "push", "origin", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=30,
-            )
+        result = self.runner.run(["git", "push", "origin", branch_name], timeout=30)
 
-            if result.returncode == 0:
-                return True, f"Pushed {branch_name} to remote"
-            else:
-                return False, f"Failed to push {branch_name}: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error pushing {branch_name}: {e}"
+        if result.success:
+            return True, f"Pushed {branch_name} to remote"
+        else:
+            return False, f"Failed to push {branch_name}: {result.stderr}"
 
     def create_pull_request(
         self, work_item_id: str, branch_name: str, work_item: dict, session_num: int
     ) -> tuple[bool, str]:
         """Create a pull request using gh CLI."""
-        try:
-            # Check if gh CLI is available
-            check_gh = subprocess.run(
-                ["gh", "--version"],
-                capture_output=True,
-                cwd=self.project_root,
-                timeout=5,
-            )
+        # Check if gh CLI is available
+        check_gh = self.runner.run(["gh", "--version"], timeout=5)
 
-            if check_gh.returncode != 0:
-                return False, "gh CLI not installed. Install from: https://cli.github.com/"
+        if not check_gh.success:
+            return False, "gh CLI not installed. Install from: https://cli.github.com/"
 
-            # Generate PR title and body from templates
-            title = self._format_pr_title(work_item, session_num)
-            body = self._format_pr_body(work_item, work_item_id, session_num)
+        # Generate PR title and body from templates
+        title = self._format_pr_title(work_item, session_num)
+        body = self._format_pr_body(work_item, work_item_id, session_num)
 
-            # Create PR using gh CLI
-            result = subprocess.run(
-                ["gh", "pr", "create", "--title", title, "--body", body],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=30,
-            )
+        # Create PR using gh CLI
+        result = self.runner.run(
+            ["gh", "pr", "create", "--title", title, "--body", body], timeout=30
+        )
 
-            if result.returncode == 0:
-                pr_url = result.stdout.strip()
-                return True, f"PR created: {pr_url}"
-            else:
-                return False, f"Failed to create PR: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error creating PR: {e}"
+        if result.success:
+            pr_url = result.stdout.strip()
+            return True, f"PR created: {pr_url}"
+        else:
+            return False, f"Failed to create PR: {result.stderr}"
 
     def _format_pr_title(self, work_item: dict, session_num: int) -> str:
         """Format PR title from template."""
@@ -286,38 +188,20 @@ class GitWorkflow:
 
     def merge_to_parent(self, branch_name: str, parent_branch: str = "main") -> tuple[bool, str]:
         """Merge branch to parent branch and delete branch."""
-        try:
-            # Checkout parent branch (not hardcoded main)
-            subprocess.run(
-                ["git", "checkout", parent_branch],
-                capture_output=True,
-                cwd=self.project_root,
-                timeout=5,
-                check=True,
-            )
+        # Checkout parent branch (not hardcoded main)
+        checkout_result = self.runner.run(["git", "checkout", parent_branch], timeout=5)
+        if not checkout_result.success:
+            return False, f"Failed to checkout {parent_branch}: {checkout_result.stderr}"
 
-            # Merge
-            result = subprocess.run(
-                ["git", "merge", "--no-ff", branch_name],
-                capture_output=True,
-                text=True,
-                cwd=self.project_root,
-                timeout=10,
-            )
+        # Merge
+        result = self.runner.run(["git", "merge", "--no-ff", branch_name], timeout=10)
 
-            if result.returncode == 0:
-                # Delete branch
-                subprocess.run(
-                    ["git", "branch", "-d", branch_name],
-                    cwd=self.project_root,
-                    timeout=5,
-                )
-                return True, f"Merged to {parent_branch} and branch deleted"
-            else:
-                return False, f"Merge failed: {result.stderr}"
-
-        except Exception as e:
-            return False, f"Error merging: {e}"
+        if result.success:
+            # Delete branch
+            self.runner.run(["git", "branch", "-d", branch_name], timeout=5)
+            return True, f"Merged to {parent_branch} and branch deleted"
+        else:
+            return False, f"Merge failed: {result.stderr}"
 
     def start_work_item(self, work_item_id: str, session_num: int) -> dict:
         """Start working on a work item (create or resume branch)."""
@@ -396,42 +280,35 @@ class GitWorkflow:
         # If commit fails because there's nothing to commit, extract existing commits
         if not success and "nothing to commit" in commit_sha.lower():
             # No new changes to commit - extract existing commits from git log
-            try:
-                # Get commits for this branch since it was created
-                result = subprocess.run(
-                    [
-                        "git",
-                        "log",
-                        "--format=%h",
-                        branch_name,
-                        f"^{work_item['git'].get('parent_branch', 'main')}",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    cwd=self.project_root,
-                    timeout=10,
-                )
+            result = self.runner.run(
+                [
+                    "git",
+                    "log",
+                    "--format=%h",
+                    branch_name,
+                    f"^{work_item['git'].get('parent_branch', 'main')}",
+                ],
+                timeout=10,
+            )
 
-                if result.returncode == 0 and result.stdout.strip():
-                    existing_commits = result.stdout.strip().split("\n")
-                    # Update commits array with any new commits not already tracked
-                    for commit in reversed(existing_commits):  # Oldest to newest
-                        if commit not in work_item["git"]["commits"]:
-                            work_item["git"]["commits"].append(commit)
+            if result.success and result.stdout.strip():
+                existing_commits = result.stdout.strip().split("\n")
+                # Update commits array with any new commits not already tracked
+                for commit in reversed(existing_commits):  # Oldest to newest
+                    if commit not in work_item["git"]["commits"]:
+                        work_item["git"]["commits"].append(commit)
 
-                    # If we found commits, treat this as success
-                    if existing_commits:
-                        success = True
-                        commit_sha = f"Found {len(existing_commits)} existing commit(s)"
-                    else:
-                        return {"success": False, "message": "No commits found for this work item"}
+                # If we found commits, treat this as success
+                if existing_commits:
+                    success = True
+                    commit_sha = f"Found {len(existing_commits)} existing commit(s)"
                 else:
-                    return {
-                        "success": False,
-                        "message": f"Failed to retrieve commits: {commit_sha}",
-                    }
-            except Exception as e:
-                return {"success": False, "message": f"Failed to retrieve commits: {e}"}
+                    return {"success": False, "message": "No commits found for this work item"}
+            else:
+                return {
+                    "success": False,
+                    "message": f"Failed to retrieve commits: {commit_sha}",
+                }
         elif not success:
             return {"success": False, "message": f"Commit failed: {commit_sha}"}
         else:
