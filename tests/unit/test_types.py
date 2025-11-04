@@ -297,11 +297,13 @@ class TestGitStatus:
         assert GitStatus.READY_TO_MERGE.value == "ready_to_merge"
         assert GitStatus.READY_FOR_PR.value == "ready_for_pr"
         assert GitStatus.PR_CREATED.value == "pr_created"
+        assert GitStatus.PR_CLOSED.value == "pr_closed"
         assert GitStatus.MERGED.value == "merged"
+        assert GitStatus.DELETED.value == "deleted"
 
     def test_enum_count(self):
         """Test correct number of enum members."""
-        assert len(GitStatus) == 5
+        assert len(GitStatus) == 7
 
     def test_string_representation(self):
         """Test string conversion."""
@@ -314,7 +316,9 @@ class TestGitStatus:
         assert GitStatus("ready_to_merge") == GitStatus.READY_TO_MERGE
         assert GitStatus("ready_for_pr") == GitStatus.READY_FOR_PR
         assert GitStatus("pr_created") == GitStatus.PR_CREATED
+        assert GitStatus("pr_closed") == GitStatus.PR_CLOSED
         assert GitStatus("merged") == GitStatus.MERGED
+        assert GitStatus("deleted") == GitStatus.DELETED
 
     def test_value_validation_invalid(self):
         """Test invalid value raises ValueError."""
@@ -328,12 +332,14 @@ class TestGitStatus:
     def test_values_method(self):
         """Test values() returns all valid values."""
         values = GitStatus.values()
-        assert len(values) == 5
+        assert len(values) == 7
         assert "in_progress" in values
         assert "ready_to_merge" in values
         assert "ready_for_pr" in values
         assert "pr_created" in values
+        assert "pr_closed" in values
         assert "merged" in values
+        assert "deleted" in values
 
     def test_json_serialization(self):
         """Test JSON serialization."""
@@ -351,9 +357,11 @@ class TestGitStatus:
     def test_enum_iteration(self):
         """Test enum iteration."""
         statuses = list(GitStatus)
-        assert len(statuses) == 5
+        assert len(statuses) == 7
         assert GitStatus.IN_PROGRESS in statuses
+        assert GitStatus.PR_CLOSED in statuses
         assert GitStatus.MERGED in statuses
+        assert GitStatus.DELETED in statuses
 
     def test_enum_equality(self):
         """Test enum equality."""
