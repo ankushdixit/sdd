@@ -23,7 +23,7 @@ class ExecutionConfig:
     coverage_threshold: int = 80
     commands: dict[str, str] = field(
         default_factory=lambda: {
-            "python": "pytest --cov --cov-report=json",
+            "python": "pytest --cov=src/sdd --cov-report=json",
             "javascript": "npm test -- --coverage",
             "typescript": "npm test -- --coverage",
         }
