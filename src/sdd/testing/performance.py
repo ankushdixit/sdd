@@ -15,16 +15,16 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
-from sdd.core.file_ops import load_json, save_json
-from sdd.core.error_handlers import log_errors, convert_subprocess_errors
+from sdd.core.error_handlers import convert_subprocess_errors, log_errors
 from sdd.core.exceptions import (
-    PerformanceTestError,
     BenchmarkFailedError,
-    PerformanceRegressionError,
     LoadTestFailedError,
-    WorkItemNotFoundError,
+    PerformanceRegressionError,
+    PerformanceTestError,
     ValidationError,
+    WorkItemNotFoundError,
 )
+from sdd.core.file_ops import load_json, save_json
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class PerformanceBenchmark:
             raise ValidationError(
                 message="Work item cannot be None or empty",
                 context={"work_item": work_item},
-                remediation="Provide a valid work item dictionary"
+                remediation="Provide a valid work item dictionary",
             )
 
         self.work_item = work_item
@@ -118,7 +118,7 @@ class PerformanceBenchmark:
             raise ValidationError(
                 message="Endpoint cannot be empty",
                 context={"endpoint": endpoint},
-                remediation="Provide a valid endpoint URL"
+                remediation="Provide a valid endpoint URL",
             )
 
         duration = self.benchmarks.get("load_test_duration", 60)
@@ -154,7 +154,7 @@ class PerformanceBenchmark:
             raise LoadTestFailedError(
                 endpoint=endpoint,
                 details=str(e),
-                context={"duration": duration, "threads": threads, "connections": connections}
+                context={"duration": duration, "threads": threads, "connections": connections},
             ) from e
 
     def _parse_wrk_output(self, output: str) -> dict:
@@ -200,7 +200,7 @@ class PerformanceBenchmark:
             raise PerformanceTestError(
                 message="Failed to parse wrk output",
                 context={"output": output[:500], "error": str(e)},
-                remediation="Verify wrk is producing expected output format"
+                remediation="Verify wrk is producing expected output format",
             ) from e
 
     def _parse_latency(self, latency_str: str) -> float:
@@ -227,7 +227,7 @@ class PerformanceBenchmark:
             raise PerformanceTestError(
                 message=f"Failed to parse latency value: {latency_str}",
                 context={"latency_str": latency_str},
-                remediation="Check wrk output format"
+                remediation="Check wrk output format",
             ) from e
 
     def _run_simple_load_test(self, endpoint: str, duration: int) -> dict:
@@ -273,7 +273,7 @@ class PerformanceBenchmark:
                 raise LoadTestFailedError(
                     endpoint=endpoint,
                     details="No successful requests during load test",
-                    context={"duration": duration, "request_count": request_count}
+                    context={"duration": duration, "request_count": request_count},
                 )
 
             latencies.sort()
@@ -294,7 +294,7 @@ class PerformanceBenchmark:
             raise LoadTestFailedError(
                 endpoint=endpoint,
                 details=f"Load test execution failed: {str(e)}",
-                context={"duration": duration}
+                context={"duration": duration},
             ) from e
 
     @log_errors()
@@ -343,7 +343,9 @@ class PerformanceBenchmark:
                         "memory_usage": parts[1],
                     }
                 else:
-                    logger.warning(f"Failed to get stats for service {service}: {stats_result.stderr}")
+                    logger.warning(
+                        f"Failed to get stats for service {service}: {stats_result.stderr}"
+                    )
 
             except Exception as e:
                 logger.warning(f"Error measuring resource usage for {service}: {e}")
@@ -406,10 +408,7 @@ class PerformanceBenchmark:
                 logger.warning(f"Throughput {actual_rps} req/s below minimum {expected_rps} req/s")
                 failed_benchmarks.append(
                     BenchmarkFailedError(
-                        metric="throughput",
-                        actual=actual_rps,
-                        expected=expected_rps,
-                        unit="req/s"
+                        metric="throughput", actual=actual_rps, expected=expected_rps, unit="req/s"
                     )
                 )
 
@@ -458,7 +457,7 @@ class PerformanceBenchmark:
             baseline_val = baseline_latency.get(percentile, 0)
 
             if baseline_val > 0 and current > baseline_val * regression_threshold:
-                regression_percent = ((current / baseline_val - 1) * 100)
+                regression_percent = (current / baseline_val - 1) * 100
                 logger.warning(
                     f"Performance regression detected: {percentile} increased from "
                     f"{baseline_val}ms to {current}ms ({regression_percent:.1f}% slower)"
@@ -467,7 +466,7 @@ class PerformanceBenchmark:
                     metric=percentile,
                     current=current,
                     baseline=baseline_val,
-                    threshold_percent=10.0
+                    threshold_percent=10.0,
                 )
 
         return False
@@ -501,7 +500,7 @@ class PerformanceBenchmark:
             raise PerformanceTestError(
                 message=f"Failed to store baseline for work item {work_item_id}",
                 context={"work_item_id": work_item_id, "error": str(e)},
-                remediation="Check file permissions and disk space"
+                remediation="Check file permissions and disk space",
             ) from e
 
     def _get_current_session(self) -> int:
@@ -578,7 +577,7 @@ def main():
         raise ValidationError(
             message="Missing required argument: work_item_id",
             context={"usage": "python performance_benchmark.py <work_item_id>"},
-            remediation="Provide a work item ID as the first argument"
+            remediation="Provide a work item ID as the first argument",
         )
 
     work_item_id = sys.argv[1]

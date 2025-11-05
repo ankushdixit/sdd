@@ -11,9 +11,11 @@ from typing import Any, Callable, Optional
 
 from sdd.core.exceptions import (
     ErrorCode,
-    FileNotFoundError as SDDFileNotFoundError,
     FileOperationError,
     SystemError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -73,7 +75,7 @@ class JSONFileOperations:
                 details=f"Invalid JSON: {e}",
                 cause=e,
             ) from e
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise FileOperationError(
                 operation="read",
                 file_path=str(file_path),
@@ -144,7 +146,7 @@ class JSONFileOperations:
 
             logger.debug(f"Saved JSON to {file_path}")
 
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise FileOperationError(
                 operation="write",
                 file_path=str(file_path),
@@ -248,7 +250,7 @@ def backup_file(file_path: Path) -> Path:
         backup_path = file_path.with_suffix(f"{file_path.suffix}.backup")
         shutil.copy2(file_path, backup_path)
         return backup_path
-    except (OSError, IOError) as e:
+    except OSError as e:
         raise FileOperationError(
             operation="backup",
             file_path=str(file_path),
@@ -276,7 +278,7 @@ def read_file(file_path: Path) -> str:
     try:
         with open(file_path) as f:
             return f.read()
-    except (OSError, IOError) as e:
+    except OSError as e:
         raise FileOperationError(
             operation="read",
             file_path=str(file_path),
@@ -298,7 +300,7 @@ def write_file(file_path: Path, content: str) -> None:
     try:
         with open(file_path, "w") as f:
             f.write(content)
-    except (OSError, IOError) as e:
+    except OSError as e:
         raise FileOperationError(
             operation="write",
             file_path=str(file_path),

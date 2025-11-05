@@ -12,13 +12,13 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from sdd.core.types import WorkItemType
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
-    SpecValidationError,
     FileNotFoundError,
     FileOperationError,
+    SpecValidationError,
 )
-from sdd.core.error_handlers import log_errors
+from sdd.core.types import WorkItemType
 from sdd.work_items.spec_parser import (
     extract_checklist,
     extract_subsection,
@@ -359,7 +359,7 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> None:
             if work_item_id in work_items_data.get("work_items", {}):
                 work_item = work_items_data["work_items"][work_item_id]
                 spec_file_path = work_item.get("spec_file")
-        except (OSError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError):
             # If loading fails, fallback to default pattern
             pass
 
@@ -370,20 +370,14 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> None:
     spec_path = Path(spec_file_path)
 
     if not spec_path.exists():
-        raise FileNotFoundError(
-            file_path=str(spec_path),
-            file_type="spec"
-        )
+        raise FileNotFoundError(file_path=str(spec_path), file_type="spec")
 
     # Read spec content
     try:
         spec_content = spec_path.read_text(encoding="utf-8")
     except OSError as e:
         raise FileOperationError(
-            operation="read",
-            file_path=str(spec_path),
-            details=str(e),
-            cause=e
+            operation="read", file_path=str(spec_path), details=str(e), cause=e
         )
 
     # Collect all errors
@@ -427,13 +421,12 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> None:
 
     # Raise SpecValidationError if any validation errors found
     if errors:
-        raise SpecValidationError(
-            work_item_id=work_item_id,
-            errors=errors
-        )
+        raise SpecValidationError(work_item_id=work_item_id, errors=errors)
 
 
-def format_validation_report(work_item_id: str, work_item_type: str, validation_error: Optional[SpecValidationError] = None) -> str:
+def format_validation_report(
+    work_item_id: str, work_item_type: str, validation_error: Optional[SpecValidationError] = None
+) -> str:
     """
     Format validation errors into a human-readable report.
 

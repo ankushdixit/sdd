@@ -16,10 +16,11 @@ from typing import Any, Optional
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
-    SpecValidationError,
-    ValidationError,
     ErrorCode,
+    ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
 )
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemType
@@ -719,22 +720,19 @@ def parse_spec_file(work_item) -> dict[str, Any]:
 
     if not spec_path.exists():
         logger.error("Spec file not found: %s", spec_path)
-        raise SDDFileNotFoundError(
-            file_path=str(spec_path),
-            file_type="spec"
-        )
+        raise SDDFileNotFoundError(file_path=str(spec_path), file_type="spec")
 
     try:
         with open(spec_path, encoding="utf-8") as f:
             content = f.read()
-    except (IOError, OSError) as e:
+    except OSError as e:
         logger.error("Failed to read spec file: %s", spec_path)
         raise ValidationError(
             message=f"Failed to read spec file: {spec_path}",
             code=ErrorCode.FILE_OPERATION_FAILED,
             context={"file_path": str(spec_path)},
             remediation="Check file permissions and try again",
-            cause=e
+            cause=e,
         )
 
     # Determine work item type from first line (H1 heading)
@@ -744,11 +742,8 @@ def parse_spec_file(work_item) -> dict[str, Any]:
         raise ValidationError(
             message=f"Invalid spec file: Missing H1 heading in {spec_path}",
             code=ErrorCode.SPEC_VALIDATION_FAILED,
-            context={
-                "file_path": str(spec_path),
-                "first_line": first_line
-            },
-            remediation="Spec file must start with '# Type: Name' heading"
+            context={"file_path": str(spec_path), "first_line": first_line},
+            remediation="Spec file must start with '# Type: Name' heading",
         )
 
     # Extract type from "# Type: Name" pattern
@@ -758,11 +753,8 @@ def parse_spec_file(work_item) -> dict[str, Any]:
         raise ValidationError(
             message=f"Invalid spec file: H1 heading doesn't match 'Type: Name' pattern in {spec_path}",
             code=ErrorCode.SPEC_VALIDATION_FAILED,
-            context={
-                "file_path": str(spec_path),
-                "heading": first_line
-            },
-            remediation="Use format: '# Type: Name' (e.g., '# Feature: My Feature')"
+            context={"file_path": str(spec_path), "heading": first_line},
+            remediation="Use format: '# Type: Name' (e.g., '# Feature: My Feature')",
         )
 
     work_type = heading_match.group(1).lower()
@@ -781,16 +773,16 @@ def parse_spec_file(work_item) -> dict[str, Any]:
 
     parser = parsers.get(work_type)
     if not parser:
-        valid_types = ', '.join(parsers.keys())
+        valid_types = ", ".join(parsers.keys())
         raise ValidationError(
             message=f"Unknown work item type: {work_type}",
             code=ErrorCode.INVALID_WORK_ITEM_TYPE,
             context={
                 "work_type": work_type,
                 "valid_types": list(parsers.keys()),
-                "file_path": str(spec_path)
+                "file_path": str(spec_path),
             },
-            remediation=f"Use one of: {valid_types}"
+            remediation=f"Use one of: {valid_types}",
         )
 
     # Parse the spec
@@ -812,13 +804,9 @@ def parse_spec_file(work_item) -> dict[str, Any]:
         raise ValidationError(
             message=f"Error parsing spec file {spec_path}",
             code=ErrorCode.SPEC_VALIDATION_FAILED,
-            context={
-                "file_path": str(spec_path),
-                "work_type": work_type,
-                "error": str(e)
-            },
+            context={"file_path": str(spec_path), "work_type": work_type, "error": str(e)},
             remediation="Check spec file format and content",
-            cause=e
+            cause=e,
         )
 
 

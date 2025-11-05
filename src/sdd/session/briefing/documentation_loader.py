@@ -40,7 +40,7 @@ class DocumentationLoader:
                 try:
                     docs[path.name] = path.read_text()
                     logger.debug("Loaded documentation: %s", doc_file)
-                except (OSError, IOError, UnicodeDecodeError) as e:
+                except (OSError, UnicodeDecodeError) as e:
                     raise FileOperationError(
                         operation="read",
                         file_path=str(path),

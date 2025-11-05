@@ -7,7 +7,7 @@ JSON serialization compatibility.
 
 from enum import Enum
 
-from sdd.core.exceptions import ValidationError, ErrorCode
+from sdd.core.exceptions import ErrorCode, ValidationError
 
 
 class WorkItemType(str, Enum):
@@ -39,11 +39,8 @@ class WorkItemType(str, Enum):
         raise ValidationError(
             message=f"Invalid work item type '{value}'. Valid types: {valid_types}",
             code=ErrorCode.INVALID_WORK_ITEM_TYPE,
-            context={
-                "work_item_type": value,
-                "valid_types": cls.values()
-            },
-            remediation=f"Choose one of the valid work item types: {valid_types}"
+            context={"work_item_type": value, "valid_types": cls.values()},
+            remediation=f"Choose one of the valid work item types: {valid_types}",
         )
 
 
@@ -74,11 +71,8 @@ class WorkItemStatus(str, Enum):
         raise ValidationError(
             message=f"Invalid status '{value}'. Valid statuses: {valid_statuses}",
             code=ErrorCode.INVALID_STATUS,
-            context={
-                "status": value,
-                "valid_statuses": cls.values()
-            },
-            remediation=f"Choose one of the valid statuses: {valid_statuses}"
+            context={"status": value, "valid_statuses": cls.values()},
+            remediation=f"Choose one of the valid statuses: {valid_statuses}",
         )
 
 
@@ -149,11 +143,8 @@ class Priority(str, Enum):
         raise ValidationError(
             message=f"Invalid priority '{value}'. Valid priorities: {valid_priorities}",
             code=ErrorCode.INVALID_PRIORITY,
-            context={
-                "priority": value,
-                "valid_priorities": cls.values()
-            },
-            remediation=f"Choose one of the valid priorities: {valid_priorities}"
+            context={"priority": value, "valid_priorities": cls.values()},
+            remediation=f"Choose one of the valid priorities: {valid_priorities}",
         )
 
 

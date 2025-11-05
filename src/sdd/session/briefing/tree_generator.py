@@ -46,5 +46,5 @@ class TreeGenerator:
                 operation="read",
                 file_path=str(self.tree_file),
                 details=f"Failed to read tree file: {e}",
-                cause=e
+                cause=e,
             ) from e

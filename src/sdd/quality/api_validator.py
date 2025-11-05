@@ -12,20 +12,21 @@ Supports:
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
-from sdd.core.file_ops import load_json
+from sdd.core.error_handlers import convert_file_errors, log_errors
 from sdd.core.exceptions import (
-    WorkItemNotFoundError,
-    FileNotFoundError as SDDFileNotFoundError,
-    SchemaValidationError,
-    InvalidOpenAPISpecError,
     BreakingChangeError,
     FileOperationError,
+    InvalidOpenAPISpecError,
+    SchemaValidationError,
+    WorkItemNotFoundError,
 )
-from sdd.core.error_handlers import log_errors, convert_file_errors
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.file_ops import load_json
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,9 @@ class APIContractValidator:
             previous_version = contract.get("previous_version")
             if previous_version:
                 try:
-                    breaking_changes = self._detect_breaking_changes(contract_file, previous_version)
+                    breaking_changes = self._detect_breaking_changes(
+                        contract_file, previous_version
+                    )
                     if breaking_changes:
                         self.results["breaking_changes"].extend(breaking_changes)
                         if not contract.get("allow_breaking_changes", False):
@@ -115,10 +118,7 @@ class APIContractValidator:
         contract_path = Path(contract_file)
 
         if not contract_path.exists():
-            raise SDDFileNotFoundError(
-                file_path=contract_file,
-                file_type="API contract"
-            )
+            raise SDDFileNotFoundError(file_path=contract_file, file_type="API contract")
 
         # Load contract
         try:
@@ -130,29 +130,23 @@ class APIContractValidator:
                     spec = json.load(f)
         except (json.JSONDecodeError, yaml.YAMLError) as e:
             raise SchemaValidationError(
-                contract_file=contract_file,
-                details=f"Failed to parse contract file: {e}"
+                contract_file=contract_file, details=f"Failed to parse contract file: {e}"
             ) from e
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise FileOperationError(
-                operation="read",
-                file_path=contract_file,
-                details=str(e),
-                cause=e
+                operation="read", file_path=contract_file, details=str(e), cause=e
             ) from e
 
         # Validate OpenAPI structure
         if "openapi" not in spec and "swagger" not in spec:
             raise InvalidOpenAPISpecError(
-                contract_file=contract_file,
-                details="Missing 'openapi' or 'swagger' field"
+                contract_file=contract_file, details="Missing 'openapi' or 'swagger' field"
             )
 
         # Validate required fields
         if "paths" not in spec:
             raise SchemaValidationError(
-                contract_file=contract_file,
-                details="Missing 'paths' field"
+                contract_file=contract_file, details="Missing 'paths' field"
             )
 
         logger.info(f"Contract valid: {contract_file}")
@@ -233,10 +227,7 @@ class APIContractValidator:
         path = Path(file_path)
 
         if not path.exists():
-            raise SDDFileNotFoundError(
-                file_path=file_path,
-                file_type="API contract"
-            )
+            raise SDDFileNotFoundError(file_path=file_path, file_type="API contract")
 
         try:
             if file_path.endswith(".yaml") or file_path.endswith(".yml"):
@@ -247,8 +238,7 @@ class APIContractValidator:
                     return json.load(f)
         except (json.JSONDecodeError, yaml.YAMLError) as e:
             raise SchemaValidationError(
-                contract_file=file_path,
-                details=f"Failed to parse contract file: {e}"
+                contract_file=file_path, details=f"Failed to parse contract file: {e}"
             ) from e
 
     def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> list[dict]:

@@ -58,10 +58,7 @@ class DeploymentExecutor:
                 config = json.load(f)
         except json.JSONDecodeError as e:
             raise FileOperationError(
-                operation="parse",
-                file_path=str(config_path),
-                details=f"Invalid JSON: {e}",
-                cause=e
+                operation="parse", file_path=str(config_path), details=f"Invalid JSON: {e}", cause=e
             ) from e
 
         return config.get("deployment", self._default_config())
@@ -132,7 +129,7 @@ class DeploymentExecutor:
             raise PreDeploymentCheckError(
                 check_name=", ".join(failed_checks),
                 details=f"{len(failed_checks)} check(s) failed",
-                context={"results": results, "failed_checks": failed_checks}
+                context={"results": results, "failed_checks": failed_checks},
             )
 
         return results
@@ -177,9 +174,7 @@ class DeploymentExecutor:
                 results["failed_at_step"] = i
                 self._log("Deployment failed", {"step": i, "description": step})
                 raise DeploymentStepError(
-                    step_number=i,
-                    step_description=step,
-                    context={"results": results}
+                    step_number=i, step_description=step, context={"results": results}
                 )
 
         results["completed_at"] = datetime.now().isoformat()
@@ -229,7 +224,7 @@ class DeploymentExecutor:
             raise SmokeTestError(
                 test_name=", ".join(failed_tests),
                 details=f"{len(failed_tests)} test(s) failed",
-                context={"results": results, "failed_tests": failed_tests}
+                context={"results": results, "failed_tests": failed_tests},
             )
 
         return results
@@ -269,7 +264,7 @@ class DeploymentExecutor:
                 raise RollbackError(
                     step=step,
                     details=f"Rollback failed at step {i}",
-                    context={"results": results, "step_number": i}
+                    context={"results": results, "step_number": i},
                 )
 
         results["completed_at"] = datetime.now().isoformat()
@@ -370,7 +365,7 @@ def main():
         raise ValidationError(
             message="Missing required argument: work_item_id",
             code=ErrorCode.INVALID_COMMAND,
-            remediation="Usage: deployment_executor.py <work_item_id>"
+            remediation="Usage: deployment_executor.py <work_item_id>",
         )
 
     # Load work item

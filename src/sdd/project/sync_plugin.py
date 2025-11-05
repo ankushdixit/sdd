@@ -83,10 +83,7 @@ class PluginSyncer:
         """
         # Check main repo
         if not self.main_repo.exists():
-            raise SDDFileNotFoundError(
-                file_path=str(self.main_repo),
-                file_type="main repository"
-            )
+            raise SDDFileNotFoundError(file_path=str(self.main_repo), file_type="main repository")
 
         main_markers = ["src/sdd/cli.py", "pyproject.toml", ".claude/commands"]
         for marker in main_markers:
@@ -97,16 +94,15 @@ class PluginSyncer:
                     context={
                         "repository": str(self.main_repo),
                         "missing_marker": marker,
-                        "marker_type": "file" if "." in marker else "directory"
+                        "marker_type": "file" if "." in marker else "directory",
                     },
-                    remediation=f"Ensure {self.main_repo} is a valid SDD repository"
+                    remediation=f"Ensure {self.main_repo} is a valid SDD repository",
                 )
 
         # Check plugin repo
         if not self.plugin_repo.exists():
             raise SDDFileNotFoundError(
-                file_path=str(self.plugin_repo),
-                file_type="plugin repository"
+                file_path=str(self.plugin_repo), file_type="plugin repository"
             )
 
         plugin_markers = ["sdd", "sdd/.claude-plugin/plugin.json"]
@@ -118,9 +114,9 @@ class PluginSyncer:
                     context={
                         "repository": str(self.plugin_repo),
                         "missing_marker": marker,
-                        "marker_type": "file" if "plugin.json" in marker else "directory"
+                        "marker_type": "file" if "plugin.json" in marker else "directory",
                     },
-                    remediation=f"Ensure {self.plugin_repo} is a valid claude-plugins repository"
+                    remediation=f"Ensure {self.plugin_repo} is a valid claude-plugins repository",
                 )
 
         logger.info("Repository validation passed")
@@ -139,10 +135,7 @@ class PluginSyncer:
         """
         pyproject_path = self.main_repo / "pyproject.toml"
         if not pyproject_path.exists():
-            raise SDDFileNotFoundError(
-                file_path=str(pyproject_path),
-                file_type="pyproject.toml"
-            )
+            raise SDDFileNotFoundError(file_path=str(pyproject_path), file_type="pyproject.toml")
 
         try:
             with open(pyproject_path) as f:
@@ -153,20 +146,14 @@ class PluginSyncer:
                         return version
         except OSError as e:
             raise FileOperationError(
-                operation="read",
-                file_path=str(pyproject_path),
-                details=str(e),
-                cause=e
+                operation="read", file_path=str(pyproject_path), details=str(e), cause=e
             )
 
         raise ValidationError(
             message="Version not found in pyproject.toml",
             code=ErrorCode.MISSING_REQUIRED_FIELD,
-            context={
-                "file_path": str(pyproject_path),
-                "expected_field": "version"
-            },
-            remediation="Ensure pyproject.toml contains a 'version = \"x.y.z\"' line"
+            context={"file_path": str(pyproject_path), "expected_field": "version"},
+            remediation="Ensure pyproject.toml contains a 'version = \"x.y.z\"' line",
         )
 
     def update_plugin_version(self, version: str) -> None:
@@ -194,14 +181,11 @@ class PluginSyncer:
                 operation="parse",
                 file_path=str(plugin_json_path),
                 details=f"Invalid JSON: {e}",
-                cause=e
+                cause=e,
             )
         except OSError as e:
             raise FileOperationError(
-                operation="read",
-                file_path=str(plugin_json_path),
-                details=str(e),
-                cause=e
+                operation="read", file_path=str(plugin_json_path), details=str(e), cause=e
             )
 
         old_version = plugin_data.get("version", "unknown")
@@ -213,10 +197,7 @@ class PluginSyncer:
                 f.write("\n")  # Add trailing newline
         except OSError as e:
             raise FileOperationError(
-                operation="write",
-                file_path=str(plugin_json_path),
-                details=str(e),
-                cause=e
+                operation="write", file_path=str(plugin_json_path), details=str(e), cause=e
             )
 
         change_msg = f"Updated plugin.json version: {old_version} → {version}"
@@ -254,7 +235,7 @@ class PluginSyncer:
                 operation="copy",
                 file_path=str(src),
                 details=f"Failed to copy to {dest}: {e}",
-                cause=e
+                cause=e,
             )
 
         logger.info(
@@ -297,7 +278,7 @@ class PluginSyncer:
                 operation="sync_directory",
                 file_path=str(src),
                 details=f"Failed to sync directory to {dest}: {e}",
-                cause=e
+                cause=e,
             )
 
         # Count files synced

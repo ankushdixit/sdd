@@ -15,23 +15,16 @@ Usage:
 
 import functools
 import logging
-import time
 import subprocess
-from typing import Callable, TypeVar, Any, Optional
-from pathlib import Path
+import time
+from typing import Callable, Optional, TypeVar
 
-from sdd.core.exceptions import (
-    SDDError,
-    TimeoutError as SDDTimeoutError,
-    SubprocessError,
-    GitError,
-    ErrorCode,
-    SystemError
-)
+from sdd.core.exceptions import ErrorCode, GitError, SDDError, SubprocessError, SystemError
+from sdd.core.exceptions import TimeoutError as SDDTimeoutError
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def with_timeout(seconds: int, operation_name: str):
@@ -53,6 +46,7 @@ def with_timeout(seconds: int, operation_name: str):
         ... def fetch_data():
         ...     time.sleep(10)  # Will timeout
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
@@ -60,10 +54,7 @@ def with_timeout(seconds: int, operation_name: str):
                 import signal
 
                 def timeout_handler(signum, frame):
-                    raise SDDTimeoutError(
-                        operation=operation_name,
-                        timeout_seconds=seconds
-                    )
+                    raise SDDTimeoutError(operation=operation_name, timeout_seconds=seconds)
 
                 # Set up timeout signal (Unix only)
                 old_handler = signal.signal(signal.SIGALRM, timeout_handler)
@@ -80,6 +71,7 @@ def with_timeout(seconds: int, operation_name: str):
                 return func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -87,7 +79,7 @@ def with_retry(
     max_attempts: int = 3,
     delay_seconds: float = 1.0,
     backoff_multiplier: float = 2.0,
-    exceptions: tuple = (Exception,)
+    exceptions: tuple = (Exception,),
 ):
     """
     Decorator to retry function on failure.
@@ -103,6 +95,7 @@ def with_retry(
         ... def load_file(path: Path) -> dict:
         ...     return json.load(open(path))
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
@@ -122,14 +115,13 @@ def with_retry(
                         time.sleep(delay)
                         delay *= backoff_multiplier
                     else:
-                        logger.error(
-                            f"All {max_attempts} attempts failed for {func.__name__}"
-                        )
+                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
 
             # Re-raise the last exception
             raise last_exception
 
         return wrapper
+
     return decorator
 
 
@@ -146,6 +138,7 @@ def log_errors(logger_instance: Optional[logging.Logger] = None):
         ...     # Business logic that may raise SDDError
         ...     pass
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
@@ -161,19 +154,20 @@ def log_errors(logger_instance: Optional[logging.Logger] = None):
                         "error_code": e.code.value,
                         "error_category": e.category.value,
                         "context": e.context,
-                        "function": func.__name__
-                    }
+                        "function": func.__name__,
+                    },
                 )
                 raise
             except Exception as e:  # noqa: BLE001 - Logging decorator catches all for observability
                 # Log unexpected errors
                 log.exception(
                     f"{func.__name__} failed with unexpected error: {e}",
-                    extra={"function": func.__name__}
+                    extra={"function": func.__name__},
                 )
                 raise
 
         return wrapper
+
     return decorator
 
 
@@ -189,6 +183,7 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
         ...     result = subprocess.run(["git"] + args, check=True, capture_output=True, text=True)
         ...     return result.stdout
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> T:
         try:
@@ -197,7 +192,7 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
             raise SDDTimeoutError(
                 operation=f"subprocess: {' '.join(e.cmd) if isinstance(e.cmd, list) else e.cmd}",
                 timeout_seconds=int(e.timeout),
-                context={"stdout": e.stdout, "stderr": e.stderr}
+                context={"stdout": e.stdout, "stderr": e.stderr},
             ) from e
         except FileNotFoundError as e:
             # Command not found (e.g., git not installed)
@@ -206,14 +201,14 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
                 message=f"Command not found: {cmd_name}",
                 code=ErrorCode.GIT_NOT_FOUND,
                 remediation=f"Install {cmd_name} or ensure it's in your PATH",
-                cause=e
+                cause=e,
             ) from e
         except subprocess.CalledProcessError as e:
             raise SubprocessError(
-                command=' '.join(e.cmd) if isinstance(e.cmd, list) else str(e.cmd),
+                command=" ".join(e.cmd) if isinstance(e.cmd, list) else str(e.cmd),
                 returncode=e.returncode,
                 stderr=e.stderr.decode() if isinstance(e.stderr, bytes) else e.stderr,
-                stdout=e.stdout.decode() if isinstance(e.stdout, bytes) else e.stdout
+                stdout=e.stdout.decode() if isinstance(e.stdout, bytes) else e.stdout,
             ) from e
 
     return wrapper
@@ -231,27 +226,27 @@ def convert_file_errors(func: Callable[..., T]) -> Callable[..., T]:
         ...     with open(path) as f:
         ...         return json.load(f)
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> T:
-        from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
         import builtins
+
+        from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
 
         try:
             return func(*args, **kwargs)
         except builtins.FileNotFoundError as e:
             # Catch FileNotFoundError first (it's a subclass of OSError)
-            file_path = getattr(e, 'filename', 'unknown')
-            raise SDDFileNotFoundError(
-                file_path=file_path
-            ) from e
-        except (IOError, OSError) as e:
+            file_path = getattr(e, "filename", "unknown")
+            raise SDDFileNotFoundError(file_path=file_path) from e
+        except OSError as e:
             # Extract file path from exception if available
-            file_path = getattr(e, 'filename', 'unknown')
+            file_path = getattr(e, "filename", "unknown")
             raise SystemError(
                 message=f"File operation failed: {e}",
                 code=ErrorCode.FILE_OPERATION_FAILED,
                 context={"file_path": file_path, "error": str(e)},
-                cause=e
+                cause=e,
             ) from e
 
     return wrapper
@@ -268,10 +263,7 @@ class ErrorContext:
     """
 
     def __init__(
-        self,
-        operation: str,
-        cleanup: Optional[Callable[[], None]] = None,
-        **context_data
+        self, operation: str, cleanup: Optional[Callable[[], None]] = None, **context_data
     ):
         self.operation = operation
         self.cleanup = cleanup
@@ -297,11 +289,7 @@ class ErrorContext:
 
 
 def safe_execute(
-    func: Callable[..., T],
-    *args,
-    default: Optional[T] = None,
-    log_errors: bool = True,
-    **kwargs
+    func: Callable[..., T], *args, default: Optional[T] = None, log_errors: bool = True, **kwargs
 ) -> Optional[T]:
     """
     Execute function and return default value on error instead of raising.
@@ -331,6 +319,6 @@ def safe_execute(
         if log_errors:
             logger.warning(
                 f"Optional operation failed: {func.__name__}: {e}",
-                extra={"function": func.__name__, "error": str(e)}
+                extra={"function": func.__name__, "error": str(e)},
             )
         return default

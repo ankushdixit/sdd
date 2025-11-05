@@ -15,7 +15,6 @@ from sdd.core.exceptions import (
     ConfigurationError,
     ConfigValidationError,
     ErrorCode,
-    FileNotFoundError as SDDFileNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -208,9 +207,11 @@ class ConfigManager:
             # Filter curation_data to only include valid CurationConfig fields
             # This maintains backward compatibility with old configs
             valid_curation_fields = {"auto_curate", "frequency", "dry_run", "similarity_threshold"}
-            filtered_curation_data = {
-                k: v for k, v in curation_data.items() if k in valid_curation_fields
-            } if curation_data else {}
+            filtered_curation_data = (
+                {k: v for k, v in curation_data.items() if k in valid_curation_fields}
+                if curation_data
+                else {}
+            )
 
             # Create config with parsed data
             self._config = SDDConfig(
@@ -218,7 +219,9 @@ class ConfigManager:
                 git_workflow=GitWorkflowConfig(**git_workflow_data)
                 if git_workflow_data
                 else GitWorkflowConfig(),
-                curation=CurationConfig(**filtered_curation_data) if filtered_curation_data else CurationConfig(),
+                curation=CurationConfig(**filtered_curation_data)
+                if filtered_curation_data
+                else CurationConfig(),
             )
 
             logger.info("Loaded configuration from %s", config_path)

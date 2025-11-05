@@ -732,6 +732,7 @@ def main():
                     print(f"DOT graph saved to {args.output}")
                 except OSError as e:
                     from sdd.core.exceptions import FileOperationError
+
                     raise FileOperationError(
                         operation="write",
                         file_path=args.output,
@@ -756,7 +757,10 @@ def main():
         print(f"Command Error: {e.message}", file=sys.stderr)
         if e.context.get("stderr"):
             print(f"Details: {e.context['stderr']}", file=sys.stderr)
-        print("Hint: Ensure Graphviz is installed (apt-get install graphviz / brew install graphviz)", file=sys.stderr)
+        print(
+            "Hint: Ensure Graphviz is installed (apt-get install graphviz / brew install graphviz)",
+            file=sys.stderr,
+        )
         return e.exit_code
     except FileOperationError as e:
         print(f"File Error: {e.message}", file=sys.stderr)

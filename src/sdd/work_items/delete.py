@@ -12,6 +12,8 @@ from typing import Optional
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
     FileOperationError,
     ValidationError,
     WorkItemNotFoundError,
@@ -73,21 +75,15 @@ def delete_work_item(
     # Check if work items file exists
     if not work_items_file.exists():
         logger.error("Work items file not found")
-        raise SDDFileNotFoundError(
-            file_path=str(work_items_file),
-            file_type="work items"
-        )
+        raise SDDFileNotFoundError(file_path=str(work_items_file), file_type="work items")
 
     # Load work items
     try:
         work_items_data = load_json(work_items_file)
-    except (OSError, IOError, ValueError) as e:
+    except (OSError, ValueError) as e:
         logger.error("Failed to load work items: %s", e)
         raise FileOperationError(
-            operation="read",
-            file_path=str(work_items_file),
-            details=str(e),
-            cause=e
+            operation="read", file_path=str(work_items_file), details=str(e), cause=e
         ) from e
 
     work_items = work_items_data.get("work_items", {})
@@ -131,7 +127,7 @@ def delete_work_item(
                     "Use command-line flags:\n"
                     "  sdd work-delete <work_item_id> --keep-spec   (delete work item only)\n"
                     "  sdd work-delete <work_item_id> --delete-spec (delete work item and spec)"
-                )
+                ),
             )
 
         print("\nOptions:")
@@ -185,13 +181,10 @@ def delete_work_item(
         save_json(work_items_file, work_items_data)
         logger.info("Successfully updated work_items.json")
         print(f"✓ Deleted work item '{work_item_id}'")
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.error("Failed to save work items: %s", e)
         raise FileOperationError(
-            operation="write",
-            file_path=str(work_items_file),
-            details=str(e),
-            cause=e
+            operation="write", file_path=str(work_items_file), details=str(e), cause=e
         ) from e
 
     # Delete spec file if requested
@@ -204,7 +197,7 @@ def delete_work_item(
                 spec_path.unlink()
                 logger.info("Deleted spec file: %s", spec_file_path)
                 print(f"✓ Deleted spec file '{spec_file_path}'")
-            except (OSError, IOError, PermissionError) as e:
+            except (OSError, PermissionError) as e:
                 logger.warning("Failed to delete spec file: %s", e)
                 print(f"⚠️  Warning: Could not delete spec file: {e}")
         else:
@@ -247,7 +240,7 @@ def main():
     if args.keep_spec and args.delete_spec:
         raise ValidationError(
             message="Cannot specify both --keep-spec and --delete-spec",
-            remediation="Choose only one option: --keep-spec OR --delete-spec"
+            remediation="Choose only one option: --keep-spec OR --delete-spec",
         )
     elif args.keep_spec:
         delete_spec_value = False
@@ -265,6 +258,7 @@ def main():
         # Show available work items
         try:
             from pathlib import Path
+
             work_items_file = Path.cwd() / ".session" / "tracking" / "work_items.json"
             if work_items_file.exists():
                 work_items_data = load_json(work_items_file)

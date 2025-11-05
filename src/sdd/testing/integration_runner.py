@@ -23,7 +23,6 @@ from sdd.core.command_runner import CommandRunner
 from sdd.core.exceptions import (
     EnvironmentSetupError,
     FileNotFoundError,
-    IntegrationTestError,
     IntegrationExecutionError,
     TimeoutError,
     ValidationError,
@@ -54,7 +53,7 @@ class IntegrationTestRunner:
             raise ValidationError(
                 message="Work item must have 'id' field",
                 context={"work_item": work_item},
-                remediation="Ensure work item dict contains 'id' key"
+                remediation="Ensure work item dict contains 'id' key",
             )
 
         # Parse spec file to get test scenarios and environment requirements
@@ -69,7 +68,7 @@ class IntegrationTestRunner:
                 message=f"Failed to parse spec file for {work_id}",
                 context={"work_item_id": work_id, "error": str(e)},
                 remediation=f"Check .session/specs/{work_id}.md for valid format",
-                cause=e
+                cause=e,
             )
 
         # Extract test scenarios from parsed spec
@@ -156,10 +155,7 @@ class IntegrationTestRunner:
         # Check if Docker Compose file exists
         compose_file = self.env_requirements.get("compose_file", "docker-compose.integration.yml")
         if not Path(compose_file).exists():
-            raise FileNotFoundError(
-                file_path=compose_file,
-                file_type="Docker Compose"
-            )
+            raise FileNotFoundError(file_path=compose_file, file_type="Docker Compose")
 
         # Start services
         result = self.runner.run(
@@ -172,12 +168,12 @@ class IntegrationTestRunner:
                 raise TimeoutError(
                     operation="docker-compose startup",
                     timeout_seconds=180,
-                    context={"compose_file": compose_file}
+                    context={"compose_file": compose_file},
                 )
             raise EnvironmentSetupError(
                 component="docker-compose",
                 details=result.stderr or "Failed to start services",
-                context={"compose_file": compose_file, "stderr": result.stderr}
+                context={"compose_file": compose_file, "stderr": result.stderr},
             )
 
         logger.info(f"✓ Services started from {compose_file}")
@@ -232,7 +228,7 @@ class IntegrationTestRunner:
         raise TimeoutError(
             operation=f"waiting for service '{service}' to become healthy",
             timeout_seconds=timeout,
-            context={"service": service}
+            context={"service": service},
         )
 
     def _load_test_data(self) -> None:
@@ -259,7 +255,7 @@ class IntegrationTestRunner:
                 raise EnvironmentSetupError(
                     component="test data fixture",
                     details=f"Failed to load fixture: {fixture}",
-                    context={"fixture": fixture, "stderr": result.stderr}
+                    context={"fixture": fixture, "stderr": result.stderr},
                 )
 
     def run_tests(self, language: str = None) -> dict:
@@ -293,7 +289,7 @@ class IntegrationTestRunner:
             raise ValidationError(
                 message=f"Unsupported language: {language}",
                 context={"language": language},
-                remediation="Supported languages: python, javascript, typescript"
+                remediation="Supported languages: python, javascript, typescript",
             )
 
         self.results["end_time"] = datetime.now().isoformat()
@@ -342,7 +338,7 @@ class IntegrationTestRunner:
             raise TimeoutError(
                 operation="pytest execution",
                 timeout_seconds=600,
-                context={"test_directory": test_dir}
+                context={"test_directory": test_dir},
             )
 
         if not result.success:
@@ -354,8 +350,8 @@ class IntegrationTestRunner:
                     "passed": self.results.get("passed", 0),
                     "failed": self.results.get("failed", 0),
                     "skipped": self.results.get("skipped", 0),
-                    "stderr": result.stderr
-                }
+                    "stderr": result.stderr,
+                },
             )
 
     def _run_jest(self) -> None:
@@ -392,7 +388,7 @@ class IntegrationTestRunner:
             raise TimeoutError(
                 operation="jest execution",
                 timeout_seconds=600,
-                context={"test_pattern": "integration"}
+                context={"test_pattern": "integration"},
             )
 
         if not result.success:
@@ -403,8 +399,8 @@ class IntegrationTestRunner:
                     "passed": self.results.get("passed", 0),
                     "failed": self.results.get("failed", 0),
                     "skipped": self.results.get("skipped", 0),
-                    "stderr": result.stderr
-                }
+                    "stderr": result.stderr,
+                },
             )
 
     def _detect_language(self) -> str:
@@ -440,12 +436,12 @@ class IntegrationTestRunner:
                 raise TimeoutError(
                     operation="docker-compose teardown",
                     timeout_seconds=60,
-                    context={"compose_file": compose_file}
+                    context={"compose_file": compose_file},
                 )
             raise EnvironmentSetupError(
                 component="docker-compose teardown",
                 details=result.stderr or "Failed to tear down services",
-                context={"compose_file": compose_file, "stderr": result.stderr}
+                context={"compose_file": compose_file, "stderr": result.stderr},
             )
 
         logger.info("✓ Services stopped and removed")
@@ -481,14 +477,14 @@ def main():
         WorkItemNotFoundError: If work item not found
         Various exceptions from runner methods
     """
-    from sdd.core.exceptions import SDDError, WorkItemNotFoundError
+    from sdd.core.exceptions import WorkItemNotFoundError
     from sdd.core.file_ops import load_json
 
     if len(sys.argv) < 2:
         raise ValidationError(
             message="Missing required argument: work_item_id",
             context={"usage": "python integration_test_runner.py <work_item_id>"},
-            remediation="Provide work item ID as command-line argument"
+            remediation="Provide work item ID as command-line argument",
         )
 
     work_item_id = sys.argv[1]
@@ -523,7 +519,7 @@ def main():
         else:
             sys.exit(0)
 
-    except Exception as e:
+    except Exception:
         # Attempt teardown on any failure
         try:
             runner.teardown_environment()

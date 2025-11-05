@@ -6,14 +6,16 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
-    ConfigValidationError,
     ConfigurationError,
+    ConfigValidationError,
     ErrorCode,
-    FileNotFoundError as SDDFileNotFoundError,
     ValidationError,
 )
-from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
                 code=ErrorCode.INVALID_JSON,
                 context={"file_path": str(config_path), "error": str(e)},
                 remediation="Fix JSON syntax errors in config file",
-                cause=e
+                cause=e,
             ) from e
 
     # Load config
@@ -69,7 +71,7 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
             code=ErrorCode.INVALID_JSON,
             context={"file_path": str(config_path), "error": str(e)},
             remediation="Fix JSON syntax errors in config file",
-            cause=e
+            cause=e,
         ) from e
 
     # Load schema
@@ -87,7 +89,7 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
             code=ErrorCode.INVALID_CONFIG_VALUE,
             context={"file_path": str(schema_path), "error": str(e)},
             remediation="Fix JSON syntax errors in schema file",
-            cause=e
+            cause=e,
         ) from e
 
     # Validate
@@ -96,17 +98,14 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
         return config
     except jsonschema.ValidationError as e:
         error_msg = _format_validation_error(e)
-        raise ConfigValidationError(
-            config_path=str(config_path),
-            errors=[error_msg]
-        ) from e
+        raise ConfigValidationError(config_path=str(config_path), errors=[error_msg]) from e
     except jsonschema.SchemaError as e:
         raise ConfigurationError(
             message=f"Invalid schema structure: {schema_path}",
             code=ErrorCode.INVALID_CONFIG_VALUE,
             context={"file_path": str(schema_path), "error": e.message},
             remediation="Fix schema structure errors in schema file",
-            cause=e
+            cause=e,
         ) from e
 
 
@@ -151,6 +150,7 @@ def main():
         SystemExit: Always exits with status code
     """
     import sys
+
     from sdd.core.exceptions import SDDError
 
     if len(sys.argv) < 2:

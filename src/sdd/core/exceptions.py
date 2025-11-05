@@ -22,12 +22,14 @@ Usage:
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+
 from enum import Enum
+from typing import Any
 
 
 class ErrorCategory(Enum):
     """Error categories for classification and handling"""
+
     VALIDATION = "validation"
     NOT_FOUND = "not_found"
     ALREADY_EXISTS = "already_exists"
@@ -42,6 +44,7 @@ class ErrorCategory(Enum):
 
 class ErrorCode(Enum):
     """Specific error codes for programmatic handling"""
+
     # Validation errors (1000-1999)
     INVALID_WORK_ITEM_ID = 1001
     INVALID_WORK_ITEM_TYPE = 1002
@@ -154,9 +157,9 @@ class SDDError(Exception):
         message: str,
         code: ErrorCode,
         category: ErrorCategory,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -200,13 +203,14 @@ class SDDError(Exception):
             "context": self.context,
             "remediation": self.remediation,
             "cause": str(self.cause) if self.cause else None,
-            "exit_code": self.exit_code
+            "exit_code": self.exit_code,
         }
 
 
 # ============================================================================
 # Validation Errors
 # ============================================================================
+
 
 class ValidationError(SDDError):
     """
@@ -225,9 +229,9 @@ class ValidationError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.MISSING_REQUIRED_FIELD,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -235,7 +239,7 @@ class ValidationError(SDDError):
             category=ErrorCategory.VALIDATION,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -250,29 +254,26 @@ class SpecValidationError(ValidationError):
         ... )
     """
 
-    def __init__(
-        self,
-        work_item_id: str,
-        errors: list[str],
-        remediation: Optional[str] = None
-    ):
+    def __init__(self, work_item_id: str, errors: list[str], remediation: str | None = None):
         message = f"Spec validation failed for '{work_item_id}'"
         context = {
             "work_item_id": work_item_id,
             "validation_errors": errors,
-            "error_count": len(errors)
+            "error_count": len(errors),
         }
         super().__init__(
             message=message,
             code=ErrorCode.SPEC_VALIDATION_FAILED,
             context=context,
-            remediation=remediation or f"Edit .session/specs/{work_item_id}.md to fix validation errors"
+            remediation=remediation
+            or f"Edit .session/specs/{work_item_id}.md to fix validation errors",
         )
 
 
 # ============================================================================
 # Not Found Errors
 # ============================================================================
+
 
 class NotFoundError(SDDError):
     """
@@ -290,9 +291,9 @@ class NotFoundError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -300,7 +301,7 @@ class NotFoundError(SDDError):
             category=ErrorCategory.NOT_FOUND,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -317,7 +318,7 @@ class WorkItemNotFoundError(NotFoundError):
             message=f"Work item '{work_item_id}' not found",
             code=ErrorCode.WORK_ITEM_NOT_FOUND,
             context={"work_item_id": work_item_id},
-            remediation="Use 'sdd work-list' to see available work items"
+            remediation="Use 'sdd work-list' to see available work items",
         )
 
 
@@ -335,7 +336,7 @@ class FileNotFoundError(NotFoundError):
         ... )
     """
 
-    def __init__(self, file_path: str, file_type: Optional[str] = None):
+    def __init__(self, file_path: str, file_type: str | None = None):
         context = {"file_path": file_path}
         if file_type:
             context["file_type"] = file_type
@@ -348,7 +349,7 @@ class FileNotFoundError(NotFoundError):
             message=f"File not found: {file_path}",
             code=ErrorCode.FILE_NOT_FOUND,
             context=context,
-            remediation=remediation_msg
+            remediation=remediation_msg,
         )
 
 
@@ -364,13 +365,14 @@ class SessionNotFoundError(NotFoundError):
         super().__init__(
             message="No active session found",
             code=ErrorCode.SESSION_NOT_FOUND,
-            remediation="Start a session with 'sdd start' or 'sdd start <work_item_id>'"
+            remediation="Start a session with 'sdd start' or 'sdd start <work_item_id>'",
         )
 
 
 # ============================================================================
 # Configuration Errors
 # ============================================================================
+
 
 class ConfigurationError(SDDError):
     """
@@ -388,9 +390,9 @@ class ConfigurationError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.CONFIG_VALIDATION_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -398,7 +400,7 @@ class ConfigurationError(SDDError):
             category=ErrorCategory.CONFIGURATION,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -418,19 +420,20 @@ class ConfigValidationError(ConfigurationError):
         context = {
             "config_path": config_path,
             "validation_errors": errors,
-            "error_count": len(errors)
+            "error_count": len(errors),
         }
         super().__init__(
             message=message,
             code=ErrorCode.CONFIG_VALIDATION_FAILED,
             context=context,
-            remediation="Check docs/guides/configuration.md for valid configuration options"
+            remediation="Check docs/guides/configuration.md for valid configuration options",
         )
 
 
 # ============================================================================
 # Git Errors
 # ============================================================================
+
 
 class GitError(SDDError):
     """
@@ -448,9 +451,9 @@ class GitError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -458,7 +461,7 @@ class GitError(SDDError):
             category=ErrorCategory.GIT,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -470,13 +473,13 @@ class NotAGitRepoError(GitError):
         >>> raise NotAGitRepoError()
     """
 
-    def __init__(self, path: Optional[str] = None):
+    def __init__(self, path: str | None = None):
         context = {"path": path} if path else {}
         super().__init__(
             message="Not a git repository",
             code=ErrorCode.NOT_A_GIT_REPO,
             context=context,
-            remediation="Run 'git init' to initialize a repository"
+            remediation="Run 'git init' to initialize a repository",
         )
 
 
@@ -490,13 +493,13 @@ class WorkingDirNotCleanError(GitError):
         ... )
     """
 
-    def __init__(self, changes: Optional[list[str]] = None):
+    def __init__(self, changes: list[str] | None = None):
         context = {"uncommitted_changes": changes} if changes else {}
         super().__init__(
             message="Working directory not clean (uncommitted changes)",
             code=ErrorCode.WORKING_DIR_NOT_CLEAN,
             context=context,
-            remediation="Commit or stash changes before proceeding"
+            remediation="Commit or stash changes before proceeding",
         )
 
 
@@ -513,13 +516,14 @@ class BranchNotFoundError(GitError):
             message=f"Branch '{branch_name}' not found",
             code=ErrorCode.BRANCH_NOT_FOUND,
             context={"branch_name": branch_name},
-            remediation="Check branch name or create it with 'git checkout -b <branch>'"
+            remediation="Check branch name or create it with 'git checkout -b <branch>'",
         )
 
 
 # ============================================================================
 # System Errors
 # ============================================================================
+
 
 class SystemError(SDDError):
     """
@@ -537,9 +541,9 @@ class SystemError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -547,7 +551,7 @@ class SystemError(SDDError):
             category=ErrorCategory.SYSTEM,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -564,22 +568,13 @@ class SubprocessError(SystemError):
     """
 
     def __init__(
-        self,
-        command: str,
-        returncode: int,
-        stderr: Optional[str] = None,
-        stdout: Optional[str] = None
+        self, command: str, returncode: int, stderr: str | None = None, stdout: str | None = None
     ):
-        context = {
-            "command": command,
-            "returncode": returncode,
-            "stderr": stderr,
-            "stdout": stdout
-        }
+        context = {"command": command, "returncode": returncode, "stderr": stderr, "stdout": stdout}
         super().__init__(
             message=f"Command failed with exit code {returncode}: {command}",
             code=ErrorCode.SUBPROCESS_FAILED,
-            context=context
+            context=context,
         )
 
 
@@ -594,18 +589,13 @@ class TimeoutError(SystemError):
         ... )
     """
 
-    def __init__(
-        self,
-        operation: str,
-        timeout_seconds: int,
-        context: Optional[dict[str, Any]] = None
-    ):
+    def __init__(self, operation: str, timeout_seconds: int, context: dict[str, Any] | None = None):
         ctx = context or {}
         ctx.update({"operation": operation, "timeout_seconds": timeout_seconds})
         super().__init__(
             message=f"Operation timed out after {timeout_seconds}s: {operation}",
             code=ErrorCode.OPERATION_TIMEOUT,
-            context=ctx
+            context=ctx,
         )
 
 
@@ -624,28 +614,20 @@ class CommandExecutionError(SystemError):
     """
 
     def __init__(
-        self,
-        command: str,
-        returncode: int,
-        stderr: Optional[str] = None,
-        stdout: Optional[str] = None
+        self, command: str, returncode: int, stderr: str | None = None, stdout: str | None = None
     ):
-        context = {
-            "command": command,
-            "returncode": returncode,
-            "stderr": stderr,
-            "stdout": stdout
-        }
+        context = {"command": command, "returncode": returncode, "stderr": stderr, "stdout": stdout}
         super().__init__(
             message=f"Command execution failed: {command}",
             code=ErrorCode.COMMAND_FAILED,
-            context=context
+            context=context,
         )
 
 
 # ============================================================================
 # Dependency Errors
 # ============================================================================
+
 
 class DependencyError(SDDError):
     """
@@ -663,9 +645,9 @@ class DependencyError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -673,7 +655,7 @@ class DependencyError(SDDError):
             category=ErrorCategory.DEPENDENCY,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -691,7 +673,7 @@ class CircularDependencyError(DependencyError):
             message=f"Circular dependency detected: {cycle_str}",
             code=ErrorCode.CIRCULAR_DEPENDENCY,
             context={"cycle": cycle},
-            remediation="Break the dependency cycle by reordering work items"
+            remediation="Break the dependency cycle by reordering work items",
         )
 
 
@@ -708,13 +690,14 @@ class UnmetDependencyError(DependencyError):
             message=f"Cannot start '{work_item_id}': dependency '{dependency_id}' not completed",
             code=ErrorCode.UNMET_DEPENDENCY,
             context={"work_item_id": work_item_id, "dependency_id": dependency_id},
-            remediation=f"Complete '{dependency_id}' before starting '{work_item_id}'"
+            remediation=f"Complete '{dependency_id}' before starting '{work_item_id}'",
         )
 
 
 # ============================================================================
 # Already Exists Errors
 # ============================================================================
+
 
 class AlreadyExistsError(SDDError):
     """
@@ -732,9 +715,9 @@ class AlreadyExistsError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -742,7 +725,7 @@ class AlreadyExistsError(SDDError):
             category=ErrorCategory.ALREADY_EXISTS,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -759,7 +742,7 @@ class SessionAlreadyActiveError(AlreadyExistsError):
             message=f"Session already active for '{current_work_item_id}'",
             code=ErrorCode.SESSION_ALREADY_ACTIVE,
             context={"current_work_item_id": current_work_item_id},
-            remediation="Complete current session with 'sdd end' before starting a new one"
+            remediation="Complete current session with 'sdd end' before starting a new one",
         )
 
 
@@ -776,13 +759,14 @@ class WorkItemAlreadyExistsError(AlreadyExistsError):
             message=f"Work item '{work_item_id}' already exists",
             code=ErrorCode.WORK_ITEM_ALREADY_EXISTS,
             context={"work_item_id": work_item_id},
-            remediation=f"Use 'sdd work-show {work_item_id}' to view existing work item"
+            remediation=f"Use 'sdd work-show {work_item_id}' to view existing work item",
         )
 
 
 # ============================================================================
 # Quality Gate Errors
 # ============================================================================
+
 
 class QualityGateError(SDDError):
     """
@@ -800,9 +784,9 @@ class QualityGateError(SDDError):
         self,
         message: str,
         code: ErrorCode,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -810,7 +794,7 @@ class QualityGateError(SDDError):
             category=ErrorCategory.VALIDATION,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -826,24 +810,21 @@ class QualityTestFailedError(QualityGateError):
         ... )
     """
 
-    def __init__(self, failed_count: int, total_count: int, details: Optional[list[str]] = None):
+    def __init__(self, failed_count: int, total_count: int, details: list[str] | None = None):
         message = f"{failed_count} of {total_count} tests failed"
-        context = {
-            "failed_count": failed_count,
-            "total_count": total_count,
-            "details": details
-        }
+        context = {"failed_count": failed_count, "total_count": total_count, "details": details}
         super().__init__(
             message=message,
             code=ErrorCode.TEST_FAILED,
             context=context,
-            remediation="Fix failing tests before completing session"
+            remediation="Fix failing tests before completing session",
         )
 
 
 # ============================================================================
 # File Operation Errors
 # ============================================================================
+
 
 class FileOperationError(SystemError):
     """
@@ -861,29 +842,23 @@ class FileOperationError(SystemError):
         self,
         operation: str,
         file_path: str,
-        details: Optional[str] = None,
-        cause: Optional[Exception] = None
+        details: str | None = None,
+        cause: Exception | None = None,
     ):
         message = f"File {operation} operation failed: {file_path}"
         if details:
             message = f"{message} - {details}"
 
-        context = {
-            "operation": operation,
-            "file_path": file_path,
-            "details": details
-        }
+        context = {"operation": operation, "file_path": file_path, "details": details}
         super().__init__(
-            message=message,
-            code=ErrorCode.FILE_OPERATION_FAILED,
-            context=context,
-            cause=cause
+            message=message, code=ErrorCode.FILE_OPERATION_FAILED, context=context, cause=cause
         )
 
 
 # ============================================================================
 # Learning Errors
 # ============================================================================
+
 
 class LearningError(ValidationError):
     """
@@ -899,16 +874,16 @@ class LearningError(ValidationError):
     def __init__(
         self,
         message: str,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
             code=ErrorCode.MISSING_REQUIRED_FIELD,
             context=context,
             remediation=remediation or "Check learning content and structure",
-            cause=cause
+            cause=cause,
         )
 
 
@@ -925,13 +900,14 @@ class LearningNotFoundError(NotFoundError):
             message=f"Learning '{learning_id}' not found",
             code=ErrorCode.LEARNING_NOT_FOUND,
             context={"learning_id": learning_id},
-            remediation="Use search or list commands to find available learnings"
+            remediation="Use search or list commands to find available learnings",
         )
 
 
 # ============================================================================
 # Deployment Errors
 # ============================================================================
+
 
 class DeploymentError(SDDError):
     """
@@ -949,9 +925,9 @@ class DeploymentError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.DEPLOYMENT_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -959,7 +935,7 @@ class DeploymentError(SDDError):
             category=ErrorCategory.SYSTEM,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -975,10 +951,7 @@ class PreDeploymentCheckError(DeploymentError):
     """
 
     def __init__(
-        self,
-        check_name: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        self, check_name: str, details: str | None = None, context: dict[str, Any] | None = None
     ):
         message = f"Pre-deployment check '{check_name}' failed"
         if details:
@@ -991,7 +964,7 @@ class PreDeploymentCheckError(DeploymentError):
             message=message,
             code=ErrorCode.PRE_DEPLOYMENT_CHECK_FAILED,
             context=ctx,
-            remediation=f"Fix {check_name} issues before proceeding with deployment"
+            remediation=f"Fix {check_name} issues before proceeding with deployment",
         )
 
 
@@ -1007,10 +980,7 @@ class SmokeTestError(DeploymentError):
     """
 
     def __init__(
-        self,
-        test_name: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        self, test_name: str, details: str | None = None, context: dict[str, Any] | None = None
     ):
         message = f"Smoke test '{test_name}' failed"
         if details:
@@ -1023,7 +993,7 @@ class SmokeTestError(DeploymentError):
             message=message,
             code=ErrorCode.SMOKE_TEST_FAILED,
             context=ctx,
-            remediation="Check deployment logs and verify service health"
+            remediation="Check deployment logs and verify service health",
         )
 
 
@@ -1040,9 +1010,9 @@ class RollbackError(DeploymentError):
 
     def __init__(
         self,
-        step: Optional[str] = None,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        step: str | None = None,
+        details: str | None = None,
+        context: dict[str, Any] | None = None,
     ):
         message = "Rollback failed"
         if step:
@@ -1060,7 +1030,7 @@ class RollbackError(DeploymentError):
             message=message,
             code=ErrorCode.ROLLBACK_FAILED,
             context=ctx,
-            remediation="Manual intervention may be required to restore system state"
+            remediation="Manual intervention may be required to restore system state",
         )
 
 
@@ -1080,31 +1050,30 @@ class DeploymentStepError(DeploymentError):
         self,
         step_number: int,
         step_description: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        details: str | None = None,
+        context: dict[str, Any] | None = None,
     ):
         message = f"Deployment step {step_number} failed: {step_description}"
         if details:
             message = f"{message} - {details}"
 
         ctx = context or {}
-        ctx.update({
-            "step_number": step_number,
-            "step_description": step_description,
-            "details": details
-        })
+        ctx.update(
+            {"step_number": step_number, "step_description": step_description, "details": details}
+        )
 
         super().__init__(
             message=message,
             code=ErrorCode.DEPLOYMENT_STEP_FAILED,
             context=ctx,
-            remediation="Review deployment logs and fix the failing step"
+            remediation="Review deployment logs and fix the failing step",
         )
 
 
 # ============================================================================
 # Integration Test Errors
 # ============================================================================
+
 
 class IntegrationTestError(SDDError):
     """
@@ -1121,9 +1090,9 @@ class IntegrationTestError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.TEST_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -1131,7 +1100,7 @@ class IntegrationTestError(SDDError):
             category=ErrorCategory.SYSTEM,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -1147,10 +1116,7 @@ class EnvironmentSetupError(IntegrationTestError):
     """
 
     def __init__(
-        self,
-        component: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        self, component: str, details: str | None = None, context: dict[str, Any] | None = None
     ):
         message = f"Environment setup failed: {component}"
         if details:
@@ -1163,7 +1129,7 @@ class EnvironmentSetupError(IntegrationTestError):
             message=message,
             code=ErrorCode.COMMAND_FAILED,
             context=ctx,
-            remediation="Check Docker/docker-compose installation and service configurations"
+            remediation="Check Docker/docker-compose installation and service configurations",
         )
 
 
@@ -1179,10 +1145,7 @@ class IntegrationExecutionError(IntegrationTestError):
     """
 
     def __init__(
-        self,
-        test_framework: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        self, test_framework: str, details: str | None = None, context: dict[str, Any] | None = None
     ):
         message = f"Test execution failed: {test_framework}"
         if details:
@@ -1195,13 +1158,14 @@ class IntegrationExecutionError(IntegrationTestError):
             message=message,
             code=ErrorCode.TEST_FAILED,
             context=ctx,
-            remediation="Review test output and fix failing tests"
+            remediation="Review test output and fix failing tests",
         )
 
 
 # ============================================================================
 # API Validation Errors
 # ============================================================================
+
 
 class APIValidationError(ValidationError):
     """
@@ -1218,16 +1182,12 @@ class APIValidationError(ValidationError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.API_VALIDATION_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
-            message=message,
-            code=code,
-            context=context,
-            remediation=remediation,
-            cause=cause
+            message=message, code=code, context=context, remediation=remediation, cause=cause
         )
 
 
@@ -1242,24 +1202,16 @@ class SchemaValidationError(APIValidationError):
         ... )
     """
 
-    def __init__(
-        self,
-        contract_file: str,
-        details: str,
-        context: Optional[dict[str, Any]] = None
-    ):
+    def __init__(self, contract_file: str, details: str, context: dict[str, Any] | None = None):
         message = f"Schema validation failed for '{contract_file}': {details}"
         ctx = context or {}
-        ctx.update({
-            "contract_file": contract_file,
-            "details": details
-        })
+        ctx.update({"contract_file": contract_file, "details": details})
 
         super().__init__(
             message=message,
             code=ErrorCode.SCHEMA_VALIDATION_FAILED,
             context=ctx,
-            remediation=f"Fix schema validation errors in {contract_file}"
+            remediation=f"Fix schema validation errors in {contract_file}",
         )
 
 
@@ -1283,23 +1235,25 @@ class ContractViolationError(APIValidationError):
         violation_type: str,
         details: str,
         severity: str = "high",
-        context: Optional[dict[str, Any]] = None
+        context: dict[str, Any] | None = None,
     ):
         message = f"Contract violation in {method} {path}: {details}"
         ctx = context or {}
-        ctx.update({
-            "path": path,
-            "method": method,
-            "violation_type": violation_type,
-            "details": details,
-            "severity": severity
-        })
+        ctx.update(
+            {
+                "path": path,
+                "method": method,
+                "violation_type": violation_type,
+                "details": details,
+                "severity": severity,
+            }
+        )
 
         super().__init__(
             message=message,
             code=ErrorCode.CONTRACT_VIOLATION,
             context=ctx,
-            remediation="Review API contract changes and update implementation"
+            remediation="Review API contract changes and update implementation",
         )
 
 
@@ -1321,7 +1275,7 @@ class BreakingChangeError(APIValidationError):
         self,
         breaking_changes: list[dict],
         allow_breaking_changes: bool = False,
-        context: Optional[dict[str, Any]] = None
+        context: dict[str, Any] | None = None,
     ):
         change_count = len(breaking_changes)
         message = f"{change_count} breaking change{'s' if change_count != 1 else ''} detected"
@@ -1329,11 +1283,13 @@ class BreakingChangeError(APIValidationError):
             message = f"{message} (not allowed)"
 
         ctx = context or {}
-        ctx.update({
-            "breaking_changes": breaking_changes,
-            "breaking_change_count": change_count,
-            "allow_breaking_changes": allow_breaking_changes
-        })
+        ctx.update(
+            {
+                "breaking_changes": breaking_changes,
+                "breaking_change_count": change_count,
+                "allow_breaking_changes": allow_breaking_changes,
+            }
+        )
 
         super().__init__(
             message=message,
@@ -1343,7 +1299,7 @@ class BreakingChangeError(APIValidationError):
                 "Review breaking changes and either: "
                 "1) Fix them to maintain backward compatibility, or "
                 "2) Set 'allow_breaking_changes: true' if intentional"
-            )
+            ),
         )
 
 
@@ -1358,29 +1314,23 @@ class InvalidOpenAPISpecError(APIValidationError):
         ... )
     """
 
-    def __init__(
-        self,
-        contract_file: str,
-        details: str,
-        context: Optional[dict[str, Any]] = None
-    ):
+    def __init__(self, contract_file: str, details: str, context: dict[str, Any] | None = None):
         message = f"Invalid OpenAPI/Swagger spec: {contract_file}"
         ctx = context or {}
-        ctx.update({
-            "contract_file": contract_file,
-            "details": details
-        })
+        ctx.update({"contract_file": contract_file, "details": details})
 
         super().__init__(
             message=message,
             code=ErrorCode.INVALID_OPENAPI_SPEC,
             context=ctx,
-            remediation=f"Ensure {contract_file} is a valid OpenAPI/Swagger specification with 'openapi' or 'swagger' field"
+            remediation=f"Ensure {contract_file} is a valid OpenAPI/Swagger specification with 'openapi' or 'swagger' field",
         )
+
 
 # ============================================================================
 # Performance Testing Errors
 # ============================================================================
+
 
 class PerformanceTestError(SDDError):
     """
@@ -1398,9 +1348,9 @@ class PerformanceTestError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.PERFORMANCE_TEST_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -1408,7 +1358,7 @@ class PerformanceTestError(SDDError):
             category=ErrorCategory.VALIDATION,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -1425,13 +1375,7 @@ class BenchmarkFailedError(PerformanceTestError):
         ... )
     """
 
-    def __init__(
-        self,
-        metric: str,
-        actual: float,
-        expected: float,
-        unit: str = "ms"
-    ):
+    def __init__(self, metric: str, actual: float, expected: float, unit: str = "ms"):
         message = f"Benchmark failed: {metric} {actual}{unit} exceeds requirement {expected}{unit}"
         context = {
             "metric": metric,
@@ -1439,13 +1383,13 @@ class BenchmarkFailedError(PerformanceTestError):
             "expected_value": expected,
             "unit": unit,
             "delta": actual - expected,
-            "percentage_over": ((actual / expected - 1) * 100) if expected > 0 else 0
+            "percentage_over": ((actual / expected - 1) * 100) if expected > 0 else 0,
         }
         super().__init__(
             message=message,
             code=ErrorCode.BENCHMARK_FAILED,
             context=context,
-            remediation=f"Optimize performance to meet {metric} requirement of {expected}{unit}"
+            remediation=f"Optimize performance to meet {metric} requirement of {expected}{unit}",
         )
 
 
@@ -1463,11 +1407,7 @@ class PerformanceRegressionError(PerformanceTestError):
     """
 
     def __init__(
-        self,
-        metric: str,
-        current: float,
-        baseline: float,
-        threshold_percent: float = 10.0
+        self, metric: str, current: float, baseline: float, threshold_percent: float = 10.0
     ):
         regression_percent = ((current / baseline - 1) * 100) if baseline > 0 else 0
         message = (
@@ -1480,13 +1420,13 @@ class PerformanceRegressionError(PerformanceTestError):
             "current_value": current,
             "baseline_value": baseline,
             "regression_percent": regression_percent,
-            "threshold_percent": threshold_percent
+            "threshold_percent": threshold_percent,
         }
         super().__init__(
             message=message,
             code=ErrorCode.PERFORMANCE_REGRESSION,
             context=context,
-            remediation="Investigate recent changes that may have caused performance degradation"
+            remediation="Investigate recent changes that may have caused performance degradation",
         )
 
 
@@ -1502,32 +1442,27 @@ class LoadTestFailedError(PerformanceTestError):
     """
 
     def __init__(
-        self,
-        endpoint: str,
-        details: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None
+        self, endpoint: str, details: str | None = None, context: dict[str, Any] | None = None
     ):
         message = f"Load test failed for endpoint: {endpoint}"
         if details:
             message = f"{message} - {details}"
 
         ctx = context or {}
-        ctx.update({
-            "endpoint": endpoint,
-            "details": details
-        })
+        ctx.update({"endpoint": endpoint, "details": details})
 
         super().__init__(
             message=message,
             code=ErrorCode.LOAD_TEST_FAILED,
             context=ctx,
-            remediation="Verify the endpoint is accessible and the service is running"
+            remediation="Verify the endpoint is accessible and the service is running",
         )
 
 
 # ============================================================================
 # Project Initialization Errors
 # ============================================================================
+
 
 class ProjectInitializationError(SDDError):
     """
@@ -1544,9 +1479,9 @@ class ProjectInitializationError(SDDError):
         self,
         message: str,
         code: ErrorCode = ErrorCode.FILE_OPERATION_FAILED,
-        context: Optional[dict[str, Any]] = None,
-        remediation: Optional[str] = None,
-        cause: Optional[Exception] = None
+        context: dict[str, Any] | None = None,
+        remediation: str | None = None,
+        cause: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -1554,7 +1489,7 @@ class ProjectInitializationError(SDDError):
             category=ErrorCategory.SYSTEM,
             context=context,
             remediation=remediation,
-            cause=cause
+            cause=cause,
         )
 
 
@@ -1571,7 +1506,7 @@ class DirectoryNotEmptyError(AlreadyExistsError):
             message=f"Directory '{directory}' already exists",
             code=ErrorCode.FILE_ALREADY_EXISTS,
             context={"directory": directory},
-            remediation=f"Remove '{directory}' directory or run initialization in a different location"
+            remediation=f"Remove '{directory}' directory or run initialization in a different location",
         )
 
 
@@ -1587,9 +1522,8 @@ class TemplateNotFoundError(FileNotFoundError):
     """
 
     def __init__(self, template_name: str, template_path: str):
-        super().__init__(
-            file_path=f"{template_path}/{template_name}",
-            file_type="template"
-        )
+        super().__init__(file_path=f"{template_path}/{template_name}", file_type="template")
         self.context["template_name"] = template_name
-        self.remediation = f"Ensure SDD is properly installed and template file exists: {template_name}"
+        self.remediation = (
+            f"Ensure SDD is properly installed and template file exists: {template_name}"
+        )

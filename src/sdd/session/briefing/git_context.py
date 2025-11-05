@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
-from sdd.core.exceptions import GitError, NotAGitRepoError, ErrorCode, SystemError
 from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import ErrorCode, GitError, SystemError
 from sdd.core.logging_config import get_logger
 from sdd.core.types import GitStatus, WorkItemStatus
 
@@ -51,7 +51,7 @@ class GitContext:
                 code=ErrorCode.IMPORT_FAILED,
                 context={"module": "sdd.git.integration", "error": str(e)},
                 remediation="Ensure git integration module is properly installed",
-                cause=e
+                cause=e,
             ) from e
         except GitError:
             # Re-raise GitError as-is (already standardized)
@@ -63,7 +63,7 @@ class GitContext:
                 code=ErrorCode.GIT_COMMAND_FAILED,
                 context={"error": str(e)},
                 remediation="Check git installation and repository state",
-                cause=e
+                cause=e,
             ) from e
 
     @log_errors()
@@ -156,10 +156,10 @@ class GitContext:
                 context={
                     "branch_name": branch_name,
                     "parent_branch": parent_branch,
-                    "error": str(e)
+                    "error": str(e),
                 },
                 remediation="Check git installation and repository state",
-                cause=e
+                cause=e,
             ) from e
 
     @log_errors()
@@ -230,20 +230,22 @@ class GitContext:
             try:
                 with open(work_items_file, "w") as f:
                     json.dump(work_items_data, f, indent=2)
-            except (IOError, OSError) as e:
+            except OSError as e:
                 raise SystemError(
                     message=f"Failed to save work items file: {work_items_file}",
                     code=ErrorCode.FILE_OPERATION_FAILED,
                     context={
                         "file_path": str(work_items_file),
                         "work_item_id": previous_work_item_id,
-                        "error": str(e)
+                        "error": str(e),
                     },
                     remediation="Check file permissions and disk space",
-                    cause=e
+                    cause=e,
                 ) from e
 
-            logger.info(f"Updated git status for {previous_work_item_id}: in_progress → {final_status}")
+            logger.info(
+                f"Updated git status for {previous_work_item_id}: in_progress → {final_status}"
+            )
             print(
                 f"✓ Finalized git status for previous work item: "
                 f"{previous_work_item_id} → {final_status}\n"
@@ -266,8 +268,8 @@ class GitContext:
                     "work_item_id": previous_work_item_id,
                     "current_work_item_id": current_work_item_id,
                     "branch_name": branch_name,
-                    "error": str(e)
+                    "error": str(e),
                 },
                 remediation="Check work items data integrity and git repository state",
-                cause=e
+                cause=e,
             ) from e

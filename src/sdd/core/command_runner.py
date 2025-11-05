@@ -12,13 +12,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Union
 
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     CommandExecutionError,
-    SubprocessError,
     TimeoutError,
-    ErrorCode,
 )
-from sdd.core.error_handlers import convert_subprocess_errors, log_errors
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +144,7 @@ class CommandRunner:
 
                 if check:
                     raise CommandExecutionError(
-                        command=' '.join(command),
+                        command=" ".join(command),
                         returncode=result.returncode,
                         stderr=result.stderr,
                         stdout=result.stdout,
@@ -177,12 +175,12 @@ class CommandRunner:
 
                 if check:
                     raise TimeoutError(
-                        operation=' '.join(command),
+                        operation=" ".join(command),
                         timeout_seconds=int(timeout),
                         context={
-                            'stdout': e.stdout or "",
-                            'stderr': e.stderr or "",
-                        }
+                            "stdout": e.stdout or "",
+                            "stderr": e.stderr or "",
+                        },
                     ) from e
 
                 # Retry if configured
@@ -202,7 +200,7 @@ class CommandRunner:
 
                 if check:
                     raise CommandExecutionError(
-                        command=' '.join(command),
+                        command=" ".join(command),
                         returncode=-1,
                         stderr=str(e),
                         stdout="",

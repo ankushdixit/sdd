@@ -11,12 +11,10 @@ from datetime import datetime
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
-    ValidationError,
-    ErrorCode,
 )
-from sdd.core.error_handlers import log_errors
 
 
 class TreeGenerator:
@@ -144,7 +142,7 @@ class TreeGenerator:
                 operation="read",
                 file_path=str(self.project_root),
                 details="Failed to generate project tree",
-                cause=e
+                cause=e,
             ) from e
 
     def detect_changes(self, old_tree: str, new_tree: str) -> list[dict]:
@@ -196,7 +194,7 @@ class TreeGenerator:
                     operation="read",
                     file_path=str(self.tree_file),
                     details="Failed to read existing tree file",
-                    cause=e
+                    cause=e,
                 ) from e
 
         # Detect changes
@@ -219,7 +217,7 @@ class TreeGenerator:
                 operation="write",
                 file_path=str(self.tree_file),
                 details="Failed to write tree file",
-                cause=e
+                cause=e,
             ) from e
 
         # If significant changes detected, prompt for reasoning (unless non-interactive)
@@ -263,7 +261,7 @@ class TreeGenerator:
         if self.updates_file.exists():
             try:
                 updates = json.loads(self.updates_file.read_text())
-            except (json.JSONDecodeError, OSError) as e:
+            except (json.JSONDecodeError, OSError):
                 # If tree_updates.json is corrupted or unreadable, start fresh
                 # Log warning but don't fail - we can rebuild the history
                 updates = {"updates": []}
@@ -285,7 +283,7 @@ class TreeGenerator:
                 operation="write",
                 file_path=str(self.updates_file),
                 details="Failed to write tree updates",
-                cause=e
+                cause=e,
             ) from e
 
 
@@ -295,6 +293,7 @@ def main():
     Handles exceptions and provides user-friendly error messages.
     """
     import argparse
+
     from sdd.core.exceptions import SDDError
 
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
@@ -324,7 +323,7 @@ def main():
                         operation="read",
                         file_path=str(generator.updates_file),
                         details="Failed to parse tree updates file",
-                        cause=e
+                        cause=e,
                     ) from e
             else:
                 print("No tree updates recorded yet")

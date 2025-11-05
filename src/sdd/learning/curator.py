@@ -21,13 +21,14 @@ import jsonschema
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
     FileOperationError,
-    LearningNotFoundError,
     ValidationError,
 )
-from sdd.core.error_handlers import convert_file_errors, log_errors
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 
@@ -460,7 +461,11 @@ class LearningsCurator:
                 session_num = self._extract_session_number(learning.get("learned_in", ""))
 
                 # Archive if too old
-                if session_num and current_session > 0 and current_session - session_num > max_age_sessions:
+                if (
+                    session_num
+                    and current_session > 0
+                    and current_session - session_num > max_age_sessions
+                ):
                     to_archive.append(i)
 
             # Move to archive
@@ -551,7 +556,7 @@ class LearningsCurator:
         try:
             with open(session_file) as f:
                 content = f.read()
-        except (OSError, IOError, Exception) as e:
+        except (OSError, Exception) as e:
             logger.warning(f"Failed to read session summary {session_file}: {e}")
             return []
 
@@ -738,7 +743,7 @@ class LearningsCurator:
                                 # Validate schema before adding
                                 if self.validate_learning(entry):
                                     learnings.append(entry)
-            except (OSError, IOError, UnicodeDecodeError) as e:
+            except (OSError, UnicodeDecodeError) as e:
                 logger.warning(f"Failed to read file {file_path}: {e}")
                 continue
 
@@ -1314,10 +1319,7 @@ def main():
     session_dir = project_root / ".session"
 
     if not session_dir.exists():
-        raise SDDFileNotFoundError(
-            file_path=str(session_dir),
-            file_type="session directory"
-        )
+        raise SDDFileNotFoundError(file_path=str(session_dir), file_type="session directory")
 
     curator = LearningsCurator(project_root)
 

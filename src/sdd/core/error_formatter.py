@@ -17,7 +17,8 @@ Usage:
 
 import sys
 from typing import Optional
-from sdd.core.exceptions import SDDError, ErrorCategory
+
+from sdd.core.exceptions import ErrorCategory, SDDError
 
 
 class ErrorFormatter:
@@ -58,7 +59,7 @@ class ErrorFormatter:
 
         # Context (if verbose or critical info)
         if verbose and error.context:
-            lines.append(f"\nContext:")
+            lines.append("\nContext:")
             for key, value in error.context.items():
                 # Format lists and dicts nicely
                 if isinstance(value, list):
@@ -96,6 +97,7 @@ class ErrorFormatter:
         """Format generic exception"""
         if verbose:
             import traceback
+
             return f"❌ {type(error).__name__}: {error}\n\n{traceback.format_exc()}"
         else:
             return f"❌ {type(error).__name__}: {error}"
@@ -113,7 +115,7 @@ class ErrorFormatter:
             ErrorCategory.SECURITY: "🔒",
             ErrorCategory.TIMEOUT: "⏱️",
             ErrorCategory.ALREADY_EXISTS: "📋",
-            ErrorCategory.PERMISSION: "🔐"
+            ErrorCategory.PERMISSION: "🔐",
         }
         return symbols.get(category, "❌")
 

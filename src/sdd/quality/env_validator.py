@@ -11,11 +11,11 @@ Validates:
 - Infrastructure (load balancers, DNS)
 """
 
-import os
 import logging
+import os
 
-from sdd.core.exceptions import ValidationError, ErrorCode
 from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import ErrorCode, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +79,8 @@ class EnvironmentValidator:
             raise ValidationError(
                 message=f"Missing or empty required environment variables: {', '.join(missing_vars)}",
                 code=ErrorCode.MISSING_REQUIRED_FIELD,
-                context={
-                    "missing_variables": missing_vars,
-                    "environment": self.environment
-                },
-                remediation=f"Set the following environment variables: {', '.join(missing_vars)}"
+                context={"missing_variables": missing_vars, "environment": self.environment},
+                remediation=f"Set the following environment variables: {', '.join(missing_vars)}",
             )
 
         return results
@@ -210,10 +207,11 @@ class EnvironmentValidator:
                 )
             except ValidationError as e:
                 all_results["validations"].append(
-                    {"name": "Configuration", "passed": False, "details": {
-                        "error": e.message,
-                        "context": e.context
-                    }}
+                    {
+                        "name": "Configuration",
+                        "passed": False,
+                        "details": {"error": e.message, "context": e.context},
+                    }
                 )
                 all_results["passed"] = False
 
@@ -287,7 +285,7 @@ def main():
         sys.exit(0 if passed else 1)
     except ValidationError as e:
         logger.error(f"Validation failed: {e.message}", extra=e.to_dict())
-        print(f"\nEnvironment Validation: ✗ FAILED", file=sys.stderr)
+        print("\nEnvironment Validation: ✗ FAILED", file=sys.stderr)
         print(f"Error: {e.message}", file=sys.stderr)
         if e.remediation:
             print(f"Remediation: {e.remediation}", file=sys.stderr)

@@ -18,15 +18,16 @@ from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
+    CommandExecutionError,
     ErrorCode,
     FileOperationError,
     QualityGateError,
-    CommandExecutionError,
-    ValidationError,
+)
+from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
-from sdd.core.error_handlers import log_errors
 
 # Import logging
 from sdd.core.logging_config import get_logger
@@ -37,8 +38,8 @@ logger = get_logger(__name__)
 
 # Import spec validator for spec completeness quality gate
 try:
-    from sdd.work_items.spec_validator import validate_spec_file
     from sdd.core.exceptions import SpecValidationError
+    from sdd.work_items.spec_validator import validate_spec_file
 except ImportError:
     validate_spec_file = None
     SpecValidationError = None
@@ -558,7 +559,8 @@ class QualityGates:
                 "status": "failed",
                 "errors": e.context.get("validation_errors", []),
                 "message": f"Spec file for '{work_item_id}' is incomplete",
-                "suggestion": e.remediation or f"Edit .session/specs/{work_item_id}.md to add missing sections",
+                "suggestion": e.remediation
+                or f"Edit .session/specs/{work_item_id}.md to add missing sections",
             }
         except SDDFileNotFoundError as e:
             return False, {
@@ -817,12 +819,12 @@ class QualityGates:
         # Import here to avoid circular imports
 
         # 1. Run integration tests
-        from sdd.testing.integration_runner import IntegrationTestRunner
         from sdd.core.exceptions import (
             EnvironmentSetupError,
             IntegrationExecutionError,
             IntegrationTestError,
         )
+        from sdd.testing.integration_runner import IntegrationTestRunner
 
         runner = IntegrationTestRunner(work_item)
 

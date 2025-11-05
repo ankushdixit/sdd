@@ -204,7 +204,5 @@ class LearningLoader:
             delta = datetime.now() - ts
             return delta.days
         except (ValueError, TypeError) as e:
-            logger.debug(
-                f"Failed to parse timestamp '{timestamp}': {e}. Treating as old learning."
-            )
+            logger.debug(f"Failed to parse timestamp '{timestamp}': {e}. Treating as old learning.")
             return 365  # Default to old if parsing fails

@@ -84,6 +84,7 @@ class StackGenerator:
         }
 
         if language in version_commands:
+
             def detect_version():
                 runner = CommandRunner(default_timeout=2)
                 result = runner.run(version_commands[language])
@@ -127,11 +128,12 @@ class StackGenerator:
                     operation="read",
                     file_path=str(self.project_root / "requirements.txt"),
                     details=str(e),
-                    cause=e
+                    cause=e,
                 )
 
         # Check JavaScript/TypeScript frameworks
         if (self.project_root / "package.json").exists():
+
             def parse_package_json():
                 try:
                     content = (self.project_root / "package.json").read_text()
@@ -154,7 +156,7 @@ class StackGenerator:
                         operation="parse",
                         file_path=str(self.project_root / "package.json"),
                         details=f"Invalid JSON: {e}",
-                        cause=e
+                        cause=e,
                     )
 
             safe_execute(parse_package_json, default=None, log_errors=False)
@@ -189,7 +191,7 @@ class StackGenerator:
                     operation="read",
                     file_path=str(self.project_root / "requirements.txt"),
                     details=str(e),
-                    cause=e
+                    cause=e,
                 )
 
         return libraries[:20]  # Limit to top 20
@@ -202,6 +204,7 @@ class StackGenerator:
 
         # Check for context7 usage in code
         for py_file in self.project_root.rglob("*.py"):
+
             def read_py_file():
                 content = py_file.read_text()
                 if "context7" in content.lower() or "mcp__context7" in content:
@@ -307,10 +310,7 @@ class StackGenerator:
                 old_content = self.stack_file.read_text()
             except OSError as e:
                 raise FileOperationError(
-                    operation="read",
-                    file_path=str(self.stack_file),
-                    details=str(e),
-                    cause=e
+                    operation="read", file_path=str(self.stack_file), details=str(e), cause=e
                 )
 
         # Detect changes
@@ -322,10 +322,7 @@ class StackGenerator:
             self.stack_file.write_text(new_content)
         except OSError as e:
             raise FileOperationError(
-                operation="write",
-                file_path=str(self.stack_file),
-                details=str(e),
-                cause=e
+                operation="write", file_path=str(self.stack_file), details=str(e), cause=e
             )
 
         # If changes detected, prompt for reasoning (unless non-interactive)
@@ -356,6 +353,7 @@ class StackGenerator:
         updates = {"updates": []}
 
         if self.updates_file.exists():
+
             def load_updates():
                 try:
                     content = self.updates_file.read_text()
@@ -365,7 +363,7 @@ class StackGenerator:
                         operation="parse",
                         file_path=str(self.updates_file),
                         details=f"Invalid JSON: {e}",
-                        cause=e
+                        cause=e,
                     )
 
             loaded_updates = safe_execute(load_updates, default=None, log_errors=False)
@@ -385,10 +383,7 @@ class StackGenerator:
             self.updates_file.write_text(json.dumps(updates, indent=2))
         except OSError as e:
             raise FileOperationError(
-                operation="write",
-                file_path=str(self.updates_file),
-                details=str(e),
-                cause=e
+                operation="write", file_path=str(self.updates_file), details=str(e), cause=e
             )
 
 

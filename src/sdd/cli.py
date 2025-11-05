@@ -19,18 +19,18 @@ import argparse
 import sys
 from pathlib import Path
 
-# Import logging configuration
-from sdd.core.logging_config import setup_logging
-from sdd.core.types import Priority
+from sdd.core.error_formatter import ErrorFormatter
 
 # Import error handling infrastructure
 from sdd.core.exceptions import (
+    ErrorCode,
     SDDError,
     SystemError,
-    ErrorCode,
-    ErrorCategory,
 )
-from sdd.core.error_formatter import ErrorFormatter
+
+# Import logging configuration
+from sdd.core.logging_config import setup_logging
+from sdd.core.types import Priority
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
@@ -152,12 +152,12 @@ def route_command(command_name, args):
         SystemError: If command is unknown or execution fails
     """
     if command_name not in COMMANDS:
-        available = ', '.join(sorted(COMMANDS.keys()))
+        available = ", ".join(sorted(COMMANDS.keys()))
         raise SystemError(
             message=f"Unknown command '{command_name}'",
             code=ErrorCode.INVALID_COMMAND,
             context={"command": command_name, "available_commands": list(COMMANDS.keys())},
-            remediation=f"Available commands: {available}"
+            remediation=f"Available commands: {available}",
         )
 
     module_path, class_name, function_name, needs_argparse = COMMANDS[command_name]
@@ -283,7 +283,7 @@ def route_command(command_name, args):
             code=ErrorCode.MODULE_NOT_FOUND,
             context={"module_path": module_path, "command": command_name},
             remediation="Check that the command is properly installed",
-            cause=e
+            cause=e,
         ) from e
     except AttributeError as e:
         raise SystemError(
@@ -291,7 +291,7 @@ def route_command(command_name, args):
             code=ErrorCode.FUNCTION_NOT_FOUND,
             context={"function": function_name, "module": module_path, "command": command_name},
             remediation="This appears to be an internal error - please report it",
-            cause=e
+            cause=e,
         ) from e
     except SDDError:
         # Re-raise SDDError exceptions to be caught by main()
@@ -302,7 +302,7 @@ def route_command(command_name, args):
             message=f"Unexpected error executing command '{command_name}'",
             code=ErrorCode.COMMAND_FAILED,
             context={"command": command_name},
-            cause=e
+            cause=e,
         ) from e
 
 
@@ -378,7 +378,7 @@ def main():
 
     except SDDError as e:
         # Structured SDD errors with proper formatting
-        ErrorFormatter.print_error(e, verbose=args.verbose if 'args' in locals() else False)
+        ErrorFormatter.print_error(e, verbose=args.verbose if "args" in locals() else False)
         return e.exit_code
 
     except KeyboardInterrupt:

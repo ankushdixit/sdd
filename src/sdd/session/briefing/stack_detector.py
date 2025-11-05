@@ -45,5 +45,5 @@ class StackDetector:
                 operation="read",
                 file_path=str(self.stack_file),
                 details=f"Failed to read stack file: {e}",
-                cause=e
+                cause=e,
             ) from e

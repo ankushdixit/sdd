@@ -21,10 +21,6 @@ from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
-    QualityGateError,
-    SessionNotFoundError,
-    ValidationError,
-    WorkItemNotFoundError,
 )
 from sdd.core.types import WorkItemStatus, WorkItemType
 from sdd.quality.gates import QualityGates
@@ -53,12 +49,12 @@ def load_status():
     except json.JSONDecodeError as e:
         raise FileOperationError(
             f"Invalid JSON in status file: {status_file}",
-            {"path": str(status_file), "error": str(e)}
+            {"path": str(status_file), "error": str(e)},
         ) from e
     except OSError as e:
         raise FileOperationError(
             f"Failed to read status file: {status_file}",
-            {"path": str(status_file), "error": str(e)}
+            {"path": str(status_file), "error": str(e)},
         ) from e
 
 
@@ -79,18 +75,17 @@ def load_work_items():
             return json.load(f)
     except FileNotFoundError as e:
         raise FileOperationError(
-            f"Work items file not found: {work_items_file}",
-            {"path": str(work_items_file)}
+            f"Work items file not found: {work_items_file}", {"path": str(work_items_file)}
         ) from e
     except json.JSONDecodeError as e:
         raise FileOperationError(
             f"Invalid JSON in work items file: {work_items_file}",
-            {"path": str(work_items_file), "error": str(e)}
+            {"path": str(work_items_file), "error": str(e)},
         ) from e
     except OSError as e:
         raise FileOperationError(
             f"Failed to read work items file: {work_items_file}",
-            {"path": str(work_items_file), "error": str(e)}
+            {"path": str(work_items_file), "error": str(e)},
         ) from e
 
 
@@ -890,7 +885,9 @@ def check_uncommitted_changes() -> bool:
             print()
             response = input("Continue anyway? (y/n): ")
             user_override = response.lower() == "y"
-            logger.info(f"User {'overrode' if user_override else 'aborted on'} uncommitted changes check")
+            logger.info(
+                f"User {'overrode' if user_override else 'aborted on'} uncommitted changes check"
+            )
             return user_override
         else:
             logger.info("Non-interactive mode: aborting on uncommitted changes")

@@ -111,11 +111,12 @@ class SessionBriefing:
             Validation warning string or None if valid
         """
         try:
+            from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+            from sdd.core.exceptions import SpecValidationError
             from sdd.work_items.spec_validator import (
                 format_validation_report,
                 validate_spec_file,
             )
-            from sdd.core.exceptions import SpecValidationError, FileNotFoundError as SDDFileNotFoundError
 
             try:
                 validate_spec_file(item_id, work_item_type)

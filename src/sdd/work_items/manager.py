@@ -11,14 +11,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from sdd.core.exceptions import (
-    WorkItemNotFoundError,
-    WorkItemAlreadyExistsError,
-    ValidationError,
-    FileOperationError,
-    ErrorCode,
-)
 from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    ValidationError,
+    WorkItemAlreadyExistsError,
+    WorkItemNotFoundError,
+)
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 from sdd.core.types import Priority, WorkItemStatus, WorkItemType
@@ -531,7 +531,9 @@ class WorkItemManager:
             from sdd.core.exceptions import SpecValidationError
 
             raise SpecValidationError(
-                work_item_id=work_id, errors=errors, remediation=f"Fix validation errors in {work_id} spec file"
+                work_item_id=work_id,
+                errors=errors,
+                remediation=f"Fix validation errors in {work_id} spec file",
             )
 
     @log_errors()
@@ -635,7 +637,9 @@ class WorkItemManager:
             from sdd.core.exceptions import SpecValidationError
 
             raise SpecValidationError(
-                work_item_id=work_id, errors=errors, remediation=f"Fix validation errors in {work_id} spec file"
+                work_item_id=work_id,
+                errors=errors,
+                remediation=f"Fix validation errors in {work_id} spec file",
             )
 
     def list_work_items(

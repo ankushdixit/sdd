@@ -10,15 +10,13 @@ import shutil
 import sys
 from pathlib import Path
 
-from sdd.core.command_runner import CommandRunner, CommandExecutionError
+from sdd.core.command_runner import CommandRunner
 from sdd.core.exceptions import (
     DirectoryNotEmptyError,
     ErrorCode,
-    FileNotFoundError as SDDFileNotFoundError,
     FileOperationError,
     GitError,
     NotAGitRepoError,
-    ProjectInitializationError,
     TemplateNotFoundError,
     ValidationError,
 )
@@ -60,7 +58,7 @@ def check_or_init_git(project_root: Path = None) -> bool:
             message="Failed to initialize git repository",
             code=ErrorCode.GIT_COMMAND_FAILED,
             context={"stderr": result.stderr, "command": "git init"},
-            remediation="Ensure git is installed and you have write permissions in the directory"
+            remediation="Ensure git is installed and you have write permissions in the directory",
         )
     logger.info("Initialized git repository")
 
@@ -71,7 +69,7 @@ def check_or_init_git(project_root: Path = None) -> bool:
             message="Failed to set default branch to 'main'",
             code=ErrorCode.GIT_COMMAND_FAILED,
             context={"stderr": result.stderr, "command": "git branch -m main"},
-            remediation="Manually run 'git branch -m main' in the repository"
+            remediation="Manually run 'git branch -m main' in the repository",
         )
     logger.info("Set default branch to 'main'")
 
@@ -111,8 +109,7 @@ def install_git_hooks(project_root: Path = None) -> bool:
 
     if not hook_template.exists():
         raise TemplateNotFoundError(
-            template_name="prepare-commit-msg",
-            template_path=str(template_dir)
+            template_name="prepare-commit-msg", template_path=str(template_dir)
         )
 
     try:
@@ -128,7 +125,7 @@ def install_git_hooks(project_root: Path = None) -> bool:
             operation="install",
             file_path=str(hook_dest),
             details=f"Failed to copy or set permissions: {str(e)}",
-            cause=e
+            cause=e,
         )
 
 
@@ -176,7 +173,7 @@ def ensure_package_manager_file(project_type: str):
             message=f"Invalid project type: {project_type}",
             code=ErrorCode.INVALID_WORK_ITEM_TYPE,
             context={"project_type": project_type},
-            remediation="Use 'typescript', 'javascript', or 'python'"
+            remediation="Use 'typescript', 'javascript', or 'python'",
         )
 
     template_dir = Path(__file__).parent.parent / "templates"
@@ -194,8 +191,7 @@ def ensure_package_manager_file(project_type: str):
             template_path = template_dir / "package.json.template"
             if not template_path.exists():
                 raise TemplateNotFoundError(
-                    template_name="package.json.template",
-                    template_path=str(template_dir)
+                    template_name="package.json.template", template_path=str(template_dir)
                 )
 
             try:
@@ -209,7 +205,7 @@ def ensure_package_manager_file(project_type: str):
                     operation="create",
                     file_path=str(package_json),
                     details=f"Failed to create package.json from template: {str(e)}",
-                    cause=e
+                    cause=e,
                 )
         else:
             logger.info("Found package.json")
@@ -222,7 +218,7 @@ def ensure_package_manager_file(project_type: str):
                     operation="parse",
                     file_path=str(package_json),
                     details=f"Invalid JSON in package.json: {str(e)}",
-                    cause=e
+                    cause=e,
                 )
 
             # Ensure scripts
@@ -289,7 +285,7 @@ def ensure_package_manager_file(project_type: str):
                         operation="write",
                         file_path=str(package_json),
                         details=f"Failed to save package.json: {str(e)}",
-                        cause=e
+                        cause=e,
                     )
 
     elif project_type == "python":
@@ -303,8 +299,7 @@ def ensure_package_manager_file(project_type: str):
             template_path = template_dir / "pyproject.toml.template"
             if not template_path.exists():
                 raise TemplateNotFoundError(
-                    template_name="pyproject.toml.template",
-                    template_path=str(template_dir)
+                    template_name="pyproject.toml.template", template_path=str(template_dir)
                 )
 
             try:
@@ -318,7 +313,7 @@ def ensure_package_manager_file(project_type: str):
                     operation="create",
                     file_path=str(pyproject),
                     details=f"Failed to create pyproject.toml from template: {str(e)}",
-                    cause=e
+                    cause=e,
                 )
         else:
             logger.info("Found pyproject.toml")
@@ -335,7 +330,7 @@ def ensure_package_manager_file(project_type: str):
                     operation="read",
                     file_path=str(pyproject),
                     details=f"Failed to read pyproject.toml: {str(e)}",
-                    cause=e
+                    cause=e,
                 )
 
 
@@ -389,7 +384,7 @@ def ensure_config_files(project_type: str):
                         operation="copy",
                         file_path=str(dest_path),
                         details=f"Failed to copy config file: {str(e)}",
-                        cause=e
+                        cause=e,
                     )
         else:
             logger.info(f"Found {dest_name}")
@@ -455,7 +450,9 @@ def install_dependencies(project_type: str):
                         "pip install failed - you may need to activate venv and install manually"
                     )
             except Exception as e:
-                logger.warning(f"pip install failed: {e} - you may need to activate venv and install manually")
+                logger.warning(
+                    f"pip install failed: {e} - you may need to activate venv and install manually"
+                )
         else:
             logger.warning("Please activate virtual environment and run: pip install -e .[dev]")
 
@@ -484,7 +481,7 @@ def create_smoke_tests(project_type: str):
             operation="create",
             file_path=str(test_dir),
             details=f"Failed to create tests directory: {str(e)}",
-            cause=e
+            cause=e,
         )
 
     if project_type == "typescript":
@@ -501,7 +498,7 @@ def create_smoke_tests(project_type: str):
                         operation="copy",
                         file_path=str(test_file),
                         details=f"Failed to copy smoke test template: {str(e)}",
-                        cause=e
+                        cause=e,
                     )
         else:
             logger.info(f"Found {test_file}")
@@ -520,7 +517,7 @@ def create_smoke_tests(project_type: str):
                         operation="copy",
                         file_path=str(test_file),
                         details=f"Failed to copy smoke test template: {str(e)}",
-                        cause=e
+                        cause=e,
                     )
         else:
             logger.info(f"Found {test_file}")
@@ -538,7 +535,7 @@ def create_smoke_tests(project_type: str):
                         operation="copy",
                         file_path=str(test_file),
                         details=f"Failed to copy smoke test template: {str(e)}",
-                        cause=e
+                        cause=e,
                     )
         else:
             logger.info(f"Found {test_file}")
@@ -569,7 +566,7 @@ def create_session_structure():
             operation="create",
             file_path=str(session_dir),
             details=f"Failed to create .session directory structure: {str(e)}",
-            cause=e
+            cause=e,
         )
 
     logger.info("Created .session/tracking/")
@@ -613,7 +610,7 @@ def initialize_tracking_files():
                     operation="copy",
                     file_path=str(dst_path),
                     details=f"Failed to copy tracking file template: {str(e)}",
-                    cause=e
+                    cause=e,
                 )
 
     # Create empty files for stack and tree tracking
@@ -632,7 +629,7 @@ def initialize_tracking_files():
             operation="create",
             file_path=str(session_dir / "tracking"),
             details=f"Failed to create tracking files: {str(e)}",
-            cause=e
+            cause=e,
         )
 
     # Create config.json with default settings
@@ -744,7 +741,7 @@ def initialize_tracking_files():
             operation="create",
             file_path=str(session_dir / "config.json"),
             details=f"Failed to create config.json: {str(e)}",
-            cause=e
+            cause=e,
         )
 
     # Copy config schema file
@@ -760,7 +757,7 @@ def initialize_tracking_files():
                 operation="copy",
                 file_path=str(schema_dest),
                 details=f"Failed to copy config schema: {str(e)}",
-                cause=e
+                cause=e,
             )
 
 
@@ -852,7 +849,7 @@ def ensure_gitignore_entries():
             operation="read",
             file_path=str(gitignore),
             details=f"Failed to read .gitignore: {str(e)}",
-            cause=e
+            cause=e,
         )
 
     entries_to_add = []
@@ -902,7 +899,7 @@ def ensure_gitignore_entries():
                 operation="write",
                 file_path=str(gitignore),
                 details=f"Failed to update .gitignore: {str(e)}",
-                cause=e
+                cause=e,
             )
     else:
         logger.info(".gitignore already up to date")

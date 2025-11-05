@@ -12,16 +12,17 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    GitError,
+    SessionAlreadyActiveError,
+    SessionNotFoundError,
+    UnmetDependencyError,
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus
-from sdd.core.exceptions import (
-    WorkItemNotFoundError,
-    SessionNotFoundError,
-    SessionAlreadyActiveError,
-    UnmetDependencyError,
-    GitError,
-)
-from sdd.core.error_handlers import log_errors
 
 # Import from refactored briefing package
 from sdd.session.briefing import (
@@ -146,11 +147,12 @@ def main():
 
         if not item_id:
             logger.warning("No available work items found")
-            from sdd.core.exceptions import ValidationError, ErrorCode
+            from sdd.core.exceptions import ErrorCode, ValidationError
+
             raise ValidationError(
                 message="No available work items. All dependencies must be satisfied first.",
                 code=ErrorCode.INVALID_STATUS,
-                remediation="Complete dependencies or use 'sdd work-list' to see work item status"
+                remediation="Complete dependencies or use 'sdd work-list' to see work item status",
             )
 
     # Finalize previous work item's git status if starting a new work item
@@ -308,7 +310,7 @@ def _cli_main():
         print(f"\nWarning: {e.message}")
         print("\nOptions:")
         print("1. Complete current work item first: /end")
-        print(f"2. Force start new work item: sdd start <work_item_id> --force")
+        print("2. Force start new work item: sdd start <work_item_id> --force")
         print("3. Cancel: Ctrl+C\n")
         return e.exit_code
     except UnmetDependencyError as e:
@@ -320,8 +322,10 @@ def _cli_main():
             dep_id = e.context.get("dependency_id")
             if dep_id:
                 dep = work_items_data.get("work_items", {}).get(dep_id, {})
-                print(f"\nDependency details:")
-                print(f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})")
+                print("\nDependency details:")
+                print(
+                    f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})"
+                )
         except Exception:
             pass  # If we can't load work items, just skip the details
         return e.exit_code

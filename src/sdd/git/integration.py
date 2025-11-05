@@ -19,7 +19,7 @@ from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
-from sdd.core.error_handlers import convert_subprocess_errors, log_errors
+from sdd.core.error_handlers import convert_subprocess_errors
 from sdd.core.exceptions import (
     CommandExecutionError,
     ErrorCode,
@@ -97,7 +97,9 @@ class GitWorkflow:
         result = self.runner.run(["git", "checkout", "-b", branch_name], timeout=5)
 
         if not result.success:
-            raise GitError(f"Failed to create branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                f"Failed to create branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED
+            )
 
         return branch_name, parent_branch
 
@@ -115,7 +117,9 @@ class GitWorkflow:
         result = self.runner.run(["git", "checkout", branch_name], timeout=5)
 
         if not result.success:
-            raise GitError(f"Failed to checkout branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                f"Failed to checkout branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED
+            )
 
     @convert_subprocess_errors
     def commit_changes(self, message: str) -> str:
@@ -185,7 +189,9 @@ class GitWorkflow:
             if "remote ref does not exist" in result.stderr.lower():
                 logger.info(f"Remote branch {branch_name} doesn't exist (already deleted)")
                 return
-            raise GitError(f"Failed to delete remote branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                f"Failed to delete remote branch: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED
+            )
 
     @convert_subprocess_errors
     def push_main_to_remote(self, branch_name: str = "main") -> None:
@@ -201,7 +207,9 @@ class GitWorkflow:
         result = self.runner.run(["git", "push", "origin", branch_name], timeout=30)
 
         if not result.success:
-            raise GitError(f"Failed to push {branch_name}: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                f"Failed to push {branch_name}: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED
+            )
 
     @convert_subprocess_errors
     def create_pull_request(
@@ -226,7 +234,10 @@ class GitWorkflow:
         check_gh = self.runner.run(["gh", "--version"], timeout=5)
 
         if not check_gh.success:
-            raise GitError("gh CLI not installed. Install from: https://cli.github.com/", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                "gh CLI not installed. Install from: https://cli.github.com/",
+                ErrorCode.GIT_COMMAND_FAILED,
+            )
 
         # Generate PR title and body from templates
         title = self._format_pr_title(work_item, session_num)
@@ -287,7 +298,10 @@ class GitWorkflow:
         # Checkout parent branch (not hardcoded main)
         checkout_result = self.runner.run(["git", "checkout", parent_branch], timeout=5)
         if not checkout_result.success:
-            raise GitError(f"Failed to checkout {parent_branch}: {checkout_result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
+            raise GitError(
+                f"Failed to checkout {parent_branch}: {checkout_result.stderr}",
+                ErrorCode.GIT_COMMAND_FAILED,
+            )
 
         # Merge
         result = self.runner.run(["git", "merge", "--no-ff", branch_name], timeout=10)
