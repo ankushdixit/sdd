@@ -4,6 +4,8 @@ Project directory tree loading.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from sdd.core.error_handlers import log_errors

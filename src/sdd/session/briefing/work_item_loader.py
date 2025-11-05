@@ -4,10 +4,12 @@ Work item loading and dependency resolution.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sdd.core.logging_config import get_logger
 from sdd.core.types import Priority, WorkItemStatus
@@ -42,7 +44,7 @@ class WorkItemLoader:
 
     def get_work_item(
         self, work_item_id: str, work_items_data: dict[str, Any] | None = None
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get a specific work item by ID.
 
         Args:
@@ -57,7 +59,7 @@ class WorkItemLoader:
 
         return work_items_data.get("work_items", {}).get(work_item_id)  # type: ignore[no-any-return]
 
-    def get_next_work_item(self, work_items_data: dict) -> tuple[Optional[str], Optional[dict]]:
+    def get_next_work_item(self, work_items_data: dict) -> tuple[str | None, dict | None]:
         """Find next available work item where dependencies are satisfied.
 
         Prioritizes resuming in-progress items over starting new work.
