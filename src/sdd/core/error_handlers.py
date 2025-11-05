@@ -19,7 +19,7 @@ import functools
 import logging
 import subprocess
 import time
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Literal, TypeVar
 
 from sdd.core.exceptions import ErrorCode, GitError, SDDError, SubprocessError, SystemError
 from sdd.core.exceptions import TimeoutError as SDDTimeoutError
@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def with_timeout(seconds: int, operation_name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def with_timeout(
+    seconds: int, operation_name: str
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to add timeout to function execution.
 
@@ -136,7 +138,9 @@ def with_retry(
     return decorator
 
 
-def log_errors(logger_instance: Optional[logging.Logger] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def log_errors(
+    logger_instance: logging.Logger | None = None,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to log exceptions with structured data.
 
@@ -277,7 +281,7 @@ class ErrorContext:
     """
 
     def __init__(
-        self, operation: str, cleanup: Optional[Callable[[], None]] = None, **context_data: Any
+        self, operation: str, cleanup: Callable[[], None] | None = None, **context_data: Any
     ) -> None:
         self.operation = operation
         self.cleanup = cleanup
@@ -286,7 +290,7 @@ class ErrorContext:
     def __enter__(self) -> ErrorContext:
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> Literal[False]:
         # Run cleanup regardless of success/failure
         if self.cleanup:
             try:
@@ -303,8 +307,12 @@ class ErrorContext:
 
 
 def safe_execute(
-    func: Callable[..., T], *args: Any, default: Optional[T] = None, log_errors: bool = True, **kwargs: Any
-) -> Optional[T]:
+    func: Callable[..., T],
+    *args: Any,
+    default: T | None = None,
+    log_errors: bool = True,
+    **kwargs: Any,
+) -> T | None:
     """
     Execute function and return default value on error instead of raising.
 

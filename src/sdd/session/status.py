@@ -19,7 +19,7 @@ from sdd.core.types import Priority, WorkItemStatus
 logger = logging.getLogger(__name__)
 
 
-def get_session_status():
+def get_session_status() -> int:
     """
     Get current session status.
 
@@ -185,7 +185,7 @@ def get_session_status():
     # Next items
     print("Next up:")
     items = data["work_items"]
-    not_started = [
+    next_items = [
         (wid, i) for wid, i in items.items() if i["status"] == WorkItemStatus.NOT_STARTED.value
     ][:3]
 
@@ -196,7 +196,7 @@ def get_session_status():
         Priority.LOW.value: "🟢",
     }
 
-    for wid, i in not_started:
+    for wid, i in next_items:
         emoji = priority_emoji.get(i["priority"], "")
         # Check if blocked
         blocked = any(

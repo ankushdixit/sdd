@@ -428,7 +428,7 @@ class TestIntegrationTestRunnerStructure:
         content = file_path.read_text()
 
         # Act & Assert
-        assert "def main():" in content
+        assert "def main()" in content
 
     def test_integration_test_runner_file_has_required_imports(self):
         """Test that integration_test_runner.py has required imports."""

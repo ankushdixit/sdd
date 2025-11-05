@@ -10,6 +10,7 @@ Public API exports maintain backward compatibility with the original briefing.py
 
 import sys
 from pathlib import Path
+from typing import Any, Optional
 
 from sdd.core.logging_config import get_logger
 
@@ -35,7 +36,7 @@ if str(_parent_module_path) not in sys.path:
 # Import main from the briefing.py module (not package)
 # This is a bit tricky since briefing is now a package, but main() is in briefing.py
 # We need to import the actual module file, not the package
-def main():
+def main() -> int:
     """Main entry point - delegates to briefing.py main()."""
     # Import the briefing module file (not the package) using importlib
     import importlib.util
@@ -47,12 +48,14 @@ def main():
 
     # Load the module directly from the file
     spec = importlib.util.spec_from_file_location("sdd.session._briefing_module", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load briefing module from {module_path}")
     briefing_module = importlib.util.module_from_spec(spec)
     sys.modules["sdd.session._briefing_module"] = briefing_module
     spec.loader.exec_module(briefing_module)
 
     # Call the main function from the loaded module
-    return briefing_module.main()
+    return briefing_module.main()  # type: ignore[no-any-return]
 
 
 # Export commonly used functions for backward compatibility
@@ -99,7 +102,7 @@ __all__ = [
 # Backward compatibility: Module-level function wrappers
 
 
-def load_work_items():
+def load_work_items() -> dict[str, Any]:
     """Load work items from tracking file (backward compatibility wrapper)."""
     from pathlib import Path
 
@@ -110,49 +113,51 @@ def load_work_items():
     return loader.load_work_items()
 
 
-def load_learnings():
+def load_learnings() -> dict[str, Any]:
     """Load learnings from tracking file (backward compatibility wrapper)."""
     loader = LearningLoader()
     return loader.load_learnings()
 
 
-def get_next_work_item(work_items_data):
+def get_next_work_item(work_items_data: dict) -> tuple[Optional[str], Optional[dict]]:
     """Find next available work item (backward compatibility wrapper)."""
     loader = WorkItemLoader()
     return loader.get_next_work_item(work_items_data)
 
 
-def get_relevant_learnings(learnings_data, work_item, spec_content=""):
+def get_relevant_learnings(
+    learnings_data: dict, work_item: dict, spec_content: str = ""
+) -> list[dict]:
     """Get relevant learnings (backward compatibility wrapper)."""
     loader = LearningLoader()
     return loader.get_relevant_learnings(learnings_data, work_item, spec_content)
 
 
-def load_milestone_context(work_item):
+def load_milestone_context(work_item: dict) -> Optional[dict]:
     """Load milestone context (backward compatibility wrapper)."""
     builder = MilestoneBuilder()
     return builder.load_milestone_context(work_item)
 
 
-def load_project_docs():
+def load_project_docs() -> dict[str, str]:
     """Load project documentation (backward compatibility wrapper)."""
     loader = DocumentationLoader()
     return loader.load_project_docs()
 
 
-def load_current_stack():
+def load_current_stack() -> str:
     """Load current technology stack (backward compatibility wrapper)."""
     detector = StackDetector()
     return detector.load_current_stack()
 
 
-def load_current_tree():
+def load_current_tree() -> str:
     """Load current project structure (backward compatibility wrapper)."""
     generator = TreeGenerator()
     return generator.load_current_tree()
 
 
-def load_work_item_spec(work_item):
+def load_work_item_spec(work_item: str | dict[str, Any]) -> str:
     """Load work item specification file (backward compatibility wrapper)."""
     loader = WorkItemLoader()
     return loader.load_work_item_spec(work_item)
@@ -188,19 +193,19 @@ def calculate_days_ago(timestamp: str) -> int:
     return loader._calculate_days_ago(timestamp)
 
 
-def validate_environment():
+def validate_environment() -> list[str]:
     """Validate development environment (backward compatibility wrapper)."""
     formatter = BriefingFormatter()
     return formatter.validate_environment()
 
 
-def check_git_status():
+def check_git_status() -> dict[str, Any]:
     """Check git status for session start (backward compatibility wrapper)."""
     context = GitContext()
     return context.check_git_status()
 
 
-def generate_briefing(item_id, item, learnings_data):
+def generate_briefing(item_id: str, item: dict, learnings_data: dict) -> str:
     """Generate comprehensive markdown briefing (backward compatibility wrapper)."""
     briefing = SessionBriefing()
     return briefing.generate_briefing(item_id, item, learnings_data)
@@ -230,7 +235,9 @@ def determine_git_branch_final_status(branch_name: str, git_info: dict) -> str:
     return context.determine_git_branch_final_status(branch_name, git_info)
 
 
-def finalize_previous_work_item_git_status(work_items_data: dict, current_work_item_id: str):
+def finalize_previous_work_item_git_status(
+    work_items_data: dict, current_work_item_id: str
+) -> Optional[str]:
     """Finalize git status for previous work item (backward compatibility wrapper)."""
     context = GitContext()
     return context.finalize_previous_work_item_git_status(work_items_data, current_work_item_id)

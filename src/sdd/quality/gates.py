@@ -15,6 +15,7 @@ Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
@@ -41,14 +42,14 @@ try:
     from sdd.core.exceptions import SpecValidationError
     from sdd.work_items.spec_validator import validate_spec_file
 except ImportError:
-    validate_spec_file = None
-    SpecValidationError = None
+    validate_spec_file = None  # type: ignore[assignment]
+    SpecValidationError = None  # type: ignore[assignment, misc]
 
 
 class QualityGates:
     """Quality gate validation."""
 
-    def __init__(self, config_path: Path = None):
+    def __init__(self, config_path: Path | None = None):
         """Initialize quality gates with configuration."""
         if config_path is None:
             config_path = Path(".session/config.json")
@@ -63,12 +64,12 @@ class QualityGates:
         self.runner = CommandRunner(default_timeout=120)
 
     @log_errors()
-    def _load_full_config(self) -> dict:
+    def _load_full_config(self) -> dict[str, Any]:
         """Load full configuration file for optional sections (context7, custom_validations, etc.)."""
         if self._config_path.exists():
             try:
                 with open(self._config_path) as f:
-                    return json.load(f)
+                    return json.load(f)  # type: ignore[no-any-return]
             except OSError as e:
                 raise FileOperationError(
                     operation="read",
@@ -85,7 +86,7 @@ class QualityGates:
                 ) from e
         return {}
 
-    def run_tests(self, language: str = None) -> tuple[bool, dict]:
+    def run_tests(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
         """
         Run test suite with coverage.
 
@@ -170,7 +171,7 @@ class QualityGates:
 
         return "python"  # default
 
-    def _parse_coverage(self, language: str) -> float:
+    def _parse_coverage(self, language: str) -> float | None:
         """
         Parse coverage from test results.
 
@@ -183,14 +184,14 @@ class QualityGates:
                 if coverage_file.exists():
                     with open(coverage_file) as f:
                         data = json.load(f)
-                    return data.get("totals", {}).get("percent_covered", 0)
+                    return data.get("totals", {}).get("percent_covered", 0)  # type: ignore[no-any-return]
 
             elif language in ["javascript", "typescript"]:
                 coverage_file = Path("coverage/coverage-summary.json")
                 if coverage_file.exists():
                     with open(coverage_file) as f:
                         data = json.load(f)
-                    return data.get("total", {}).get("lines", {}).get("pct", 0)
+                    return data.get("total", {}).get("lines", {}).get("pct", 0)  # type: ignore[no-any-return]
 
             return None
         except OSError as e:
@@ -208,7 +209,7 @@ class QualityGates:
                 cause=e,
             ) from e
 
-    def run_security_scan(self, language: str = None) -> tuple[bool, dict]:
+    def run_security_scan(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
         """
         Run security vulnerability scanning.
 
@@ -223,7 +224,7 @@ class QualityGates:
         if language is None:
             language = self._detect_language()
 
-        results = {"vulnerabilities": [], "by_severity": {}}
+        results: dict[str, Any] = {"vulnerabilities": [], "by_severity": {}}
 
         # Python: bandit + safety
         if language == "python":
@@ -336,7 +337,9 @@ class QualityGates:
 
         return passed, results
 
-    def run_linting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
+    def run_linting(
+        self, language: str | None = None, auto_fix: bool | None = None
+    ) -> tuple[bool, dict[str, Any]]:
         """Run linting with optional auto-fix."""
         config = self.config.linting
 
@@ -381,7 +384,9 @@ class QualityGates:
             "fixed": auto_fix,
         }
 
-    def run_formatting(self, language: str = None, auto_fix: bool = None) -> tuple[bool, dict]:
+    def run_formatting(
+        self, language: str | None = None, auto_fix: bool | None = None
+    ) -> tuple[bool, dict[str, Any]]:
         """Run code formatting."""
         config = self.config.formatting
 
@@ -429,14 +434,14 @@ class QualityGates:
             "output": result.stdout,
         }
 
-    def validate_documentation(self, work_item: dict = None) -> tuple[bool, dict]:
+    def validate_documentation(self, work_item: dict | None = None) -> tuple[bool, dict[str, Any]]:
         """Validate documentation requirements."""
         config = self.config.documentation
 
         if not config.enabled:
             return True, {"status": "skipped"}
 
-        results = {"checks": [], "passed": True}
+        results: dict[str, Any] = {"checks": [], "passed": True}
 
         # Check CHANGELOG updated
         if config.check_changelog:
@@ -505,7 +510,7 @@ class QualityGates:
         # If no issues found, return True
         return result.returncode == 0
 
-    def _check_readme_current(self, work_item: dict = None) -> bool:
+    def _check_readme_current(self, work_item: dict | None = None) -> bool:
         """Check if README was updated (optional check)."""
         result = self.runner.run(["git", "diff", "--name-only", "HEAD~1..HEAD"], timeout=10)
 
@@ -515,7 +520,7 @@ class QualityGates:
         changed_files = result.stdout.strip().split("\n")
         return any("README" in f.upper() for f in changed_files)
 
-    def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict]:
+    def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Validate that the work item specification file is complete.
 
@@ -533,7 +538,7 @@ class QualityGates:
             return True, {"status": "skipped"}
 
         if validate_spec_file is None:
-            return True, {
+            return True, {  # type: ignore[unreachable]
                 "status": "skipped",
                 "reason": "spec_validator module not available",
             }
@@ -578,7 +583,7 @@ class QualityGates:
                 cause=e,
             ) from e
 
-    def verify_context7_libraries(self) -> tuple[bool, dict]:
+    def verify_context7_libraries(self) -> tuple[bool, dict[str, Any]]:
         """Verify important libraries via Context7 MCP."""
         # Context7 is not in the main quality_gates config, load from full config
         # This is optional and might not be present
@@ -594,7 +599,7 @@ class QualityGates:
             return True, {"status": "skipped", "reason": "no stack.txt"}
 
         libraries = self._parse_libraries_from_stack()
-        results = {"libraries": [], "verified": 0, "failed": 0}
+        results: dict[str, Any] = {"libraries": [], "verified": 0, "failed": 0}
 
         for lib in libraries:
             # Check if library should be verified
@@ -680,9 +685,9 @@ class QualityGates:
         # Returns True by default to allow framework operation
         return True
 
-    def run_custom_validations(self, work_item: dict) -> tuple[bool, dict]:
+    def run_custom_validations(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """Run custom validation rules for work item."""
-        results = {"validations": [], "passed": True}
+        results: dict[str, Any] = {"validations": [], "passed": True}
 
         # Get custom rules from work item
         custom_rules = work_item.get("validation_rules", []) if work_item else []
@@ -771,12 +776,12 @@ class QualityGates:
         }
 
         for gate_name, gate_config in gates.items():
-            if gate_config.required and not gate_config.enabled:
+            if gate_config.required and not gate_config.enabled:  # type: ignore[attr-defined]
                 missing.append(gate_name)
 
         return len(missing) == 0, missing
 
-    def run_integration_tests(self, work_item: dict) -> tuple[bool, dict]:
+    def run_integration_tests(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Run integration tests for integration test work items.
 
@@ -788,7 +793,7 @@ class QualityGates:
         """
         # Get integration test config
         # Try to load from the full config file since integration_tests is a sibling of quality_gates
-        full_config = {}
+        full_config: dict[str, Any] = {}
         if hasattr(self, "_config_path") and self._config_path.exists():
             with open(self._config_path) as f:
                 full_config = json.load(f)
@@ -809,7 +814,7 @@ class QualityGates:
 
         logger.info("Running integration test quality gates...")
 
-        results = {
+        results: dict[str, Any] = {
             "integration_tests": {},
             "performance_benchmarks": {},
             "api_contracts": {},
@@ -889,7 +894,7 @@ class QualityGates:
                 # Log teardown failures but don't fail the gate
                 logger.warning(f"Environment teardown failed: {e}")
 
-    def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict]:
+    def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Validate integration test environment requirements.
 
@@ -903,7 +908,7 @@ class QualityGates:
             return True, {"status": "skipped"}
 
         env_requirements = work_item.get("environment_requirements", {})
-        results = {
+        results: dict[str, Any] = {
             "docker_available": False,
             "docker_compose_available": False,
             "required_services": [],
@@ -939,7 +944,7 @@ class QualityGates:
 
         return results["passed"], results
 
-    def validate_integration_documentation(self, work_item: dict) -> tuple[bool, dict]:
+    def validate_integration_documentation(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Validate integration test documentation requirements.
 
@@ -953,7 +958,7 @@ class QualityGates:
             return True, {"status": "skipped"}
 
         # Get integration documentation config
-        full_config = {}
+        full_config: dict[str, Any] = {}
         if hasattr(self, "_config_path") and self._config_path.exists():
             with open(self._config_path) as f:
                 full_config = json.load(f)
@@ -967,7 +972,7 @@ class QualityGates:
         if not config.get("enabled", True):
             return True, {"status": "skipped"}
 
-        results = {"checks": [], "missing": [], "passed": False}
+        results: dict[str, Any] = {"checks": [], "missing": [], "passed": False}
 
         # 1. Check for integration architecture diagram
         if config.get("architecture_diagrams", True):
@@ -1222,14 +1227,14 @@ class QualityGates:
 
         return "\n".join(guidance)
 
-    def run_deployment_gates(self, work_item: dict) -> tuple[bool, dict]:
+    def run_deployment_gates(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Run deployment-specific quality gates.
 
         Returns:
             (passed, results)
         """
-        results = {"gates": [], "passed": True}
+        results: dict[str, Any] = {"gates": [], "passed": True}
 
         # Gate 1: All integration tests must pass
         tests_passed, test_results = self.run_integration_tests(work_item)
@@ -1341,7 +1346,7 @@ class QualityGates:
         return True
 
 
-def main():
+def main() -> None:
     """CLI entry point."""
     gates = QualityGates()
 

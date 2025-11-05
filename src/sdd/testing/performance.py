@@ -9,10 +9,12 @@ Tracks:
 - Regression detection
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import convert_subprocess_errors, log_errors
@@ -52,11 +54,11 @@ class PerformanceBenchmark:
         self.work_item = work_item
         self.benchmarks = work_item.get("performance_benchmarks", {})
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
-        self.results = {}
+        self.results: dict[str, Any] = {}
         self.runner = CommandRunner(default_timeout=300)
 
     @log_errors()
-    def run_benchmarks(self, test_endpoint: Optional[str] = None) -> tuple[bool, dict]:
+    def run_benchmarks(self, test_endpoint: str | None = None) -> tuple[bool, dict[str, Any]]:
         """
         Run performance benchmarks.
 
@@ -100,7 +102,7 @@ class PerformanceBenchmark:
 
     @log_errors()
     @convert_subprocess_errors
-    def _run_load_test(self, endpoint: str) -> dict:
+    def _run_load_test(self, endpoint: str) -> dict[str, Any]:
         """
         Run load test using wrk or similar tool.
 
@@ -157,7 +159,7 @@ class PerformanceBenchmark:
                 context={"duration": duration, "threads": threads, "connections": connections},
             ) from e
 
-    def _parse_wrk_output(self, output: str) -> dict:
+    def _parse_wrk_output(self, output: str) -> dict[str, Any]:
         """
         Parse wrk output to extract metrics.
 
@@ -170,7 +172,7 @@ class PerformanceBenchmark:
         Raises:
             PerformanceTestError: If parsing fails
         """
-        results = {"latency": {}, "throughput": {}}
+        results: dict[str, Any] = {"latency": {}, "throughput": {}}
 
         try:
             lines = output.split("\n")
@@ -230,7 +232,7 @@ class PerformanceBenchmark:
                 remediation="Check wrk output format",
             ) from e
 
-    def _run_simple_load_test(self, endpoint: str, duration: int) -> dict:
+    def _run_simple_load_test(self, endpoint: str, duration: int) -> dict[str, Any]:
         """
         Fallback load test using Python requests.
 
@@ -246,7 +248,7 @@ class PerformanceBenchmark:
         """
         import time
 
-        import requests
+        import requests  # type: ignore[import-untyped]
 
         latencies = []
         start_time = time.time()
@@ -299,7 +301,7 @@ class PerformanceBenchmark:
 
     @log_errors()
     @convert_subprocess_errors
-    def _measure_resource_usage(self) -> dict:
+    def _measure_resource_usage(self) -> dict[str, Any]:
         """
         Measure CPU and memory usage of services.
 
@@ -439,6 +441,10 @@ class PerformanceBenchmark:
             return False
 
         work_item_id = self.work_item.get("id")
+        if not work_item_id:
+            logger.info("Work item has no id, skipping regression check")
+            return False
+
         baseline = baselines.get(work_item_id)
 
         if not baseline:
@@ -472,7 +478,7 @@ class PerformanceBenchmark:
         return False
 
     @log_errors()
-    def _store_baseline(self):
+    def _store_baseline(self) -> None:
         """
         Store current results as baseline.
 
@@ -486,6 +492,13 @@ class PerformanceBenchmark:
                 baselines = load_json(self.baselines_file)
 
             work_item_id = self.work_item.get("id")
+            if not work_item_id:
+                raise PerformanceTestError(
+                    message="Work item has no id, cannot store baseline",
+                    context={"work_item": self.work_item},
+                    remediation="Ensure work item has an 'id' field",
+                )
+
             baselines[work_item_id] = {
                 "latency": self.results.get("load_test", {}).get("latency", {}),
                 "throughput": self.results.get("load_test", {}).get("throughput", {}),
@@ -514,7 +527,8 @@ class PerformanceBenchmark:
         if status_file.exists():
             try:
                 status = load_json(status_file)
-                return status.get("session_number", 0)
+                session_num = status.get("session_number", 0)
+                return int(session_num) if session_num is not None else 0
             except Exception as e:
                 logger.warning(f"Failed to load session status: {e}")
                 return 0
@@ -562,7 +576,7 @@ Resource Usage:
 
 
 @log_errors()
-def main():
+def main() -> None:
     """
     CLI entry point.
 

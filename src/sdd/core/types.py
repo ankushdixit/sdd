@@ -39,7 +39,7 @@ class WorkItemType(str, Enum):
         return [item.value for item in cls]
 
     @classmethod
-    def _missing_(cls, value: object) -> "WorkItemType":
+    def _missing_(cls, value: object) -> WorkItemType:
         """Handle invalid work item types with ValidationError."""
         valid_types = ", ".join(cls.values())
         raise ValidationError(
@@ -71,7 +71,7 @@ class WorkItemStatus(str, Enum):
         return [item.value for item in cls]
 
     @classmethod
-    def _missing_(cls, value: object) -> "WorkItemStatus":
+    def _missing_(cls, value: object) -> WorkItemStatus:
         """Handle invalid work item status with ValidationError."""
         valid_statuses = ", ".join(cls.values())
         raise ValidationError(
@@ -98,7 +98,7 @@ class Priority(str, Enum):
         """Return the string value of the enum."""
         return self.value
 
-    def __lt__(self, other: "Priority") -> bool:
+    def __lt__(self, other: object) -> bool:
         """Enable priority comparison.
 
         Lower numeric order = higher priority:
@@ -119,19 +119,19 @@ class Priority(str, Enum):
         order = {Priority.CRITICAL: 0, Priority.HIGH: 1, Priority.MEDIUM: 2, Priority.LOW: 3}
         return order[self] < order[other]
 
-    def __le__(self, other: "Priority") -> bool:
+    def __le__(self, other: object) -> bool:
         """Enable priority less-than-or-equal comparison."""
         if not isinstance(other, Priority):
             raise TypeError(f"Cannot compare Priority with {type(other)}")
         return self == other or self < other
 
-    def __gt__(self, other: "Priority") -> bool:
+    def __gt__(self, other: object) -> bool:
         """Enable priority greater-than comparison."""
         if not isinstance(other, Priority):
             raise TypeError(f"Cannot compare Priority with {type(other)}")
         return not self <= other
 
-    def __ge__(self, other: "Priority") -> bool:
+    def __ge__(self, other: object) -> bool:
         """Enable priority greater-than-or-equal comparison."""
         if not isinstance(other, Priority):
             raise TypeError(f"Cannot compare Priority with {type(other)}")
@@ -143,7 +143,7 @@ class Priority(str, Enum):
         return [item.value for item in cls]
 
     @classmethod
-    def _missing_(cls, value: object) -> "Priority":
+    def _missing_(cls, value: object) -> Priority:
         """Handle invalid priority with ValidationError."""
         valid_priorities = ", ".join(cls.values())
         raise ValidationError(

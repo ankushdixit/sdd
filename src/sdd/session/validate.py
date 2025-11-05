@@ -34,7 +34,7 @@ from sdd.work_items import spec_parser
 class SessionValidator:
     """Validate session readiness for completion."""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize SessionValidator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
@@ -383,7 +383,7 @@ class SessionValidator:
         return {"ready": all_passed, "checks": checks}
 
 
-def main():
+def main() -> int:
     """CLI entry point.
 
     Returns:

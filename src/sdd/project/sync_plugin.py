@@ -365,7 +365,7 @@ class PluginSyncer:
             logger.info("Sync completed successfully!")
 
 
-def main():
+def main() -> None:
     """
     Main entry point.
 

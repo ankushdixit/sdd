@@ -16,6 +16,7 @@ import re
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import jsonschema
 
@@ -55,7 +56,7 @@ LEARNING_SCHEMA = {
 class LearningsCurator:
     """Curates project learnings"""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize LearningsCurator with project root path."""
         if project_root is None:
             project_root = Path.cwd()
@@ -195,7 +196,7 @@ class LearningsCurator:
 
     def _extract_learnings_from_sessions(self) -> list[dict]:
         """Extract learnings from session summary files"""
-        learnings = []
+        learnings: list[dict[str, Any]] = []
         summaries_dir = self.session_dir / "summaries"
 
         if not summaries_dir.exists():
@@ -597,7 +598,7 @@ class LearningsCurator:
 
     @log_errors()
     def extract_from_git_commits(
-        self, since_session: int = 0, session_id: str = None
+        self, since_session: int = 0, session_id: str | None = None
     ) -> list[dict]:
         """Extract learnings from git commit messages with standardized metadata
 
@@ -664,7 +665,7 @@ class LearningsCurator:
 
     @log_errors()
     def extract_from_code_comments(
-        self, changed_files: list[Path] = None, session_id: str = None
+        self, changed_files: list[Path] | None = None, session_id: str | None = None
     ) -> list[dict]:
         """Extract learnings from inline code comments (not documentation) with standardized metadata
 
@@ -788,10 +789,10 @@ class LearningsCurator:
         self,
         content: str,
         source: str,
-        session_id: str = None,
-        context: str = None,
-        timestamp: str = None,
-        learning_id: str = None,
+        session_id: str | None = None,
+        context: str | None = None,
+        timestamp: str | None = None,
+        learning_id: str | None = None,
     ) -> dict:
         """Create a standardized learning entry with all required fields.
 
@@ -911,9 +912,9 @@ class LearningsCurator:
         self,
         content: str,
         category: str,
-        session: int = None,
-        tags: list = None,
-        context: str = None,
+        session: int | None = None,
+        tags: list | None = None,
+        context: str | None = None,
     ) -> str:
         """Add a new learning
 
@@ -937,7 +938,7 @@ class LearningsCurator:
         learning_id = str(uuid.uuid4())[:8]
 
         # Create learning object
-        learning = {
+        learning: dict[str, Any] = {
             "id": learning_id,
             "content": content,
             "timestamp": datetime.now().isoformat(),
@@ -1016,11 +1017,11 @@ class LearningsCurator:
 
     def show_learnings(
         self,
-        category: str = None,
-        tag: str = None,
-        session: int = None,
-        date_from: str = None,
-        date_to: str = None,
+        category: str | None = None,
+        tag: str | None = None,
+        session: int | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
         include_archived: bool = False,
     ) -> None:
         """Show learnings with optional filters"""
@@ -1077,7 +1078,7 @@ class LearningsCurator:
                 print(f"   ID: {learning.get('id', 'N/A')}")
         else:
             # Show all categories
-            grouped = {}
+            grouped: dict[str, list[Any]] = {}
             for learning in filtered:
                 cat = learning["category"]
                 if cat not in grouped:
@@ -1145,7 +1146,7 @@ class LearningsCurator:
         learnings = self._load_learnings()
         categories = learnings.get("categories", {})
 
-        stats = {
+        stats: dict[str, Any] = {
             "total": 0,
             "by_category": {},
             "by_tag": {},
@@ -1160,8 +1161,8 @@ class LearningsCurator:
             stats["total"] += count
 
         # Count by tag and session
-        tag_counts = {}
-        session_counts = {}
+        tag_counts: dict[str, int] = {}
+        session_counts: dict[int, int] = {}
 
         for items in categories.values():
             for learning in items:
@@ -1221,7 +1222,7 @@ class LearningsCurator:
         categories = learnings.get("categories", {})
 
         # Group by session
-        by_session = {}
+        by_session: dict[int, list[Any]] = {}
         for items in categories.values():
             for learning in items:
                 learned_in = learning.get("learned_in", "unknown")
@@ -1260,7 +1261,7 @@ class LearningsCurator:
             print()
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Learning curation and management")
 

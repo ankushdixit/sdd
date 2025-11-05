@@ -172,7 +172,7 @@ class BriefingFormatter:
             True if command exists, False otherwise
         """
         result = self.runner.run([command, "--version"])
-        return result.success  # type: ignore[no-any-return]
+        return result.success
 
     def generate_integration_test_briefing(self, work_item: dict) -> str:
         """Generate integration test specific briefing sections.

@@ -40,7 +40,9 @@ class WorkItemLoader:
         with open(self.work_items_file) as f:
             return json.load(f)  # type: ignore[no-any-return]
 
-    def get_work_item(self, work_item_id: str, work_items_data: dict[str, Any] | None = None) -> Optional[dict[str, Any]]:
+    def get_work_item(
+        self, work_item_id: str, work_items_data: dict[str, Any] | None = None
+    ) -> Optional[dict[str, Any]]:
         """Get a specific work item by ID.
 
         Args:

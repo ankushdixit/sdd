@@ -5,10 +5,13 @@ Generate and update project tree documentation.
 Tracks structural changes to the project with reasoning.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import log_errors
@@ -20,7 +23,7 @@ from sdd.core.exceptions import (
 class TreeGenerator:
     """Generate project tree documentation."""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize TreeGenerator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
@@ -112,7 +115,7 @@ class TreeGenerator:
                     return True
             return False
 
-        def add_tree(path: Path, prefix: str = "", is_last: bool = True):
+        def add_tree(path: Path, prefix: str = "", is_last: bool = True) -> None:
             if should_ignore(path):
                 return
 
@@ -171,7 +174,9 @@ class TreeGenerator:
         return changes
 
     @log_errors()
-    def update_tree(self, session_num: int = None, non_interactive: bool = False):
+    def update_tree(
+        self, session_num: int | None = None, non_interactive: bool = False
+    ) -> list[dict[str, str]]:
         """Generate/update tree.txt and detect changes.
 
         Args:
@@ -245,7 +250,9 @@ class TreeGenerator:
         return changes
 
     @log_errors()
-    def _record_tree_update(self, session_num: int, changes: list[dict], reasoning: str):
+    def _record_tree_update(
+        self, session_num: int, changes: list[dict[str, Any]], reasoning: str
+    ) -> None:
         """Record tree update in tree_updates.json.
 
         Args:
@@ -256,7 +263,7 @@ class TreeGenerator:
         Raises:
             FileOperationError: If writing tree updates fails
         """
-        updates = {"updates": []}
+        updates: dict[str, Any] = {"updates": []}
 
         if self.updates_file.exists():
             try:
@@ -287,7 +294,7 @@ class TreeGenerator:
             ) from e
 
 
-def main():
+def main() -> None:
     """CLI entry point.
 
     Handles exceptions and provides user-friendly error messages.

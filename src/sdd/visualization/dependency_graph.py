@@ -6,10 +6,12 @@ Generates visual dependency graphs with critical path analysis and work item tim
 Supports DOT format, SVG, and ASCII art output.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import convert_file_errors, log_errors
@@ -25,7 +27,7 @@ from sdd.core.types import WorkItemStatus
 class DependencyGraphVisualizer:
     """Visualizes work item dependency graphs"""
 
-    def __init__(self, work_items_file: Path = None):
+    def __init__(self, work_items_file: Path | None = None):
         """
         Initialize visualizer.
 
@@ -41,9 +43,9 @@ class DependencyGraphVisualizer:
     @log_errors()
     def load_work_items(
         self,
-        status_filter: Optional[str] = None,
-        milestone_filter: Optional[str] = None,
-        type_filter: Optional[str] = None,
+        status_filter: str | None = None,
+        milestone_filter: str | None = None,
+        type_filter: str | None = None,
         include_completed: bool = False,
     ) -> list[dict]:
         """Load and filter work items from JSON file.
@@ -417,7 +419,7 @@ class DependencyGraphVisualizer:
         item_dict = {item["id"]: item for item in work_items}
 
         # Calculate depth for each item
-        depths = {}
+        depths: dict[str, int] = {}
 
         def calculate_depth(item_id: str, visited: set[str], path: list[str]) -> int:
             if item_id in depths:
@@ -519,15 +521,16 @@ class DependencyGraphVisualizer:
         status = item.get("status", WorkItemStatus.NOT_STARTED.value)
         return f"{item['id']}\\n{title}\\n[{status}]"
 
-    def _get_status_icon(self, item: dict) -> str:
+    def _get_status_icon(self, item: dict[str, Any]) -> str:
         """Get ASCII icon for work item status"""
-        icons = {
+        icons: dict[str, str] = {
             WorkItemStatus.NOT_STARTED.value: "○",
             WorkItemStatus.IN_PROGRESS.value: "◐",
             WorkItemStatus.COMPLETED.value: "●",
             WorkItemStatus.BLOCKED.value: "✗",
         }
-        return icons.get(item.get("status"), "○")
+        status = item.get("status")
+        return icons.get(str(status) if status is not None else "", "○")
 
     def _group_by_dependency_level(self, work_items: list[dict]) -> list[list[dict]]:
         """Group work items by dependency level
@@ -615,7 +618,7 @@ class DependencyGraphVisualizer:
         return lines
 
 
-def main():
+def main() -> int:
     """CLI entry point for graph generation."""
     import sys
 

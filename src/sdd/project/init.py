@@ -24,7 +24,7 @@ from sdd.core.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-def check_or_init_git(project_root: Path = None) -> bool:
+def check_or_init_git(project_root: Path | None = None) -> bool:
     """
     Check if git is initialized, if not initialize it.
 
@@ -76,7 +76,7 @@ def check_or_init_git(project_root: Path = None) -> bool:
     return True
 
 
-def install_git_hooks(project_root: Path = None) -> bool:
+def install_git_hooks(project_root: Path | None = None) -> bool:
     """
     Install git hooks from templates.
 
@@ -153,7 +153,7 @@ def detect_project_type() -> str:
         return {"1": "typescript", "2": "javascript", "3": "python"}.get(choice, "typescript")
 
 
-def ensure_package_manager_file(project_type: str):
+def ensure_package_manager_file(project_type: str) -> None:
     """
     Create or update package manager file with required dependencies.
 
@@ -334,7 +334,7 @@ def ensure_package_manager_file(project_type: str):
                 )
 
 
-def ensure_config_files(project_type: str):
+def ensure_config_files(project_type: str) -> None:
     """
     Create all required config files from templates.
 
@@ -390,7 +390,7 @@ def ensure_config_files(project_type: str):
             logger.info(f"Found {dest_name}")
 
 
-def install_dependencies(project_type: str):
+def install_dependencies(project_type: str) -> None:
     """
     Install project dependencies.
 
@@ -457,7 +457,7 @@ def install_dependencies(project_type: str):
             logger.warning("Please activate virtual environment and run: pip install -e .[dev]")
 
 
-def create_smoke_tests(project_type: str):
+def create_smoke_tests(project_type: str) -> None:
     """
     Create initial smoke tests that validate SDD setup.
 
@@ -541,7 +541,7 @@ def create_smoke_tests(project_type: str):
             logger.info(f"Found {test_file}")
 
 
-def create_session_structure():
+def create_session_structure() -> None:
     """
     Create .session directory structure.
 
@@ -575,7 +575,7 @@ def create_session_structure():
     logger.info("Created .session/specs/")
 
 
-def initialize_tracking_files():
+def initialize_tracking_files() -> None:
     """
     Initialize tracking files from templates.
 
@@ -761,7 +761,7 @@ def initialize_tracking_files():
             )
 
 
-def run_initial_scans():
+def run_initial_scans() -> None:
     """
     Run initial stack and tree scans with FIXED path resolution (Bug #12).
 
@@ -803,7 +803,7 @@ def run_initial_scans():
         logger.warning(f"Tree generation failed: {e}")
 
 
-def ensure_gitignore_entries():
+def ensure_gitignore_entries() -> None:
     """
     Add .session patterns and OS-specific files to .gitignore.
 
@@ -905,7 +905,7 @@ def ensure_gitignore_entries():
         logger.info(".gitignore already up to date")
 
 
-def create_initial_commit(project_root: Path = None):
+def create_initial_commit(project_root: Path | None = None) -> bool:
     """
     Create initial commit after project initialization.
 
@@ -976,7 +976,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
         return False
 
 
-def init_project():
+def init_project() -> int:
     """
     Main initialization function - deterministic setup.
 
