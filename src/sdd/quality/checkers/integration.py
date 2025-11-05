@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.exceptions import CommandExecutionError
@@ -165,8 +165,8 @@ class IntegrationChecker(QualityChecker):
             checker_name=self.name(),
             passed=passed,
             status="passed" if passed else "failed",
-            errors=cast(list[dict[str, Any] | str], errors),
-            warnings=cast(list[dict[str, Any] | str], warnings),
+            errors=cast(list[Union[dict[str, Any], str]], errors),
+            warnings=cast(list[Union[dict[str, Any], str]], warnings),
             info=results,
             execution_time=execution_time,
         )
@@ -230,7 +230,7 @@ class IntegrationChecker(QualityChecker):
             checker_name=self.name(),
             passed=passed,
             status="passed" if passed else "failed",
-            errors=cast(list[dict[str, Any] | str], errors),
+            errors=cast(list[Union[dict[str, Any], str]], errors),
             warnings=[],
             info=results,
             execution_time=execution_time,
@@ -382,7 +382,7 @@ class IntegrationChecker(QualityChecker):
             checker_name=self.name(),
             passed=passed,
             status="passed" if passed else "failed",
-            errors=cast(list[dict[str, Any] | str], errors),
+            errors=cast(list[Union[dict[str, Any], str]], errors),
             warnings=[],
             info=results,
             execution_time=execution_time,

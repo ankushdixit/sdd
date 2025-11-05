@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.logging_config import get_logger
@@ -144,7 +144,7 @@ class ExecutionChecker(QualityChecker):
             checker_name=self.name(),
             passed=passed,
             status="passed" if passed else "failed",
-            errors=cast(list[dict[str, Any] | str], errors),
+            errors=cast(list[Union[dict[str, Any], str]], errors),
             warnings=[],
             info={
                 "coverage": coverage,
