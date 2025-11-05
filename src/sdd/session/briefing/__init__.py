@@ -8,9 +8,11 @@ The package is organized into focused, single-responsibility modules.
 Public API exports maintain backward compatibility with the original briefing.py module.
 """
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sdd.core.logging_config import get_logger
 
@@ -119,7 +121,7 @@ def load_learnings() -> dict[str, Any]:
     return loader.load_learnings()
 
 
-def get_next_work_item(work_items_data: dict) -> tuple[Optional[str], Optional[dict]]:
+def get_next_work_item(work_items_data: dict) -> tuple[str | None, dict | None]:
     """Find next available work item (backward compatibility wrapper)."""
     loader = WorkItemLoader()
     return loader.get_next_work_item(work_items_data)
@@ -133,7 +135,7 @@ def get_relevant_learnings(
     return loader.get_relevant_learnings(learnings_data, work_item, spec_content)
 
 
-def load_milestone_context(work_item: dict) -> Optional[dict]:
+def load_milestone_context(work_item: dict) -> dict | None:
     """Load milestone context (backward compatibility wrapper)."""
     builder = MilestoneBuilder()
     return builder.load_milestone_context(work_item)
@@ -237,7 +239,7 @@ def determine_git_branch_final_status(branch_name: str, git_info: dict) -> str:
 
 def finalize_previous_work_item_git_status(
     work_items_data: dict, current_work_item_id: str
-) -> Optional[str]:
+) -> str | None:
     """Finalize git status for previous work item (backward compatibility wrapper)."""
     context = GitContext()
     return context.finalize_previous_work_item_git_status(work_items_data, current_work_item_id)
