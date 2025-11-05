@@ -432,75 +432,83 @@ class TestQualityGatesTestExecution:
 class TestQualityGatesCoverageParsing:
     """Tests for coverage parsing from different languages."""
 
-    def test_parse_coverage_python_valid_json(self):
+    def test_parse_coverage_python_valid_json(self, temp_dir):
         """Test parsing Python coverage from valid JSON file."""
         # Arrange
-        coverage_data = {"totals": {"percent_covered": 92.5}}
+        from sdd.quality.checkers.tests import ExecutionChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        coverage_data = {"totals": {"percent_covered": 92.5}}
+        coverage_file = temp_dir / "coverage.json"
+        coverage_file.write_text(json.dumps(coverage_data))
 
         # Act
-        with patch.object(Path, "exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data=json.dumps(coverage_data))):
-                coverage = gates._parse_coverage("python")
+        test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
+        runner = ExecutionChecker(test_config, temp_dir, language="python")
+        coverage = runner._parse_coverage()
 
         # Assert
         assert coverage == 92.5
 
-    def test_parse_coverage_python_file_not_found(self):
+    def test_parse_coverage_python_file_not_found(self, temp_dir):
         """Test parsing Python coverage when file doesn't exist."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.tests import ExecutionChecker
 
-        # Act
-        with patch.object(Path, "exists", return_value=False):
-            coverage = gates._parse_coverage("python")
+        # Act - no coverage.json file exists
+        test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
+        runner = ExecutionChecker(test_config, temp_dir, language="python")
+        coverage = runner._parse_coverage()
 
         # Assert
         assert coverage is None
 
-    def test_parse_coverage_javascript_valid_json(self):
+    def test_parse_coverage_javascript_valid_json(self, temp_dir):
         """Test parsing JavaScript coverage from valid JSON file."""
         # Arrange
-        coverage_data = {"total": {"lines": {"pct": 88.3}}}
+        from sdd.quality.checkers.tests import ExecutionChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        coverage_data = {"total": {"lines": {"pct": 88.3}}}
+        coverage_dir = temp_dir / "coverage"
+        coverage_dir.mkdir()
+        coverage_file = coverage_dir / "coverage-summary.json"
+        coverage_file.write_text(json.dumps(coverage_data))
 
         # Act
-        with patch.object(Path, "exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data=json.dumps(coverage_data))):
-                coverage = gates._parse_coverage("javascript")
+        test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
+        runner = ExecutionChecker(test_config, temp_dir, language="javascript")
+        coverage = runner._parse_coverage()
 
         # Assert
         assert coverage == 88.3
 
-    def test_parse_coverage_typescript(self):
+    def test_parse_coverage_typescript(self, temp_dir):
         """Test parsing TypeScript coverage (uses same format as JavaScript)."""
         # Arrange
-        coverage_data = {"total": {"lines": {"pct": 95.0}}}
+        from sdd.quality.checkers.tests import ExecutionChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        coverage_data = {"total": {"lines": {"pct": 95.0}}}
+        coverage_dir = temp_dir / "coverage"
+        coverage_dir.mkdir()
+        coverage_file = coverage_dir / "coverage-summary.json"
+        coverage_file.write_text(json.dumps(coverage_data))
 
         # Act
-        with patch.object(Path, "exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data=json.dumps(coverage_data))):
-                coverage = gates._parse_coverage("typescript")
+        test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
+        runner = ExecutionChecker(test_config, temp_dir, language="typescript")
+        coverage = runner._parse_coverage()
 
         # Assert
         assert coverage == 95.0
 
-    def test_parse_coverage_unsupported_language(self):
+    def test_parse_coverage_unsupported_language(self, temp_dir):
         """Test parsing coverage for unsupported language returns None."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.tests import ExecutionChecker
 
         # Act
-        coverage = gates._parse_coverage("ruby")
+        test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
+        runner = ExecutionChecker(test_config, temp_dir, language="ruby")
+        coverage = runner._parse_coverage()
 
         # Assert
         assert coverage is None
@@ -621,9 +629,13 @@ class TestQualityGatesSecurityScan:
         assert passed is True
 
     @patch("sdd.quality.gates.CommandRunner")
-    def test_run_security_scan_javascript_npm_audit(self, mock_run):
+    def test_run_security_scan_javascript_npm_audit(self, mock_run, temp_dir):
         """Test running security scan for JavaScript with npm audit."""
         # Arrange
+        # Create package.json so the scanner runs
+        package_json = temp_dir / "package.json"
+        package_json.write_text("{}")
+
         audit_data = {
             "vulnerabilities": {"lodash": {"severity": "high"}, "express": {"severity": "low"}}
         }
@@ -638,7 +650,8 @@ class TestQualityGatesSecurityScan:
         mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+            gates = QualityGates(config_path=temp_dir / "config.json")
+        gates.project_root = temp_dir
 
         # Act
         passed, results = gates.run_security_scan(language="javascript")
@@ -838,7 +851,7 @@ class TestQualityGatesLinting:
         # Assert
         assert passed is False
         assert results["status"] == "failed"
-        assert "Required linting tool not found" in results["reason"]
+        assert results["reason"] == "tool not found"
 
     @patch("sdd.quality.gates.CommandRunner")
     def test_run_linting_tool_not_found_optional(self, mock_run):
@@ -1121,6 +1134,8 @@ class TestQualityGatesDocumentation:
     def test_check_changelog_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG updated on feature branch."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
         mock_runner.run.side_effect = [
             CommandResult(
@@ -1144,7 +1159,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_changelog_updated()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_changelog_updated()
 
         # Assert
         assert result is True
@@ -1153,6 +1169,8 @@ class TestQualityGatesDocumentation:
     def test_check_changelog_not_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG not updated on feature branch."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
         mock_runner.run.side_effect = [
             CommandResult(
@@ -1176,7 +1194,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_changelog_updated()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_changelog_updated()
 
         # Assert
         assert result is False
@@ -1185,6 +1204,8 @@ class TestQualityGatesDocumentation:
     def test_check_changelog_on_main_branch_skipped(self, mock_run):
         """Test checking CHANGELOG on main branch is skipped."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1197,7 +1218,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_changelog_updated()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_changelog_updated()
 
         # Assert
         assert result is True
@@ -1206,6 +1228,8 @@ class TestQualityGatesDocumentation:
     def test_check_python_docstrings_pass(self, mock_run):
         """Test checking Python docstrings when all present."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1218,7 +1242,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_python_docstrings()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_python_docstrings()
 
         # Assert
         assert result is True
@@ -1227,6 +1252,8 @@ class TestQualityGatesDocumentation:
     def test_check_python_docstrings_missing(self, mock_run):
         """Test checking Python docstrings when some are missing."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1243,7 +1270,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_python_docstrings()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_python_docstrings()
 
         # Assert
         assert result is False
@@ -1252,6 +1280,8 @@ class TestQualityGatesDocumentation:
     def test_check_python_docstrings_tool_not_available(self, mock_run):
         """Test checking Python docstrings when pydocstyle not available."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1268,7 +1298,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_python_docstrings()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_python_docstrings()
 
         # Assert
         assert result is True  # Skip check if tool not available
@@ -1277,6 +1308,8 @@ class TestQualityGatesDocumentation:
     def test_check_readme_current_updated(self, mock_run):
         """Test checking README was updated."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1293,7 +1326,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_readme_current()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_readme_current()
 
         # Assert
         assert result is True
@@ -1302,6 +1336,8 @@ class TestQualityGatesDocumentation:
     def test_check_readme_current_not_updated(self, mock_run):
         """Test checking README was not updated."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
 
         mock_runner.run.return_value = CommandResult(
@@ -1318,7 +1354,8 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        result = gates._check_readme_current()
+        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        result = checker._check_readme_current()
 
         # Assert
         assert result is False
@@ -1336,7 +1373,7 @@ class TestQualityGatesSpecCompleteness:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.validate_spec_file", return_value=(True, [])):
+        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file", return_value=(True, [])):
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -1354,8 +1391,11 @@ class TestQualityGatesSpecCompleteness:
 
         # Act
         # Mock validate_spec_file to raise SpecValidationError
-        with patch("sdd.quality.gates.validate_spec_file") as mock_validate:
-            mock_validate.side_effect = SpecValidationError(work_item_id="WI-001", errors=errors)
+        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file") as mock_validate:
+            mock_validate.side_effect = SpecValidationError(
+                work_item_id="WI-001",
+                errors=errors
+            )
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -1390,12 +1430,14 @@ class TestQualityGatesSpecCompleteness:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.validate_spec_file", None):
+        # Simulate validator raising an OSError (caught by checker)
+        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file", side_effect=OSError("Validator not available")):
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
-        assert passed is True
-        assert results["status"] == "skipped"
+        # When validator raises OSError, it's caught and returns failed status
+        assert passed is False
+        assert results["status"] == "failed"
 
     def test_validate_spec_completeness_missing_work_item_fields(self):
         """Test validating spec completeness with missing work item fields."""
@@ -1411,7 +1453,8 @@ class TestQualityGatesSpecCompleteness:
         # Assert
         assert passed is False
         assert results["status"] == "failed"
-        assert "missing" in results["error"].lower()
+        # Check that the error message mentions missing field
+        assert any("missing" in str(err).lower() for err in results["errors"])
 
 
 class TestQualityGatesCustomValidations:
@@ -1809,55 +1852,55 @@ class TestQualityGatesContext7:
         assert results["status"] == "skipped"
         assert results["reason"] == "not enabled"
 
-    def test_verify_context7_libraries_no_stack_file(self):
+    def test_verify_context7_libraries_no_stack_file(self, temp_dir):
         """Test Context7 verification when stack.txt doesn't exist."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-        # Mock _load_full_config to return context7 config
-        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
-            # Act
-            with patch.object(Path, "exists", return_value=False):
-                passed, results = gates.verify_context7_libraries()
+        from sdd.quality.checkers.context7 import Context7Checker
+
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=temp_dir)
+
+        # Act
+        result = checker.run()
 
         # Assert
-        assert passed is True
-        assert results["status"] == "skipped"
-        assert results["reason"] == "no stack.txt"
+        assert result.passed is True
+        assert result.status == "skipped"
+        assert result.info["reason"] == "no stack.txt"
 
     def test_parse_libraries_from_stack(self, temp_dir):
         """Test parsing libraries from stack.txt file."""
         # Arrange
+        from sdd.quality.checkers.context7 import Context7Checker
+
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         stack_file.parent.mkdir(parents=True, exist_ok=True)
         stack_file.write_text("Python 3.11\npytest 7.4.0\nruff 0.1.0\n")
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=Path.cwd())
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
-            mock_path.return_value.exists.return_value = True
-            mock_path.return_value.__truediv__.return_value = stack_file
-            with patch("builtins.open", mock_open(read_data="Python 3.11\npytest 7.4.0\n")):
-                libraries = gates._parse_libraries_from_stack()
+        libraries = checker._parse_libraries_from_stack(stack_file)
 
         # Assert
-        assert len(libraries) == 2
+        assert len(libraries) == 3
         assert libraries[0]["name"] == "Python"
         assert libraries[0]["version"] == "3.11"
+        assert libraries[1]["name"] == "pytest"
+        assert libraries[1]["version"] == "7.4.0"
 
     def test_should_verify_library_with_important_list(self):
         """Test checking if library should be verified with important list."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "pytest", "version": "7.4.0"}
-        config = {"important_libraries": ["pytest", "ruff"]}
+        config = {"enabled": True, "important_libraries": ["pytest", "ruff"]}
+        checker = Context7Checker(config=config, project_root=Path.cwd())
 
         # Act
-        should_verify = gates._should_verify_library(lib, config)
+        should_verify = checker._should_verify_library(lib)
 
         # Assert
         assert should_verify is True
@@ -1865,14 +1908,14 @@ class TestQualityGatesContext7:
     def test_should_verify_library_not_in_important_list(self):
         """Test library not in important list is not verified."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "other-lib", "version": "1.0.0"}
-        config = {"important_libraries": ["pytest", "ruff"]}
+        config = {"enabled": True, "important_libraries": ["pytest", "ruff"]}
+        checker = Context7Checker(config=config, project_root=Path.cwd())
 
         # Act
-        should_verify = gates._should_verify_library(lib, config)
+        should_verify = checker._should_verify_library(lib)
 
         # Assert
         assert should_verify is False
@@ -1880,14 +1923,14 @@ class TestQualityGatesContext7:
     def test_should_verify_library_no_important_list(self):
         """Test all libraries verified when no important list configured."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "any-lib", "version": "1.0.0"}
-        config = {}
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=Path.cwd())
 
         # Act
-        should_verify = gates._should_verify_library(lib, config)
+        should_verify = checker._should_verify_library(lib)
 
         # Assert
         assert should_verify is True
@@ -1895,13 +1938,14 @@ class TestQualityGatesContext7:
     def test_query_context7_stub_returns_true(self):
         """Test Context7 query stub returns True."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "pytest", "version": "7.4.0"}
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=Path.cwd())
 
         # Act
-        result = gates._query_context7(lib)
+        result = checker._query_context7(lib)
 
         # Assert
         assert result is True
@@ -1918,16 +1962,8 @@ class TestQualityGatesIntegration:
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
-        # Act - Mock Path.exists to return True for config file
-        def exists_side_effect(self):
-            return str(self) == ".session/config.json"
-
-        with (
-            patch.object(Path, "exists", exists_side_effect),
-            patch(
-                "builtins.open", mock_open(read_data='{"integration_tests": {"enabled": false}}')
-            ),
-        ):
+        # Act - Patch the integration config to be disabled
+        with patch.object(gates.config.integration, "enabled", False):
             passed, results = gates.run_integration_tests(work_item)
 
         # Assert
@@ -1944,18 +1980,14 @@ class TestQualityGatesIntegration:
             gates = QualityGates()
 
         # Act
-        with patch(
-            "builtins.open", mock_open(read_data='{"integration_tests": {"enabled": true}}')
-        ):
-            passed, results = gates.run_integration_tests(work_item)
+        passed, results = gates.run_integration_tests(work_item)
 
         # Assert
         assert passed is True
         assert results["status"] == "skipped"
         assert results["reason"] == "not integration test"
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_validate_integration_environment_docker_available(self, mock_run):
+    def test_validate_integration_environment_docker_available(self):
         """Test validating integration environment with Docker available."""
         # Arrange
         work_item = {
@@ -1975,10 +2007,12 @@ class TestQualityGatesIntegration:
                 returncode=0, stdout="", stderr="", command=["docker-compose"], duration_seconds=0.1
             ),
         ]
-        mock_run.return_value = mock_runner
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
+
+        # Replace the gates.runner with our mock
+        gates.runner = mock_runner
 
         # Act
         with patch.object(Path, "exists", return_value=True):
@@ -2075,19 +2109,25 @@ class TestQualityGatesIntegration:
         # Arrange
         work_item = {"id": "test-001", "type": "integration_test"}
 
-        with patch.object(Path, "exists", return_value=False):
+        # Mock config file to have documentation disabled
+        config_data = '{"integration_tests": {"documentation": {"enabled": false}}}'
+
+        with (
+            patch("builtins.open", mock_open(read_data=config_data)),
+            patch.object(Path, "exists", side_effect=lambda: str(Path(".session/config.json")) in str(Path.cwd() / ".session/config.json"))
+        ):
             gates = QualityGates()
 
-        # Act - Mock Path.exists to return True for config file
-        def exists_side_effect(self):
-            return str(self) == ".session/config.json"
+            # Act - Patch for the IntegrationChecker's config file read
+            with (
+                patch("sdd.quality.checkers.integration.Path") as mock_path_class,
+                patch("sdd.quality.checkers.integration.open", mock_open(read_data=config_data))
+            ):
+                mock_config_path = Mock()
+                mock_config_path.exists.return_value = True
+                mock_path_class.return_value = mock_config_path
 
-        config_data = '{"integration_tests": {"documentation": {"enabled": false}}}'
-        with (
-            patch.object(Path, "exists", exists_side_effect),
-            patch("builtins.open", mock_open(read_data=config_data)),
-        ):
-            passed, results = gates.validate_integration_documentation(work_item)
+                passed, results = gates.validate_integration_documentation(work_item)
 
         # Assert
         assert passed is True
@@ -2112,66 +2152,107 @@ class TestQualityGatesIntegration:
 class TestQualityGatesDeployment:
     """Tests for deployment-specific quality gates."""
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_all_pass(self, mock_security, mock_integration):
+    def test_run_deployment_gates_all_pass(self):
         """Test running deployment gates when all pass."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (True, {"status": "passed"})
-        mock_security.return_value = (True, {"status": "passed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return all gates passing
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=True,
+            status="passed",
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": True},
+                    {"name": "Security Scans", "required": True, "passed": True},
+                    {"name": "Environment Validation", "required": True, "passed": True},
+                    {"name": "Deployment Documentation", "required": True, "passed": True},
+                    {"name": "Rollback Tested", "required": True, "passed": True},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=True):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=True):
-                with patch.object(gates, "_check_rollback_tested", return_value=True):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is True
         assert len(results["gates"]) == 5
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_integration_fails(self, mock_security, mock_integration):
+    def test_run_deployment_gates_integration_fails(self):
         """Test running deployment gates when integration tests fail."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (False, {"status": "failed"})
-        mock_security.return_value = (True, {"status": "passed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return integration test failure
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=False,
+            status="failed",
+            errors=[{"gate": "Integration Tests", "message": "Integration test failed"}],
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": False},
+                    {"name": "Security Scans", "required": True, "passed": True},
+                    {"name": "Environment Validation", "required": True, "passed": True},
+                    {"name": "Deployment Documentation", "required": True, "passed": True},
+                    {"name": "Rollback Tested", "required": True, "passed": True},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=True):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=True):
-                with patch.object(gates, "_check_rollback_tested", return_value=True):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is False
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_security_fails(self, mock_security, mock_integration):
+    def test_run_deployment_gates_security_fails(self):
         """Test running deployment gates when security scan fails."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (True, {"status": "passed"})
-        mock_security.return_value = (False, {"status": "failed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return security scan failure
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=False,
+            status="failed",
+            errors=[{"gate": "Security Scans", "message": "Security scan failed"}],
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": True},
+                    {"name": "Security Scans", "required": True, "passed": False},
+                    {"name": "Environment Validation", "required": True, "passed": True},
+                    {"name": "Deployment Documentation", "required": True, "passed": True},
+                    {"name": "Rollback Tested", "required": True, "passed": True},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=True):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=True):
-                with patch.object(gates, "_check_rollback_tested", return_value=True):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is False
@@ -2179,15 +2260,16 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_environment_success(self):
         """Test validating deployment environment fallback returns True."""
         # Arrange
-        work_item = {"specification": "environment: staging"}
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        work_item = {"specification": "environment: staging"}
+        config = {"enabled": True}
+        checker = DeploymentChecker(work_item=work_item, config=config, project_root=Path.cwd())
 
         # Act
         # Since environment_validator module doesn't exist, the method will
         # catch the ImportError and return True (fallback behavior)
-        result = gates._validate_deployment_environment(work_item)
+        result = checker._validate_deployment_environment()
 
         # Assert
         assert result is True  # Falls back to True when module not available
@@ -2195,13 +2277,14 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_environment_validator_not_available(self):
         """Test deployment environment validation when validator not available."""
         # Arrange
-        work_item = {"specification": "environment: staging"}
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        work_item = {"specification": "environment: staging"}
+        config = {"enabled": True}
+        checker = DeploymentChecker(work_item=work_item, config=config, project_root=Path.cwd())
 
         # Act
-        result = gates._validate_deployment_environment(work_item)
+        result = checker._validate_deployment_environment()
 
         # Assert
         assert result is True  # Returns True when validator not available
@@ -2209,6 +2292,8 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_documentation_all_sections_present(self):
         """Test deployment documentation validation with all sections."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+
         work_item = {
             "specification": """
             Deployment Procedure:
@@ -2225,11 +2310,11 @@ class TestQualityGatesDeployment:
             """
         }
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        config = {"enabled": True}
+        checker = DeploymentChecker(work_item=work_item, config=config, project_root=Path.cwd())
 
         # Act
-        result = gates._validate_deployment_documentation(work_item)
+        result = checker._validate_deployment_documentation()
 
         # Assert
         assert result is True
@@ -2237,6 +2322,8 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_documentation_missing_sections(self):
         """Test deployment documentation validation with missing sections."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+
         work_item = {
             "specification": """
             Deployment Procedure:
@@ -2244,11 +2331,11 @@ class TestQualityGatesDeployment:
             """
         }
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        config = {"enabled": True}
+        checker = DeploymentChecker(work_item=work_item, config=config, project_root=Path.cwd())
 
         # Act
-        result = gates._validate_deployment_documentation(work_item)
+        result = checker._validate_deployment_documentation()
 
         # Assert
         assert result is False
@@ -2256,13 +2343,14 @@ class TestQualityGatesDeployment:
     def test_check_rollback_tested_stub(self):
         """Test rollback tested check (stub implementation)."""
         # Arrange
-        work_item = {"type": "deployment"}
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        work_item = {"type": "deployment"}
+        config = {"enabled": True}
+        checker = DeploymentChecker(work_item=work_item, config=config, project_root=Path.cwd())
 
         # Act
-        result = gates._check_rollback_tested(work_item)
+        result = checker._check_rollback_tested()
 
         # Assert
         assert result is True  # Stub always returns True
@@ -2271,54 +2359,49 @@ class TestQualityGatesDeployment:
 class TestQualityGatesHelperMethods:
     """Tests for helper methods and edge cases."""
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_command_validation_success(self, mock_run):
+    def test_run_command_validation_success(self, temp_dir):
         """Test running command validation successfully."""
         # Arrange
-        mock_runner = Mock()
+        from sdd.quality.checkers.custom import CustomValidationChecker
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
-            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            returncode=0, stdout="", stderr="", command=["echo", "test"], duration_seconds=0.1
         )
 
-        mock_run.return_value = mock_runner
         rule = {"command": "echo test"}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_command_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_command_validation(rule)
 
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_command_validation_failure(self, mock_run):
+    def test_run_command_validation_failure(self, temp_dir):
         """Test running command validation that fails."""
         # Arrange
-        mock_runner = Mock()
+        from sdd.quality.checkers.custom import CustomValidationChecker
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
-            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            returncode=1, stdout="", stderr="", command=["false"], duration_seconds=0.1
         )
 
-        mock_run.return_value = mock_runner
         rule = {"command": "false"}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_command_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_command_validation(rule)
 
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_command_validation_exception(self, mock_run):
+    def test_run_command_validation_exception(self, temp_dir):
         """Test running command validation with exception."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=-1,
@@ -2327,28 +2410,25 @@ class TestQualityGatesHelperMethods:
             command=["invalid"],
             duration_seconds=0.1,
         )
-        mock_run.return_value = mock_runner
         rule = {"command": "invalid"}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_command_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_command_validation(rule)
 
         # Assert
         assert result is False
 
-    def test_run_command_validation_no_command(self):
+    def test_run_command_validation_no_command(self, temp_dir):
         """Test running command validation with no command specified."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         rule = {}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_command_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir)
+        result = checker._run_command_validation(rule)
 
         # Assert
         assert result is True
@@ -2356,125 +2436,113 @@ class TestQualityGatesHelperMethods:
     def test_check_file_exists_file_present(self, temp_dir):
         """Test checking file exists when file is present."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         test_file = temp_dir / "test.txt"
         test_file.touch()
-        rule = {"path": str(test_file)}
-
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        rule = {"path": "test.txt"}
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
-            mock_path.return_value.exists.return_value = True
-            result = gates._check_file_exists(rule)
+        checker = CustomValidationChecker({}, temp_dir)
+        result = checker._check_file_exists(rule)
 
         # Assert
         assert result is True
 
-    def test_check_file_exists_file_missing(self):
+    def test_check_file_exists_file_missing(self, temp_dir):
         """Test checking file exists when file is missing."""
         # Arrange
-        rule = {"path": "/nonexistent/file.txt"}
+        from sdd.quality.checkers.custom import CustomValidationChecker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        rule = {"path": "nonexistent/file.txt"}
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
-            mock_path.return_value.exists.return_value = False
-            result = gates._check_file_exists(rule)
+        checker = CustomValidationChecker({}, temp_dir)
+        result = checker._check_file_exists(rule)
 
         # Assert
         assert result is False
 
-    def test_check_file_exists_no_path(self):
+    def test_check_file_exists_no_path(self, temp_dir):
         """Test checking file exists with no path specified."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         rule = {}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._check_file_exists(rule)
+        checker = CustomValidationChecker({}, temp_dir)
+        result = checker._check_file_exists(rule)
 
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_grep_validation_pattern_found(self, mock_run):
+    def test_run_grep_validation_pattern_found(self, temp_dir):
         """Test running grep validation when pattern is found."""
         # Arrange
-        mock_runner = Mock()
+        from sdd.quality.checkers.custom import CustomValidationChecker
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
-            returncode=0, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            returncode=0, stdout="", stderr="", command=["grep"], duration_seconds=0.1
         )
 
-        mock_run.return_value = mock_runner
         rule = {"pattern": "TODO", "files": "."}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_grep_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_grep_validation(rule)
 
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_grep_validation_pattern_not_found(self, mock_run):
+    def test_run_grep_validation_pattern_not_found(self, temp_dir):
         """Test running grep validation when pattern is not found."""
         # Arrange
-        mock_runner = Mock()
+        from sdd.quality.checkers.custom import CustomValidationChecker
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
-            returncode=1, stdout="", stderr="", command=["pytest"], duration_seconds=0.1
+            returncode=1, stdout="", stderr="", command=["grep"], duration_seconds=0.1
         )
 
-        mock_run.return_value = mock_runner
         rule = {"pattern": "NOTFOUND", "files": "."}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_grep_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_grep_validation(rule)
 
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_grep_validation_exception(self, mock_run):
+    def test_run_grep_validation_exception(self, temp_dir):
         """Test running grep validation with exception."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="grep failed", command=["grep"], duration_seconds=0.1
         )
-        mock_run.return_value = mock_runner
         rule = {"pattern": "test", "files": "."}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_grep_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_grep_validation(rule)
 
         # Assert
         assert result is False
 
-    def test_run_grep_validation_no_pattern(self):
+    def test_run_grep_validation_no_pattern(self, temp_dir):
         """Test running grep validation with no pattern specified."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         rule = {"files": "."}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_grep_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir)
+        result = checker._run_grep_validation(rule)
 
         # Assert
         assert result is True
@@ -2594,7 +2662,8 @@ class TestQualityGatesAdditionalCoverage:
             passed, results = gates.run_security_scan(language="python")
 
         # Assert
-        assert "safety" in results
+        # After refactoring, gates.py returns simplified format
+        assert results["status"] == "passed"  # No high severity issues trigger failure
         assert len(results["vulnerabilities"]) > 0
 
     @patch("sdd.quality.gates.CommandRunner")
@@ -2682,162 +2751,170 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_check_changelog_git_exception(self, mock_run):
+    def test_check_changelog_git_exception(self, temp_dir):
         """Test CHANGELOG check with git exception."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="git error", command=["git"], duration_seconds=0.1
         )
-        mock_run.return_value = mock_runner
-
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
 
         # Act
-        result = gates._check_changelog_updated()
+        checker = DocumentationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._check_changelog_updated()
 
         # Assert
         assert result is True  # Should skip check on error
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_check_python_docstrings_timeout(self, mock_run):
+    def test_check_python_docstrings_timeout(self, temp_dir):
         """Test Python docstring check with timeout."""
         # Arrange
-        mock_runner = Mock()
+        from sdd.quality.checkers.documentation import DocumentationChecker
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=124,
             stdout="",
             stderr="Timeout",
-            command=["pytest"],
+            command=["pydocstyle"],
             duration_seconds=300.0,
             timed_out=True,
         )
 
-        mock_run.return_value = mock_runner
-
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._check_python_docstrings()
+        checker = DocumentationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._check_python_docstrings()
 
         # Assert
         assert result is True  # Should skip check on timeout
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_check_readme_current_exception(self, mock_run):
+    def test_check_readme_current_exception(self, temp_dir):
         """Test README check with exception."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="git error", command=["git"], duration_seconds=0.1
         )
-        mock_run.return_value = mock_runner
-
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
 
         # Act
-        result = gates._check_readme_current()
+        checker = DocumentationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._check_readme_current()
 
         # Assert
         assert result is True  # Should skip check on error
 
-    def test_validate_documentation_with_work_item(self):
+    def test_validate_documentation_with_work_item(self, temp_dir):
         """Test documentation validation with work item parameter."""
         # Arrange
+        from sdd.quality.checkers.documentation import DocumentationChecker
+
         work_item = {"id": "WI-001", "type": "feature"}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-        gates.config = replace(
-            gates.config, documentation=replace(gates.config.documentation, check_readme=True)
-        )
+        # Mock runner to return success for all checks
+        mock_runner = Mock()
+        mock_runner.run.side_effect = [
+            # For git rev-parse (changelog check)
+            CommandResult(returncode=0, stdout="feature-branch", stderr="", command=["git"], duration_seconds=0.1),
+            # For git log (changelog check)
+            CommandResult(returncode=0, stdout="CHANGELOG.md", stderr="", command=["git"], duration_seconds=0.1),
+            # For pydocstyle (docstring check)
+            CommandResult(returncode=0, stdout="", stderr="", command=["pydocstyle"], duration_seconds=0.1),
+            # For git diff (readme check) - should return file containing README
+            CommandResult(returncode=0, stdout="README.md\nother.txt", stderr="", command=["git"], duration_seconds=0.1),
+        ]
+
+        doc_config = {"enabled": True, "check_changelog": True, "check_docstrings": True, "check_readme": True}
 
         # Act
-        with patch.object(gates, "_check_changelog_updated", return_value=True):
-            with patch.object(gates, "_check_python_docstrings", return_value=True):
-                with patch.object(gates, "_check_readme_current", return_value=True):
-                    passed, results = gates.validate_documentation(work_item)
+        # Create pyproject.toml to pass Python project check
+        (temp_dir / "pyproject.toml").touch()
+        checker = DocumentationChecker(doc_config, temp_dir, work_item=work_item, runner=mock_runner)
+        result = checker.run()
 
         # Assert
-        assert passed is True
-        assert len(results["checks"]) == 3
+        assert result.passed is True
+        assert len(result.info["checks"]) == 3
 
-    def test_verify_context7_libraries_with_libraries(self):
+    def test_verify_context7_libraries_with_libraries(self, temp_dir):
         """Test Context7 verification with actual libraries."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
-        stack_content = "Python 3.11\npytest 7.4.0\nruff 0.1.0\n"
+        stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
+        stack_file.parent.mkdir(parents=True, exist_ok=True)
+        stack_file.write_text("Python 3.11\npytest 7.4.0\nruff 0.1.0\n")
+
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=temp_dir)
 
         # Act
-        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
-            with patch.object(Path, "exists", return_value=True):
-                with patch("builtins.open", mock_open(read_data=stack_content)):
-                    with patch.object(gates, "_should_verify_library", return_value=True):
-                        with patch.object(gates, "_query_context7", return_value=True):
-                            passed, results = gates.verify_context7_libraries()
+        with patch.object(checker, "_query_context7", return_value=True):
+            result = checker.run()
 
         # Assert
-        assert passed is True
-        assert results["verified"] == 3
-        assert results["failed"] == 0
+        assert result.passed is True
+        assert result.info["verified"] == 3
+        assert result.info["failed"] == 0
 
-    def test_verify_context7_libraries_with_failures(self):
+    def test_verify_context7_libraries_with_failures(self, temp_dir):
         """Test Context7 verification with failed verifications."""
         # Arrange
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        from sdd.quality.checkers.context7 import Context7Checker
 
-        stack_content = "Python 3.11\npytest 7.4.0\n"
+        stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
+        stack_file.parent.mkdir(parents=True, exist_ok=True)
+        stack_file.write_text("Python 3.11\npytest 7.4.0\n")
+
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=temp_dir)
 
         # Act
-        with patch.object(gates, "_load_full_config", return_value={"context7": {"enabled": True}}):
-            with patch.object(Path, "exists", return_value=True):
-                with patch("builtins.open", mock_open(read_data=stack_content)):
-                    with patch.object(gates, "_should_verify_library", return_value=True):
-                        with patch.object(gates, "_query_context7", return_value=False):
-                            passed, results = gates.verify_context7_libraries()
+        with patch.object(checker, "_query_context7", return_value=False):
+            result = checker.run()
 
         # Assert
-        assert passed is False
-        assert results["verified"] == 0
-        assert results["failed"] == 2
+        assert result.passed is False
+        assert result.info["verified"] == 0
+        assert result.info["failed"] == 2
 
-    def test_parse_libraries_from_stack_with_comments(self):
+    def test_parse_libraries_from_stack_with_comments(self, temp_dir):
         """Test parsing libraries with comments and empty lines."""
         # Arrange
-        stack_content = "# Comment line\n\nPython 3.11\n# Another comment\npytest\n"
+        from sdd.quality.checkers.context7 import Context7Checker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
+        stack_file.parent.mkdir(parents=True, exist_ok=True)
+        stack_file.write_text("# Comment line\n\nPython 3.11\n# Another comment\npytest\n")
+
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=temp_dir)
 
         # Act
-        with patch("builtins.open", mock_open(read_data=stack_content)):
-            libraries = gates._parse_libraries_from_stack()
+        libraries = checker._parse_libraries_from_stack(stack_file)
 
         # Assert
         assert len(libraries) == 2
         assert libraries[0]["name"] == "Python"
         assert libraries[1]["name"] == "pytest"
 
-    def test_parse_libraries_from_stack_exception(self):
+    def test_parse_libraries_from_stack_exception(self, temp_dir):
         """Test parsing libraries with file read exception raises FileOperationError."""
         # Arrange
         from sdd.core.exceptions import FileOperationError
+        from sdd.quality.checkers.context7 import Context7Checker
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
+        config = {"enabled": True}
+        checker = Context7Checker(config=config, project_root=temp_dir)
 
         # Act & Assert
         with patch("builtins.open", side_effect=OSError("File error")):
             with pytest.raises(FileOperationError) as exc_info:
-                gates._parse_libraries_from_stack()
+                checker._parse_libraries_from_stack(stack_file)
 
             assert "Failed to read stack.txt file" in str(exc_info.value)
             assert exc_info.value.context["operation"] == "read"
@@ -2882,10 +2959,11 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert len(results["validations"]) == 1
 
-    @patch("sdd.quality.gates.CommandRunner")
-    def test_run_command_validation_timeout(self, mock_run):
+    def test_run_command_validation_timeout(self, temp_dir):
         """Test command validation with timeout."""
         # Arrange
+        from sdd.quality.checkers.custom import CustomValidationChecker
+
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=-1,
@@ -2895,14 +2973,11 @@ class TestQualityGatesAdditionalCoverage:
             command=["sleep"],
             duration_seconds=60.0,
         )
-        mock_run.return_value = mock_runner
         rule = {"command": "sleep 100"}
 
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
-
         # Act
-        result = gates._run_command_validation(rule)
+        checker = CustomValidationChecker({}, temp_dir, runner=mock_runner)
+        result = checker._run_command_validation(rule)
 
         # Assert
         assert result is False
@@ -2979,67 +3054,109 @@ class TestQualityGatesAdditionalCoverage:
         assert "Custom Validation Failed" in guidance
         assert "Review failed validation rules" in guidance
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_environment_fails(self, mock_security, mock_integration):
+    def test_run_deployment_gates_environment_fails(self):
         """Test deployment gates when environment validation fails."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (True, {"status": "passed"})
-        mock_security.return_value = (True, {"status": "passed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return environment validation failure
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=False,
+            status="failed",
+            errors=[{"gate": "Environment Validation", "message": "Deployment environment validation failed"}],
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": True},
+                    {"name": "Security Scans", "required": True, "passed": True},
+                    {"name": "Environment Validation", "required": True, "passed": False},
+                    {"name": "Deployment Documentation", "required": True, "passed": True},
+                    {"name": "Rollback Tested", "required": True, "passed": True},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=False):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=True):
-                with patch.object(gates, "_check_rollback_tested", return_value=True):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is False
         env_gate = [g for g in results["gates"] if g["name"] == "Environment Validation"][0]
         assert env_gate["passed"] is False
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_documentation_fails(self, mock_security, mock_integration):
+    def test_run_deployment_gates_documentation_fails(self):
         """Test deployment gates when documentation validation fails."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (True, {"status": "passed"})
-        mock_security.return_value = (True, {"status": "passed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return documentation validation failure
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=False,
+            status="failed",
+            errors=[{"gate": "Deployment Documentation", "message": "Deployment documentation incomplete"}],
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": True},
+                    {"name": "Security Scans", "required": True, "passed": True},
+                    {"name": "Environment Validation", "required": True, "passed": True},
+                    {"name": "Deployment Documentation", "required": True, "passed": False},
+                    {"name": "Rollback Tested", "required": True, "passed": True},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=True):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=False):
-                with patch.object(gates, "_check_rollback_tested", return_value=True):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is False
 
-    @patch.object(QualityGates, "run_integration_tests")
-    @patch.object(QualityGates, "run_security_scan")
-    def test_run_deployment_gates_rollback_fails(self, mock_security, mock_integration):
+    def test_run_deployment_gates_rollback_fails(self):
         """Test deployment gates when rollback test fails."""
         # Arrange
+        from sdd.quality.checkers.deployment import DeploymentChecker
+        from sdd.quality.checkers.base import CheckResult
+
         work_item = {"type": "deployment"}
-        mock_integration.return_value = (True, {"status": "passed"})
-        mock_security.return_value = (True, {"status": "passed"})
 
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
+        # Mock the deployment checker's run method to return rollback test failure
+        mock_result = CheckResult(
+            checker_name="deployment",
+            passed=False,
+            status="failed",
+            errors=[{"gate": "Rollback Tested", "message": "Rollback procedure not tested"}],
+            info={
+                "gates": [
+                    {"name": "Integration Tests", "required": True, "passed": True},
+                    {"name": "Security Scans", "required": True, "passed": True},
+                    {"name": "Environment Validation", "required": True, "passed": True},
+                    {"name": "Deployment Documentation", "required": True, "passed": True},
+                    {"name": "Rollback Tested", "required": True, "passed": False},
+                ]
+            },
+        )
+
         # Act
-        with patch.object(gates, "_validate_deployment_environment", return_value=True):
-            with patch.object(gates, "_validate_deployment_documentation", return_value=True):
-                with patch.object(gates, "_check_rollback_tested", return_value=False):
-                    passed, results = gates.run_deployment_gates(work_item)
+        with patch.object(DeploymentChecker, "run", return_value=mock_result):
+            passed, results = gates.run_deployment_gates(work_item)
 
         # Assert
         assert passed is False

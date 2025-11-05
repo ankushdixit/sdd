@@ -2,6 +2,8 @@
 """
 Quality gate validation for session completion.
 
+Refactored to use pluggable checker architecture for better maintainability.
+
 Provides comprehensive validation including:
 - Test execution with coverage
 - Linting and formatting
@@ -9,13 +11,12 @@ Provides comprehensive validation including:
 - Documentation validation
 - Custom validation rules
 
-Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
+Updated to use modular checker architecture while maintaining backward compatibility.
 """
 
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -23,19 +24,20 @@ from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
-    CommandExecutionError,
-    ErrorCode,
     FileOperationError,
-    QualityGateError,
 )
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
-)
-
-# Import logging
 from sdd.core.logging_config import get_logger
-from sdd.core.types import WorkItemType
-from sdd.work_items import spec_parser
+from sdd.quality.checkers import (
+    CustomValidationChecker,
+    DocumentationChecker,
+    ExecutionChecker,
+    FormattingChecker,
+    LintingChecker,
+    SecurityChecker,
+    SpecCompletenessChecker,
+)
+from sdd.quality.reporters import ConsoleReporter
+from sdd.quality.results import ResultAggregator
 
 logger = get_logger(__name__)
 
@@ -49,7 +51,11 @@ except ImportError:
 
 
 class QualityGates:
-    """Quality gate validation."""
+    """Quality gate validation using modular checker architecture.
+
+    This class maintains backward compatibility with the original QualityGates interface
+    while delegating to specialized checker classes internally.
+    """
 
     def __init__(self, config_path: Path | None = None):
         """Initialize quality gates with configuration."""
@@ -62,8 +68,15 @@ class QualityGates:
         config_manager.load_config(config_path)
         self.config = config_manager.quality_gates  # QualityGatesConfig dataclass
 
-        # Initialize command runner
+        # Initialize command runner (for backward compatibility)
         self.runner = CommandRunner(default_timeout=120)
+
+        # Project root
+        self.project_root = Path.cwd()
+
+        # Result aggregator and reporter
+        self.aggregator = ResultAggregator()
+        self.reporter = ConsoleReporter()
 
     @log_errors()
     def _load_full_config(self) -> dict[str, Any]:
@@ -88,78 +101,6 @@ class QualityGates:
                 ) from e
         return {}
 
-    def run_tests(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
-        """
-        Run test suite with coverage.
-
-        Returns:
-            (passed: bool, results: dict)
-        """
-        logger.info("Running test quality gate")
-        config = self.config.test_execution
-
-        if not config.enabled:
-            logger.debug("Test execution is disabled")
-            return True, {"status": "skipped", "reason": "disabled"}
-
-        # Detect language if not provided
-        if language is None:
-            language = self._detect_language()
-            logger.debug("Detected language: %s", language)
-
-        # Get test command for language
-        command = config.commands.get(language)
-        if not command:
-            logger.warning("No test command configured for language: %s", language)
-            return True, {"status": "skipped", "reason": f"no command for {language}"}
-
-        # Run tests
-        result = self.runner.run(command.split(), timeout=1200)
-
-        # pytest exit codes:
-        # 0 = all tests passed
-        # 1 = tests were collected and run but some failed
-        # 2 = test execution was interrupted
-        # 3 = internal error
-        # 4 = pytest command line usage error
-        # 5 = no tests were collected
-
-        if result.timed_out:
-            return False, {"status": "failed", "reason": "timeout"}
-
-        # Command not found (pytest not available)
-        if result.returncode == -1 and "not found" in result.stderr.lower():
-            return True, {"status": "skipped", "reason": "pytest not available"}
-
-        # Treat "no tests collected" (exit code 5) as skipped, not failed
-        if result.returncode == 5:
-            return True, {
-                "status": "skipped",
-                "reason": "no tests collected",
-                "returncode": result.returncode,
-            }
-
-        # Parse results
-        passed = result.returncode == 0
-        coverage = self._parse_coverage(language)
-
-        results = {
-            "status": "passed" if passed else "failed",
-            "returncode": result.returncode,
-            "coverage": coverage,
-            "output": result.stdout,
-            "errors": result.stderr,
-        }
-
-        # Check coverage threshold
-        threshold = config.coverage_threshold
-        if coverage and coverage < threshold:
-            results["status"] = "failed"
-            results["reason"] = f"Coverage {coverage}% below threshold {threshold}%"
-            passed = False
-
-        return passed, results
-
     def _detect_language(self) -> str:
         """Detect primary project language."""
         # Check for common files
@@ -173,356 +114,202 @@ class QualityGates:
 
         return "python"  # default
 
-    def _parse_coverage(self, language: str) -> float | None:
+    def run_tests(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
         """
-        Parse coverage from test results.
+        Run test suite with coverage.
 
-        Raises:
-            FileOperationError: If coverage file cannot be read or parsed
-        """
-        try:
-            if language == "python":
-                coverage_file = Path("coverage.json")
-                if coverage_file.exists():
-                    with open(coverage_file) as f:
-                        data = json.load(f)
-                    return data.get("totals", {}).get("percent_covered", 0)  # type: ignore[no-any-return]
-
-            elif language in ["javascript", "typescript"]:
-                coverage_file = Path("coverage/coverage-summary.json")
-                if coverage_file.exists():
-                    with open(coverage_file) as f:
-                        data = json.load(f)
-                    return data.get("total", {}).get("lines", {}).get("pct", 0)  # type: ignore[no-any-return]
-
-            return None
-        except OSError as e:
-            raise FileOperationError(
-                operation="read",
-                file_path=str(coverage_file),
-                details="Failed to read coverage file",
-                cause=e,
-            ) from e
-        except json.JSONDecodeError as e:
-            raise FileOperationError(
-                operation="parse",
-                file_path=str(coverage_file),
-                details="Invalid JSON in coverage file",
-                cause=e,
-            ) from e
-
-    def run_security_scan(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
-        """
-        Run security vulnerability scanning.
+        Args:
+            language: Programming language (optional, will be detected if not provided)
 
         Returns:
             (passed: bool, results: dict)
         """
-        config = self.config.security
+        logger.info("Running test quality gate")
 
-        if not config.enabled:
-            return True, {"status": "skipped"}
+        # Convert config dataclass to dict for checker
+        test_config = {
+            "enabled": self.config.test_execution.enabled,
+            "commands": self.config.test_execution.commands,
+            "coverage_threshold": self.config.test_execution.coverage_threshold,
+        }
 
-        if language is None:
-            language = self._detect_language()
+        # Create and run test checker (pass runner for test compatibility)
+        checker = ExecutionChecker(
+            test_config, self.project_root, language=language, runner=self.runner
+        )
+        result = checker.run()
 
-        results: dict[str, Any] = {"vulnerabilities": [], "by_severity": {}}
+        # Convert CheckResult to legacy format
+        # Extract reason from errors if present (for coverage failures)
+        reason = result.info.get("reason")
+        if not reason and result.errors:
+            # Check if any error is about coverage
+            for error in result.errors:
+                if isinstance(error, dict):
+                    msg = error.get("message", "")
+                    if "coverage" in msg.lower() and "threshold" in msg.lower():
+                        reason = msg
+                        break
 
-        # Python: bandit + safety
-        if language == "python":
-            # Run bandit
-            try:
-                import os
-                import tempfile
+        return result.passed, {
+            "status": result.status,
+            "coverage": result.info.get("coverage"),
+            "returncode": result.info.get("returncode", 0),
+            "output": result.info.get("output", ""),
+            "errors": "\n".join(str(e) for e in result.errors) if result.errors else "",
+            "reason": reason,
+        }
 
-                # Use secure temporary file instead of hardcoded /tmp path
-                fd, bandit_report_path = tempfile.mkstemp(suffix=".json")
-                os.close(fd)  # Close file descriptor, bandit will write to the path
+    def run_security_scan(
+        self, language: str | None = None
+    ) -> tuple[bool, dict[str, Any]]:
+        """
+        Run security vulnerability scanning.
 
-                try:
-                    self.runner.run(
-                        [
-                            "bandit",
-                            "-r",
-                            "src/",
-                            "-f",
-                            "json",
-                            "-o",
-                            bandit_report_path,
-                        ],
-                        timeout=60,
-                    )
+        Args:
+            language: Programming language (optional, will be detected if not provided)
 
-                    if Path(bandit_report_path).exists():
-                        try:
-                            with open(bandit_report_path) as f:
-                                content = f.read().strip()
-                                if content:  # Only parse if file has content
-                                    bandit_data = json.loads(content)
-                                    results["bandit"] = bandit_data
+        Returns:
+            (passed: bool, results: dict)
+        """
+        logger.info("Running security scan quality gate")
 
-                                    # Count by severity
-                                    for issue in bandit_data.get("results", []):
-                                        severity = issue.get("issue_severity", "LOW")
-                                        results["by_severity"][severity] = (
-                                            results["by_severity"].get(severity, 0) + 1
-                                        )
-                        except (json.JSONDecodeError, ValueError) as e:
-                            # Invalid or empty JSON - log warning but continue
-                            logger.warning(f"Failed to parse bandit report: {e}")
-                        except OSError as e:
-                            logger.warning(f"Failed to read bandit report: {e}")
-                finally:
-                    # Clean up temporary file
-                    try:
-                        Path(bandit_report_path).unlink()
-                    except OSError as e:
-                        logger.debug(f"Failed to delete temporary bandit report: {e}")
-            except (ImportError, OSError) as e:
-                # bandit not available or temp file creation failed - log and continue
-                logger.debug(f"Bandit security scan not available: {e}")
+        # Convert config dataclass to dict for checker
+        security_config = {
+            "enabled": self.config.security.enabled,
+            "fail_on": self.config.security.fail_on,
+        }
 
-            # Run safety (scan only project requirements, not entire environment)
-            safety_result = self.runner.run(
-                ["safety", "check", "--file", "requirements.txt", "--json"],
-                timeout=60,
-            )
+        # Create and run security checker (pass runner for test compatibility)
+        checker = SecurityChecker(
+            security_config, self.project_root, language=language, runner=self.runner
+        )
+        result = checker.run()
 
-            if safety_result.success and safety_result.stdout:
-                try:
-                    safety_data = json.loads(safety_result.stdout)
-                    results["safety"] = safety_data
-                    results["vulnerabilities"].extend(safety_data)
-                except json.JSONDecodeError:
-                    pass  # Invalid JSON from safety
-
-        # JavaScript/TypeScript: npm audit
-        elif language in ["javascript", "typescript"]:
-            audit_result = self.runner.run(["npm", "audit", "--json"], timeout=60)
-
-            if audit_result.success and audit_result.stdout:
-                try:
-                    audit_data = json.loads(audit_result.stdout)
-                    results["npm_audit"] = audit_data
-
-                    # Count by severity
-                    for vuln in audit_data.get("vulnerabilities", {}).values():
-                        severity = vuln.get("severity", "low").upper()
-                        results["by_severity"][severity] = (
-                            results["by_severity"].get(severity, 0) + 1
-                        )
-                except json.JSONDecodeError:
-                    pass  # Invalid JSON from npm audit
-
-        # Check if passed based on fail_on threshold
-        fail_on = config.fail_on.upper()
-        severity_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
-
-        if fail_on not in severity_levels:
-            fail_on = "HIGH"
-
-        fail_threshold = severity_levels.index(fail_on)
-
-        passed = True
-        for severity, count in results["by_severity"].items():
-            if (
-                severity in severity_levels
-                and severity_levels.index(severity) >= fail_threshold
-                and count > 0
-            ):
-                passed = False
-                results["status"] = f"failed: {count} {severity} vulnerabilities"
-                break
-
-        if passed:
-            results["status"] = "passed"
-
-        return passed, results
+        # Convert CheckResult to legacy format
+        return result.passed, {
+            "status": result.status,
+            "vulnerabilities": result.errors,
+            "by_severity": result.info.get("by_severity", {}),
+        }
 
     def run_linting(
         self, language: str | None = None, auto_fix: bool | None = None
     ) -> tuple[bool, dict[str, Any]]:
-        """Run linting with optional auto-fix."""
-        config = self.config.linting
+        """Run linting with optional auto-fix.
 
-        if not config.enabled:
-            return True, {"status": "skipped"}
+        Args:
+            language: Programming language (optional, will be detected if not provided)
+            auto_fix: Whether to automatically fix issues (overrides config)
 
-        if language is None:
-            language = self._detect_language()
+        Returns:
+            (passed: bool, results: dict)
+        """
+        logger.info("Running linting quality gate")
 
-        if auto_fix is None:
-            auto_fix = config.auto_fix
+        # Convert config dataclass to dict for checker
+        linting_config = {
+            "enabled": self.config.linting.enabled,
+            "commands": self.config.linting.commands,
+            "auto_fix": self.config.linting.auto_fix,
+            "required": self.config.linting.required,
+        }
 
-        command = config.commands.get(language)
-        if not command:
-            return True, {"status": "skipped"}
+        # Create and run linting checker (pass runner for test compatibility)
+        checker = LintingChecker(
+            linting_config,
+            self.project_root,
+            language=language,
+            auto_fix=auto_fix,
+            runner=self.runner,
+        )
+        result = checker.run()
 
-        # Add auto-fix flag if supported
-        if auto_fix and language == "python":
-            command += " --fix"
-        elif auto_fix and language in ["javascript", "typescript"]:
-            command += " --fix"
-
-        result = self.runner.run(command.split(), timeout=120)
-
-        if result.timed_out:
-            if config.required:
-                return False, {"status": "failed", "reason": "Linting timed out"}
-            return True, {"status": "skipped", "reason": "timeout"}
-
-        # Tool not found
-        if result.returncode == -1:
-            if config.required:
-                return False, {"status": "failed", "reason": "Required linting tool not found"}
-            return True, {"status": "skipped", "reason": "linting tool not available"}
-
-        passed = result.returncode == 0
-
-        return passed, {
-            "status": "passed" if passed else "failed",
-            "issues_found": result.returncode,
-            "output": result.stdout,
-            "fixed": auto_fix,
+        # Convert CheckResult to legacy format
+        return result.passed, {
+            "status": result.status,
+            "issues_found": result.info.get("issues_found", 0),
+            "output": result.info.get("output", ""),
+            "fixed": result.info.get("auto_fixed", False),
+            "reason": result.info.get("reason"),
         }
 
     def run_formatting(
         self, language: str | None = None, auto_fix: bool | None = None
     ) -> tuple[bool, dict[str, Any]]:
-        """Run code formatting."""
-        config = self.config.formatting
+        """Run code formatting.
 
-        if not config.enabled:
-            return True, {"status": "skipped"}
+        Args:
+            language: Programming language (optional, will be detected if not provided)
+            auto_fix: Whether to automatically format (overrides config)
 
-        if language is None:
-            language = self._detect_language()
+        Returns:
+            (passed: bool, results: dict)
+        """
+        logger.info("Running formatting quality gate")
 
-        if auto_fix is None:
-            auto_fix = config.auto_fix
-
-        command = config.commands.get(language)
-        if not command:
-            return True, {"status": "skipped"}
-
-        # Add appropriate flags based on auto_fix and language
-        if language == "python":
-            if not auto_fix:
-                command += " --check"
-        elif language in ["javascript", "typescript"]:
-            if auto_fix:
-                command += " --write"
-            else:
-                command += " --check"
-
-        result = self.runner.run(command.split(), timeout=120)
-
-        if result.timed_out:
-            if config.required:
-                return False, {"status": "failed", "reason": "Formatting timed out"}
-            return True, {"status": "skipped", "reason": "timeout"}
-
-        # Tool not found
-        if result.returncode == -1:
-            if config.required:
-                return False, {"status": "failed", "reason": "Required formatting tool not found"}
-            return True, {"status": "skipped", "reason": "formatting tool not available"}
-
-        passed = result.returncode == 0
-
-        return passed, {
-            "status": "passed" if passed else "failed",
-            "formatted": auto_fix,
-            "output": result.stdout,
+        # Convert config dataclass to dict for checker
+        formatting_config = {
+            "enabled": self.config.formatting.enabled,
+            "commands": self.config.formatting.commands,
+            "auto_fix": self.config.formatting.auto_fix,
+            "required": self.config.formatting.required,
         }
 
-    def validate_documentation(self, work_item: dict | None = None) -> tuple[bool, dict[str, Any]]:
-        """Validate documentation requirements."""
-        config = self.config.documentation
-
-        if not config.enabled:
-            return True, {"status": "skipped"}
-
-        results: dict[str, Any] = {"checks": [], "passed": True}
-
-        # Check CHANGELOG updated
-        if config.check_changelog:
-            changelog_updated = self._check_changelog_updated()
-            results["checks"].append({"name": "CHANGELOG updated", "passed": changelog_updated})
-            if not changelog_updated:
-                results["passed"] = False
-
-        # Check docstrings for Python
-        if config.check_docstrings:
-            language = self._detect_language()
-            if language == "python":
-                docstrings_present = self._check_python_docstrings()
-                results["checks"].append(
-                    {"name": "Docstrings present", "passed": docstrings_present}
-                )
-                if not docstrings_present:
-                    results["passed"] = False
-
-        # Check README current
-        if config.check_readme:
-            readme_current = self._check_readme_current(work_item)
-            results["checks"].append({"name": "README current", "passed": readme_current})
-            if not readme_current:
-                results["passed"] = False
-
-        results["status"] = "passed" if results["passed"] else "failed"
-        return results["passed"], results
-
-    def _check_changelog_updated(self) -> bool:
-        """Check if CHANGELOG was updated in the current branch."""
-        # Get the current branch name
-        result = self.runner.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=10)
-        if not result.success:
-            logger.debug("Could not check CHANGELOG: git not available")
-            return True  # Skip check if git not available
-
-        current_branch = result.stdout.strip()
-
-        # Don't check if we're on main/master
-        if current_branch in ["main", "master"]:
-            logger.debug("On main/master branch, skipping CHANGELOG check")
-            return True
-
-        # Check if CHANGELOG.md was modified in any commit on this branch
-        result = self.runner.run(
-            ["git", "log", "--name-only", "--pretty=format:", "main..HEAD"],
-            timeout=10,
+        # Create and run formatting checker (pass runner for test compatibility)
+        checker = FormattingChecker(
+            formatting_config,
+            self.project_root,
+            language=language,
+            auto_fix=auto_fix,
+            runner=self.runner,
         )
+        result = checker.run()
 
-        if result.success and "CHANGELOG.md" in result.stdout:
-            logger.debug("CHANGELOG updated in branch")
-            return True
-        else:
-            logger.debug("CHANGELOG not updated in branch")
-            return False
+        # Convert CheckResult to legacy format
+        return result.passed, {
+            "status": result.status,
+            "formatted": result.info.get("formatted", False),
+            "output": result.info.get("output", ""),
+        }
 
-    def _check_python_docstrings(self) -> bool:
-        """Check if Python functions have docstrings."""
-        result = self.runner.run([sys.executable, "-m", "pydocstyle", "--count"], timeout=30)
+    def validate_documentation(
+        self, work_item: dict | None = None
+    ) -> tuple[bool, dict[str, Any]]:
+        """Validate documentation requirements.
 
-        # If pydocstyle not available or timeout, skip check
-        if result.timed_out or result.returncode == -1:
-            return True
+        Args:
+            work_item: Work item dictionary (optional)
 
-        # If no issues found, return True
-        return result.returncode == 0
+        Returns:
+            (passed: bool, results: dict)
+        """
+        logger.info("Running documentation validation quality gate")
 
-    def _check_readme_current(self, work_item: dict | None = None) -> bool:
-        """Check if README was updated (optional check)."""
-        result = self.runner.run(["git", "diff", "--name-only", "HEAD~1..HEAD"], timeout=10)
+        # Convert config dataclass to dict for checker
+        doc_config = {
+            "enabled": self.config.documentation.enabled,
+            "check_changelog": self.config.documentation.check_changelog,
+            "check_docstrings": self.config.documentation.check_docstrings,
+            "check_readme": self.config.documentation.check_readme,
+        }
 
-        if not result.success:
-            return True  # Skip check if git not available
+        # Create and run documentation checker (pass runner for test compatibility)
+        checker = DocumentationChecker(
+            doc_config, self.project_root, work_item=work_item, runner=self.runner
+        )
+        result = checker.run()
 
-        changed_files = result.stdout.strip().split("\n")
-        return any("README" in f.upper() for f in changed_files)
+        # Convert CheckResult to legacy format
+        return result.passed, {
+            "status": result.status,
+            "checks": result.info.get("checks", []),
+            "passed": result.passed,
+        }
 
-    def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
+    def validate_spec_completeness(
+        self, work_item: dict
+    ) -> tuple[bool, dict[str, Any]]:
         """
         Validate that the work item specification file is complete.
 
@@ -534,229 +321,68 @@ class QualityGates:
         Returns:
             Tuple of (passed, results)
         """
-        config = self.config.spec_completeness
+        logger.info(
+            f"Running spec completeness validation for work item: {work_item.get('id')}"
+        )
 
-        if not config.enabled:
-            return True, {"status": "skipped"}
+        # Convert config dataclass to dict for checker
+        spec_config = {
+            "enabled": self.config.spec_completeness.enabled,
+        }
 
-        if validate_spec_file is None:
-            return True, {  # type: ignore[unreachable]
-                "status": "skipped",
-                "reason": "spec_validator module not available",
-            }
+        # Create and run spec completeness checker
+        checker = SpecCompletenessChecker(
+            spec_config, self.project_root, work_item=work_item
+        )
+        result = checker.run()
 
-        work_item_id = work_item.get("id")
-        work_item_type = work_item.get("type")
+        # Convert CheckResult to legacy format
+        if result.status == "skipped":
+            return True, {"status": "skipped", "reason": result.info.get("reason", "")}
 
-        if not work_item_id or not work_item_type:
-            return False, {
-                "status": "failed",
-                "error": "Work item missing 'id' or 'type' field",
-            }
-
-        # Validate spec file
-        try:
-            validate_spec_file(work_item_id, work_item_type)
+        if result.passed:
             return True, {
                 "status": "passed",
-                "message": f"Spec file for '{work_item_id}' is complete",
+                "message": result.info.get("message", ""),
             }
-        except SpecValidationError as e:
+        else:
             return False, {
                 "status": "failed",
-                "errors": e.context.get("validation_errors", []),
-                "message": f"Spec file for '{work_item_id}' is incomplete",
-                "suggestion": e.remediation
-                or f"Edit .session/specs/{work_item_id}.md to add missing sections",
+                "errors": [
+                    e.get("message", str(e)) if isinstance(e, dict) else str(e)
+                    for e in result.errors
+                ],
+                "message": result.info.get("message", ""),
+                "suggestion": result.info.get("suggestion", ""),
             }
-        except SDDFileNotFoundError as e:
-            return False, {
-                "status": "failed",
-                "error": e.message,
-                "suggestion": e.remediation,
-            }
-        except (OSError, ValueError) as e:
-            # Re-raise as QualityGateError for unexpected errors during validation
-            raise QualityGateError(
-                message=f"Error validating spec file for '{work_item_id}'",
-                code=ErrorCode.QUALITY_GATE_FAILED,
-                context={"work_item_id": work_item_id, "error": str(e)},
-                remediation="Check spec file format and validator configuration",
-                cause=e,
-            ) from e
-
-    def verify_context7_libraries(self) -> tuple[bool, dict[str, Any]]:
-        """Verify important libraries via Context7 MCP."""
-        # Context7 is not in the main quality_gates config, load from full config
-        # This is optional and might not be present
-        full_config = self._load_full_config()
-        config = full_config.get("context7", {})
-
-        if not config.get("enabled", False):
-            return True, {"status": "skipped", "reason": "not enabled"}
-
-        # Get important libraries from stack.txt
-        stack_file = Path(".session/tracking/stack.txt")
-        if not stack_file.exists():
-            return True, {"status": "skipped", "reason": "no stack.txt"}
-
-        libraries = self._parse_libraries_from_stack()
-        results: dict[str, Any] = {"libraries": [], "verified": 0, "failed": 0}
-
-        for lib in libraries:
-            # Check if library should be verified
-            if not self._should_verify_library(lib, config):
-                continue
-
-            # Query Context7 MCP
-            verified = self._query_context7(lib)
-
-            results["libraries"].append(
-                {
-                    "name": lib["name"],
-                    "version": lib.get("version", "unknown"),
-                    "verified": verified,
-                }
-            )
-
-            if verified:
-                results["verified"] += 1
-            else:
-                results["failed"] += 1
-
-        passed = results["failed"] == 0
-        results["status"] = "passed" if passed else "failed"
-
-        return passed, results
-
-    def _parse_libraries_from_stack(self) -> list[dict]:
-        """
-        Parse libraries from stack.txt.
-
-        Raises:
-            FileOperationError: If stack file cannot be read
-        """
-        stack_file = Path(".session/tracking/stack.txt")
-        libraries = []
-
-        try:
-            with open(stack_file) as f:
-                content = f.read()
-
-            # Parse libraries - expecting format like "Python 3.x" or "pytest (testing)"
-            lines = content.split("\n")
-            for line in lines:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-
-                # Extract library name and version
-                parts = line.split()
-                if len(parts) >= 1:
-                    name = parts[0]
-                    version = parts[1] if len(parts) > 1 else "unknown"
-                    libraries.append({"name": name, "version": version})
-
-        except OSError as e:
-            raise FileOperationError(
-                operation="read",
-                file_path=str(stack_file),
-                details="Failed to read stack.txt file",
-                cause=e,
-            ) from e
-
-        return libraries
-
-    def _should_verify_library(self, lib: dict, config: dict) -> bool:
-        """Check if library should be verified via Context7."""
-        # Check if library is in important list (if configured)
-        important_libs = config.get("important_libraries", [])
-        if important_libs:
-            return lib["name"] in important_libs
-
-        # By default, verify all libraries
-        return True
-
-    def _query_context7(self, lib: dict) -> bool:
-        """Query Context7 MCP for library verification (stub)."""
-        # NOTE: Future integration - Context7 MCP for library verification
-        # When implemented, this should:
-        # 1. Connect to Context7 MCP server
-        # 2. Query library version and security status
-        # 3. Return True if library is current/secure, False otherwise
-        # Returns True by default to allow framework operation
-        return True
 
     def run_custom_validations(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
-        """Run custom validation rules for work item."""
-        results: dict[str, Any] = {"validations": [], "passed": True}
+        """Run custom validation rules for work item.
 
-        # Get custom rules from work item
-        custom_rules = work_item.get("validation_rules", []) if work_item else []
+        Args:
+            work_item: Work item dictionary
 
-        # Get project-level rules from full config (custom_validations is optional)
+        Returns:
+            (passed: bool, results: dict)
+        """
+        logger.info("Running custom validations quality gate")
+
+        # Get custom rules from full config
         full_config = self._load_full_config()
-        project_rules = full_config.get("custom_validations", {}).get("rules", [])
+        custom_config = full_config.get("custom_validations", {})
 
-        # Combine rules
-        all_rules = custom_rules + project_rules
+        # Create and run custom validation checker (pass runner for test compatibility)
+        checker = CustomValidationChecker(
+            custom_config, self.project_root, work_item=work_item, runner=self.runner
+        )
+        result = checker.run()
 
-        for rule in all_rules:
-            rule_type = rule.get("type")
-            required = rule.get("required", False)
-
-            # Execute rule based on type
-            if rule_type == "command":
-                passed = self._run_command_validation(rule)
-            elif rule_type == "file_exists":
-                passed = self._check_file_exists(rule)
-            elif rule_type == "grep":
-                passed = self._run_grep_validation(rule)
-            else:
-                passed = True
-
-            results["validations"].append(
-                {
-                    "name": rule.get("name", "unknown"),
-                    "passed": passed,
-                    "required": required,
-                }
-            )
-
-            if not passed and required:
-                results["passed"] = False
-
-        results["status"] = "passed" if results["passed"] else "failed"
-        return results["passed"], results
-
-    def _run_command_validation(self, rule: dict) -> bool:
-        """Run command validation."""
-        command = rule.get("command")
-        if not command:
-            return True
-
-        result = self.runner.run(command.split(), timeout=60)
-        return result.success
-
-    def _check_file_exists(self, rule: dict) -> bool:
-        """Check if file exists at path."""
-        file_path = rule.get("path")
-        if not file_path:
-            return True
-
-        return Path(file_path).exists()
-
-    def _run_grep_validation(self, rule: dict) -> bool:
-        """Run grep validation."""
-        pattern = rule.get("pattern")
-        files = rule.get("files", ".")
-
-        if not pattern:
-            return True
-
-        result = self.runner.run(["grep", "-r", pattern, files], timeout=30)
-        # grep returns 0 if pattern found
-        return result.success
+        # Convert CheckResult to legacy format
+        return result.passed, {
+            "status": result.status,
+            "validations": result.info.get("validations", []),
+            "passed": result.passed,
+        }
 
     def check_required_gates(self) -> tuple[bool, list[str]]:
         """
@@ -783,313 +409,88 @@ class QualityGates:
 
         return len(missing) == 0, missing
 
+    # ========================================================================
+    # Integration Test Gates
+    # ========================================================================
+
     def run_integration_tests(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
-        """
-        Run integration tests for integration test work items.
+        """Run integration tests for integration test work items."""
+        from sdd.quality.checkers.integration import IntegrationChecker
 
-        Args:
-            work_item: Integration test work item
-
-        Returns:
-            (passed: bool, results: dict)
-        """
-        # Get integration test config
-        # Try to load from the full config file since integration_tests is a sibling of quality_gates
-        full_config: dict[str, Any] = {}
-        if hasattr(self, "_config_path") and self._config_path.exists():
-            with open(self._config_path) as f:
-                full_config = json.load(f)
-        else:
-            config_path = Path(".session/config.json")
-            if config_path.exists():
-                with open(config_path) as f:
-                    full_config = json.load(f)
-
-        config = full_config.get("integration_tests", {})
-
-        if not config.get("enabled", True):
-            return True, {"status": "skipped", "reason": "disabled"}
-
-        # Only run for integration_test work items
-        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
-            return True, {"status": "skipped", "reason": "not integration test"}
-
-        logger.info("Running integration test quality gates...")
-
-        results: dict[str, Any] = {
-            "integration_tests": {},
-            "performance_benchmarks": {},
-            "api_contracts": {},
-            "passed": False,
-        }
-
-        # Import here to avoid circular imports
-
-        # 1. Run integration tests
-        from sdd.core.exceptions import (
-            EnvironmentSetupError,
-            IntegrationExecutionError,
-            IntegrationTestError,
+        checker = IntegrationChecker(
+            work_item=work_item,
+            config=self.config.integration.__dict__,
+            runner=self.runner,
         )
-        from sdd.testing.integration_runner import IntegrationTestRunner
+        result = checker.run()
+        return result.passed, result.details
 
-        runner = IntegrationTestRunner(work_item)
+    def validate_integration_environment(
+        self, work_item: dict
+    ) -> tuple[bool, dict[str, Any]]:
+        """Validate integration test environment requirements."""
+        from sdd.quality.checkers.integration import IntegrationChecker
 
-        try:
-            # Setup environment (now raises exceptions instead of returning tuple)
-            runner.setup_environment()
-
-            # Execute integration tests (now returns dict and raises exceptions on failure)
-            test_results = runner.run_tests()
-            results["integration_tests"] = test_results
-
-            # Check if tests passed
-            if test_results.get("failed", 0) > 0:
-                logger.error("Integration tests failed")
-                return False, results
-
-            logger.info(f"Integration tests passed ({test_results.get('passed', 0)} tests)")
-
-            # 2. Run performance benchmarks
-            if work_item.get("performance_benchmarks"):
-                from sdd.testing.performance import PerformanceBenchmark
-
-                benchmark = PerformanceBenchmark(work_item)
-                benchmarks_passed, benchmark_results = benchmark.run_benchmarks()
-                results["performance_benchmarks"] = benchmark_results
-
-                if not benchmarks_passed:
-                    logger.error("Performance benchmarks failed")
-                    if config.get("performance_benchmarks", {}).get("required", True):
-                        return False, results
-                else:
-                    logger.info("Performance benchmarks passed")
-
-            # 3. Validate API contracts
-            if work_item.get("api_contracts"):
-                from sdd.quality.api_validator import APIContractValidator
-
-                validator = APIContractValidator(work_item)
-                contracts_passed, contract_results = validator.validate_contracts()
-                results["api_contracts"] = contract_results
-
-                if not contracts_passed:
-                    logger.error("API contract validation failed")
-                    if config.get("api_contracts", {}).get("required", True):
-                        return False, results
-                else:
-                    logger.info("API contracts validated")
-
-            results["passed"] = True
-            return True, results
-
-        except (EnvironmentSetupError, IntegrationExecutionError, IntegrationTestError) as e:
-            # Integration test setup or execution failed
-            results["error"] = str(e)
-            return False, results
-
-        finally:
-            # Always teardown environment
-            try:
-                runner.teardown_environment()
-            except (OSError, CommandExecutionError) as e:
-                # Log teardown failures but don't fail the gate
-                logger.warning(f"Environment teardown failed: {e}")
-
-    def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
-        """
-        Validate integration test environment requirements.
-
-        Args:
-            work_item: Integration test work item
-
-        Returns:
-            (passed: bool, results: dict)
-        """
-        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
-            return True, {"status": "skipped"}
-
-        env_requirements = work_item.get("environment_requirements", {})
-        results: dict[str, Any] = {
-            "docker_available": False,
-            "docker_compose_available": False,
-            "required_services": [],
-            "missing_config": [],
-            "passed": False,
-        }
-
-        # Check Docker available
-        result = self.runner.run(["docker", "--version"], timeout=5)
-        results["docker_available"] = result.success
-
-        # Check Docker Compose available
-        result = self.runner.run(["docker-compose", "--version"], timeout=5)
-        results["docker_compose_available"] = result.success
-
-        # Check compose file exists
-        compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
-        if not Path(compose_file).exists():
-            results["missing_config"].append(compose_file)
-
-        # Check config files exist
-        config_files = env_requirements.get("config_files", [])
-        for config_file in config_files:
-            if not Path(config_file).exists():
-                results["missing_config"].append(config_file)
-
-        # Determine if passed
-        results["passed"] = (
-            results["docker_available"]
-            and results["docker_compose_available"]
-            and len(results["missing_config"]) == 0
+        checker = IntegrationChecker(
+            work_item=work_item,
+            config=self.config.integration.__dict__,
+            runner=self.runner,
         )
+        result = checker.validate_environment()
+        return result.passed, result.details
 
-        return results["passed"], results
+    def validate_integration_documentation(
+        self, work_item: dict
+    ) -> tuple[bool, dict[str, Any]]:
+        """Validate integration test documentation requirements."""
+        from sdd.quality.checkers.integration import IntegrationChecker
 
-    def validate_integration_documentation(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
-        """
-        Validate integration test documentation requirements.
+        checker = IntegrationChecker(
+            work_item=work_item,
+            config=self.config.integration.__dict__,
+            runner=self.runner,
+        )
+        result = checker.validate_documentation()
+        return result.passed, result.details
 
-        Args:
-            work_item: Integration test work item
+    def verify_context7_libraries(self) -> tuple[bool, dict[str, Any]]:
+        """Verify important libraries via Context7 MCP."""
+        from sdd.quality.checkers.context7 import Context7Checker
 
-        Returns:
-            (passed: bool, results: dict)
-        """
-        if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
-            return True, {"status": "skipped"}
+        checker = Context7Checker(
+            config=self.config.context7.__dict__,
+            project_root=self.project_root,
+            runner=self.runner,
+        )
+        result = checker.run()
+        return result.passed, result.details
 
-        # Get integration documentation config
-        full_config: dict[str, Any] = {}
-        if hasattr(self, "_config_path") and self._config_path.exists():
-            with open(self._config_path) as f:
-                full_config = json.load(f)
-        else:
-            config_path = Path(".session/config.json")
-            if config_path.exists():
-                with open(config_path) as f:
-                    full_config = json.load(f)
+    def run_deployment_gates(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
+        """Run deployment-specific quality gates."""
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
-        config = full_config.get("integration_tests", {}).get("documentation", {})
-        if not config.get("enabled", True):
-            return True, {"status": "skipped"}
+        checker = DeploymentChecker(
+            work_item=work_item,
+            config=self.config.deployment.__dict__,
+            project_root=self.project_root,
+            runner=self.runner,
+        )
+        result = checker.run()
+        return result.passed, result.details
 
-        results: dict[str, Any] = {"checks": [], "missing": [], "passed": False}
-
-        # 1. Check for integration architecture diagram
-        if config.get("architecture_diagrams", True):
-            diagram_paths = [
-                "docs/architecture/integration-architecture.md",
-                "docs/integration-architecture.md",
-                ".session/specs/integration-architecture.md",
-            ]
-
-            diagram_found = any(Path(p).exists() for p in diagram_paths)
-            results["checks"].append(
-                {"name": "Integration architecture diagram", "passed": diagram_found}
-            )
-
-            if not diagram_found:
-                results["missing"].append("Integration architecture diagram")
-
-        # 2. Check for sequence diagrams (using spec_parser)
-        if config.get("sequence_diagrams", True):
-            # Parse spec file to get test scenarios
-            try:
-                parsed_spec = spec_parser.parse_spec_file(work_item)
-                scenarios = parsed_spec.get("test_scenarios", [])
-            except (OSError, ValueError, KeyError) as e:
-                logger.debug(f"Failed to parse spec file for scenarios: {e}")
-                scenarios = []
-
-            if scenarios:
-                # Check if any scenario content contains sequence diagrams
-                has_sequence = False
-                for scenario in scenarios:
-                    content = scenario.get("content", "")
-                    if "```mermaid" in content or "sequenceDiagram" in content:
-                        has_sequence = True
-                        break
-
-                results["checks"].append({"name": "Sequence diagrams", "passed": has_sequence})
-
-                if not has_sequence:
-                    results["missing"].append("Sequence diagrams for test scenarios")
-
-        # 3. Check for API contract documentation (using spec_parser)
-        if config.get("contract_documentation", True):
-            # Parse spec file to get API contracts
-            try:
-                parsed_spec = spec_parser.parse_spec_file(work_item)
-                api_contracts = parsed_spec.get("api_contracts", "")
-                # API contracts should be documented in the spec
-                has_contracts = api_contracts and len(api_contracts.strip()) > 20
-            except (OSError, ValueError, KeyError) as e:
-                logger.debug(f"Failed to parse spec file for API contracts: {e}")
-                has_contracts = False
-
-            results["checks"].append(
-                {
-                    "name": "API contracts documented",
-                    "passed": has_contracts,
-                }
-            )
-
-            if not has_contracts:
-                results["missing"].append("API contract documentation")
-
-        # 4. Check for performance baseline documentation (using spec_parser)
-        if config.get("performance_baseline_docs", True):
-            # Parse spec file to get performance benchmarks
-            try:
-                parsed_spec = spec_parser.parse_spec_file(work_item)
-                benchmarks = parsed_spec.get("performance_benchmarks", "")
-                has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
-            except (OSError, ValueError, KeyError) as e:
-                logger.debug(f"Failed to parse spec file for performance benchmarks: {e}")
-                has_benchmarks = False
-
-            if has_benchmarks:
-                baseline_file = Path(".session/tracking/performance_baselines.json")
-                baseline_exists = baseline_file.exists()
-
-                results["checks"].append(
-                    {
-                        "name": "Performance baseline documented",
-                        "passed": baseline_exists,
-                    }
-                )
-
-                if not baseline_exists:
-                    results["missing"].append("Performance baseline documentation")
-
-        # 5. Check for integration point documentation (using spec_parser)
-        try:
-            parsed_spec = spec_parser.parse_spec_file(work_item.get("id"))
-            scope = parsed_spec.get("scope", "")
-            # Check if scope has meaningful content
-            documented = scope and len(scope.strip()) > 20
-        except (OSError, ValueError, KeyError) as e:
-            logger.debug(f"Failed to parse spec file for integration points: {e}")
-            documented = False
-
-        results["checks"].append({"name": "Integration points documented", "passed": documented})
-
-        if not documented:
-            results["missing"].append("Integration points documentation")
-
-        # Determine overall pass/fail
-        passed_checks = sum(1 for check in results["checks"] if check["passed"])
-        total_checks = len(results["checks"])
-
-        # Pass if all required checks pass
-        results["passed"] = len(results["missing"]) == 0
-        results["summary"] = f"{passed_checks}/{total_checks} documentation requirements met"
-
-        return results["passed"], results
+    # ========================================================================
+    # Report Generation
+    # ========================================================================
 
     def generate_report(self, all_results: dict) -> str:
-        """Generate comprehensive quality gate report."""
+        """Generate comprehensive quality gate report.
+
+        Args:
+            all_results: Dictionary of results from all quality gates
+
+        Returns:
+            Formatted report string
+        """
         report = []
         report.append("=" * 60)
         report.append("QUALITY GATE RESULTS")
@@ -1098,7 +499,9 @@ class QualityGates:
         # Test results
         if "tests" in all_results:
             test_results = all_results["tests"]
-            status = "✓ PASSED" if test_results["status"] == "passed" else "✗ FAILED"
+            status = (
+                "✓ PASSED" if test_results.get("status") == "passed" else "✗ FAILED"
+            )
             report.append(f"\nTests: {status}")
             if test_results.get("coverage"):
                 report.append(f"  Coverage: {test_results['coverage']}%")
@@ -1106,7 +509,7 @@ class QualityGates:
         # Security results
         if "security" in all_results:
             sec_results = all_results["security"]
-            status = "✓ PASSED" if sec_results["status"] == "passed" else "✗ FAILED"
+            status = "✓ PASSED" if sec_results.get("status") == "passed" else "✗ FAILED"
             report.append(f"\nSecurity: {status}")
             if sec_results.get("by_severity"):
                 for severity, count in sec_results["by_severity"].items():
@@ -1115,9 +518,9 @@ class QualityGates:
         # Linting results
         if "linting" in all_results:
             lint_results = all_results["linting"]
-            if lint_results["status"] == "passed":
+            if lint_results.get("status") == "passed":
                 status = "✓ PASSED"
-            elif lint_results["status"] == "skipped":
+            elif lint_results.get("status") == "skipped":
                 status = "⊘ SKIPPED"
             else:
                 status = "✗ FAILED"
@@ -1128,9 +531,9 @@ class QualityGates:
         # Formatting results
         if "formatting" in all_results:
             fmt_results = all_results["formatting"]
-            if fmt_results["status"] == "passed":
+            if fmt_results.get("status") == "passed":
                 status = "✓ PASSED"
-            elif fmt_results["status"] == "skipped":
+            elif fmt_results.get("status") == "skipped":
                 status = "⊘ SKIPPED"
             else:
                 status = "✗ FAILED"
@@ -1141,7 +544,7 @@ class QualityGates:
         # Documentation results
         if "documentation" in all_results:
             doc_results = all_results["documentation"]
-            status = "✓ PASSED" if doc_results["status"] == "passed" else "✗ FAILED"
+            status = "✓ PASSED" if doc_results.get("status") == "passed" else "✗ FAILED"
             report.append(f"\nDocumentation: {status}")
             for check in doc_results.get("checks", []):
                 check_status = "✓" if check["passed"] else "✗"
@@ -1150,8 +553,10 @@ class QualityGates:
         # Context7 results
         if "context7" in all_results:
             ctx_results = all_results["context7"]
-            if ctx_results["status"] != "skipped":
-                status = "✓ PASSED" if ctx_results["status"] == "passed" else "✗ FAILED"
+            if ctx_results.get("status") != "skipped":
+                status = (
+                    "✓ PASSED" if ctx_results.get("status") == "passed" else "✗ FAILED"
+                )
                 report.append(f"\nContext7: {status}")
                 report.append(f"  Verified: {ctx_results.get('verified', 0)}")
                 report.append(f"  Failed: {ctx_results.get('failed', 0)}")
@@ -1159,7 +564,9 @@ class QualityGates:
         # Custom validations results
         if "custom" in all_results:
             custom_results = all_results["custom"]
-            status = "✓ PASSED" if custom_results["status"] == "passed" else "✗ FAILED"
+            status = (
+                "✓ PASSED" if custom_results.get("status") == "passed" else "✗ FAILED"
+            )
             report.append(f"\nCustom Validations: {status}")
             for validation in custom_results.get("validations", []):
                 val_status = "✓" if validation["passed"] else "✗"
@@ -1171,7 +578,14 @@ class QualityGates:
         return "\n".join(report)
 
     def get_remediation_guidance(self, failed_gates: list[str]) -> str:
-        """Get remediation guidance for failed gates."""
+        """Get remediation guidance for failed gates.
+
+        Args:
+            failed_gates: List of failed gate names
+
+        Returns:
+            Formatted remediation guidance string
+        """
         guidance = []
         guidance.append("\nREMEDIATION GUIDANCE:")
         guidance.append("-" * 60)
@@ -1228,124 +642,6 @@ class QualityGates:
                 guidance.append("  - Check work item requirements")
 
         return "\n".join(guidance)
-
-    def run_deployment_gates(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
-        """
-        Run deployment-specific quality gates.
-
-        Returns:
-            (passed, results)
-        """
-        results: dict[str, Any] = {"gates": [], "passed": True}
-
-        # Gate 1: All integration tests must pass
-        tests_passed, test_results = self.run_integration_tests(work_item)
-        results["gates"].append(
-            {
-                "name": "Integration Tests",
-                "required": True,
-                "passed": tests_passed,
-                "details": test_results,
-            }
-        )
-        if not tests_passed:
-            results["passed"] = False
-
-        # Gate 2: Security scans must pass
-        security_passed, security_results = self.run_security_scan()
-        results["gates"].append(
-            {
-                "name": "Security Scans",
-                "required": True,
-                "passed": security_passed,
-                "details": security_results,
-            }
-        )
-        if not security_passed:
-            results["passed"] = False
-
-        # Gate 3: Environment must be validated
-        env_passed = self._validate_deployment_environment(work_item)
-        results["gates"].append(
-            {"name": "Environment Validation", "required": True, "passed": env_passed}
-        )
-        if not env_passed:
-            results["passed"] = False
-
-        # Gate 4: Deployment documentation complete
-        docs_passed = self._validate_deployment_documentation(work_item)
-        results["gates"].append(
-            {
-                "name": "Deployment Documentation",
-                "required": True,
-                "passed": docs_passed,
-            }
-        )
-        if not docs_passed:
-            results["passed"] = False
-
-        # Gate 5: Rollback procedure tested
-        rollback_tested = self._check_rollback_tested(work_item)
-        results["gates"].append(
-            {"name": "Rollback Tested", "required": True, "passed": rollback_tested}
-        )
-        if not rollback_tested:
-            results["passed"] = False
-
-        return results["passed"], results
-
-    def _validate_deployment_environment(self, work_item: dict) -> bool:
-        """Validate deployment environment is ready."""
-        try:
-            from sdd.quality.env_validator import EnvironmentValidator
-
-            # Parse target environment from work item
-            # Try to extract from spec, fallback to "staging"
-            spec = work_item.get("specification", "")
-            environment = "staging"  # Default fallback
-
-            # Simple pattern matching for common environment declarations
-            import re
-
-            env_match = re.search(r"environment[:\s]+(\w+)", spec.lower())
-            if env_match:
-                environment = env_match.group(1)
-
-            validator = EnvironmentValidator(environment)
-            passed, _ = validator.validate_all()
-
-            return passed
-        except ImportError:
-            # If environment_validator not available, return True
-            logger.debug("Environment validator module not available, skipping validation")
-            return True
-
-    def _validate_deployment_documentation(self, work_item: dict) -> bool:
-        """Validate deployment documentation is complete."""
-        spec = work_item.get("specification", "")
-
-        required_sections = [
-            "deployment procedure",
-            "rollback procedure",
-            "smoke tests",
-            "monitoring & alerting",
-        ]
-
-        for section in required_sections:
-            if section.lower() not in spec.lower():
-                return False
-
-        return True
-
-    def _check_rollback_tested(self, work_item: dict) -> bool:
-        """Check if rollback procedure has been tested."""
-        # NOTE: Framework stub - Check deployment history for rollback test
-        # When implemented, this should:
-        # 1. Query deployment history/logs
-        # 2. Check if rollback has been tested in staging/test environment
-        # 3. Verify rollback completed successfully
-        # Returns True by default to allow framework operation
-        return True
 
 
 def main() -> None:

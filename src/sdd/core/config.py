@@ -97,6 +97,39 @@ class SpecCompletenessConfig:
 
 
 @dataclass
+class Context7Config:
+    """Context7 library verification configuration."""
+
+    enabled: bool = False
+    important_libraries: list[str] = field(default_factory=list)
+
+
+@dataclass
+class IntegrationConfig:
+    """Integration test validation configuration."""
+
+    enabled: bool = True
+    documentation: dict[str, bool] = field(
+        default_factory=lambda: {
+            "enabled": True,
+            "architecture_diagrams": True,
+            "sequence_diagrams": True,
+            "contract_documentation": True,
+            "performance_baseline_docs": True,
+        }
+    )
+
+
+@dataclass
+class DeploymentConfig:
+    """Deployment quality gates configuration."""
+
+    enabled: bool = True
+    integration_tests: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
+    security_scans: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
+
+
+@dataclass
 class QualityGatesConfig:
     """Quality gates configuration."""
 
@@ -106,6 +139,9 @@ class QualityGatesConfig:
     security: SecurityConfig = field(default_factory=SecurityConfig)
     documentation: DocumentationConfig = field(default_factory=DocumentationConfig)
     spec_completeness: SpecCompletenessConfig = field(default_factory=SpecCompletenessConfig)
+    context7: Context7Config = field(default_factory=Context7Config)
+    integration: IntegrationConfig = field(default_factory=IntegrationConfig)
+    deployment: DeploymentConfig = field(default_factory=DeploymentConfig)
 
 
 @dataclass
