@@ -9,6 +9,9 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
+from sdd.core.exceptions import BenchmarkFailedError, PerformanceRegressionError
 from sdd.testing.performance import PerformanceBenchmark
 
 
@@ -232,11 +235,14 @@ class TestRequirementsChecking:
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {"load_test": {"latency": {"p50": 150, "p95": 400, "p99": 900}}}
 
-        # Act
-        passed = benchmark._check_against_requirements()
+        # Act & Assert
+        with pytest.raises(BenchmarkFailedError) as exc_info:
+            benchmark._check_against_requirements()
 
-        # Assert
-        assert passed is False
+        assert "p50_latency" in str(exc_info.value.context["metric"])
+        assert exc_info.value.context["actual_value"] == 150
+        assert exc_info.value.context["expected_value"] == 100
+        assert exc_info.value.remediation is not None
 
     def test_check_against_requirements_p95_fails(self):
         """Test that requirements check fails when p95 exceeds requirement."""
@@ -248,11 +254,14 @@ class TestRequirementsChecking:
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {"load_test": {"latency": {"p50": 80, "p95": 600}}}
 
-        # Act
-        passed = benchmark._check_against_requirements()
+        # Act & Assert
+        with pytest.raises(BenchmarkFailedError) as exc_info:
+            benchmark._check_against_requirements()
 
-        # Assert
-        assert passed is False
+        assert "p95_latency" in str(exc_info.value.context["metric"])
+        assert exc_info.value.context["actual_value"] == 600
+        assert exc_info.value.context["expected_value"] == 500
+        assert exc_info.value.remediation is not None
 
     def test_check_against_requirements_p99_fails(self):
         """Test that requirements check fails when p99 exceeds requirement."""
@@ -261,11 +270,14 @@ class TestRequirementsChecking:
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {"load_test": {"latency": {"p99": 1100}}}
 
-        # Act
-        passed = benchmark._check_against_requirements()
+        # Act & Assert
+        with pytest.raises(BenchmarkFailedError) as exc_info:
+            benchmark._check_against_requirements()
 
-        # Assert
-        assert passed is False
+        assert "p99_latency" in str(exc_info.value.context["metric"])
+        assert exc_info.value.context["actual_value"] == 1100
+        assert exc_info.value.context["expected_value"] == 1000
+        assert exc_info.value.remediation is not None
 
     def test_check_against_requirements_throughput_fails(self):
         """Test that requirements check fails when throughput is below minimum."""
@@ -274,11 +286,14 @@ class TestRequirementsChecking:
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {"load_test": {"throughput": {"requests_per_sec": 50}}}
 
-        # Act
-        passed = benchmark._check_against_requirements()
+        # Act & Assert
+        with pytest.raises(BenchmarkFailedError) as exc_info:
+            benchmark._check_against_requirements()
 
-        # Assert
-        assert passed is False
+        assert "throughput" in str(exc_info.value.context["metric"])
+        assert exc_info.value.context["actual_value"] == 50
+        assert exc_info.value.context["expected_value"] == 100
+        assert exc_info.value.remediation is not None
 
     def test_check_against_requirements_no_requirements(self):
         """Test that requirements check passes when no requirements are defined."""
@@ -346,11 +361,14 @@ class TestRegressionDetection:
 
         benchmark.results = {"load_test": {"latency": {"p50": 100, "p95": 500, "p99": 1100}}}
 
-        # Act
-        regression = benchmark._check_for_regression()
+        # Act & Assert
+        with pytest.raises(PerformanceRegressionError) as exc_info:
+            benchmark._check_for_regression()
 
-        # Assert
-        assert regression is True
+        # Verify regression context
+        assert exc_info.value.context["regression_percent"] > 10.0
+        assert exc_info.value.context["threshold_percent"] == 10.0
+        assert exc_info.value.remediation is not None
 
     def test_check_for_regression_not_detected(self, tmp_path):
         """Test that regression is not detected when latency increase is within threshold."""

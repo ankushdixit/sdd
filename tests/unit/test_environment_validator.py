@@ -15,6 +15,7 @@ import os
 import pytest
 
 from sdd.quality.env_validator import EnvironmentValidator
+from sdd.core.exceptions import ValidationError
 
 
 class TestEnvironmentValidatorInit:
@@ -80,10 +81,9 @@ class TestConfigurationValidation:
         validator = EnvironmentValidator("staging")
 
         # Act
-        passed, results = validator.validate_configuration(["TEST_VAR"])
+        results = validator.validate_configuration(["TEST_VAR"])
 
         # Assert
-        assert passed is True
         assert results["passed"] is True
         assert len(results["checks"]) == 1
         assert results["checks"][0]["passed"] is True
@@ -92,18 +92,19 @@ class TestConfigurationValidation:
         del os.environ["TEST_VAR"]
 
     def test_validate_configuration_detects_missing_var(self):
-        """Test that validate_configuration detects missing environment variables."""
+        """Test that validate_configuration raises ValidationError for missing environment variables."""
         # Arrange
         validator = EnvironmentValidator("staging")
 
-        # Act
-        passed, results = validator.validate_configuration(["NONEXISTENT_VAR"])
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            validator.validate_configuration(["NONEXISTENT_VAR"])
 
-        # Assert
-        assert passed is False
-        assert results["passed"] is False
-        assert len(results["checks"]) == 1
-        assert results["checks"][0]["passed"] is False
+        # Verify error details
+        assert "NONEXISTENT_VAR" in exc_info.value.message
+        assert "NONEXISTENT_VAR" in exc_info.value.context["missing_variables"]
+        assert exc_info.value.context["environment"] == "staging"
+        assert exc_info.value.remediation is not None
 
     def test_validate_configuration_with_multiple_vars(self):
         """Test that validate_configuration checks multiple environment variables."""
@@ -113,10 +114,10 @@ class TestConfigurationValidation:
         validator = EnvironmentValidator("staging")
 
         # Act
-        passed, results = validator.validate_configuration(["VAR1", "VAR2"])
+        results = validator.validate_configuration(["VAR1", "VAR2"])
 
         # Assert
-        assert passed is True
+        assert results["passed"] is True
         assert len(results["checks"]) == 2
 
         # Cleanup
@@ -124,17 +125,18 @@ class TestConfigurationValidation:
         del os.environ["VAR2"]
 
     def test_validate_configuration_fails_with_empty_var(self):
-        """Test that validate_configuration fails when variable is set but empty."""
+        """Test that validate_configuration raises ValidationError when variable is set but empty."""
         # Arrange
         os.environ["EMPTY_VAR"] = ""
         validator = EnvironmentValidator("staging")
 
-        # Act
-        passed, results = validator.validate_configuration(["EMPTY_VAR"])
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            validator.validate_configuration(["EMPTY_VAR"])
 
-        # Assert
-        assert passed is False
-        assert results["checks"][0]["passed"] is False
+        # Verify error details
+        assert "EMPTY_VAR" in exc_info.value.message
+        assert "EMPTY_VAR" in exc_info.value.context["missing_variables"]
 
         # Cleanup
         del os.environ["EMPTY_VAR"]
@@ -386,3 +388,24 @@ class TestValidateAll:
             assert "name" in validation
             assert "passed" in validation
             assert "details" in validation
+
+    def test_validate_all_includes_error_context_when_config_fails(self):
+        """Test that validate_all includes error context when configuration validation fails."""
+        # Arrange
+        validator = EnvironmentValidator("staging")
+
+        # Act
+        passed, results = validator.validate_all(required_env_vars=["MISSING_VAR_1", "MISSING_VAR_2"])
+
+        # Assert
+        assert passed is False
+        assert results["passed"] is False
+
+        # Find the Configuration validation
+        config_validation = next(v for v in results["validations"] if v["name"] == "Configuration")
+        assert config_validation["passed"] is False
+        assert "error" in config_validation["details"]
+        assert "context" in config_validation["details"]
+        assert "missing_variables" in config_validation["details"]["context"]
+        assert "MISSING_VAR_1" in config_validation["details"]["context"]["missing_variables"]
+        assert "MISSING_VAR_2" in config_validation["details"]["context"]["missing_variables"]

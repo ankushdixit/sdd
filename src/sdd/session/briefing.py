@@ -14,6 +14,14 @@ from pathlib import Path
 
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus
+from sdd.core.exceptions import (
+    WorkItemNotFoundError,
+    SessionNotFoundError,
+    SessionAlreadyActiveError,
+    UnmetDependencyError,
+    GitError,
+)
+from sdd.core.error_handlers import log_errors
 
 # Import from refactored briefing package
 from sdd.session.briefing import (
@@ -44,8 +52,18 @@ from sdd.session.briefing import (
 logger = get_logger(__name__)
 
 
+@log_errors()
 def main():
-    """Main entry point."""
+    """Main entry point for session briefing generation.
+
+    Raises:
+        SessionNotFoundError: If .session directory doesn't exist
+        WorkItemNotFoundError: If specified work item doesn't exist
+        SessionAlreadyActiveError: If another work item is in-progress (without --force)
+        UnmetDependencyError: If work item has unmet dependencies
+        ValidationError: If no available work items found
+        GitError: If git workflow fails
+    """
     import argparse
 
     # Parse command-line arguments
@@ -68,8 +86,7 @@ def main():
     session_dir = Path(".session")
     if not session_dir.exists():
         logger.error(".session directory not found")
-        print("Error: .session directory not found. Run project initialization first.")
-        return 1
+        raise SessionNotFoundError()
 
     # Load data
     work_items_data = load_work_items()
@@ -83,17 +100,7 @@ def main():
 
         if not item:
             logger.error("Work item not found: %s", item_id)
-            print(f"❌ Error: Work item '{item_id}' not found.")
-            print("\nAvailable work items:")
-            for wid, wi in work_items_data.get("work_items", {}).items():
-                status_emoji = {
-                    WorkItemStatus.NOT_STARTED.value: "○",
-                    WorkItemStatus.IN_PROGRESS.value: "◐",
-                    WorkItemStatus.COMPLETED.value: "✓",
-                    WorkItemStatus.BLOCKED.value: "✗",
-                }.get(wi["status"], "○")
-                print(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
-            return 1
+            raise WorkItemNotFoundError(item_id)
 
         # Check if a DIFFERENT work item is in-progress (excluding the requested one)
         in_progress = [
@@ -105,18 +112,12 @@ def main():
         # If another item is in-progress, warn and exit (unless --force)
         if in_progress and not args.force:
             in_progress_id = in_progress[0][0]
-            print(f"\n⚠️  Warning: Work item '{in_progress_id}' is currently in-progress.")
-            print("Starting a new work item will leave the current one incomplete.\n")
-            print("Options:")
-            print("1. Complete current work item first: /end")
-            print(f"2. Force start new work item: sdd start {item_id} --force")
-            print("3. Cancel: Ctrl+C\n")
             logger.warning(
                 "Blocked start of %s due to in-progress item: %s (use --force to override)",
                 item_id,
                 in_progress_id,
             )
-            return 1
+            raise SessionAlreadyActiveError(in_progress_id)
 
         # Check dependencies are satisfied
         deps_satisfied = all(
@@ -133,14 +134,9 @@ def main():
                 != "completed"
             ]
             logger.error("Work item %s has unmet dependencies: %s", item_id, unmet_deps)
-            print(f"❌ Error: Work item '{item_id}' has unmet dependencies:")
-            for dep_id in unmet_deps:
-                dep = work_items_data.get("work_items", {}).get(dep_id, {})
-                print(
-                    f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})"
-                )
-            print("\nPlease complete dependencies first.")
-            return 1
+            # Raise exception for the first unmet dependency
+            # (The exception message will indicate there are dependencies to complete)
+            raise UnmetDependencyError(item_id, unmet_deps[0])
 
         # Note: If requested item is already in-progress, no conflict - just resume it
         logger.info("User explicitly requested work item: %s", item_id)
@@ -150,8 +146,12 @@ def main():
 
         if not item_id:
             logger.warning("No available work items found")
-            print("No available work items. All dependencies must be satisfied first.")
-            return 1
+            from sdd.core.exceptions import ValidationError, ErrorCode
+            raise ValidationError(
+                message="No available work items. All dependencies must be satisfied first.",
+                code=ErrorCode.INVALID_STATUS,
+                remediation="Complete dependencies or use 'sdd work-list' to see work item status"
+            )
 
     # Finalize previous work item's git status if starting a new work item
     finalize_previous_work_item_git_status(work_items_data, item_id)
@@ -195,7 +195,14 @@ def main():
                 print(f"✓ Resumed git branch: {git_result['branch']}\n")
         else:
             print(f"⚠️  Git workflow warning: {git_result['message']}\n")
+    except GitError:
+        # Re-raise GitError only if it's critical (not a git repo, command not found)
+        # Other git errors are logged as warnings but don't block the briefing
+        raise
     except Exception as e:
+        # Log unexpected errors but don't block briefing generation
+        # Git workflow issues are non-fatal
+        logger.warning("Could not start git workflow: %s", e)
         print(f"⚠️  Could not start git workflow: {e}\n")
 
     # Update work item status and session tracking
@@ -271,5 +278,70 @@ def main():
     return 0
 
 
+def _cli_main():
+    """CLI wrapper for main() that handles exceptions and exit codes."""
+    try:
+        return main()
+    except SessionNotFoundError as e:
+        print(f"Error: {e.message}")
+        print(f"\n{e.remediation}")
+        return e.exit_code
+    except WorkItemNotFoundError as e:
+        print(f"Error: {e.message}")
+        print(f"\n{e.remediation}")
+        # Also show available work items
+        try:
+            work_items_data = load_work_items()
+            print("\nAvailable work items:")
+            for wid, wi in work_items_data.get("work_items", {}).items():
+                status_emoji = {
+                    WorkItemStatus.NOT_STARTED.value: "○",
+                    WorkItemStatus.IN_PROGRESS.value: "◐",
+                    WorkItemStatus.COMPLETED.value: "✓",
+                    WorkItemStatus.BLOCKED.value: "✗",
+                }.get(wi["status"], "○")
+                print(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
+        except Exception:
+            pass  # If we can't load work items, just skip the list
+        return e.exit_code
+    except SessionAlreadyActiveError as e:
+        print(f"\nWarning: {e.message}")
+        print("\nOptions:")
+        print("1. Complete current work item first: /end")
+        print(f"2. Force start new work item: sdd start <work_item_id> --force")
+        print("3. Cancel: Ctrl+C\n")
+        return e.exit_code
+    except UnmetDependencyError as e:
+        print(f"Error: {e.message}")
+        print(f"\n{e.remediation}")
+        # Show unmet dependency details
+        try:
+            work_items_data = load_work_items()
+            dep_id = e.context.get("dependency_id")
+            if dep_id:
+                dep = work_items_data.get("work_items", {}).get(dep_id, {})
+                print(f"\nDependency details:")
+                print(f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})")
+        except Exception:
+            pass  # If we can't load work items, just skip the details
+        return e.exit_code
+    except ValidationError as e:
+        print(f"Error: {e.message}")
+        if e.remediation:
+            print(f"\n{e.remediation}")
+        return e.exit_code
+    except GitError as e:
+        print(f"Warning: {e.message}")
+        if e.remediation:
+            print(f"\n{e.remediation}")
+        # Git errors are warnings, not fatal - return success
+        # This maintains backwards compatibility
+        return 0
+    except Exception as e:
+        logger.exception("Unexpected error in briefing generation")
+        print(f"Unexpected error: {e}")
+        return 1
+
+
 if __name__ == "__main__":
-    exit(main())
+    exit(_cli_main())

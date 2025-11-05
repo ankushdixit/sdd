@@ -130,62 +130,58 @@ class TestBriefingGeneratorArgumentParsing:
     def test_invalid_work_item_id_shows_error_and_available_items(
         self, mock_session_env, capsys, monkeypatch
     ):
-        """Test that invalid work item ID shows error with available items list.
+        """Test that invalid work item ID raises WorkItemNotFoundError.
 
         When a non-existent work item ID is provided, the generator should:
-        1. Exit with error code 1
-        2. Display an error message about the invalid ID
-        3. Show a list of available work items
+        1. Raise WorkItemNotFoundError
+        2. Error message should indicate the work item was not found
         """
         # Arrange
+        from sdd.core.exceptions import WorkItemNotFoundError
+
         monkeypatch.chdir(mock_session_env)
 
-        # Act
+        # Act & Assert
         with patch.object(sys, "argv", ["briefing_generator.py", "invalid_item_id"]):
-            result = main()
+            with pytest.raises(WorkItemNotFoundError) as exc_info:
+                main()
 
-        # Assert
-        assert result == 1
-        captured = capsys.readouterr()
-        assert "Error: Work item 'invalid_item_id' not found" in captured.out
-        assert "Available work items:" in captured.out
+            assert "invalid_item_id" in str(exc_info.value)
 
     def test_in_progress_conflict_prevents_starting_different_item(
         self, mock_session_env, capsys, monkeypatch
     ):
-        """Test that starting different work item shows warning when another is in-progress.
+        """Test that starting different work item raises SessionAlreadyActiveError.
 
         When attempting to start a different work item while one is already
         in-progress, the generator should:
-        1. Exit with error code 1
-        2. Show warning about the in-progress item
-        3. Suggest completing current item or using --force flag
+        1. Raise SessionAlreadyActiveError
+        2. Error message should indicate the in-progress item
         """
         # Arrange
+        from sdd.core.exceptions import SessionAlreadyActiveError
+
         monkeypatch.chdir(mock_session_env)
 
-        # Act - Try to start item_not_started while item_in_progress is active
+        # Act & Assert - Try to start item_not_started while item_in_progress is active
         with patch.object(sys, "argv", ["briefing_generator.py", "item_not_started"]):
-            result = main()
+            with pytest.raises(SessionAlreadyActiveError) as exc_info:
+                main()
 
-        # Assert
-        assert result == 1
-        captured = capsys.readouterr()
-        assert "Warning: Work item 'item_in_progress' is currently in-progress" in captured.out
-        assert "Complete current work item first: /end" in captured.out
-        assert "Force start new work item: sdd start item_not_started --force" in captured.out
+            assert "item_in_progress" in str(exc_info.value)
 
     def test_unmet_dependencies_prevent_work_item_start(
         self, mock_session_env, capsys, monkeypatch
     ):
-        """Test that work items with unmet dependencies cannot be started.
+        """Test that work items with unmet dependencies raise UnmetDependencyError.
 
         When attempting to start a work item with incomplete dependencies:
-        1. Exit with error code 1
-        2. Show error about unmet dependencies
-        3. List the specific dependencies that need completion
+        1. Raise UnmetDependencyError
+        2. Error message should indicate the unmet dependency
         """
         # Arrange
+        from sdd.core.exceptions import UnmetDependencyError
+
         monkeypatch.chdir(mock_session_env)
 
         # Set item_in_progress to not_started to avoid conflict
@@ -196,15 +192,12 @@ class TestBriefingGeneratorArgumentParsing:
         with open(work_items_file, "w") as f:
             json.dump(data, f)
 
-        # Act - Try to start item_with_deps (depends on item_not_started which is not completed)
+        # Act & Assert - Try to start item_with_deps (depends on item_not_started which is not completed)
         with patch.object(sys, "argv", ["briefing_generator.py", "item_with_deps"]):
-            result = main()
+            with pytest.raises(UnmetDependencyError) as exc_info:
+                main()
 
-        # Assert
-        assert result == 1
-        captured = capsys.readouterr()
-        assert "has unmet dependencies" in captured.out
-        assert "item_not_started" in captured.out
+            assert "item_not_started" in str(exc_info.value)
 
 
 # ============================================================================

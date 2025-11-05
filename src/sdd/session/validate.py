@@ -13,6 +13,19 @@ import json
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    GitError,
+    NotAGitRepoError,
+    SessionNotFoundError,
+    SpecValidationError,
+    ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
 from sdd.core.types import WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items import spec_parser
@@ -28,39 +41,53 @@ class SessionValidator:
         self.quality_gates = QualityGates(self.session_dir / "config.json")
         self.runner = CommandRunner(default_timeout=5, working_dir=self.project_root)
 
+    @log_errors()
     def check_git_status(self) -> dict:
-        """Check git working directory status."""
-        try:
-            # Check if clean or has expected changes
-            result = self.runner.run(["git", "status", "--porcelain"])
+        """Check git working directory status.
 
-            if not result.success:
-                return {"passed": False, "message": "Not a git repository or git error"}
+        Returns:
+            dict: Validation result with 'passed', 'message', and optionally 'details'.
+                  This returns a dict (not raises) because it's validation output,
+                  not an error condition.
 
-            # Check branch
-            branch_result = self.runner.run(["git", "branch", "--show-current"])
-            current_branch = branch_result.stdout.strip()
+        Raises:
+            NotAGitRepoError: If not in a git repository
+            GitError: If git command fails unexpectedly
+        """
+        # Check if clean or has expected changes
+        result = self.runner.run(["git", "status", "--porcelain"])
 
-            # Get status lines
-            status_lines = [line for line in result.stdout.split("\n") if line.strip()]
+        if not result.success:
+            raise NotAGitRepoError(path=str(self.project_root))
 
-            # Check for tracking file changes
-            tracking_changes = [line for line in status_lines if ".session/tracking/" in line]
+        # Check branch
+        branch_result = self.runner.run(["git", "branch", "--show-current"])
+        if not branch_result.success:
+            raise GitError(
+                message="Failed to get current branch",
+                code=ErrorCode.GIT_COMMAND_FAILED,
+                context={"stderr": branch_result.stderr},
+            )
 
-            if tracking_changes:
-                return {
-                    "passed": False,
-                    "message": f"Uncommitted tracking files: {len(tracking_changes)} files",
-                }
+        current_branch = branch_result.stdout.strip()
 
+        # Get status lines
+        status_lines = [line for line in result.stdout.split("\n") if line.strip()]
+
+        # Check for tracking file changes
+        tracking_changes = [line for line in status_lines if ".session/tracking/" in line]
+
+        if tracking_changes:
             return {
-                "passed": True,
-                "message": f"Working directory ready, branch: {current_branch}",
-                "details": {"branch": current_branch, "changes": len(status_lines)},
+                "passed": False,
+                "message": f"Uncommitted tracking files: {len(tracking_changes)} files",
             }
 
-        except Exception as e:
-            return {"passed": False, "message": f"Git check failed: {e}"}
+        return {
+            "passed": True,
+            "message": f"Working directory ready, branch: {current_branch}",
+            "details": {"branch": current_branch, "changes": len(status_lines)},
+        }
 
     def preview_quality_gates(self, auto_fix: bool = False) -> dict:
         """Preview quality gate results.
@@ -135,28 +162,67 @@ class SessionValidator:
             "gates": gates,
         }
 
+    @log_errors()
     def validate_work_item_criteria(self) -> dict:
         """
         Check if work item spec is complete and valid.
 
         Updated in Phase 5.7.3 to check spec file completeness instead of
         deprecated implementation_paths and test_paths fields.
+
+        Returns:
+            dict: Validation result with 'passed', 'message', and optionally
+                  'missing_sections'. Returns dict (not raises) for validation
+                  results that should be displayed to user.
+
+        Raises:
+            SessionNotFoundError: If no active session exists
+            ValidationError: If no current work item is set
+            FileNotFoundError: If spec file is missing
+            FileOperationError: If file operations fail
+            SpecValidationError: If spec file parsing fails
         """
         # Load current work item
         status_file = self.session_dir / "tracking" / "status_update.json"
         if not status_file.exists():
-            return {"passed": False, "message": "No active session"}
+            raise SessionNotFoundError()
 
-        with open(status_file) as f:
-            status = json.load(f)
+        try:
+            with open(status_file) as f:
+                status = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(status_file),
+                details="Failed to read or parse status file",
+                cause=e,
+            )
 
         if not status.get("current_work_item"):
-            return {"passed": False, "message": "No current work item"}
+            raise ValidationError(
+                message="No current work item is set in session",
+                code=ErrorCode.MISSING_REQUIRED_FIELD,
+                context={"status_file": str(status_file)},
+                remediation="Start a work item with 'sdd start <work_item_id>'",
+            )
 
         # Load work items
         work_items_file = self.session_dir / "tracking" / "work_items.json"
-        with open(work_items_file) as f:
-            work_items_data = json.load(f)
+        try:
+            with open(work_items_file) as f:
+                work_items_data = json.load(f)
+        except FileNotFoundError as e:
+            raise SDDFileNotFoundError(
+                file_path=str(work_items_file),
+                file_type="work items",
+            ) from e
+        except (OSError, json.JSONDecodeError) as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(work_items_file),
+                details="Failed to read or parse work items file",
+                cause=e,
+            )
 
         work_item = work_items_data["work_items"][status["current_work_item"]]
         work_id = work_item.get("id")
@@ -166,19 +232,20 @@ class SessionValidator:
         spec_file_path = work_item.get("spec_file", f".session/specs/{work_id}.md")
         spec_file = self.project_root / spec_file_path
         if not spec_file.exists():
-            return {
-                "passed": False,
-                "message": f"Spec file missing: {spec_file}",
-            }
+            raise SDDFileNotFoundError(
+                file_path=str(spec_file),
+                file_type="spec",
+            )
 
         # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
             parsed_spec = spec_parser.parse_spec_file(work_item)
         except Exception as e:
-            return {
-                "passed": False,
-                "message": f"Spec file invalid: {str(e)}",
-            }
+            raise SpecValidationError(
+                work_item_id=work_id,
+                errors=[str(e)],
+                remediation=f"Check spec file format at {spec_file}",
+            )
 
         # Check that spec has required sections based on work item type
         work_type = work_item.get("type")
@@ -254,14 +321,23 @@ class SessionValidator:
         # This would run tree detection logic
         return {"has_changes": False, "message": "No structural changes"}
 
+    @log_errors()
     def validate(self, auto_fix: bool = False) -> dict:
         """Run all validation checks.
 
         Args:
             auto_fix: If True, automatically fix linting and formatting issues
+
+        Returns:
+            dict: Validation results with 'ready' boolean and 'checks' dict
+
+        Raises:
+            SDDError: Any SDD exception (GitError, ValidationError, FileOperationError, etc.)
+                     that occurs during validation will be raised to the caller
         """
         print("Running session validation...\n")
 
+        # Run all checks - exceptions will propagate to caller
         checks = {
             "git_status": self.check_git_status(),
             "quality_gates": self.preview_quality_gates(auto_fix=auto_fix),
@@ -308,7 +384,15 @@ class SessionValidator:
 
 
 def main():
-    """CLI entry point."""
+    """CLI entry point.
+
+    Returns:
+        int: Exit code (0 for success/ready, 1 for validation failures, 2+ for errors)
+
+    Note:
+        SDDErrors are caught and formatted for user display.
+        The exit code corresponds to the error category.
+    """
     parser = argparse.ArgumentParser(description="Validate session readiness for completion")
     parser.add_argument(
         "--fix",
@@ -317,9 +401,28 @@ def main():
     )
     args = parser.parse_args()
 
-    validator = SessionValidator()
-    result = validator.validate(auto_fix=args.fix)
-    return 0 if result["ready"] else 1
+    try:
+        validator = SessionValidator()
+        result = validator.validate(auto_fix=args.fix)
+        return 0 if result["ready"] else 1
+    except (
+        SessionNotFoundError,
+        ValidationError,
+        SDDFileNotFoundError,
+        FileOperationError,
+        SpecValidationError,
+        NotAGitRepoError,
+        GitError,
+    ) as e:
+        # Handle SDD exceptions gracefully
+        print(f"\nError: {e.message}")
+        if e.remediation:
+            print(f"Remediation: {e.remediation}")
+        return e.exit_code
+    except Exception as e:
+        # Unexpected error
+        print(f"\nUnexpected error during validation: {e}")
+        return 1
 
 
 if __name__ == "__main__":

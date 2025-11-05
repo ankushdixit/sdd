@@ -29,8 +29,11 @@ logger = get_logger(__name__)
 # Import spec validator for spec completeness quality gate
 try:
     from sdd.work_items.spec_validator import validate_spec_file
+    from sdd.core.exceptions import SpecValidationError, FileNotFoundError as SDDFileNotFoundError
 except ImportError:
     validate_spec_file = None
+    SpecValidationError = None
+    SDDFileNotFoundError = None
 
 
 class QualityGates:
@@ -500,19 +503,29 @@ class QualityGates:
             }
 
         # Validate spec file
-        is_valid, errors = validate_spec_file(work_item_id, work_item_type)
-
-        if is_valid:
+        try:
+            validate_spec_file(work_item_id, work_item_type)
             return True, {
                 "status": "passed",
                 "message": f"Spec file for '{work_item_id}' is complete",
             }
-        else:
+        except SpecValidationError as e:
             return False, {
                 "status": "failed",
-                "errors": errors,
+                "errors": e.context.get("validation_errors", []),
                 "message": f"Spec file for '{work_item_id}' is incomplete",
-                "suggestion": f"Edit .session/specs/{work_item_id}.md to add missing sections",
+                "suggestion": e.remediation or f"Edit .session/specs/{work_item_id}.md to add missing sections",
+            }
+        except SDDFileNotFoundError as e:
+            return False, {
+                "status": "failed",
+                "error": e.message,
+                "suggestion": e.remediation,
+            }
+        except Exception as e:
+            return False, {
+                "status": "failed",
+                "error": f"Error validating spec file: {str(e)}",
             }
 
     def verify_context7_libraries(self) -> tuple[bool, dict]:
@@ -747,21 +760,24 @@ class QualityGates:
 
         # 1. Run integration tests
         from sdd.testing.integration_runner import IntegrationTestRunner
+        from sdd.core.exceptions import (
+            EnvironmentSetupError,
+            IntegrationExecutionError,
+            IntegrationTestError,
+        )
 
         runner = IntegrationTestRunner(work_item)
 
-        # Setup environment
-        setup_success, setup_message = runner.setup_environment()
-        if not setup_success:
-            results["error"] = f"Environment setup failed: {setup_message}"
-            return False, results
-
         try:
-            # Execute integration tests
-            tests_passed, test_results = runner.run_tests()
+            # Setup environment (now raises exceptions instead of returning tuple)
+            runner.setup_environment()
+
+            # Execute integration tests (now returns dict and raises exceptions on failure)
+            test_results = runner.run_tests()
             results["integration_tests"] = test_results
 
-            if not tests_passed:
+            # Check if tests passed
+            if test_results.get("failed", 0) > 0:
                 print("  ✗ Integration tests failed")
                 return False, results
 
@@ -800,9 +816,18 @@ class QualityGates:
             results["passed"] = True
             return True, results
 
+        except (EnvironmentSetupError, IntegrationExecutionError, IntegrationTestError) as e:
+            # Integration test setup or execution failed
+            results["error"] = str(e)
+            return False, results
+
         finally:
             # Always teardown environment
-            runner.teardown_environment()
+            try:
+                runner.teardown_environment()
+            except Exception as e:
+                # Log teardown failures but don't fail the gate
+                logger.warning(f"Environment teardown failed: {e}")
 
     def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict]:
         """

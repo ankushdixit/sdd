@@ -23,6 +23,15 @@ from pathlib import Path
 from sdd.core.logging_config import setup_logging
 from sdd.core.types import Priority
 
+# Import error handling infrastructure
+from sdd.core.exceptions import (
+    SDDError,
+    SystemError,
+    ErrorCode,
+    ErrorCategory,
+)
+from sdd.core.error_formatter import ErrorFormatter
+
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
 # - module_path: Python import path
@@ -138,14 +147,18 @@ def route_command(command_name, args):
 
     Returns:
         Exit code (0 for success, non-zero for error)
+
+    Raises:
+        SystemError: If command is unknown or execution fails
     """
     if command_name not in COMMANDS:
-        print(f"Error: Unknown command '{command_name}'", file=sys.stderr)
-        print(
-            f"\nAvailable commands: {', '.join(sorted(COMMANDS.keys()))}",
-            file=sys.stderr,
+        available = ', '.join(sorted(COMMANDS.keys()))
+        raise SystemError(
+            message=f"Unknown command '{command_name}'",
+            code=ErrorCode.INVALID_COMMAND,
+            context={"command": command_name, "available_commands": list(COMMANDS.keys())},
+            remediation=f"Available commands: {available}"
         )
-        return 1
 
     module_path, class_name, function_name, needs_argparse = COMMANDS[command_name]
 
@@ -265,77 +278,118 @@ def route_command(command_name, args):
             return result if result is not None else 0
 
     except ModuleNotFoundError as e:
-        print(f"Error: Could not import module '{module_path}': {e}", file=sys.stderr)
-        return 1
+        raise SystemError(
+            message=f"Could not import module '{module_path}'",
+            code=ErrorCode.MODULE_NOT_FOUND,
+            context={"module_path": module_path, "command": command_name},
+            remediation="Check that the command is properly installed",
+            cause=e
+        ) from e
     except AttributeError as e:
-        print(
-            f"Error: Could not find function '{function_name}' in '{module_path}': {e}",
-            file=sys.stderr,
-        )
-        return 1
+        raise SystemError(
+            message=f"Could not find function '{function_name}' in module '{module_path}'",
+            code=ErrorCode.FUNCTION_NOT_FOUND,
+            context={"function": function_name, "module": module_path, "command": command_name},
+            remediation="This appears to be an internal error - please report it",
+            cause=e
+        ) from e
+    except SDDError:
+        # Re-raise SDDError exceptions to be caught by main()
+        raise
     except Exception as e:
-        print(f"Error executing command '{command_name}': {e}", file=sys.stderr)
-        import traceback
-
-        traceback.print_exc()
-        return 1
+        # Wrap unexpected exceptions
+        raise SystemError(
+            message=f"Unexpected error executing command '{command_name}'",
+            code=ErrorCode.COMMAND_FAILED,
+            context={"command": command_name},
+            cause=e
+        ) from e
 
 
 def main():
-    """Main entry point for CLI."""
-    # Parse global flags first
-    parser = argparse.ArgumentParser(
-        description="Session-Driven Development CLI",
-        add_help=False,  # Don't show help yet, let commands handle it
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Enable verbose (DEBUG) logging",
-    )
-    parser.add_argument(
-        "--log-file",
-        type=str,
-        help="Write logs to file",
-    )
+    """
+    Main entry point for CLI with centralized error handling.
 
-    # Parse known args (global flags) and leave rest for command routing
-    args, remaining = parser.parse_known_args()
+    This function implements the standard error handling pattern:
+    - Parse arguments
+    - Route to command handlers
+    - Catch all exceptions in centralized handler
+    - Format errors using ErrorFormatter
+    - Return appropriate exit codes
 
-    # Setup logging based on global flags
-    log_level = "DEBUG" if args.verbose else "INFO"
-    log_file = Path(args.log_file) if args.log_file else None
-    setup_logging(level=log_level, log_file=log_file)
-
-    # Check if command is provided
-    if len(remaining) < 1:
-        print(
-            "Usage: sdd [--verbose] [--log-file FILE] <command> [args...]",
-            file=sys.stderr,
+    Returns:
+        Exit code (0 for success, non-zero for errors)
+    """
+    try:
+        # Parse global flags first
+        parser = argparse.ArgumentParser(
+            description="Session-Driven Development CLI",
+            add_help=False,  # Don't show help yet, let commands handle it
         )
-        print("\nGlobal flags:", file=sys.stderr)
-        print("  --verbose, -v        Enable verbose (DEBUG) logging", file=sys.stderr)
-        print("  --log-file FILE      Write logs to file", file=sys.stderr)
-        print("\nAvailable commands:", file=sys.stderr)
-        print("  Work Items:", file=sys.stderr)
-        print(
-            "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph",
-            file=sys.stderr,
+        parser.add_argument(
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="Enable verbose (DEBUG) logging",
         )
-        print("  Sessions:", file=sys.stderr)
-        print("    start, end, status, validate", file=sys.stderr)
-        print("  Learnings:", file=sys.stderr)
-        print("    learn, learn-show, learn-search, learn-curate", file=sys.stderr)
-        print("  Initialization:", file=sys.stderr)
-        print("    init", file=sys.stderr)
+        parser.add_argument(
+            "--log-file",
+            type=str,
+            help="Write logs to file",
+        )
+
+        # Parse known args (global flags) and leave rest for command routing
+        args, remaining = parser.parse_known_args()
+
+        # Setup logging based on global flags
+        log_level = "DEBUG" if args.verbose else "INFO"
+        log_file = Path(args.log_file) if args.log_file else None
+        setup_logging(level=log_level, log_file=log_file)
+
+        # Check if command is provided
+        if len(remaining) < 1:
+            print(
+                "Usage: sdd [--verbose] [--log-file FILE] <command> [args...]",
+                file=sys.stderr,
+            )
+            print("\nGlobal flags:", file=sys.stderr)
+            print("  --verbose, -v        Enable verbose (DEBUG) logging", file=sys.stderr)
+            print("  --log-file FILE      Write logs to file", file=sys.stderr)
+            print("\nAvailable commands:", file=sys.stderr)
+            print("  Work Items:", file=sys.stderr)
+            print(
+                "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph",
+                file=sys.stderr,
+            )
+            print("  Sessions:", file=sys.stderr)
+            print("    start, end, status, validate", file=sys.stderr)
+            print("  Learnings:", file=sys.stderr)
+            print("    learn, learn-show, learn-search, learn-curate", file=sys.stderr)
+            print("  Initialization:", file=sys.stderr)
+            print("    init", file=sys.stderr)
+            return 1
+
+        command = remaining[0]
+        command_args = remaining[1:]
+
+        # Route command - will raise exceptions on error
+        exit_code = route_command(command, command_args)
+        return exit_code
+
+    except SDDError as e:
+        # Structured SDD errors with proper formatting
+        ErrorFormatter.print_error(e, verbose=args.verbose if 'args' in locals() else False)
+        return e.exit_code
+
+    except KeyboardInterrupt:
+        # User cancelled operation
+        print("\n\nOperation cancelled by user", file=sys.stderr)
+        return 130
+
+    except Exception as e:
+        # Unexpected errors - show full details
+        ErrorFormatter.print_error(e, verbose=True)
         return 1
-
-    command = remaining[0]
-    command_args = remaining[1:]
-
-    exit_code = route_command(command, command_args)
-    return exit_code
 
 
 if __name__ == "__main__":

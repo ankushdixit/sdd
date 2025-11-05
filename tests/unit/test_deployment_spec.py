@@ -10,6 +10,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import pytest
+from sdd.core.exceptions import FileNotFoundError
 from sdd.work_items.manager import WorkItemManager
 
 
@@ -217,7 +219,7 @@ Just a scope, missing other required sections.
         assert len(errors) > 0, "Should have validation errors"
 
     def test_validate_deployment_missing_spec_file(self):
-        """Test that validation fails when spec file is missing."""
+        """Test that validation raises FileNotFoundError when spec file is missing."""
         # Arrange
         manager = WorkItemManager(project_root=Path(self.temp_dir))
         work_item = {
@@ -226,13 +228,11 @@ Just a scope, missing other required sections.
             "title": "Missing Spec",
         }
 
-        # Act
-        is_valid, errors = manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            manager.validate_deployment(work_item)
 
-        # Assert
-        assert not is_valid, "Validation should fail when spec file is missing"
-        assert len(errors) > 0, "Should have error about missing spec file"
-        assert any("not found" in error.lower() for error in errors)
+        assert "DEPLOY-999.md" in str(exc_info.value.context.get("file_path", ""))
 
     def test_validate_deployment_missing_deployment_scope(self):
         """Test that validation fails when deployment scope is missing."""

@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from sdd.core.exceptions import FileOperationError
 from sdd.project.stack import StackGenerator
 
 
@@ -251,10 +252,10 @@ class TestDetectFrameworks:
         # Arrange
         (temp_project / "package.json").write_text("invalid json {")
 
-        # Act
+        # Act - should not raise exception due to safe_execute
         frameworks = stack_generator.detect_frameworks()
 
-        # Assert - should not raise exception, returns empty dict
+        # Assert - returns empty dict
         assert isinstance(frameworks, dict)
 
     def test_detect_frameworks_database(self, stack_generator, temp_project):
@@ -741,6 +742,81 @@ class TestRecordStackUpdate:
         # Assert
         data = json.loads(stack_generator.updates_file.read_text())
         assert len(data["updates"]) == 1
+
+
+class TestErrorHandling:
+    """Tests for error handling with standardized exceptions."""
+
+    def test_detect_frameworks_requirements_read_error(self, stack_generator, temp_project):
+        """Test framework detection raises FileOperationError on requirements.txt read failure."""
+        # Arrange
+        requirements_file = temp_project / "requirements.txt"
+        requirements_file.touch()
+
+        # Act & Assert
+        with patch.object(Path, "read_text", side_effect=OSError("Permission denied")):
+            with pytest.raises(FileOperationError) as exc_info:
+                stack_generator.detect_frameworks()
+
+            assert exc_info.value.context["operation"] == "read"
+            assert "requirements.txt" in exc_info.value.context["file_path"]
+
+    def test_detect_libraries_read_error(self, stack_generator, temp_project):
+        """Test library detection raises FileOperationError on requirements.txt read failure."""
+        # Arrange
+        requirements_file = temp_project / "requirements.txt"
+        requirements_file.touch()
+
+        # Act & Assert
+        with patch.object(Path, "read_text", side_effect=OSError("Permission denied")):
+            with pytest.raises(FileOperationError) as exc_info:
+                stack_generator.detect_libraries()
+
+            assert exc_info.value.context["operation"] == "read"
+            assert "requirements.txt" in exc_info.value.context["file_path"]
+
+    def test_update_stack_read_error(self, stack_generator, temp_project):
+        """Test update_stack raises FileOperationError on stack file read failure."""
+        # Arrange
+        stack_generator.stack_file.parent.mkdir(parents=True, exist_ok=True)
+        stack_generator.stack_file.touch()
+
+        # Mock generate_stack_txt to avoid dependencies
+        with patch.object(stack_generator, "generate_stack_txt", return_value="# Stack\n"):
+            # Mock read_text to raise OSError
+            with patch.object(Path, "read_text", side_effect=OSError("Permission denied")):
+                # Act & Assert
+                with pytest.raises(FileOperationError) as exc_info:
+                    stack_generator.update_stack(session_num=1, non_interactive=True)
+
+                assert exc_info.value.context["operation"] == "read"
+
+    def test_update_stack_write_error(self, stack_generator, temp_project):
+        """Test update_stack raises FileOperationError on stack file write failure."""
+        # Arrange
+        with patch.object(stack_generator, "generate_stack_txt", return_value="# Stack\n"):
+            # Mock write_text to raise OSError
+            with patch.object(Path, "write_text", side_effect=OSError("Disk full")):
+                # Act & Assert
+                with pytest.raises(FileOperationError) as exc_info:
+                    stack_generator.update_stack(session_num=1, non_interactive=True)
+
+                assert exc_info.value.context["operation"] == "write"
+
+    def test_record_stack_update_write_error(self, stack_generator, temp_project):
+        """Test _record_stack_update raises FileOperationError on write failure."""
+        # Arrange
+        changes = [{"type": "addition", "content": "- Python 3.10"}]
+        reasoning = "Added Python"
+
+        # Mock write_text to raise OSError
+        with patch.object(Path, "write_text", side_effect=OSError("Disk full")):
+            # Act & Assert
+            with pytest.raises(FileOperationError) as exc_info:
+                stack_generator._record_stack_update(1, changes, reasoning)
+
+            assert exc_info.value.context["operation"] == "write"
+            assert "stack_updates.json" in exc_info.value.context["file_path"]
 
 
 class TestMainFunction:

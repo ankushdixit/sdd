@@ -9,12 +9,24 @@ Tracks:
 - Regression detection
 """
 
-import sys
+import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.file_ops import load_json, save_json
+from sdd.core.error_handlers import log_errors, convert_subprocess_errors
+from sdd.core.exceptions import (
+    PerformanceTestError,
+    BenchmarkFailedError,
+    PerformanceRegressionError,
+    LoadTestFailedError,
+    WorkItemNotFoundError,
+    ValidationError,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class PerformanceBenchmark:
@@ -26,14 +38,25 @@ class PerformanceBenchmark:
 
         Args:
             work_item: Integration test work item with performance requirements
+
+        Raises:
+            ValidationError: If work_item is invalid or missing required fields
         """
+        if not work_item:
+            raise ValidationError(
+                message="Work item cannot be None or empty",
+                context={"work_item": work_item},
+                remediation="Provide a valid work item dictionary"
+            )
+
         self.work_item = work_item
         self.benchmarks = work_item.get("performance_benchmarks", {})
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
         self.results = {}
         self.runner = CommandRunner(default_timeout=300)
 
-    def run_benchmarks(self, test_endpoint: str = None) -> tuple[bool, dict]:
+    @log_errors()
+    def run_benchmarks(self, test_endpoint: Optional[str] = None) -> tuple[bool, dict]:
         """
         Run performance benchmarks.
 
@@ -42,8 +65,14 @@ class PerformanceBenchmark:
 
         Returns:
             (passed: bool, results: dict)
+
+        Raises:
+            LoadTestFailedError: If load test fails
+            PerformanceTestError: If benchmark execution fails
+            BenchmarkFailedError: If benchmarks don't meet requirements
+            PerformanceRegressionError: If regression is detected
         """
-        print("Running performance benchmarks...")
+        logger.info("Running performance benchmarks...")
 
         if test_endpoint is None:
             test_endpoint = self.benchmarks.get("endpoint", "http://localhost:8000/health")
@@ -69,6 +98,8 @@ class PerformanceBenchmark:
 
         return passed and not regression_detected, self.results
 
+    @log_errors()
+    @convert_subprocess_errors
     def _run_load_test(self, endpoint: str) -> dict:
         """
         Run load test using wrk or similar tool.
@@ -78,7 +109,18 @@ class PerformanceBenchmark:
 
         Returns:
             Load test results dict
+
+        Raises:
+            LoadTestFailedError: If load test fails
+            ValidationError: If endpoint is invalid
         """
+        if not endpoint:
+            raise ValidationError(
+                message="Endpoint cannot be empty",
+                context={"endpoint": endpoint},
+                remediation="Provide a valid endpoint URL"
+            )
+
         duration = self.benchmarks.get("load_test_duration", 60)
         threads = self.benchmarks.get("threads", 4)
         connections = self.benchmarks.get("connections", 100)
@@ -105,48 +147,103 @@ class PerformanceBenchmark:
                 return self._parse_wrk_output(result.stdout)
             else:
                 # wrk not installed, try using Python requests as fallback
+                logger.info("wrk not available, using fallback load test")
                 return self._run_simple_load_test(endpoint, duration)
 
         except Exception as e:
-            return {"error": str(e)}
+            raise LoadTestFailedError(
+                endpoint=endpoint,
+                details=str(e),
+                context={"duration": duration, "threads": threads, "connections": connections}
+            ) from e
 
     def _parse_wrk_output(self, output: str) -> dict:
-        """Parse wrk output to extract metrics."""
+        """
+        Parse wrk output to extract metrics.
+
+        Args:
+            output: Raw wrk output
+
+        Returns:
+            Parsed metrics dictionary
+
+        Raises:
+            PerformanceTestError: If parsing fails
+        """
         results = {"latency": {}, "throughput": {}}
 
-        lines = output.split("\n")
+        try:
+            lines = output.split("\n")
 
-        for line in lines:
-            if "50.000%" in line or "50%" in line:
-                # p50 latency
-                parts = line.split()
-                results["latency"]["p50"] = self._parse_latency(parts[-1])
-            elif "75.000%" in line or "75%" in line:
-                results["latency"]["p75"] = self._parse_latency(parts[-1])
-            elif "90.000%" in line or "90%" in line:
-                results["latency"]["p90"] = self._parse_latency(parts[-1])
-            elif "99.000%" in line or "99%" in line:
-                results["latency"]["p99"] = self._parse_latency(parts[-1])
-            elif "Requests/sec:" in line:
-                parts = line.split()
-                results["throughput"]["requests_per_sec"] = float(parts[1])
-            elif "Transfer/sec:" in line:
-                parts = line.split()
-                results["throughput"]["transfer_per_sec"] = parts[1]
+            for line in lines:
+                # Match percentile lines more precisely - look for lines starting with whitespace + percentage
+                line_stripped = line.strip()
+                if line_stripped.startswith("50.000%") or line_stripped.startswith("50%"):
+                    # p50 latency
+                    parts = line.split()
+                    results["latency"]["p50"] = self._parse_latency(parts[-1])
+                elif line_stripped.startswith("75.000%") or line_stripped.startswith("75%"):
+                    results["latency"]["p75"] = self._parse_latency(parts[-1])
+                elif line_stripped.startswith("90.000%") or line_stripped.startswith("90%"):
+                    results["latency"]["p90"] = self._parse_latency(parts[-1])
+                elif line_stripped.startswith("99.000%") or line_stripped.startswith("99%"):
+                    results["latency"]["p99"] = self._parse_latency(parts[-1])
+                elif "Requests/sec:" in line:
+                    parts = line.split()
+                    results["throughput"]["requests_per_sec"] = float(parts[1])
+                elif "Transfer/sec:" in line:
+                    parts = line.split()
+                    results["throughput"]["transfer_per_sec"] = parts[1]
 
-        return results
+            return results
+        except (IndexError, ValueError) as e:
+            raise PerformanceTestError(
+                message="Failed to parse wrk output",
+                context={"output": output[:500], "error": str(e)},
+                remediation="Verify wrk is producing expected output format"
+            ) from e
 
     def _parse_latency(self, latency_str: str) -> float:
-        """Convert latency string (e.g., '1.23ms') to milliseconds."""
-        latency_str = latency_str.strip()
-        if "ms" in latency_str:  # milliseconds
-            return float(latency_str.rstrip("ms"))
-        elif "s" in latency_str:  # seconds
-            return float(latency_str.rstrip("s")) * 1000
-        return 0.0
+        """
+        Convert latency string (e.g., '1.23ms') to milliseconds.
+
+        Args:
+            latency_str: Latency string from wrk
+
+        Returns:
+            Latency in milliseconds
+
+        Raises:
+            PerformanceTestError: If parsing fails
+        """
+        try:
+            latency_str = latency_str.strip()
+            if "ms" in latency_str:  # milliseconds
+                return float(latency_str.rstrip("ms"))
+            elif "s" in latency_str:  # seconds
+                return float(latency_str.rstrip("s")) * 1000
+            return 0.0
+        except (ValueError, AttributeError) as e:
+            raise PerformanceTestError(
+                message=f"Failed to parse latency value: {latency_str}",
+                context={"latency_str": latency_str},
+                remediation="Check wrk output format"
+            ) from e
 
     def _run_simple_load_test(self, endpoint: str, duration: int) -> dict:
-        """Fallback load test using Python requests."""
+        """
+        Fallback load test using Python requests.
+
+        Args:
+            endpoint: URL to test
+            duration: Test duration in seconds
+
+        Returns:
+            Load test results dictionary
+
+        Raises:
+            LoadTestFailedError: If load test fails
+        """
         import time
 
         import requests
@@ -155,38 +252,63 @@ class PerformanceBenchmark:
         start_time = time.time()
         request_count = 0
 
-        print("  Using simple load test (wrk not available)...")
+        logger.info("Using simple load test (wrk not available)...")
 
-        while time.time() - start_time < duration:
-            req_start = time.time()
-            try:
-                requests.get(endpoint, timeout=5)
-                latency = (time.time() - req_start) * 1000  # Convert to ms
-                latencies.append(latency)
-                request_count += 1
-            except Exception:
-                pass
+        try:
+            while time.time() - start_time < duration:
+                req_start = time.time()
+                try:
+                    requests.get(endpoint, timeout=5)
+                    latency = (time.time() - req_start) * 1000  # Convert to ms
+                    latencies.append(latency)
+                    request_count += 1
+                except Exception:
+                    # Individual request failures are logged but don't stop the test
+                    logger.debug(f"Request to {endpoint} failed, continuing test")
+                    pass
 
-        total_duration = time.time() - start_time
+            total_duration = time.time() - start_time
 
-        if not latencies:
-            return {"error": "No successful requests"}
+            if not latencies:
+                raise LoadTestFailedError(
+                    endpoint=endpoint,
+                    details="No successful requests during load test",
+                    context={"duration": duration, "request_count": request_count}
+                )
 
-        latencies.sort()
+            latencies.sort()
 
-        return {
-            "latency": {
-                "p50": latencies[int(len(latencies) * 0.50)],
-                "p75": latencies[int(len(latencies) * 0.75)],
-                "p90": latencies[int(len(latencies) * 0.90)],
-                "p95": latencies[int(len(latencies) * 0.95)],
-                "p99": latencies[int(len(latencies) * 0.99)],
-            },
-            "throughput": {"requests_per_sec": request_count / total_duration},
-        }
+            return {
+                "latency": {
+                    "p50": latencies[int(len(latencies) * 0.50)],
+                    "p75": latencies[int(len(latencies) * 0.75)],
+                    "p90": latencies[int(len(latencies) * 0.90)],
+                    "p95": latencies[int(len(latencies) * 0.95)],
+                    "p99": latencies[int(len(latencies) * 0.99)],
+                },
+                "throughput": {"requests_per_sec": request_count / total_duration},
+            }
+        except LoadTestFailedError:
+            raise
+        except Exception as e:
+            raise LoadTestFailedError(
+                endpoint=endpoint,
+                details=f"Load test execution failed: {str(e)}",
+                context={"duration": duration}
+            ) from e
 
+    @log_errors()
+    @convert_subprocess_errors
     def _measure_resource_usage(self) -> dict:
-        """Measure CPU and memory usage of services."""
+        """
+        Measure CPU and memory usage of services.
+
+        Returns:
+            Resource usage dictionary
+
+        Raises:
+            PerformanceTestError: If resource measurement fails
+        """
         services = self.work_item.get("environment_requirements", {}).get("services_required", [])
 
         resource_usage = {}
@@ -198,6 +320,7 @@ class PerformanceBenchmark:
 
                 container_id = result.stdout.strip()
                 if not container_id:
+                    logger.warning(f"No container found for service: {service}")
                     continue
 
                 # Get resource stats
@@ -219,41 +342,58 @@ class PerformanceBenchmark:
                         "cpu_percent": parts[0].rstrip("%"),
                         "memory_usage": parts[1],
                     }
+                else:
+                    logger.warning(f"Failed to get stats for service {service}: {stats_result.stderr}")
 
             except Exception as e:
+                logger.warning(f"Error measuring resource usage for {service}: {e}")
                 resource_usage[service] = {"error": str(e)}
 
         return resource_usage
 
     def _check_against_requirements(self) -> bool:
-        """Check if benchmarks meet requirements."""
+        """
+        Check if benchmarks meet requirements.
+
+        Returns:
+            True if all requirements met, False otherwise
+
+        Raises:
+            BenchmarkFailedError: If benchmarks fail to meet requirements
+        """
         requirements = self.benchmarks.get("response_time", {})
         load_test = self.results.get("load_test", {})
         latency = load_test.get("latency", {})
 
-        passed = True
+        failed_benchmarks = []
 
         # Check response time requirements
         if "p50" in requirements:
-            if latency.get("p50", float("inf")) > requirements["p50"]:
-                print(
-                    f"  ✗ p50 latency {latency.get('p50')}ms exceeds requirement {requirements['p50']}ms"
+            actual = latency.get("p50", float("inf"))
+            expected = requirements["p50"]
+            if actual > expected:
+                logger.warning(f"p50 latency {actual}ms exceeds requirement {expected}ms")
+                failed_benchmarks.append(
+                    BenchmarkFailedError(metric="p50_latency", actual=actual, expected=expected)
                 )
-                passed = False
 
         if "p95" in requirements:
-            if latency.get("p95", float("inf")) > requirements["p95"]:
-                print(
-                    f"  ✗ p95 latency {latency.get('p95')}ms exceeds requirement {requirements['p95']}ms"
+            actual = latency.get("p95", float("inf"))
+            expected = requirements["p95"]
+            if actual > expected:
+                logger.warning(f"p95 latency {actual}ms exceeds requirement {expected}ms")
+                failed_benchmarks.append(
+                    BenchmarkFailedError(metric="p95_latency", actual=actual, expected=expected)
                 )
-                passed = False
 
         if "p99" in requirements:
-            if latency.get("p99", float("inf")) > requirements["p99"]:
-                print(
-                    f"  ✗ p99 latency {latency.get('p99')}ms exceeds requirement {requirements['p99']}ms"
+            actual = latency.get("p99", float("inf"))
+            expected = requirements["p99"]
+            if actual > expected:
+                logger.warning(f"p99 latency {actual}ms exceeds requirement {expected}ms")
+                failed_benchmarks.append(
+                    BenchmarkFailedError(metric="p99_latency", actual=actual, expected=expected)
                 )
-                passed = False
 
         # Check throughput requirements
         throughput_req = self.benchmarks.get("throughput", {})
@@ -261,26 +401,49 @@ class PerformanceBenchmark:
 
         if "minimum" in throughput_req:
             actual_rps = throughput.get("requests_per_sec", 0)
-            if actual_rps < throughput_req["minimum"]:
-                print(
-                    f"  ✗ Throughput {actual_rps} req/s below minimum {throughput_req['minimum']} req/s"
+            expected_rps = throughput_req["minimum"]
+            if actual_rps < expected_rps:
+                logger.warning(f"Throughput {actual_rps} req/s below minimum {expected_rps} req/s")
+                failed_benchmarks.append(
+                    BenchmarkFailedError(
+                        metric="throughput",
+                        actual=actual_rps,
+                        expected=expected_rps,
+                        unit="req/s"
+                    )
                 )
-                passed = False
 
-        return passed
+        # If any benchmarks failed, raise the first one
+        if failed_benchmarks:
+            raise failed_benchmarks[0]
+
+        return True
 
     def _check_for_regression(self) -> bool:
-        """Check for performance regression against baseline."""
+        """
+        Check for performance regression against baseline.
+
+        Returns:
+            True if regression detected, False otherwise
+
+        Raises:
+            PerformanceRegressionError: If regression is detected
+        """
         if not self.baselines_file.exists():
-            print("  ℹ️  No baseline found, skipping regression check")
+            logger.info("No baseline found, skipping regression check")
             return False
 
-        baselines = load_json(self.baselines_file)
+        try:
+            baselines = load_json(self.baselines_file)
+        except Exception as e:
+            logger.warning(f"Failed to load baselines: {e}")
+            return False
+
         work_item_id = self.work_item.get("id")
         baseline = baselines.get(work_item_id)
 
         if not baseline:
-            print(f"  ℹ️  No baseline for work item {work_item_id}")
+            logger.info(f"No baseline for work item {work_item_id}")
             return False
 
         load_test = self.results.get("load_test", {})
@@ -295,43 +458,76 @@ class PerformanceBenchmark:
             baseline_val = baseline_latency.get(percentile, 0)
 
             if baseline_val > 0 and current > baseline_val * regression_threshold:
-                print(
-                    f"  ⚠️  Performance regression detected: {percentile} increased from "
-                    f"{baseline_val}ms to {current}ms ({((current / baseline_val - 1) * 100):.1f}% slower)"
+                regression_percent = ((current / baseline_val - 1) * 100)
+                logger.warning(
+                    f"Performance regression detected: {percentile} increased from "
+                    f"{baseline_val}ms to {current}ms ({regression_percent:.1f}% slower)"
                 )
-                return True
+                raise PerformanceRegressionError(
+                    metric=percentile,
+                    current=current,
+                    baseline=baseline_val,
+                    threshold_percent=10.0
+                )
 
         return False
 
+    @log_errors()
     def _store_baseline(self):
-        """Store current results as baseline."""
-        if not self.baselines_file.exists():
-            baselines = {}
-        else:
-            baselines = load_json(self.baselines_file)
+        """
+        Store current results as baseline.
 
-        work_item_id = self.work_item.get("id")
-        baselines[work_item_id] = {
-            "latency": self.results.get("load_test", {}).get("latency", {}),
-            "throughput": self.results.get("load_test", {}).get("throughput", {}),
-            "resource_usage": self.results.get("resource_usage", {}),
-            "timestamp": datetime.now().isoformat(),
-            "session": self._get_current_session(),
-        }
+        Raises:
+            PerformanceTestError: If baseline storage fails
+        """
+        try:
+            if not self.baselines_file.exists():
+                baselines = {}
+            else:
+                baselines = load_json(self.baselines_file)
 
-        save_json(self.baselines_file, baselines)
-        print(f"  ✓ Baseline stored for work item {work_item_id}")
+            work_item_id = self.work_item.get("id")
+            baselines[work_item_id] = {
+                "latency": self.results.get("load_test", {}).get("latency", {}),
+                "throughput": self.results.get("load_test", {}).get("throughput", {}),
+                "resource_usage": self.results.get("resource_usage", {}),
+                "timestamp": datetime.now().isoformat(),
+                "session": self._get_current_session(),
+            }
+
+            save_json(self.baselines_file, baselines)
+            logger.info(f"Baseline stored for work item {work_item_id}")
+        except Exception as e:
+            raise PerformanceTestError(
+                message=f"Failed to store baseline for work item {work_item_id}",
+                context={"work_item_id": work_item_id, "error": str(e)},
+                remediation="Check file permissions and disk space"
+            ) from e
 
     def _get_current_session(self) -> int:
-        """Get current session number."""
+        """
+        Get current session number.
+
+        Returns:
+            Current session number or 0 if not found
+        """
         status_file = Path(".session/tracking/status_update.json")
         if status_file.exists():
-            status = load_json(status_file)
-            return status.get("session_number", 0)
+            try:
+                status = load_json(status_file)
+                return status.get("session_number", 0)
+            except Exception as e:
+                logger.warning(f"Failed to load session status: {e}")
+                return 0
         return 0
 
     def generate_report(self) -> str:
-        """Generate performance benchmark report."""
+        """
+        Generate performance benchmark report.
+
+        Returns:
+            Formatted report string
+        """
         load_test = self.results.get("load_test", {})
         latency = load_test.get("latency", {})
         throughput = load_test.get("throughput", {})
@@ -361,36 +557,59 @@ Resource Usage:
         report += f"\nStatus: {'PASSED' if self.results.get('passed') else 'FAILED'}\n"
 
         if self.results.get("regression_detected"):
-            report += "⚠️  Performance regression detected!\n"
+            report += "WARNING: Performance regression detected!\n"
 
         return report
 
 
+@log_errors()
 def main():
-    """CLI entry point."""
+    """
+    CLI entry point.
+
+    Raises:
+        ValidationError: If command line arguments are invalid
+        WorkItemNotFoundError: If work item doesn't exist
+        PerformanceTestError: If benchmarks fail
+    """
+    import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python performance_benchmark.py <work_item_id>")
-        sys.exit(1)
+        raise ValidationError(
+            message="Missing required argument: work_item_id",
+            context={"usage": "python performance_benchmark.py <work_item_id>"},
+            remediation="Provide a work item ID as the first argument"
+        )
 
     work_item_id = sys.argv[1]
 
     # Load work item
     work_items_file = Path(".session/tracking/work_items.json")
-    data = load_json(work_items_file)
-    work_item = data["work_items"].get(work_item_id)
+    try:
+        data = load_json(work_items_file)
+        work_item = data["work_items"].get(work_item_id)
 
-    if not work_item:
-        print(f"Work item not found: {work_item_id}")
+        if not work_item:
+            raise WorkItemNotFoundError(work_item_id)
+
+        # Run benchmarks
+        benchmark = PerformanceBenchmark(work_item)
+        passed, results = benchmark.run_benchmarks()
+
+        print(benchmark.generate_report())
+
+        sys.exit(0 if passed else 1)
+
+    except (BenchmarkFailedError, PerformanceRegressionError, LoadTestFailedError) as e:
+        logger.error(f"Performance test failed: {e.message}")
+        print(f"\nERROR: {e.message}")
+        if e.remediation:
+            print(f"REMEDIATION: {e.remediation}")
+        sys.exit(e.exit_code)
+    except Exception as e:
+        logger.exception("Unexpected error during performance benchmarking")
+        print(f"\nERROR: {e}")
         sys.exit(1)
-
-    # Run benchmarks
-    benchmark = PerformanceBenchmark(work_item)
-    passed, results = benchmark.run_benchmarks()
-
-    print(benchmark.generate_report())
-
-    sys.exit(0 if passed else 1)
 
 
 if __name__ == "__main__":

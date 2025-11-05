@@ -104,6 +104,26 @@ class ErrorCode(Enum):
     COVERAGE_BELOW_THRESHOLD = 10003
     QUALITY_GATE_FAILED = 10004
 
+    # Deployment errors (11000-11999)
+    DEPLOYMENT_FAILED = 11001
+    PRE_DEPLOYMENT_CHECK_FAILED = 11002
+    SMOKE_TEST_FAILED = 11003
+    ROLLBACK_FAILED = 11004
+    DEPLOYMENT_STEP_FAILED = 11005
+
+    # API validation errors (12000-12999)
+    API_VALIDATION_FAILED = 12001
+    SCHEMA_VALIDATION_FAILED = 12002
+    CONTRACT_VIOLATION = 12003
+    BREAKING_CHANGE_DETECTED = 12004
+    INVALID_OPENAPI_SPEC = 12005
+
+    # Performance testing errors (13000-13999)
+    PERFORMANCE_TEST_FAILED = 13001
+    BENCHMARK_FAILED = 13002
+    PERFORMANCE_REGRESSION = 13003
+    LOAD_TEST_FAILED = 13004
+
 
 class SDDError(Exception):
     """
@@ -889,4 +909,600 @@ class LearningError(ValidationError):
             context=context,
             remediation=remediation or "Check learning content and structure",
             cause=cause
+        )
+
+
+# ============================================================================
+# Deployment Errors
+# ============================================================================
+
+class DeploymentError(SDDError):
+    """
+    Raised when deployment operations fail.
+
+    Example:
+        >>> raise DeploymentError(
+        ...     message="Deployment failed",
+        ...     code=ErrorCode.DEPLOYMENT_FAILED,
+        ...     context={"work_item_id": "deploy-001"}
+        ... )
+    """
+
+    def __init__(
+        self,
+        message: str,
+        code: ErrorCode = ErrorCode.DEPLOYMENT_FAILED,
+        context: Optional[dict[str, Any]] = None,
+        remediation: Optional[str] = None,
+        cause: Optional[Exception] = None
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            category=ErrorCategory.SYSTEM,
+            context=context,
+            remediation=remediation,
+            cause=cause
+        )
+
+
+class PreDeploymentCheckError(DeploymentError):
+    """
+    Raised when pre-deployment validation checks fail.
+
+    Example:
+        >>> raise PreDeploymentCheckError(
+        ...     check_name="integration_tests",
+        ...     details="3 tests failed"
+        ... )
+    """
+
+    def __init__(
+        self,
+        check_name: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Pre-deployment check '{check_name}' failed"
+        if details:
+            message = f"{message}: {details}"
+
+        ctx = context or {}
+        ctx.update({"check_name": check_name, "details": details})
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.PRE_DEPLOYMENT_CHECK_FAILED,
+            context=ctx,
+            remediation=f"Fix {check_name} issues before proceeding with deployment"
+        )
+
+
+class SmokeTestError(DeploymentError):
+    """
+    Raised when smoke tests fail after deployment.
+
+    Example:
+        >>> raise SmokeTestError(
+        ...     test_name="health_check",
+        ...     details="Endpoint returned 500"
+        ... )
+    """
+
+    def __init__(
+        self,
+        test_name: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Smoke test '{test_name}' failed"
+        if details:
+            message = f"{message}: {details}"
+
+        ctx = context or {}
+        ctx.update({"test_name": test_name, "details": details})
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.SMOKE_TEST_FAILED,
+            context=ctx,
+            remediation="Check deployment logs and verify service health"
+        )
+
+
+class RollbackError(DeploymentError):
+    """
+    Raised when rollback operation fails.
+
+    Example:
+        >>> raise RollbackError(
+        ...     step="restore_database",
+        ...     details="Backup file not found"
+        ... )
+    """
+
+    def __init__(
+        self,
+        step: Optional[str] = None,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = "Rollback failed"
+        if step:
+            message = f"Rollback failed at step '{step}'"
+        if details:
+            message = f"{message}: {details}"
+
+        ctx = context or {}
+        if step:
+            ctx["failed_step"] = step
+        if details:
+            ctx["details"] = details
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.ROLLBACK_FAILED,
+            context=ctx,
+            remediation="Manual intervention may be required to restore system state"
+        )
+
+
+class DeploymentStepError(DeploymentError):
+    """
+    Raised when a deployment step fails.
+
+    Example:
+        >>> raise DeploymentStepError(
+        ...     step_number=2,
+        ...     step_description="Build application",
+        ...     details="Compilation failed"
+        ... )
+    """
+
+    def __init__(
+        self,
+        step_number: int,
+        step_description: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Deployment step {step_number} failed: {step_description}"
+        if details:
+            message = f"{message} - {details}"
+
+        ctx = context or {}
+        ctx.update({
+            "step_number": step_number,
+            "step_description": step_description,
+            "details": details
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.DEPLOYMENT_STEP_FAILED,
+            context=ctx,
+            remediation="Review deployment logs and fix the failing step"
+        )
+
+
+# ============================================================================
+# Integration Test Errors
+# ============================================================================
+
+class IntegrationTestError(SDDError):
+    """
+    Base exception for integration test failures.
+
+    Example:
+        >>> raise IntegrationTestError(
+        ...     message="Integration test failed",
+        ...     context={"test_name": "order_processing"}
+        ... )
+    """
+
+    def __init__(
+        self,
+        message: str,
+        code: ErrorCode = ErrorCode.TEST_FAILED,
+        context: Optional[dict[str, Any]] = None,
+        remediation: Optional[str] = None,
+        cause: Optional[Exception] = None
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            category=ErrorCategory.SYSTEM,
+            context=context,
+            remediation=remediation,
+            cause=cause
+        )
+
+
+class EnvironmentSetupError(IntegrationTestError):
+    """
+    Raised when integration test environment setup fails.
+
+    Example:
+        >>> raise EnvironmentSetupError(
+        ...     component="docker-compose",
+        ...     details="Failed to start PostgreSQL service"
+        ... )
+    """
+
+    def __init__(
+        self,
+        component: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Environment setup failed: {component}"
+        if details:
+            message = f"{message} - {details}"
+
+        ctx = context or {}
+        ctx.update({"component": component, "details": details})
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.COMMAND_FAILED,
+            context=ctx,
+            remediation="Check Docker/docker-compose installation and service configurations"
+        )
+
+
+class IntegrationExecutionError(IntegrationTestError):
+    """
+    Raised when test execution fails.
+
+    Example:
+        >>> raise IntegrationExecutionError(
+        ...     test_framework="pytest",
+        ...     details="3 tests failed"
+        ... )
+    """
+
+    def __init__(
+        self,
+        test_framework: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Test execution failed: {test_framework}"
+        if details:
+            message = f"{message} - {details}"
+
+        ctx = context or {}
+        ctx.update({"test_framework": test_framework, "details": details})
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.TEST_FAILED,
+            context=ctx,
+            remediation="Review test output and fix failing tests"
+        )
+
+
+# ============================================================================
+# API Validation Errors
+# ============================================================================
+
+class APIValidationError(ValidationError):
+    """
+    Base exception for API validation errors.
+
+    Example:
+        >>> raise APIValidationError(
+        ...     message="API validation failed",
+        ...     context={"endpoint": "/api/users"}
+        ... )
+    """
+
+    def __init__(
+        self,
+        message: str,
+        code: ErrorCode = ErrorCode.API_VALIDATION_FAILED,
+        context: Optional[dict[str, Any]] = None,
+        remediation: Optional[str] = None,
+        cause: Optional[Exception] = None
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            context=context,
+            remediation=remediation,
+            cause=cause
+        )
+
+
+class SchemaValidationError(APIValidationError):
+    """
+    Raised when OpenAPI/Swagger schema validation fails.
+
+    Example:
+        >>> raise SchemaValidationError(
+        ...     contract_file="api/openapi.yaml",
+        ...     details="Missing 'paths' field"
+        ... )
+    """
+
+    def __init__(
+        self,
+        contract_file: str,
+        details: str,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Schema validation failed for '{contract_file}': {details}"
+        ctx = context or {}
+        ctx.update({
+            "contract_file": contract_file,
+            "details": details
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.SCHEMA_VALIDATION_FAILED,
+            context=ctx,
+            remediation=f"Fix schema validation errors in {contract_file}"
+        )
+
+
+class ContractViolationError(APIValidationError):
+    """
+    Raised when API contract is violated.
+
+    Example:
+        >>> raise ContractViolationError(
+        ...     path="/api/users",
+        ...     method="POST",
+        ...     violation_type="removed_required_parameter",
+        ...     details="Parameter 'email' is required"
+        ... )
+    """
+
+    def __init__(
+        self,
+        path: str,
+        method: str,
+        violation_type: str,
+        details: str,
+        severity: str = "high",
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Contract violation in {method} {path}: {details}"
+        ctx = context or {}
+        ctx.update({
+            "path": path,
+            "method": method,
+            "violation_type": violation_type,
+            "details": details,
+            "severity": severity
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.CONTRACT_VIOLATION,
+            context=ctx,
+            remediation="Review API contract changes and update implementation"
+        )
+
+
+class BreakingChangeError(APIValidationError):
+    """
+    Raised when breaking changes are detected in API contracts.
+
+    Example:
+        >>> raise BreakingChangeError(
+        ...     breaking_changes=[
+        ...         {"type": "removed_endpoint", "path": "/api/old"},
+        ...         {"type": "removed_method", "path": "/api/users", "method": "DELETE"}
+        ...     ],
+        ...     allow_breaking_changes=False
+        ... )
+    """
+
+    def __init__(
+        self,
+        breaking_changes: list[dict],
+        allow_breaking_changes: bool = False,
+        context: Optional[dict[str, Any]] = None
+    ):
+        change_count = len(breaking_changes)
+        message = f"{change_count} breaking change{'s' if change_count != 1 else ''} detected"
+        if not allow_breaking_changes:
+            message = f"{message} (not allowed)"
+
+        ctx = context or {}
+        ctx.update({
+            "breaking_changes": breaking_changes,
+            "breaking_change_count": change_count,
+            "allow_breaking_changes": allow_breaking_changes
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.BREAKING_CHANGE_DETECTED,
+            context=ctx,
+            remediation=(
+                "Review breaking changes and either: "
+                "1) Fix them to maintain backward compatibility, or "
+                "2) Set 'allow_breaking_changes: true' if intentional"
+            )
+        )
+
+
+class InvalidOpenAPISpecError(APIValidationError):
+    """
+    Raised when OpenAPI/Swagger specification is invalid.
+
+    Example:
+        >>> raise InvalidOpenAPISpecError(
+        ...     contract_file="api/openapi.yaml",
+        ...     details="Not a valid OpenAPI/Swagger specification"
+        ... )
+    """
+
+    def __init__(
+        self,
+        contract_file: str,
+        details: str,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Invalid OpenAPI/Swagger spec: {contract_file}"
+        ctx = context or {}
+        ctx.update({
+            "contract_file": contract_file,
+            "details": details
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.INVALID_OPENAPI_SPEC,
+            context=ctx,
+            remediation=f"Ensure {contract_file} is a valid OpenAPI/Swagger specification with 'openapi' or 'swagger' field"
+        )
+
+# ============================================================================
+# Performance Testing Errors
+# ============================================================================
+
+class PerformanceTestError(SDDError):
+    """
+    Base class for performance testing errors.
+
+    Example:
+        >>> raise PerformanceTestError(
+        ...     message="Performance test failed",
+        ...     code=ErrorCode.PERFORMANCE_TEST_FAILED,
+        ...     context={"work_item_id": "perf-001"}
+        ... )
+    """
+
+    def __init__(
+        self,
+        message: str,
+        code: ErrorCode = ErrorCode.PERFORMANCE_TEST_FAILED,
+        context: Optional[dict[str, Any]] = None,
+        remediation: Optional[str] = None,
+        cause: Optional[Exception] = None
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            category=ErrorCategory.VALIDATION,
+            context=context,
+            remediation=remediation,
+            cause=cause
+        )
+
+
+class BenchmarkFailedError(PerformanceTestError):
+    """
+    Raised when a performance benchmark fails to meet requirements.
+
+    Example:
+        >>> raise BenchmarkFailedError(
+        ...     metric="p95_latency",
+        ...     actual=150.5,
+        ...     expected=100.0,
+        ...     unit="ms"
+        ... )
+    """
+
+    def __init__(
+        self,
+        metric: str,
+        actual: float,
+        expected: float,
+        unit: str = "ms"
+    ):
+        message = f"Benchmark failed: {metric} {actual}{unit} exceeds requirement {expected}{unit}"
+        context = {
+            "metric": metric,
+            "actual_value": actual,
+            "expected_value": expected,
+            "unit": unit,
+            "delta": actual - expected,
+            "percentage_over": ((actual / expected - 1) * 100) if expected > 0 else 0
+        }
+        super().__init__(
+            message=message,
+            code=ErrorCode.BENCHMARK_FAILED,
+            context=context,
+            remediation=f"Optimize performance to meet {metric} requirement of {expected}{unit}"
+        )
+
+
+class PerformanceRegressionError(PerformanceTestError):
+    """
+    Raised when performance regression is detected against baseline.
+
+    Example:
+        >>> raise PerformanceRegressionError(
+        ...     metric="p50_latency",
+        ...     current=55.0,
+        ...     baseline=50.0,
+        ...     threshold_percent=10.0
+        ... )
+    """
+
+    def __init__(
+        self,
+        metric: str,
+        current: float,
+        baseline: float,
+        threshold_percent: float = 10.0
+    ):
+        regression_percent = ((current / baseline - 1) * 100) if baseline > 0 else 0
+        message = (
+            f"Performance regression detected: {metric} increased from "
+            f"{baseline}ms to {current}ms ({regression_percent:.1f}% slower, "
+            f"threshold: {threshold_percent}%)"
+        )
+        context = {
+            "metric": metric,
+            "current_value": current,
+            "baseline_value": baseline,
+            "regression_percent": regression_percent,
+            "threshold_percent": threshold_percent
+        }
+        super().__init__(
+            message=message,
+            code=ErrorCode.PERFORMANCE_REGRESSION,
+            context=context,
+            remediation="Investigate recent changes that may have caused performance degradation"
+        )
+
+
+class LoadTestFailedError(PerformanceTestError):
+    """
+    Raised when load test execution fails.
+
+    Example:
+        >>> raise LoadTestFailedError(
+        ...     endpoint="http://localhost:8000/api",
+        ...     details="Connection refused"
+        ... )
+    """
+
+    def __init__(
+        self,
+        endpoint: str,
+        details: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None
+    ):
+        message = f"Load test failed for endpoint: {endpoint}"
+        if details:
+            message = f"{message} - {details}"
+
+        ctx = context or {}
+        ctx.update({
+            "endpoint": endpoint,
+            "details": details
+        })
+
+        super().__init__(
+            message=message,
+            code=ErrorCode.LOAD_TEST_FAILED,
+            context=ctx,
+            remediation="Verify the endpoint is accessible and the service is running"
         )

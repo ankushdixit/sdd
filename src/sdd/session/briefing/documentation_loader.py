@@ -6,6 +6,7 @@ Part of the briefing module decomposition.
 
 from pathlib import Path
 
+from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -39,7 +40,12 @@ class DocumentationLoader:
                 try:
                     docs[path.name] = path.read_text()
                     logger.debug("Loaded documentation: %s", doc_file)
-                except Exception as e:
-                    logger.warning("Failed to load %s: %s", doc_file, e)
+                except (OSError, IOError, UnicodeDecodeError) as e:
+                    raise FileOperationError(
+                        operation="read",
+                        file_path=str(path),
+                        details=f"Failed to read documentation file: {e}",
+                        cause=e,
+                    ) from e
 
         return docs

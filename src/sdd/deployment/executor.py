@@ -14,6 +14,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.error_handlers import convert_file_errors, log_errors
+from sdd.core.exceptions import (
+    DeploymentStepError,
+    ErrorCode,
+    FileOperationError,
+    PreDeploymentCheckError,
+    RollbackError,
+    SmokeTestError,
+)
+
 
 class DeploymentExecutor:
     """Deployment execution and validation."""
@@ -26,13 +36,33 @@ class DeploymentExecutor:
         self.config = self._load_config(config_path)
         self.deployment_log = []
 
+    @convert_file_errors
     def _load_config(self, config_path: Path) -> dict:
-        """Load deployment configuration."""
+        """
+        Load deployment configuration.
+
+        Args:
+            config_path: Path to configuration file
+
+        Returns:
+            dict: Deployment configuration
+
+        Raises:
+            FileOperationError: If config file cannot be read or parsed
+        """
         if not config_path.exists():
             return self._default_config()
 
-        with open(config_path) as f:
-            config = json.load(f)
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+        except json.JSONDecodeError as e:
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(config_path),
+                details=f"Invalid JSON: {e}",
+                cause=e
+            ) from e
 
         return config.get("deployment", self._default_config())
 
@@ -57,14 +87,19 @@ class DeploymentExecutor:
             },
         }
 
-    def pre_deployment_validation(self) -> tuple[bool, dict]:
+    @log_errors()
+    def pre_deployment_validation(self) -> dict:
         """
         Run pre-deployment validation checks.
 
         Returns:
-            (passed, results)
+            dict: Validation results with checks and status
+
+        Raises:
+            PreDeploymentCheckError: If any validation check fails
         """
         results = {"checks": [], "passed": True}
+        failed_checks = []
 
         # Check integration tests
         if self.config["pre_deployment_checks"].get("integration_tests"):
@@ -72,6 +107,7 @@ class DeploymentExecutor:
             results["checks"].append({"name": "Integration Tests", "passed": tests_passed})
             if not tests_passed:
                 results["passed"] = False
+                failed_checks.append("Integration Tests")
 
         # Check security scans
         if self.config["pre_deployment_checks"].get("security_scans"):
@@ -79,6 +115,7 @@ class DeploymentExecutor:
             results["checks"].append({"name": "Security Scans", "passed": scans_passed})
             if not scans_passed:
                 results["passed"] = False
+                failed_checks.append("Security Scans")
 
         # Check environment readiness
         if self.config["pre_deployment_checks"].get("environment_validation"):
@@ -86,11 +123,22 @@ class DeploymentExecutor:
             results["checks"].append({"name": "Environment Readiness", "passed": env_ready})
             if not env_ready:
                 results["passed"] = False
+                failed_checks.append("Environment Readiness")
 
         self._log("Pre-deployment validation", results)
-        return results["passed"], results
 
-    def execute_deployment(self, dry_run: bool = False) -> tuple[bool, dict]:
+        # Raise exception if any checks failed
+        if not results["passed"]:
+            raise PreDeploymentCheckError(
+                check_name=", ".join(failed_checks),
+                details=f"{len(failed_checks)} check(s) failed",
+                context={"results": results, "failed_checks": failed_checks}
+            )
+
+        return results
+
+    @log_errors()
+    def execute_deployment(self, dry_run: bool = False) -> dict:
         """
         Execute deployment procedure.
 
@@ -98,7 +146,10 @@ class DeploymentExecutor:
             dry_run: If True, simulate deployment without actual execution
 
         Returns:
-            (success, results)
+            dict: Deployment results with steps and timestamps
+
+        Raises:
+            DeploymentStepError: If any deployment step fails
         """
         results = {
             "started_at": datetime.now().isoformat(),
@@ -125,28 +176,37 @@ class DeploymentExecutor:
                 results["success"] = False
                 results["failed_at_step"] = i
                 self._log("Deployment failed", {"step": i, "description": step})
-                break
+                raise DeploymentStepError(
+                    step_number=i,
+                    step_description=step,
+                    context={"results": results}
+                )
 
         results["completed_at"] = datetime.now().isoformat()
-        return results["success"], results
+        return results
 
-    def run_smoke_tests(self) -> tuple[bool, dict]:
+    @log_errors()
+    def run_smoke_tests(self) -> dict:
         """
         Run smoke tests to verify deployment.
 
         Returns:
-            (passed, results)
+            dict: Test results with status
+
+        Raises:
+            SmokeTestError: If any smoke test fails
         """
         config = self.config["smoke_tests"]
         results = {"tests": [], "passed": True}
 
         if not config.get("enabled"):
-            return True, {"status": "skipped"}
+            return {"status": "skipped"}
 
         self._log("Running smoke tests", config)
 
         # Parse smoke tests from work item
         smoke_tests = self._parse_smoke_tests()
+        failed_tests = []
 
         for test in smoke_tests:
             test_passed = self._execute_smoke_test(
@@ -155,20 +215,35 @@ class DeploymentExecutor:
                 retry_count=config.get("retry_count", 3),
             )
 
-            results["tests"].append({"name": test.get("name"), "passed": test_passed})
+            test_name = test.get("name", "unknown")
+            results["tests"].append({"name": test_name, "passed": test_passed})
 
             if not test_passed:
                 results["passed"] = False
+                failed_tests.append(test_name)
 
         self._log("Smoke tests completed", results)
-        return results["passed"], results
 
-    def rollback(self) -> tuple[bool, dict]:
+        # Raise exception if any tests failed
+        if not results["passed"]:
+            raise SmokeTestError(
+                test_name=", ".join(failed_tests),
+                details=f"{len(failed_tests)} test(s) failed",
+                context={"results": results, "failed_tests": failed_tests}
+            )
+
+        return results
+
+    @log_errors()
+    def rollback(self) -> dict:
         """
         Execute rollback procedure.
 
         Returns:
-            (success, results)
+            dict: Rollback results with steps and timestamps
+
+        Raises:
+            RollbackError: If any rollback step fails
         """
         results = {
             "started_at": datetime.now().isoformat(),
@@ -191,12 +266,16 @@ class DeploymentExecutor:
             if not step_success:
                 results["success"] = False
                 results["failed_at_step"] = i
-                break
+                raise RollbackError(
+                    step=step,
+                    details=f"Rollback failed at step {i}",
+                    context={"results": results, "step_number": i}
+                )
 
         results["completed_at"] = datetime.now().isoformat()
         self._log("Rollback completed", results)
 
-        return results["success"], results
+        return results
 
     def _check_integration_tests(self) -> bool:
         """Check if integration tests passed."""
@@ -273,12 +352,26 @@ class DeploymentExecutor:
 
 
 def main():
-    """CLI entry point."""
+    """
+    CLI entry point.
+
+    Raises:
+        ValidationError: If no work item ID provided
+        PreDeploymentCheckError: If pre-deployment checks fail
+        DeploymentStepError: If deployment fails
+        SmokeTestError: If smoke tests fail
+        RollbackError: If rollback fails
+    """
     import sys
 
+    from sdd.core.exceptions import ValidationError
+
     if len(sys.argv) < 2:
-        print("Usage: deployment_executor.py <work_item_id>")
-        sys.exit(1)
+        raise ValidationError(
+            message="Missing required argument: work_item_id",
+            code=ErrorCode.INVALID_COMMAND,
+            remediation="Usage: deployment_executor.py <work_item_id>"
+        )
 
     # Load work item
     # NOTE: Framework stub - Should load work item by ID from work_items.json
@@ -286,27 +379,30 @@ def main():
 
     executor = DeploymentExecutor(work_item={})
 
-    # Pre-deployment validation
-    passed, results = executor.pre_deployment_validation()
-    if not passed:
-        print("Pre-deployment validation failed")
-        sys.exit(1)
+    try:
+        # Pre-deployment validation
+        executor.pre_deployment_validation()
 
-    # Execute deployment
-    success, results = executor.execute_deployment()
-    if not success:
-        print("Deployment failed, initiating rollback...")
-        executor.rollback()
-        sys.exit(1)
+        # Execute deployment
+        executor.execute_deployment()
 
-    # Run smoke tests
-    passed, results = executor.run_smoke_tests()
-    if not passed:
-        print("Smoke tests failed, initiating rollback...")
-        executor.rollback()
-        sys.exit(1)
+        # Run smoke tests
+        executor.run_smoke_tests()
 
-    print("Deployment successful!")
+        print("Deployment successful!")
+
+    except (DeploymentStepError, SmokeTestError) as e:
+        # Attempt rollback on deployment or smoke test failure
+        print(f"Error: {e.message}")
+        print("Initiating rollback...")
+        try:
+            executor.rollback()
+            print("Rollback completed successfully")
+        except RollbackError as rollback_err:
+            print(f"Rollback failed: {rollback_err.message}")
+            raise
+        # Re-raise original error after successful rollback
+        raise
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ including validation of integration tests and deployments.
 
 import pytest
 
+from sdd.core.exceptions import FileNotFoundError
 from sdd.testing.integration_runner import IntegrationTestRunner
 from sdd.work_items.manager import WorkItemManager
 
@@ -112,7 +113,7 @@ Some scope here.
         assert any("Test Scenarios" in str(e) for e in errors)
 
     def test_validate_integration_test_missing_spec_file(self, temp_project_dir, monkeypatch):
-        """Test that validate_integration_test handles missing spec file gracefully."""
+        """Test that validate_integration_test raises FileNotFoundError when spec file is missing."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -127,12 +128,11 @@ Some scope here.
             "dependencies": [],
         }
 
-        # Act
-        is_valid, errors = manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            manager.validate_integration_test(work_item)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
+        assert "nonexistent_test.md" in str(exc_info.value.context.get("file_path", ""))
 
     def test_validate_integration_test_missing_dependencies(self, temp_project_dir, monkeypatch):
         """Test that validate_integration_test detects missing dependencies."""
@@ -306,7 +306,7 @@ Some scope
         )
 
     def test_validate_deployment_missing_spec_file(self, temp_project_dir, monkeypatch):
-        """Test that validate_deployment handles missing spec file gracefully."""
+        """Test that validate_deployment raises FileNotFoundError when spec file is missing."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -320,12 +320,11 @@ Some scope
             "title": "Missing Deployment",
         }
 
-        # Act
-        is_valid, errors = manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            manager.validate_deployment(work_item)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
+        assert "nonexistent_deployment.md" in str(exc_info.value.context.get("file_path", ""))
 
 
 class TestIntegrationTestRunner:
@@ -389,7 +388,7 @@ None
         assert runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
 
     def test_integration_test_runner_missing_spec(self, temp_project_dir, monkeypatch):
-        """Test that IntegrationTestRunner raises ValueError for missing spec."""
+        """Test that IntegrationTestRunner raises FileNotFoundError for missing spec."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -398,8 +397,10 @@ None
         work_item = {"id": "nonexistent_test", "type": "integration_test"}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(FileNotFoundError) as exc_info:
             IntegrationTestRunner(work_item)
+
+        assert "nonexistent_test.md" in str(exc_info.value.context.get("file_path", ""))
 
     def test_integration_test_runner_extracts_services(self, temp_project_dir, monkeypatch):
         """Test that IntegrationTestRunner extracts required services from environment requirements."""

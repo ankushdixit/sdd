@@ -9,13 +9,14 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileNotFoundError as SDDFileNotFoundError,
+    FileOperationError,
+    SystemError,
+)
+
 logger = logging.getLogger(__name__)
-
-
-class FileOperationError(Exception):
-    """Base exception for file operations"""
-
-    pass
 
 
 class JSONFileOperations:
@@ -56,18 +57,43 @@ class JSONFileOperations:
             if default is not None:
                 logger.debug(f"File not found, using default: {file_path}")
                 return default
-            raise FileOperationError(f"File not found: {file_path}")
+            raise FileOperationError(
+                operation="read",
+                file_path=str(file_path),
+                details="File does not exist",
+            )
 
         try:
             with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            raise FileOperationError(f"Invalid JSON in {file_path}: {e}") from e
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(file_path),
+                details=f"Invalid JSON: {e}",
+                cause=e,
+            ) from e
+        except (OSError, IOError) as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(file_path),
+                details=str(e),
+                cause=e,
+            ) from e
         except Exception as e:
-            raise FileOperationError(f"Error reading {file_path}: {e}") from e
+            raise SystemError(
+                message=f"Unexpected error reading {file_path}",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={"file_path": str(file_path), "operation": "read"},
+                cause=e,
+            ) from e
 
         if validator and not validator(data):
-            raise FileOperationError(f"Validation failed for {file_path}")
+            raise FileOperationError(
+                operation="validate",
+                file_path=str(file_path),
+                details="Validation function returned False",
+            )
 
         logger.debug(f"Loaded JSON from {file_path}")
         return data
@@ -118,8 +144,24 @@ class JSONFileOperations:
 
             logger.debug(f"Saved JSON to {file_path}")
 
+        except (OSError, IOError) as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=str(file_path),
+                details=str(e),
+                cause=e,
+            ) from e
         except Exception as e:
-            raise FileOperationError(f"Error saving to {file_path}: {e}") from e
+            raise SystemError(
+                message=f"Unexpected error saving to {file_path}",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={
+                    "file_path": str(file_path),
+                    "operation": "write",
+                    "atomic": atomic,
+                },
+                cause=e,
+            ) from e
 
     @staticmethod
     def load_json_safe(file_path: Path, default: dict[str, Any]) -> dict[str, Any]:
@@ -187,22 +229,79 @@ def ensure_directory(path: Path) -> None:
 
 
 def backup_file(file_path: Path) -> Path:
-    """Create backup of a file"""
-    if not file_path.exists():
-        raise FileNotFoundError(f"File not found: {file_path}")
+    """Create backup of a file
 
-    backup_path = file_path.with_suffix(f"{file_path.suffix}.backup")
-    shutil.copy2(file_path, backup_path)
-    return backup_path
+    Args:
+        file_path: Path to file to backup
+
+    Returns:
+        Path to backup file
+
+    Raises:
+        SDDFileNotFoundError: If source file doesn't exist
+        FileOperationError: If backup operation fails
+    """
+    if not file_path.exists():
+        raise SDDFileNotFoundError(file_path=str(file_path), file_type="backup source")
+
+    try:
+        backup_path = file_path.with_suffix(f"{file_path.suffix}.backup")
+        shutil.copy2(file_path, backup_path)
+        return backup_path
+    except (OSError, IOError) as e:
+        raise FileOperationError(
+            operation="backup",
+            file_path=str(file_path),
+            details=str(e),
+            cause=e,
+        ) from e
 
 
 def read_file(file_path: Path) -> str:
-    """Read file contents"""
-    with open(file_path) as f:
-        return f.read()
+    """Read file contents
+
+    Args:
+        file_path: Path to file to read
+
+    Returns:
+        File contents as string
+
+    Raises:
+        SDDFileNotFoundError: If file doesn't exist
+        FileOperationError: If read operation fails
+    """
+    if not file_path.exists():
+        raise SDDFileNotFoundError(file_path=str(file_path), file_type="text file")
+
+    try:
+        with open(file_path) as f:
+            return f.read()
+    except (OSError, IOError) as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(file_path),
+            details=str(e),
+            cause=e,
+        ) from e
 
 
 def write_file(file_path: Path, content: str) -> None:
-    """Write content to file"""
-    with open(file_path, "w") as f:
-        f.write(content)
+    """Write content to file
+
+    Args:
+        file_path: Path to file to write
+        content: Content to write
+
+    Raises:
+        FileOperationError: If write operation fails
+    """
+    try:
+        with open(file_path, "w") as f:
+            f.write(content)
+    except (OSError, IOError) as e:
+        raise FileOperationError(
+            operation="write",
+            file_path=str(file_path),
+            details=str(e),
+            cause=e,
+        ) from e

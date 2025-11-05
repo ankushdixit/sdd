@@ -11,6 +11,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.exceptions import (
+    ConfigurationError,
+    ConfigValidationError,
+    ErrorCode,
+    FileNotFoundError as SDDFileNotFoundError,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -170,9 +177,12 @@ class ConfigManager:
             config_path: Path to config.json file
             force_reload: Force reload even if already cached
 
+        Raises:
+            ConfigurationError: If JSON is invalid or file cannot be read
+            ConfigValidationError: If configuration structure is invalid
+
         Note:
-            If the config file doesn't exist or is invalid, default configuration
-            is used and errors are logged.
+            If the config file doesn't exist, default configuration is used.
         """
         # Skip if already loaded and not forcing reload
         if not force_reload and self._config_path == config_path:
@@ -195,26 +205,53 @@ class ConfigManager:
             git_workflow_data = data.get("git_workflow", {})
             curation_data = data.get("curation", {})
 
+            # Filter curation_data to only include valid CurationConfig fields
+            # This maintains backward compatibility with old configs
+            valid_curation_fields = {"auto_curate", "frequency", "dry_run", "similarity_threshold"}
+            filtered_curation_data = {
+                k: v for k, v in curation_data.items() if k in valid_curation_fields
+            } if curation_data else {}
+
             # Create config with parsed data
             self._config = SDDConfig(
                 quality_gates=quality_gates_data,
                 git_workflow=GitWorkflowConfig(**git_workflow_data)
                 if git_workflow_data
                 else GitWorkflowConfig(),
-                curation=CurationConfig(**curation_data) if curation_data else CurationConfig(),
+                curation=CurationConfig(**filtered_curation_data) if filtered_curation_data else CurationConfig(),
             )
 
             logger.info("Loaded configuration from %s", config_path)
 
         except json.JSONDecodeError as e:
-            logger.error("Invalid JSON in %s: %s", config_path, e)
-            self._config = SDDConfig()
+            raise ConfigurationError(
+                message=f"Invalid JSON in configuration file: {config_path}",
+                code=ErrorCode.INVALID_JSON,
+                context={"config_path": str(config_path), "error": str(e)},
+                remediation="Check the JSON syntax in your config file. Ensure all quotes, brackets, and commas are properly placed.",
+                cause=e,
+            )
         except TypeError as e:
-            logger.error("Invalid config structure in %s: %s", config_path, e)
-            self._config = SDDConfig()
-        except Exception as e:
-            logger.error("Error loading config from %s: %s", config_path, e)
-            self._config = SDDConfig()
+            raise ConfigValidationError(
+                config_path=str(config_path),
+                errors=[f"Invalid configuration structure: {str(e)}"],
+            )
+        except PermissionError as e:
+            raise ConfigurationError(
+                message=f"Permission denied reading configuration file: {config_path}",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={"config_path": str(config_path)},
+                remediation="Check file permissions and ensure you have read access to the config file.",
+                cause=e,
+            )
+        except OSError as e:
+            raise ConfigurationError(
+                message=f"Error reading configuration file: {config_path}",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={"config_path": str(config_path), "error": str(e)},
+                remediation="Ensure the config file is not corrupted and the file system is accessible.",
+                cause=e,
+            )
 
     def _parse_quality_gates(self, data: dict) -> QualityGatesConfig:
         """Parse quality gates configuration with nested structures.
@@ -224,6 +261,9 @@ class ConfigManager:
 
         Returns:
             Validated QualityGatesConfig with defaults for missing values
+
+        Raises:
+            ConfigValidationError: If quality_gates structure is invalid
         """
         try:
             # Parse nested configs
@@ -251,8 +291,12 @@ class ConfigManager:
                 else SpecCompletenessConfig(),
             )
         except TypeError as e:
-            logger.warning("Invalid quality_gates structure, using defaults: %s", e)
-            return QualityGatesConfig()
+            # Collect validation errors
+            errors = [f"Invalid quality_gates structure: {str(e)}"]
+            raise ConfigValidationError(
+                config_path=str(self._config_path) if self._config_path else "unknown",
+                errors=errors,
+            )
 
     @property
     def quality_gates(self) -> QualityGatesConfig:

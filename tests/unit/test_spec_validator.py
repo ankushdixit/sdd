@@ -5,11 +5,13 @@ Test Suite for Phase 5.7.5: Spec File Validation System
 Tests the spec_validator module and its integration with briefing_generator and quality_gates.
 """
 
+import pytest
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
+from sdd.core.exceptions import SpecValidationError, FileNotFoundError, FileOperationError
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_validator import (
     check_acceptance_criteria,
@@ -236,9 +238,8 @@ How to test this.
 
         self.create_spec_file(work_item_id, spec_content)
 
-        is_valid, errors = validate_spec_file(work_item_id, "feature")
-        assert is_valid
-        assert len(errors) == 0
+        # Should not raise any exception for valid spec
+        validate_spec_file(work_item_id, "feature")
 
         print("✓ Test 9: validate_spec_file passes for complete feature spec")
 
@@ -262,12 +263,29 @@ Steps here.
 
         self.create_spec_file(work_item_id, spec_content)
 
-        is_valid, errors = validate_spec_file(work_item_id, "deployment")
-        assert not is_valid
-        assert len(errors) > 0
+        # Should raise SpecValidationError with multiple validation errors
+        with pytest.raises(SpecValidationError) as exc_info:
+            validate_spec_file(work_item_id, "deployment")
+
+        error = exc_info.value
+        validation_errors = error.context.get("validation_errors", [])
+        assert len(validation_errors) > 0
         # Should be missing: Post-Deployment Steps, Rollback Procedure, Smoke Tests, Acceptance Criteria
 
         print("✓ Test 10: validate_spec_file fails for incomplete deployment spec")
+
+    def test_validate_spec_file_not_found(self):
+        """Test: validate_spec_file raises FileNotFoundError for missing spec."""
+        work_item_id = "nonexistent_feature"
+
+        # Should raise FileNotFoundError
+        with pytest.raises(FileNotFoundError) as exc_info:
+            validate_spec_file(work_item_id, "feature")
+
+        error = exc_info.value
+        assert "nonexistent_feature" in str(error.context.get("file_path", ""))
+
+        print("✓ Test 11: validate_spec_file raises FileNotFoundError for missing spec")
 
     def test_quality_gates_validate_spec_completeness(self):
         """Test: QualityGates.validate_spec_completeness integration."""
@@ -306,7 +324,7 @@ Strategy here.
         assert passed
         assert results["status"] == "passed"
 
-        print("✓ Test 11 (BONUS): QualityGates.validate_spec_completeness integration works")
+        print("✓ Test 12 (BONUS): QualityGates.validate_spec_completeness integration works")
 
 
 def run_all_tests():
@@ -324,6 +342,7 @@ def run_all_tests():
         test_instance.test_check_deployment_subsections_valid,
         test_instance.test_validate_spec_file_valid_feature,
         test_instance.test_validate_spec_file_incomplete_deployment,
+        test_instance.test_validate_spec_file_not_found,
         test_instance.test_quality_gates_validate_spec_completeness,
     ]
 

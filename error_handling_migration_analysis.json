@@ -1,0 +1,1680 @@
+{
+  "summary": {
+    "total_files_analyzed": 33,
+    "files_needing_migration": 33,
+    "total_return_tuples": 26,
+    "total_sys_exits": 27,
+    "total_print_errors": 342,
+    "total_broad_exceptions": 75,
+    "total_builtin_exceptions": 14
+  },
+  "migration_groups": {
+    "simple": [
+      "/Users/ankushdixit/Projects/sdd/src/sdd/core/file_ops.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/core/command_runner.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/core/types.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/project/stack.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/git_context.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/core/config.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/tree_generator.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/formatter.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/documentation_loader.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/learning_loader.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/stack_detector.py"
+    ],
+    "medium": [
+      "/Users/ankushdixit/Projects/sdd/src/sdd/deployment/executor.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/spec_parser.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/spec_validator.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/project/tree.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/validate.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/cli.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/quality/env_validator.py"
+    ],
+    "complex": [
+      "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/manager.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/complete.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/learning/curator.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/quality/gates.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/project/init.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/testing/integration_runner.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/delete.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/git/integration.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/testing/performance.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/quality/api_validator.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/core/config_validator.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/project/sync_plugin.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/session/status.py",
+      "/Users/ankushdixit/Projects/sdd/src/sdd/visualization/dependency_graph.py"
+    ]
+  },
+  "files": {
+    "/Users/ankushdixit/Projects/sdd/src/sdd/cli.py": {
+      "complexity_score": 9,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 1,
+          "locations": [
+            342
+          ]
+        },
+        "print_errors": {
+          "count": 5,
+          "locations": [
+            143,
+            144,
+            268,
+            271,
+            277
+          ]
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            276
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/visualization/dependency_graph.py": {
+      "complexity_score": 16,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 12,
+          "locations": [
+            564,
+            577,
+            578,
+            579,
+            580,
+            581,
+            583,
+            593,
+            608,
+            616,
+            618,
+            625
+          ]
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            193,
+            624
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/core/config.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            215
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/core/config_validator.py": {
+      "complexity_score": 17,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 1,
+          "locations": [
+            {
+              "function": "validate_config",
+              "line": 9,
+              "returns": 8
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 3,
+          "locations": [
+            98,
+            120,
+            128
+          ]
+        },
+        "print_errors": {
+          "count": 7,
+          "locations": [
+            109,
+            110,
+            119,
+            122,
+            123,
+            125,
+            126
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 1,
+          "locations": [
+            {
+              "line": 81,
+              "exception": "ValueError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/core/file_ops.py": {
+      "complexity_score": 4,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            66,
+            121
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/core/command_runner.py": {
+      "complexity_score": 4,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            195
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 1,
+          "locations": [
+            {
+              "line": 211,
+              "exception": "RuntimeError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/core/types.py": {
+      "complexity_score": 4,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 4,
+          "locations": [
+            {
+              "line": 87,
+              "exception": "TypeError"
+            },
+            {
+              "line": 95,
+              "exception": "TypeError"
+            },
+            {
+              "line": 101,
+              "exception": "TypeError"
+            },
+            {
+              "line": 107,
+              "exception": "TypeError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/quality/api_validator.py": {
+      "complexity_score": 19,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 3,
+          "locations": [
+            292,
+            303,
+            311
+          ]
+        },
+        "print_errors": {
+          "count": 9,
+          "locations": [
+            47,
+            89,
+            101,
+            106,
+            111,
+            114,
+            160,
+            162,
+            302
+          ]
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            100,
+            134
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/quality/gates.py": {
+      "complexity_score": 55,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 10,
+          "locations": [
+            {
+              "function": "run_tests",
+              "line": 63,
+              "returns": 6
+            },
+            {
+              "function": "run_security_scan",
+              "line": 166,
+              "returns": 2
+            },
+            {
+              "function": "run_linting",
+              "line": 291,
+              "returns": 7
+            },
+            {
+              "function": "run_formatting",
+              "line": 336,
+              "returns": 7
+            },
+            {
+              "function": "validate_documentation",
+              "line": 384,
+              "returns": 2
+            },
+            {
+              "function": "validate_spec_completeness",
+              "line": 470,
+              "returns": 5
+            },
+            {
+              "function": "verify_context7_libraries",
+              "line": 518,
+              "returns": 3
+            },
+            {
+              "function": "run_integration_tests",
+              "line": 706,
+              "returns": 7
+            },
+            {
+              "function": "validate_integration_environment",
+              "line": 807,
+              "returns": 2
+            },
+            {
+              "function": "validate_integration_documentation",
+              "line": 857,
+              "returns": 3
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 7,
+          "locations": [
+            765,
+            768,
+            779,
+            794,
+            1262,
+            1264,
+            1269
+          ]
+        },
+        "broad_exceptions": {
+          "count": 9,
+          "locations": [
+            59,
+            229,
+            231,
+            585,
+            909,
+            934,
+            954,
+            977,
+            1222
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/quality/env_validator.py": {
+      "complexity_score": 6,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 2,
+          "locations": [
+            239,
+            251
+          ]
+        },
+        "print_errors": {
+          "count": 2,
+          "locations": [
+            246,
+            249
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/learning/curator.py": {
+      "complexity_score": 59,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 1,
+          "locations": [
+            1246
+          ]
+        },
+        "print_errors": {
+          "count": 41,
+          "locations": [
+            79,
+            84,
+            89,
+            93,
+            104,
+            513,
+            828,
+            833,
+            837,
+            843,
+            889,
+            890,
+            892,
+            922,
+            925,
+            926,
+            929,
+            930,
+            933,
+            935,
+            936,
+            988,
+            992,
+            994,
+            996,
+            998,
+            999,
+            1010,
+            1011,
+            1015,
+            1017,
+            1020,
+            1114,
+            1121,
+            1128,
+            1136,
+            1163,
+            1169,
+            1177,
+            1180,
+            1244
+          ]
+        },
+        "broad_exceptions": {
+          "count": 8,
+          "locations": [
+            222,
+            477,
+            488,
+            527,
+            615,
+            635,
+            685,
+            773
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/project/tree.py": {
+      "complexity_score": 10,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 8,
+          "locations": [
+            176,
+            181,
+            184,
+            242,
+            243,
+            244,
+            253,
+            257
+          ]
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            77
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/project/sync_plugin.py": {
+      "complexity_score": 17,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 1,
+          "locations": [
+            288
+          ]
+        },
+        "print_errors": {
+          "count": 14,
+          "locations": [
+            68,
+            74,
+            79,
+            85,
+            111,
+            126,
+            132,
+            145,
+            153,
+            173,
+            187,
+            231,
+            233,
+            248
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 1,
+          "locations": [
+            {
+              "line": 104,
+              "exception": "ValueError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/project/stack.py": {
+      "complexity_score": 4,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 4,
+          "locations": [
+            280,
+            285,
+            338,
+            342
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/project/init.py": {
+      "complexity_score": 52,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 34,
+          "locations": [
+            45,
+            59,
+            79,
+            82,
+            130,
+            155,
+            186,
+            210,
+            253,
+            255,
+            269,
+            271,
+            286,
+            289,
+            302,
+            306,
+            308,
+            324,
+            326,
+            335,
+            337,
+            345,
+            347,
+            387,
+            527,
+            529,
+            531,
+            539,
+            541,
+            543,
+            619,
+            671,
+            682,
+            696
+          ]
+        },
+        "broad_exceptions": {
+          "count": 9,
+          "locations": [
+            44,
+            78,
+            270,
+            288,
+            305,
+            530,
+            542,
+            640,
+            670
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/testing/integration_runner.py": {
+      "complexity_score": 49,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 3,
+          "locations": [
+            {
+              "function": "setup_environment",
+              "line": 123,
+              "returns": 7
+            },
+            {
+              "function": "run_tests",
+              "line": 230,
+              "returns": 2
+            },
+            {
+              "function": "teardown_environment",
+              "line": 348,
+              "returns": 4
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 5,
+          "locations": [
+            405,
+            418,
+            427,
+            441,
+            446
+          ]
+        },
+        "print_errors": {
+          "count": 11,
+          "locations": [
+            149,
+            159,
+            213,
+            220,
+            222,
+            225,
+            242,
+            417,
+            426,
+            439,
+            444
+          ]
+        },
+        "broad_exceptions": {
+          "count": 8,
+          "locations": [
+            50,
+            150,
+            201,
+            224,
+            299,
+            334,
+            376,
+            443
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 3,
+          "locations": [
+            {
+              "line": 42,
+              "exception": "ValueError"
+            },
+            {
+              "line": 49,
+              "exception": "ValueError"
+            },
+            {
+              "line": 51,
+              "exception": "ValueError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/testing/performance.py": {
+      "complexity_score": 20,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 3,
+          "locations": [
+            374,
+            385,
+            393
+          ]
+        },
+        "print_errors": {
+          "count": 8,
+          "locations": [
+            239,
+            246,
+            253,
+            265,
+            283,
+            298,
+            323,
+            384
+          ]
+        },
+        "broad_exceptions": {
+          "count": 3,
+          "locations": [
+            110,
+            167,
+            223
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/deployment/executor.py": {
+      "complexity_score": 14,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 1,
+          "locations": [
+            {
+              "function": "run_smoke_tests",
+              "line": 133,
+              "returns": 2
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 4,
+          "locations": [
+            281,
+            293,
+            300,
+            307
+          ]
+        },
+        "print_errors": {
+          "count": 3,
+          "locations": [
+            292,
+            298,
+            305
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/delete.py": {
+      "complexity_score": 26,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 20,
+          "locations": [
+            62,
+            70,
+            78,
+            81,
+            83,
+            92,
+            94,
+            95,
+            96,
+            100,
+            105,
+            114,
+            170,
+            173,
+            185,
+            188,
+            191,
+            195,
+            197,
+            227
+          ]
+        },
+        "broad_exceptions": {
+          "count": 3,
+          "locations": [
+            68,
+            171,
+            186
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/spec_parser.py": {
+      "complexity_score": 13,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 2,
+          "locations": [
+            776,
+            785
+          ]
+        },
+        "print_errors": {
+          "count": 1,
+          "locations": [
+            784
+          ]
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            762,
+            783
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 4,
+          "locations": [
+            {
+              "line": 722,
+              "exception": "ValueError"
+            },
+            {
+              "line": 728,
+              "exception": "ValueError"
+            },
+            {
+              "line": 748,
+              "exception": "ValueError"
+            },
+            {
+              "line": 763,
+              "exception": "ValueError"
+            }
+          ]
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/spec_validator.py": {
+      "complexity_score": 11,
+      "needs_migration": true,
+      "has_tests": true,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 1,
+          "locations": [
+            {
+              "function": "validate_spec_file",
+              "line": 326,
+              "returns": 3
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 2,
+          "locations": [
+            453,
+            462
+          ]
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            355,
+            371
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/work_items/manager.py": {
+      "complexity_score": 85,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 2,
+          "locations": [
+            {
+              "function": "validate_integration_test",
+              "line": 391,
+              "returns": 3
+            },
+            {
+              "function": "validate_deployment",
+              "line": 455,
+              "returns": 3
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 79,
+          "locations": [
+            43,
+            62,
+            73,
+            81,
+            89,
+            99,
+            106,
+            113,
+            116,
+            117,
+            118,
+            119,
+            121,
+            124,
+            127,
+            142,
+            143,
+            149,
+            162,
+            171,
+            178,
+            185,
+            188,
+            189,
+            190,
+            191,
+            193,
+            196,
+            199,
+            233,
+            243,
+            261,
+            275,
+            652,
+            689,
+            711,
+            743,
+            746,
+            753,
+            758,
+            759,
+            760,
+            761,
+            771,
+            773,
+            779,
+            785,
+            791,
+            793,
+            807,
+            827,
+            829,
+            844,
+            854,
+            862,
+            881,
+            921,
+            937,
+            948,
+            953,
+            955,
+            956,
+            957,
+            992,
+            1037,
+            1065,
+            1066,
+            1067,
+            1068,
+            1077,
+            1084,
+            1095,
+            1098,
+            1115,
+            1130,
+            1199,
+            1200,
+            1201,
+            1207
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/git/integration.py": {
+      "complexity_score": 26,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 8,
+          "locations": [
+            {
+              "function": "check_git_status",
+              "line": 41,
+              "returns": 4
+            },
+            {
+              "function": "checkout_branch",
+              "line": 74,
+              "returns": 2
+            },
+            {
+              "function": "commit_changes",
+              "line": 83,
+              "returns": 3
+            },
+            {
+              "function": "push_branch",
+              "line": 101,
+              "returns": 3
+            },
+            {
+              "function": "delete_remote_branch",
+              "line": 113,
+              "returns": 3
+            },
+            {
+              "function": "push_main_to_remote",
+              "line": 125,
+              "returns": 2
+            },
+            {
+              "function": "create_pull_request",
+              "line": 134,
+              "returns": 3
+            },
+            {
+              "function": "merge_to_parent",
+              "line": 189,
+              "returns": 3
+            }
+          ]
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 2,
+          "locations": [
+            390,
+            393
+          ]
+        },
+        "broad_exceptions": {
+          "count": 0,
+          "locations": []
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/validate.py": {
+      "complexity_score": 10,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 6,
+          "locations": [
+            275,
+            281,
+            284,
+            291,
+            295,
+            304
+          ]
+        },
+        "broad_exceptions": {
+          "count": 2,
+          "locations": [
+            62,
+            177
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/complete.py": {
+      "complexity_score": 63,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 41,
+          "locations": [
+            139,
+            141,
+            143,
+            145,
+            164,
+            166,
+            168,
+            170,
+            192,
+            193,
+            194,
+            204,
+            208,
+            244,
+            251,
+            266,
+            269,
+            274,
+            276,
+            649,
+            655,
+            658,
+            697,
+            718,
+            736,
+            763,
+            773,
+            784,
+            785,
+            801,
+            824,
+            826,
+            829,
+            833,
+            839,
+            842,
+            853,
+            860,
+            862,
+            927,
+            929
+          ]
+        },
+        "broad_exceptions": {
+          "count": 11,
+          "locations": [
+            144,
+            169,
+            207,
+            250,
+            275,
+            324,
+            370,
+            399,
+            454,
+            696,
+            832
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing.py": {
+      "complexity_score": 14,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 12,
+          "locations": [
+            71,
+            86,
+            95,
+            108,
+            112,
+            136,
+            139,
+            193,
+            195,
+            197,
+            199,
+            243
+          ]
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            198
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/status.py": {
+      "complexity_score": 17,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 15,
+          "locations": [
+            35,
+            43,
+            44,
+            45,
+            49,
+            59,
+            69,
+            71,
+            73,
+            83,
+            84,
+            110,
+            111,
+            136,
+            143
+          ]
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            75
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/tree_generator.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            36
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/git_context.py": {
+      "complexity_score": 3,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 1,
+          "locations": [
+            177
+          ]
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            40
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/formatter.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            312
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/documentation_loader.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            42
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/learning_loader.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            179
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    },
+    "/Users/ankushdixit/Projects/sdd/src/sdd/session/briefing/stack_detector.py": {
+      "complexity_score": 2,
+      "needs_migration": true,
+      "has_tests": false,
+      "uses_new_exceptions": false,
+      "patterns": {
+        "return_tuples": {
+          "count": 0,
+          "locations": []
+        },
+        "sys_exits": {
+          "count": 0,
+          "locations": []
+        },
+        "print_errors": {
+          "count": 0,
+          "locations": []
+        },
+        "broad_exceptions": {
+          "count": 1,
+          "locations": [
+            35
+          ]
+        },
+        "builtin_exceptions": {
+          "count": 0,
+          "locations": []
+        }
+      }
+    }
+  }
+}

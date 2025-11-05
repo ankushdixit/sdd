@@ -8,11 +8,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from sdd.core.command_runner import (
-    CommandExecutionError,
     CommandResult,
     CommandRunner,
     run_command,
 )
+from sdd.core.exceptions import CommandExecutionError, TimeoutError
 
 
 class TestCommandResult:
@@ -78,25 +78,32 @@ class TestCommandResult:
 class TestCommandExecutionError:
     """Tests for CommandExecutionError exception."""
 
-    def test_error_stores_message_and_result(self):
-        """Test error stores both message and result."""
-        result = CommandResult(
+    def test_error_stores_command_details(self):
+        """Test error stores command execution details."""
+        error = CommandExecutionError(
+            command="false",
             returncode=1,
-            stdout="",
             stderr="error",
-            command=["false"],
-            duration_seconds=0.1,
+            stdout="",
         )
-        error = CommandExecutionError("Command failed", result=result)
 
-        assert str(error) == "Command failed"
-        assert error.result == result
+        assert "Command execution failed" in str(error)
+        assert error.context["command"] == "false"
+        assert error.context["returncode"] == 1
+        assert error.context["stderr"] == "error"
 
-    def test_error_can_be_created_without_result(self):
-        """Test error can be created without result."""
-        error = CommandExecutionError("Command failed")
-        assert str(error) == "Command failed"
-        assert error.result is None
+    def test_error_includes_context(self):
+        """Test error includes structured context."""
+        error = CommandExecutionError(
+            command="pytest tests/",
+            returncode=1,
+            stderr="FAILED",
+            stdout="test output",
+        )
+        assert error.context["command"] == "pytest tests/"
+        assert error.context["returncode"] == 1
+        assert error.context["stderr"] == "FAILED"
+        assert error.context["stdout"] == "test output"
 
 
 class TestCommandRunner:
@@ -206,8 +213,9 @@ class TestCommandRunner:
         with pytest.raises(CommandExecutionError) as exc_info:
             runner.run(["false"], check=True)
 
-        assert "Command failed with exit code 1" in str(exc_info.value)
-        assert exc_info.value.result.returncode == 1
+        assert "Command execution failed" in str(exc_info.value)
+        assert exc_info.value.context["returncode"] == 1
+        assert exc_info.value.context["command"] == "false"
 
     @patch("subprocess.run")
     def test_run_command_timeout_expired(self, mock_run):
@@ -231,11 +239,12 @@ class TestCommandRunner:
         )
 
         runner = CommandRunner()
-        with pytest.raises(CommandExecutionError) as exc_info:
+        with pytest.raises(TimeoutError) as exc_info:
             runner.run(["sleep", "10"], timeout=1, check=True)
 
-        assert "Command timed out" in str(exc_info.value)
-        assert exc_info.value.result.timed_out is True
+        assert "timed out" in str(exc_info.value)
+        assert exc_info.value.context["operation"] == "sleep 10"
+        assert exc_info.value.context["timeout_seconds"] == 1
 
     @patch("subprocess.run")
     @patch("time.sleep")
@@ -291,7 +300,10 @@ class TestCommandRunner:
         with pytest.raises(CommandExecutionError) as exc_info:
             runner.run(["test"], check=True)
 
-        assert "Unexpected error" in str(exc_info.value)
+        assert "Command execution failed" in str(exc_info.value)
+        assert exc_info.value.context["command"] == "test"
+        assert exc_info.value.context["returncode"] == -1
+        assert "Unexpected error" in exc_info.value.context["stderr"]
 
     @patch("subprocess.run")
     def test_run_json_success(self, mock_run):

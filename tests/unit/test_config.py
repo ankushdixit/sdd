@@ -18,6 +18,7 @@ from sdd.core.config import (
     SpecCompletenessConfig,
     get_config_manager,
 )
+from sdd.core.exceptions import ConfigurationError, ConfigValidationError
 
 
 @pytest.fixture
@@ -153,20 +154,25 @@ class TestConfigManager:
             f.write("{invalid json}")
 
         manager = ConfigManager()
-        manager.load_config(config_file)
 
-        # Should use defaults
-        config = manager.get_config()
-        assert isinstance(config, SDDConfig)
-        assert config.quality_gates.test_execution.coverage_threshold == 80
+        # Should raise ConfigurationError
+        with pytest.raises(ConfigurationError) as exc_info:
+            manager.load_config(config_file)
+
+        # Check error details
+        assert "Invalid JSON" in str(exc_info.value)
+        assert str(config_file) in exc_info.value.context["config_path"]
+        assert exc_info.value.remediation is not None
+        assert "JSON syntax" in exc_info.value.remediation
 
     def test_load_invalid_structure(self, config_file):
         """Test loading with invalid config structure."""
-        # Write config with invalid structure
+        # Write config with structure that will cause TypeError (unknown kwargs)
         invalid_data = {
             "quality_gates": {
                 "test_execution": {
-                    "coverage_threshold": "not_a_number",  # Invalid type
+                    "unknown_field": "value",  # Field doesn't exist in dataclass
+                    "another_bad_field": 123,
                 }
             }
         }
@@ -174,11 +180,16 @@ class TestConfigManager:
             json.dump(invalid_data, f)
 
         manager = ConfigManager()
-        manager.load_config(config_file)
 
-        # Should use defaults
-        config = manager.get_config()
-        assert isinstance(config, SDDConfig)
+        # Should raise ConfigValidationError when dataclass rejects unknown kwargs
+        with pytest.raises(ConfigValidationError) as exc_info:
+            manager.load_config(config_file)
+
+        # Check error details
+        assert str(config_file) in exc_info.value.context["config_path"]
+        assert "validation_errors" in exc_info.value.context
+        assert len(exc_info.value.context["validation_errors"]) > 0
+        assert exc_info.value.remediation is not None
 
     def test_caching_behavior(self, config_file, valid_config_data):
         """Test that config is cached and not re-read."""
@@ -363,12 +374,65 @@ class TestConfigManager:
         monkeypatch.setattr("builtins.open", mock_open)
 
         manager = ConfigManager()
-        manager.load_config(config_file)
 
-        # Should use defaults
-        config = manager.get_config()
-        assert isinstance(config, SDDConfig)
-        assert config.quality_gates.test_execution.coverage_threshold == 80
+        # Should raise ConfigurationError
+        with pytest.raises(ConfigurationError) as exc_info:
+            manager.load_config(config_file)
+
+        # Check error details
+        assert "Permission denied" in str(exc_info.value)
+        assert str(config_file) in exc_info.value.context["config_path"]
+        assert exc_info.value.remediation is not None
+        assert "permissions" in exc_info.value.remediation.lower()
+
+    def test_invalid_quality_gates_structure(self, config_file):
+        """Test loading with invalid quality_gates nested structure."""
+        # Create config with completely invalid quality_gates structure (unknown field)
+        invalid_data = {
+            "quality_gates": {
+                "test_execution": {
+                    "invalid_unknown_field": "value",  # Unknown field
+                }
+            }
+        }
+        with open(config_file, "w") as f:
+            json.dump(invalid_data, f)
+
+        manager = ConfigManager()
+
+        # Should raise ConfigValidationError from _parse_quality_gates
+        with pytest.raises(ConfigValidationError) as exc_info:
+            manager.load_config(config_file)
+
+        # Verify error context
+        error = exc_info.value
+        assert "validation_errors" in error.context
+        assert error.context["error_count"] > 0
+        assert str(config_file) in error.context["config_path"]
+        assert "configuration.md" in error.remediation
+
+    def test_os_error_during_load(self, config_file, monkeypatch):
+        """Test handling of OSError during config loading."""
+        # Create file
+        with open(config_file, "w") as f:
+            json.dump({}, f)
+
+        # Mock open to raise OSError
+        def mock_open(*args, **kwargs):
+            raise OSError("Disk error")
+
+        monkeypatch.setattr("builtins.open", mock_open)
+
+        manager = ConfigManager()
+
+        # Should raise ConfigurationError
+        with pytest.raises(ConfigurationError) as exc_info:
+            manager.load_config(config_file)
+
+        # Check error details
+        assert "Error reading" in str(exc_info.value)
+        assert str(config_file) in exc_info.value.context["config_path"]
+        assert exc_info.value.remediation is not None
 
 
 class TestDataclassDefaults:

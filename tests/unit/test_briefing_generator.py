@@ -23,6 +23,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from sdd.core.exceptions import GitError, SystemError, ErrorCode, SpecValidationError
 from sdd.session import briefing as briefing_generator
 
 
@@ -541,6 +542,28 @@ class TestLoadCurrentTree:
         # Assert
         assert result == "Tree not yet generated"
 
+    def test_load_current_tree_raises_file_operation_error_on_read_failure(
+        self, temp_session_dir
+    ):
+        """Test that load_current_tree raises FileOperationError on read failure."""
+        from sdd.core.exceptions import FileOperationError
+        from unittest.mock import patch
+
+        # Arrange
+        tree_file = Path(".session/tracking/tree.txt")
+        tree_file.parent.mkdir(parents=True, exist_ok=True)
+        tree_file.write_text("test content")
+
+        # Act & Assert
+        with patch("pathlib.Path.read_text", side_effect=OSError("Permission denied")):
+            with pytest.raises(FileOperationError) as exc_info:
+                briefing_generator.load_current_tree()
+
+            # Verify error details
+            assert exc_info.value.context["operation"] == "read"
+            assert "tree.txt" in exc_info.value.context["file_path"]
+            assert "Permission denied" in exc_info.value.context["details"]
+
 
 class TestLoadWorkItemSpec:
     """Tests for load_work_item_spec function."""
@@ -714,16 +737,40 @@ class TestCheckGitStatus:
         assert result["status"] == "clean"
         assert result["branch"] == "main"
 
-    def test_check_git_status_handles_error(self):
-        """Test that check_git_status handles errors gracefully."""
-        # Arrange - git_integration.py doesn't exist
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_check_git_status_raises_git_error_on_exception(self, mock_git_workflow_class):
+        """Test that check_git_status raises GitError when git workflow fails."""
+        # Arrange - simulate git error
+        mock_workflow = Mock()
+        mock_workflow.check_git_status.side_effect = Exception("Not a git repository")
+        mock_git_workflow_class.return_value = mock_workflow
 
-        # Act
-        result = briefing_generator.check_git_status()
+        # Act & Assert
+        with pytest.raises(GitError) as exc_info:
+            briefing_generator.check_git_status()
 
-        # Assert
-        assert "clean" in result
-        assert "status" in result
+        assert exc_info.value.code.name == "GIT_COMMAND_FAILED"
+        assert "Failed to check git status" in exc_info.value.message
+
+    @patch("sdd.git.integration.GitWorkflow")
+    def test_check_git_status_reraises_git_error(self, mock_git_workflow_class):
+        """Test that check_git_status re-raises GitError as-is."""
+        # Arrange - simulate GitError from workflow
+        mock_workflow = Mock()
+        original_error = GitError(
+            message="Not a git repository",
+            code=ErrorCode.NOT_A_GIT_REPO
+        )
+        mock_workflow.check_git_status.side_effect = original_error
+        mock_git_workflow_class.return_value = mock_workflow
+
+        # Act & Assert
+        with pytest.raises(GitError) as exc_info:
+            briefing_generator.check_git_status()
+
+        # Should be the same error (not wrapped)
+        assert exc_info.value.code.name == "NOT_A_GIT_REPO"
+        assert exc_info.value is original_error
 
 
 class TestCheckCommandExists:
@@ -848,11 +895,14 @@ class TestGenerateDeploymentBriefing:
 class TestDetermineGitBranchFinalStatus:
     """Tests for determine_git_branch_final_status function."""
 
-    @patch("subprocess.run")
-    def test_determine_git_branch_final_status_returns_merged_when_merged(self, mock_run):
+    @patch("sdd.session.briefing.git_context.CommandRunner")
+    def test_determine_git_branch_final_status_returns_merged_when_merged(self, mock_runner_class):
         """Test that determine_git_branch_final_status returns 'merged' when branch is merged."""
         # Arrange
-        mock_run.return_value = Mock(returncode=0, stdout="  session-001-test")
+        mock_runner = Mock()
+        mock_result = Mock(success=True, stdout="  session-001-test")
+        mock_runner.run.return_value = mock_result
+        mock_runner_class.return_value = mock_runner
         git_info = {"parent_branch": "main"}
 
         # Act
@@ -861,18 +911,22 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "merged"
 
-    @patch("subprocess.run")
-    def test_determine_git_branch_final_status_returns_pr_created_when_open_pr(self, mock_run):
+    @patch("sdd.session.briefing.git_context.CommandRunner")
+    def test_determine_git_branch_final_status_returns_pr_created_when_open_pr(self, mock_runner_class):
         """Test that determine_git_branch_final_status returns 'pr_created' when PR is open."""
-
         # Arrange
-        def run_side_effect(cmd, *args, **kwargs):
-            if "branch" in cmd:
-                return Mock(returncode=1, stdout="")
-            elif "gh" in cmd:
-                return Mock(returncode=0, stdout='[{"number": 123, "state": "OPEN"}]')
+        mock_runner = Mock()
 
-        mock_run.side_effect = run_side_effect
+        def run_side_effect(cmd, *args, **kwargs):
+            if "branch" in cmd and "--merged" in cmd:
+                return Mock(success=False, stdout="")
+            elif "gh" in cmd:
+                return Mock(success=True, stdout='[{"number": 123, "state": "OPEN"}]')
+            else:
+                return Mock(success=False, stdout="")
+
+        mock_runner.run.side_effect = run_side_effect
+        mock_runner_class.return_value = mock_runner
         git_info = {"parent_branch": "main"}
 
         # Act
@@ -881,18 +935,22 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "pr_created"
 
-    @patch("subprocess.run")
-    def test_determine_git_branch_final_status_returns_pr_closed_when_closed_pr(self, mock_run):
+    @patch("sdd.session.briefing.git_context.CommandRunner")
+    def test_determine_git_branch_final_status_returns_pr_closed_when_closed_pr(self, mock_runner_class):
         """Test that determine_git_branch_final_status returns 'pr_closed' when PR is closed."""
-
         # Arrange
-        def run_side_effect(cmd, *args, **kwargs):
-            if "branch" in cmd:
-                return Mock(returncode=1, stdout="")
-            elif "gh" in cmd:
-                return Mock(returncode=0, stdout='[{"number": 123, "state": "CLOSED"}]')
+        mock_runner = Mock()
 
-        mock_run.side_effect = run_side_effect
+        def run_side_effect(cmd, *args, **kwargs):
+            if "branch" in cmd and "--merged" in cmd:
+                return Mock(success=False, stdout="")
+            elif "gh" in cmd:
+                return Mock(success=True, stdout='[{"number": 123, "state": "CLOSED"}]')
+            else:
+                return Mock(success=False, stdout="")
+
+        mock_runner.run.side_effect = run_side_effect
+        mock_runner_class.return_value = mock_runner
         git_info = {"parent_branch": "main"}
 
         # Act
@@ -901,22 +959,26 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "pr_closed"
 
-    @patch("subprocess.run")
+    @patch("sdd.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_ready_for_pr_when_branch_exists(
-        self, mock_run
+        self, mock_runner_class
     ):
         """Test that determine_git_branch_final_status returns 'ready_for_pr' when branch exists locally."""
-
         # Arrange
+        mock_runner = Mock()
+
         def run_side_effect(cmd, *args, **kwargs):
             if "branch" in cmd and "--merged" in cmd:
-                return Mock(returncode=1, stdout="")
+                return Mock(success=False, stdout="")
             elif "gh" in cmd:
-                raise FileNotFoundError()
+                return Mock(success=False, stdout="")
             elif "show-ref" in cmd:
-                return Mock(returncode=0, stdout="ref")
+                return Mock(success=True, stdout="ref")
+            else:
+                return Mock(success=False, stdout="")
 
-        mock_run.side_effect = run_side_effect
+        mock_runner.run.side_effect = run_side_effect
+        mock_runner_class.return_value = mock_runner
         git_info = {"parent_branch": "main"}
 
         # Act
@@ -925,17 +987,18 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "ready_for_pr"
 
-    @patch("subprocess.run")
-    def test_determine_git_branch_final_status_returns_deleted_when_not_found(self, mock_run):
+    @patch("sdd.session.briefing.git_context.CommandRunner")
+    def test_determine_git_branch_final_status_returns_deleted_when_not_found(self, mock_runner_class):
         """Test that determine_git_branch_final_status returns 'deleted' when branch not found."""
-
         # Arrange
-        def run_side_effect(cmd, *args, **kwargs):
-            if "gh" in cmd:
-                raise FileNotFoundError()
-            return Mock(returncode=1, stdout="")
+        mock_runner = Mock()
 
-        mock_run.side_effect = run_side_effect
+        def run_side_effect(cmd, *args, **kwargs):
+            # All commands fail - branch not found anywhere
+            return Mock(success=False, stdout="")
+
+        mock_runner.run.side_effect = run_side_effect
+        mock_runner_class.return_value = mock_runner
         git_info = {"parent_branch": "main"}
 
         # Act
@@ -1156,7 +1219,11 @@ class TestGenerateBriefing:
         mock_git.return_value = {"status": "clean"}
         mock_milestone.return_value = None
         mock_learnings.return_value = []
-        mock_validate_spec.return_value = (False, ["Missing acceptance criteria"])
+        # Mock validate_spec_file to raise SpecValidationError
+        mock_validate_spec.side_effect = SpecValidationError(
+            work_item_id=item_id,
+            errors=["Missing acceptance criteria"]
+        )
 
         # Patch the spec validator in the correct location
         with patch(
@@ -1167,7 +1234,7 @@ class TestGenerateBriefing:
             result = briefing_generator.generate_briefing(item_id, item, learnings_data)
 
         # Assert
-        assert "Specification Validation Warning" in result
+        assert "Validation Warning" in result  # Should include the formatted validation report
 
     @patch("sdd.session.briefing.load_project_docs")
     @patch("sdd.session.briefing.load_current_stack")
@@ -1246,20 +1313,23 @@ class TestMainFunction:
         assert result == 0
         mock_get_next.assert_called_once()
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
-    def test_main_returns_error_when_no_session_dir(
-        self, mock_load_learnings, mock_load_work_items
-    ):
-        """Test that main returns error code when .session directory not found."""
-        # Arrange - no .session directory
+    def test_main_returns_error_when_no_session_dir(self):
+        """Test that main raises SessionNotFoundError when .session directory not found."""
+        # Arrange - Create a temp directory without .session
+        from sdd.core.exceptions import SessionNotFoundError
+        import os
 
-        with patch("sys.argv", ["briefing_generator.py"]):
-            # Act
-            result = briefing_generator.main()
-
-        # Assert
-        assert result == 1
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Change to temp directory where .session doesn't exist
+            orig_cwd = os.getcwd()
+            try:
+                os.chdir(tmpdir)
+                with patch("sys.argv", ["briefing_generator.py"]):
+                    # Act & Assert
+                    with pytest.raises(SessionNotFoundError):
+                        briefing_generator.main()
+            finally:
+                os.chdir(orig_cwd)
 
     @patch("sdd.session.briefing.load_work_items")
     @patch("sdd.session.briefing.load_learnings")
@@ -1267,18 +1337,18 @@ class TestMainFunction:
     def test_main_returns_error_when_no_available_work_items(
         self, mock_get_next, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
-        """Test that main returns error when no available work items."""
+        """Test that main raises ValidationError when no available work items."""
         # Arrange
+        from sdd.core.exceptions import ValidationError
+
         mock_load_work_items.return_value = {"work_items": {}}
         mock_load_learnings.return_value = {"learnings": []}
         mock_get_next.return_value = (None, None)
 
         with patch("sys.argv", ["briefing_generator.py"]):
-            # Act
-            result = briefing_generator.main()
-
-        # Assert
-        assert result == 1
+            # Act & Assert
+            with pytest.raises(ValidationError):
+                briefing_generator.main()
 
     @patch("sdd.session.briefing.load_work_items")
     @patch("sdd.session.briefing.load_learnings")
@@ -1314,25 +1384,27 @@ class TestMainFunction:
     def test_main_returns_error_when_work_item_not_found(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
-        """Test that main returns error when specified work item not found."""
+        """Test that main raises WorkItemNotFoundError when specified work item not found."""
         # Arrange
+        from sdd.core.exceptions import WorkItemNotFoundError
+
         mock_load_work_items.return_value = {"work_items": {}}
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-999"]):
-            # Act
-            result = briefing_generator.main()
-
-        # Assert
-        assert result == 1
+            # Act & Assert
+            with pytest.raises(WorkItemNotFoundError):
+                briefing_generator.main()
 
     @patch("sdd.session.briefing.load_work_items")
     @patch("sdd.session.briefing.load_learnings")
     def test_main_blocks_when_another_item_in_progress(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
-        """Test that main blocks starting new work when another item is in-progress."""
+        """Test that main raises SessionAlreadyActiveError when another item is in-progress."""
         # Arrange
+        from sdd.core.exceptions import SessionAlreadyActiveError
+
         work_items_data = {
             "work_items": {
                 "WORK-001": {"status": "not_started", "title": "Test 1", "dependencies": []},
@@ -1343,11 +1415,9 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001"]):
-            # Act
-            result = briefing_generator.main()
-
-        # Assert
-        assert result == 1
+            # Act & Assert
+            with pytest.raises(SessionAlreadyActiveError):
+                briefing_generator.main()
 
     @patch("sdd.session.briefing.load_work_items")
     @patch("sdd.session.briefing.load_learnings")
@@ -1384,8 +1454,10 @@ class TestMainFunction:
     def test_main_checks_dependencies_are_satisfied(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
-        """Test that main checks dependencies are satisfied before starting work."""
+        """Test that main raises UnmetDependencyError when dependencies not satisfied."""
         # Arrange
+        from sdd.core.exceptions import UnmetDependencyError
+
         work_items_data = {
             "work_items": {
                 "WORK-001": {"status": "not_started", "title": "Test 1", "dependencies": []},
@@ -1400,11 +1472,9 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-002"]):
-            # Act
-            result = briefing_generator.main()
-
-        # Assert
-        assert result == 1  # Should fail due to unmet dependencies
+            # Act & Assert
+            with pytest.raises(UnmetDependencyError):
+                briefing_generator.main()
 
     @patch("sdd.session.briefing.load_work_items")
     @patch("sdd.session.briefing.load_learnings")

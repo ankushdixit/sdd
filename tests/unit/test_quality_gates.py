@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 from sdd.core.command_runner import CommandResult
+from sdd.core.exceptions import SpecValidationError
 from sdd.quality.gates import QualityGates
 
 
@@ -1350,7 +1351,12 @@ class TestQualityGatesSpecCompleteness:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.validate_spec_file", return_value=(False, errors)):
+        # Mock validate_spec_file to raise SpecValidationError
+        with patch("sdd.quality.gates.validate_spec_file") as mock_validate:
+            mock_validate.side_effect = SpecValidationError(
+                work_item_id="WI-001",
+                errors=errors
+            )
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
