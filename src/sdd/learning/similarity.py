@@ -1,6 +1,6 @@
 """Learning similarity detection engine with pluggable algorithms"""
 
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
 from sdd.core.logging_config import get_logger
 
@@ -59,7 +59,7 @@ class JaccardContainmentSimilarity:
 
     def __init__(
         self,
-        stopwords: set[str] | None = None,
+        stopwords: Optional[set[str]] = None,
         jaccard_threshold: float = 0.6,
         containment_threshold: float = 0.8,
     ) -> None:
@@ -150,7 +150,7 @@ class LearningSimilarityEngine:
     Supports multiple similarity algorithms and caches results for performance.
     """
 
-    def __init__(self, algorithm: SimilarityAlgorithm | None = None) -> None:
+    def __init__(self, algorithm: Optional[SimilarityAlgorithm] = None) -> None:
         """
         Initialize similarity engine
 
@@ -314,7 +314,7 @@ class LearningSimilarityEngine:
 
     def _find_learning_by_id(
         self, learnings: dict[str, Any], learning_id: str
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Find a learning by its ID"""
         categories = learnings.get("categories", {})
         for category_learnings in categories.values():
