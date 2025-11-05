@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from sdd.core.exceptions import SpecValidationError
 from sdd.work_items.manager import WorkItemManager
 
 
@@ -238,12 +239,9 @@ Test the integration between Service A and Service B API.
             "dependencies": ["FEAT-001", "FEAT-002"],
         }
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
-
-        # Assert
-        assert is_valid, f"Valid integration test spec should pass validation. Errors: {errors}"
-        assert len(errors) == 0, "Valid spec should have no validation errors"
+        # Act & Assert
+        # Valid spec should not raise an exception
+        work_item_manager.validate_integration_test(work_item)
 
     def test_incomplete_integration_test_fails_validation(
         self, temp_session_env, work_item_manager
@@ -268,12 +266,11 @@ Just a scope, missing other sections.
             "title": "Incomplete Test",
         }
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert not is_valid, "Incomplete integration test spec should fail validation"
-        assert len(errors) > 0, "Incomplete spec should have validation errors"
+        assert len(exc_info.value.context["validation_errors"]) > 0
 
     def test_incomplete_spec_identifies_missing_sections(self, temp_session_env, work_item_manager):
         """Test that validation identifies specific missing sections.
@@ -300,15 +297,14 @@ Some test scenarios.
             "title": "Partial Test",
         }
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
-
-        # Assert
-        assert not is_valid, "Partial spec should fail validation"
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
         # Should identify multiple missing sections
         # The spec is missing: Performance Benchmarks, API Contracts,
         # Environment Requirements, Dependencies, Acceptance Criteria
+        errors = exc_info.value.context["validation_errors"]
         assert len(errors) >= 3, (
             f"Should identify multiple missing sections, got {len(errors)} errors: {errors}"
         )
@@ -369,8 +365,6 @@ Minimal scope for testing basic integration.
             "dependencies": ["FEAT-001"],
         }
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
-
-        # Assert
-        assert is_valid, f"Minimal but complete spec should pass validation. Errors: {errors}"
+        # Act & Assert
+        # Minimal but complete spec should not raise an exception
+        work_item_manager.validate_integration_test(work_item)

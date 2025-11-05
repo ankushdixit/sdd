@@ -4,42 +4,108 @@ Complete current session with quality gates and summary generation.
 Enhanced with full tracking updates and git workflow.
 
 Updated in Phase 5.7.3 to use spec_parser for reading work item rationale.
+Migrated to standardized error handling pattern.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
 
 # Add scripts directory to path for imports
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileOperationError,
+    QualityGateError,
+    SessionNotFoundError,
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.core.types import WorkItemStatus, WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_parser import parse_spec_file
 
+logger = logging.getLogger(__name__)
 
+
+@log_errors()
 def load_status():
-    """Load current session status."""
+    """Load current session status.
+
+    Returns:
+        dict: Session status data, or None if no session exists
+
+    Raises:
+        FileOperationError: If file cannot be read or parsed
+    """
     status_file = Path(".session/tracking/status_update.json")
     if not status_file.exists():
         return None
-    with open(status_file) as f:
-        return json.load(f)
+
+    try:
+        with open(status_file) as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        raise FileOperationError(
+            f"Invalid JSON in status file: {status_file}",
+            {"path": str(status_file), "error": str(e)}
+        ) from e
+    except OSError as e:
+        raise FileOperationError(
+            f"Failed to read status file: {status_file}",
+            {"path": str(status_file), "error": str(e)}
+        ) from e
 
 
+@log_errors()
 def load_work_items():
-    """Load work items."""
-    with open(".session/tracking/work_items.json") as f:
-        return json.load(f)
+    """Load work items.
 
+    Returns:
+        dict: Work items data
 
-def run_quality_gates(work_item=None):
+    Raises:
+        FileOperationError: If file cannot be read or parsed
     """
-    Run comprehensive quality gates using QualityGates class.
-    Returns dict with results from all gates.
+    work_items_file = Path(".session/tracking/work_items.json")
+
+    try:
+        with open(work_items_file) as f:
+            return json.load(f)
+    except FileNotFoundError as e:
+        raise FileOperationError(
+            f"Work items file not found: {work_items_file}",
+            {"path": str(work_items_file)}
+        ) from e
+    except json.JSONDecodeError as e:
+        raise FileOperationError(
+            f"Invalid JSON in work items file: {work_items_file}",
+            {"path": str(work_items_file), "error": str(e)}
+        ) from e
+    except OSError as e:
+        raise FileOperationError(
+            f"Failed to read work items file: {work_items_file}",
+            {"path": str(work_items_file), "error": str(e)}
+        ) from e
+
+
+@log_errors()
+def run_quality_gates(work_item=None):
+    """Run comprehensive quality gates using QualityGates class.
+
+    Args:
+        work_item: Optional work item dict for custom validations
+
+    Returns:
+        tuple: (all_results dict, all_passed bool, failed_gates list)
+
+    Raises:
+        QualityGateError: If quality gates fail and are required
     """
     gates = QualityGates()
     all_results = {}
@@ -87,7 +153,7 @@ def run_quality_gates(work_item=None):
     # Context7 is optional and not in QualityGatesConfig, always treat as optional
     if not passed:
         # Context7 failures are warnings, not failures
-        pass
+        logger.warning("Context7 library verification failed (non-blocking)")
 
     # Run custom validations
     if work_item:
@@ -109,9 +175,21 @@ def run_quality_gates(work_item=None):
     return all_results, all_passed, failed_gates
 
 
+@log_errors()
 def update_all_tracking(session_num):
-    """Update stack, tree, and other tracking files."""
-    print("\nUpdating tracking files...")
+    """Update stack, tree, and other tracking files.
+
+    Args:
+        session_num: Current session number
+
+    Returns:
+        bool: True if tracking updates completed (may have warnings)
+
+    Note:
+        This function logs warnings but does not raise exceptions for
+        tracking update failures, as they are non-critical.
+    """
+    logger.info(f"Updating tracking files for session {session_num}")
 
     # Get SDD installation directory for absolute path resolution
     script_dir = Path(__file__).parent
@@ -138,10 +216,13 @@ def update_all_tracking(session_num):
                     if line.strip():
                         print(f"  {line}")
         else:
+            logger.warning(f"Stack update failed (exit code {result.returncode})")
             print(f"⚠️  Stack update failed (exit code {result.returncode})")
             if result.stderr:
+                logger.warning(f"Stack update error: {result.stderr}")
                 print(f"  Error: {result.stderr}")
     except Exception as e:
+        logger.warning(f"Stack update failed: {e}", exc_info=True)
         print(f"⚠️  Stack update failed: {e}")
 
     # Update tree
@@ -163,17 +244,29 @@ def update_all_tracking(session_num):
                     if line.strip():
                         print(f"  {line}")
         else:
+            logger.warning(f"Tree update failed (exit code {result.returncode})")
             print(f"⚠️  Tree update failed (exit code {result.returncode})")
             if result.stderr:
+                logger.warning(f"Tree update error: {result.stderr}")
                 print(f"  Error: {result.stderr}")
     except Exception as e:
+        logger.warning(f"Tree update failed: {e}", exc_info=True)
         print(f"⚠️  Tree update failed: {e}")
 
     return True
 
 
+@log_errors()
 def trigger_curation_if_needed(session_num):
-    """Check if curation should run and trigger it"""
+    """Check if curation should run and trigger it.
+
+    Args:
+        session_num: Current session number
+
+    Note:
+        This function logs warnings but does not raise exceptions for
+        curation failures, as they are non-critical.
+    """
     # Use ConfigManager for centralized config management
     from sdd.core.config import get_config_manager
 
@@ -183,12 +276,14 @@ def trigger_curation_if_needed(session_num):
     curation_config = config_manager.curation
 
     if not curation_config.auto_curate:
+        logger.debug("Auto-curation disabled in config")
         return
 
     frequency = curation_config.frequency
 
     # Run curation every N sessions
     if session_num % frequency == 0:
+        logger.info(f"Triggering automatic curation for session {session_num}")
         print(f"\n{'=' * 50}")
         print(f"Running automatic learning curation (session {session_num})...")
         print(f"{'=' * 50}\n")
@@ -200,17 +295,32 @@ def trigger_curation_if_needed(session_num):
             if result.success:
                 print(result.stdout)
                 print("✓ Learning curation completed\n")
+                logger.info("Learning curation completed successfully")
             else:
+                logger.warning(f"Learning curation encountered issues: {result.stderr}")
                 print("⚠️  Learning curation encountered issues")
                 if result.stderr:
                     print(result.stderr)
         except Exception as e:
+            logger.warning(f"Learning curation failed: {e}", exc_info=True)
             print(f"⚠️  Learning curation failed: {e}\n")
 
 
+@log_errors()
 def auto_extract_learnings(session_num):
-    """Auto-extract learnings from session artifacts"""
-    print("\nAuto-extracting learnings from session artifacts...")
+    """Auto-extract learnings from session artifacts.
+
+    Args:
+        session_num: Current session number
+
+    Returns:
+        int: Number of new learnings extracted
+
+    Note:
+        This function logs warnings but does not raise exceptions for
+        extraction failures, as they are non-critical.
+    """
+    logger.info(f"Auto-extracting learnings from session {session_num} artifacts")
 
     try:
         # Import learning curator
@@ -241,42 +351,57 @@ def auto_extract_learnings(session_num):
                 total_extracted += 1
 
         if total_extracted > 0:
+            logger.info(f"Auto-extracted {total_extracted} new learnings")
             print(f"✓ Auto-extracted {total_extracted} new learning(s)\n")
         else:
+            logger.info("No new learnings extracted from session artifacts")
             print("No new learnings extracted\n")
 
         return total_extracted
 
     except Exception as e:
+        logger.warning(f"Auto-extraction failed: {e}", exc_info=True)
         print(f"⚠️  Auto-extraction failed: {e}\n")
         return 0
 
 
+@log_errors()
 def extract_learnings_from_session(learnings_file=None):
     """Extract learnings from work done in session (manual input or file).
 
     Args:
         learnings_file: Path to file containing learnings (one per line)
+
+    Returns:
+        list: List of learning strings
+
+    Raises:
+        FileOperationError: If learnings file cannot be read
     """
     # If learnings file provided, read from it
     if learnings_file:
-        try:
-            learnings_path = Path(learnings_file)
-            if learnings_path.exists():
-                print(f"\nReading learnings from {learnings_file}...")
+        learnings_path = Path(learnings_file)
+        if learnings_path.exists():
+            try:
+                logger.info(f"Reading learnings from {learnings_file}")
                 with open(learnings_path) as f:
                     learnings = [line.strip() for line in f if line.strip()]
                 print(f"✓ Loaded {len(learnings)} learnings from file")
                 # Clean up temp file
                 learnings_path.unlink()
                 return learnings
-            else:
-                print(f"⚠️  Learnings file not found: {learnings_file}")
-        except Exception as e:
-            print(f"⚠️  Failed to read learnings file: {e}")
+            except OSError as e:
+                logger.warning(f"Failed to read learnings file: {e}")
+                print(f"⚠️  Failed to read learnings file: {e}")
+                return []
+        else:
+            logger.warning(f"Learnings file not found: {learnings_file}")
+            print(f"⚠️  Learnings file not found: {learnings_file}")
+            return []
 
     # Skip manual input in non-interactive mode (e.g., when run by Claude Code)
     if not sys.stdin.isatty():
+        logger.info("Skipping manual learning extraction (non-interactive mode)")
         print("\nSkipping manual learning extraction (non-interactive mode)")
         return []
 
@@ -295,13 +420,28 @@ def extract_learnings_from_session(learnings_file=None):
                 learnings.append(learning)
         except EOFError:
             # Handle EOF gracefully in case stdin is closed
+            logger.debug("EOF encountered during manual learning input")
             break
 
     return learnings
 
 
+@log_errors()
 def complete_git_workflow(work_item_id, commit_message, session_num):
-    """Complete git workflow (commit, push, optionally merge or create PR)."""
+    """Complete git workflow (commit, push, optionally merge or create PR).
+
+    Args:
+        work_item_id: Work item identifier
+        commit_message: Git commit message
+        session_num: Current session number
+
+    Returns:
+        dict: Result dict with 'success' and 'message' keys
+
+    Note:
+        This function returns error dicts rather than raising exceptions
+        to maintain compatibility with existing error handling.
+    """
     try:
         # Import git workflow from new location
         from sdd.git.integration import GitWorkflow
@@ -309,8 +449,17 @@ def complete_git_workflow(work_item_id, commit_message, session_num):
         workflow = GitWorkflow()
 
         # Load work items to check status
-        with open(".session/tracking/work_items.json") as f:
-            data = json.load(f)
+        work_items_file = Path(".session/tracking/work_items.json")
+        try:
+            with open(work_items_file) as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to load work items: {e}")
+            return {"success": False, "message": f"Failed to load work items: {e}"}
+
+        if work_item_id not in data["work_items"]:
+            logger.error(f"Work item not found: {work_item_id}")
+            return {"success": False, "message": f"Work item not found: {work_item_id}"}
 
         work_item = data["work_items"][work_item_id]
         should_merge = work_item["status"] == WorkItemStatus.COMPLETED.value
@@ -322,15 +471,29 @@ def complete_git_workflow(work_item_id, commit_message, session_num):
 
         return result
     except Exception as e:
+        logger.error(f"Git workflow error: {e}", exc_info=True)
         return {"success": False, "message": f"Git workflow error: {e}"}
 
 
+@log_errors()
 def record_session_commits(work_item_id):
-    """Record commits made during session to work item tracking (Bug #15 fix)."""
+    """Record commits made during session to work item tracking (Bug #15 fix).
+
+    Args:
+        work_item_id: Work item identifier
+
+    Note:
+        This function logs warnings but does not raise exceptions, as commit
+        recording is non-critical tracking functionality.
+    """
     try:
         work_items_file = Path(".session/tracking/work_items.json")
         with open(work_items_file) as f:
             data = json.load(f)
+
+        if work_item_id not in data["work_items"]:
+            logger.warning(f"Work item not found for commit recording: {work_item_id}")
+            return
 
         work_item = data["work_items"][work_item_id]
         git_info = work_item.get("git", {})
@@ -341,6 +504,7 @@ def record_session_commits(work_item_id):
 
         if not branch_name:
             # No git branch tracking for this work item
+            logger.debug(f"No git branch tracking for work item: {work_item_id}")
             return
 
         # Get commits on session branch that aren't in parent branch
@@ -351,6 +515,7 @@ def record_session_commits(work_item_id):
 
         if not result.success:
             # Branch might not exist or other git error - skip silently
+            logger.debug(f"Git log failed for branch {branch_name}: {result.stderr}")
             return
 
         commits = []
@@ -366,18 +531,29 @@ def record_session_commits(work_item_id):
             data["work_items"][work_item_id]["git"]["commits"] = commits
             with open(work_items_file, "w") as f:
                 json.dump(data, f, indent=2)
+            logger.info(f"Recorded {len(commits)} commits for work item {work_item_id}")
 
-    except Exception:
+    except Exception as e:
         # Silently skip if there's any error - this is non-critical tracking
-        pass
+        logger.debug(f"Failed to record session commits: {e}", exc_info=True)
 
 
+@log_errors()
 def generate_commit_message(status, work_item):
-    """
-    Generate standardized commit message.
+    """Generate standardized commit message.
 
     Updated in Phase 5.7.3 to read rationale from spec file instead of
     deprecated JSON field.
+
+    Args:
+        status: Session status dict
+        work_item: Work item dict
+
+    Returns:
+        str: Formatted commit message
+
+    Note:
+        Spec file errors are logged but don't prevent message generation.
     """
     session_num = status["current_session"]
     work_type = work_item["type"]
@@ -396,9 +572,9 @@ def generate_commit_message(status, work_item):
             if len(first_para) > 200:
                 first_para = first_para[:197] + "..."
             message += f"{first_para}\n\n"
-    except Exception:
+    except Exception as e:
         # If spec file not found or invalid, continue without rationale
-        pass
+        logger.debug(f"Could not read spec file rationale: {e}")
 
     if work_item["status"] == WorkItemStatus.COMPLETED.value:
         message += "✅ Work item completed\n"
@@ -411,8 +587,22 @@ def generate_commit_message(status, work_item):
     return message
 
 
+@log_errors()
 def generate_summary(status, work_items_data, gate_results, learnings=None):
-    """Generate comprehensive session summary."""
+    """Generate comprehensive session summary.
+
+    Args:
+        status: Session status dict
+        work_items_data: Work items data dict
+        gate_results: Quality gate results dict
+        learnings: Optional list of learnings
+
+    Returns:
+        str: Formatted markdown summary
+
+    Note:
+        Git diff errors are logged but don't prevent summary generation.
+    """
     work_item_id = status["current_work_item"]
     work_item = work_items_data["work_items"][work_item_id]
 
@@ -451,9 +641,9 @@ def generate_summary(status, work_items_data, gate_results, learnings=None):
                     summary += "\nFiles changed:\n```\n"
                     summary += result.stdout
                     summary += "```\n\n"
-            except Exception:
+            except Exception as e:
                 # Silently skip if git diff fails
-                pass
+                logger.debug(f"Git diff failed for commit {commit['sha']}: {e}")
 
         summary += "\n"
 
@@ -626,8 +816,17 @@ def generate_deployment_summary(work_item: dict, gate_results: dict) -> str:
     return "\n".join(summary)
 
 
+@log_errors()
 def check_uncommitted_changes() -> bool:
-    """Check for uncommitted changes and guide user to commit first."""
+    """Check for uncommitted changes and guide user to commit first.
+
+    Returns:
+        bool: True if can proceed, False if should abort
+
+    Note:
+        This function logs warnings but does not raise exceptions.
+        Git errors allow proceeding to avoid blocking workflows.
+    """
     try:
         runner = CommandRunner(default_timeout=5, working_dir=Path.cwd())
         result = runner.run(["git", "status", "--porcelain"])
@@ -642,7 +841,10 @@ def check_uncommitted_changes() -> bool:
         ]
 
         if not user_changes:
+            logger.debug("No uncommitted changes detected")
             return True  # All good
+
+        logger.warning(f"Detected {len(user_changes)} uncommitted changes")
 
         # Display uncommitted changes
         print("\n" + "=" * 60)
@@ -687,13 +889,17 @@ def check_uncommitted_changes() -> bool:
         if sys.stdin.isatty():
             print()
             response = input("Continue anyway? (y/n): ")
-            return response.lower() == "y"
+            user_override = response.lower() == "y"
+            logger.info(f"User {'overrode' if user_override else 'aborted on'} uncommitted changes check")
+            return user_override
         else:
+            logger.info("Non-interactive mode: aborting on uncommitted changes")
             print("\nNon-interactive mode: exiting")
             print("Please commit your changes and run 'sdd end' again.")
             return False
 
     except Exception as e:
+        logger.warning(f"Could not check git status: {e}", exc_info=True)
         print(f"Warning: Could not check git status: {e}")
         return True  # Don't block on errors
 
@@ -736,8 +942,19 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
             print("Invalid choice. Enter 1, 2, or 3.")
 
 
+@log_errors()
 def main():
-    """Enhanced main entry point with full tracking updates."""
+    """Enhanced main entry point with full tracking updates.
+
+    Returns:
+        int: Exit code (0 for success, 1 for failure)
+
+    Raises:
+        SessionNotFoundError: If no active session exists
+        WorkItemNotFoundError: If work item cannot be found
+        QualityGateError: If quality gates fail
+        FileOperationError: If file operations fail
+    """
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Complete SDD session")
     parser.add_argument(
@@ -758,18 +975,39 @@ def main():
     args = parser.parse_args()
 
     # Load current status
-    status = load_status()
-    if not status:
-        print("Error: No active session found")
+    try:
+        status = load_status()
+        if not status:
+            logger.error("No active session found")
+            print("Error: No active session found")
+            return 1
+    except FileOperationError as e:
+        logger.error(f"Failed to load session status: {e}")
+        print(f"Error: Failed to load session status: {e}")
         return 1
 
-    work_items_data = load_work_items()
+    try:
+        work_items_data = load_work_items()
+    except FileOperationError as e:
+        logger.error(f"Failed to load work items: {e}")
+        print(f"Error: Failed to load work items: {e}")
+        return 1
+
     work_item_id = status["current_work_item"]
     session_num = status["current_session"]
+
+    if work_item_id not in work_items_data["work_items"]:
+        logger.error(f"Work item not found: {work_item_id}")
+        print(f"Error: Work item not found: {work_item_id}")
+        return 1
+
     work_item = work_items_data["work_items"][work_item_id]
+
+    logger.info(f"Starting session {session_num} completion for work item {work_item_id}")
 
     # Pre-flight check - ensure changes are committed
     if not check_uncommitted_changes():
+        logger.warning("Session completion aborted due to uncommitted changes")
         print("\n❌ Session completion aborted")
         print("Commit your changes and try again.\n")
         return 1
@@ -781,10 +1019,12 @@ def main():
     gate_results, all_passed, failed_gates = run_quality_gates(work_item)
 
     if not all_passed:
+        logger.error(f"Quality gates failed: {failed_gates}")
         print("\n❌ Required quality gates failed. Fix issues before completing session.")
         print(f"Failed gates: {', '.join(failed_gates)}")
         return 1
 
+    logger.info("All required quality gates passed")
     print("\n✓ All required quality gates PASSED\n")
 
     # Update all tracking (stack, tree)
@@ -798,6 +1038,7 @@ def main():
 
     # Process learnings with learning_curator if available
     if learnings:
+        logger.info(f"Processing {len(learnings)} learnings")
         print(f"\nProcessing {len(learnings)} learnings...")
         try:
             from sdd.learning.curator import LearningsCurator
@@ -826,10 +1067,13 @@ def main():
                     print(f"  ⊘ Duplicate: {learning}")
 
             if added_count > 0:
+                logger.info(f"Added {added_count} new learnings")
                 print(f"\n✓ Added {added_count} new learning(s) to learnings.json")
             else:
+                logger.info("No new learnings added (all duplicates)")
                 print("\n⊘ No new learnings added (all were duplicates)")
         except Exception as e:
+            logger.warning(f"Failed to process learnings: {e}", exc_info=True)
             print(f"⚠️  Failed to process learnings: {e}")
 
     # Determine work item completion status
@@ -941,8 +1185,13 @@ def main():
     history_dir = Path(".session/history")
     history_dir.mkdir(exist_ok=True)
     summary_file = history_dir / f"session_{session_num:03d}_summary.md"
-    with open(summary_file, "w") as f:
-        f.write(summary)
+    try:
+        with open(summary_file, "w") as f:
+            f.write(summary)
+        logger.info(f"Saved session summary to {summary_file}")
+    except OSError as e:
+        logger.error(f"Failed to save session summary: {e}")
+        print(f"⚠️  Failed to save session summary: {e}")
 
     # Auto-extract learnings from session artifacts (Bug #16 fix)
     # Now that commit and summary are created, we can extract from them
@@ -956,9 +1205,15 @@ def main():
     # Update status
     status["status"] = WorkItemStatus.COMPLETED.value
     status["completed_at"] = datetime.now().isoformat()
-    with open(".session/tracking/status_update.json", "w") as f:
-        json.dump(status, f, indent=2)
+    try:
+        with open(".session/tracking/status_update.json", "w") as f:
+            json.dump(status, f, indent=2)
+        logger.info("Updated session status to completed")
+    except OSError as e:
+        logger.error(f"Failed to update session status: {e}")
+        print(f"⚠️  Failed to update session status: {e}")
 
+    logger.info(f"Session {session_num} completed successfully")
     print("\n✓ Session completed successfully")
     return 0
 

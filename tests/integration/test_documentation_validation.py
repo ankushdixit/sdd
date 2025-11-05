@@ -690,7 +690,8 @@ class TestIntegrationPointsDocumentation:
     def test_handles_spec_parse_error_gracefully(self, mock_parse):
         """Test that validation handles spec parse errors gracefully."""
         # Arrange
-        mock_parse.side_effect = Exception("Spec file not found")
+        # Use OSError which is caught by the exception handler
+        mock_parse.side_effect = OSError("Spec file not found")
         gates = QualityGates()
         work_item = {"id": "INTEG-001", "type": "integration_test"}
 

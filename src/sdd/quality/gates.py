@@ -18,6 +18,15 @@ from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    QualityGateError,
+    CommandExecutionError,
+    ValidationError,
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.error_handlers import log_errors
 
 # Import logging
 from sdd.core.logging_config import get_logger
@@ -29,11 +38,10 @@ logger = get_logger(__name__)
 # Import spec validator for spec completeness quality gate
 try:
     from sdd.work_items.spec_validator import validate_spec_file
-    from sdd.core.exceptions import SpecValidationError, FileNotFoundError as SDDFileNotFoundError
+    from sdd.core.exceptions import SpecValidationError
 except ImportError:
     validate_spec_file = None
     SpecValidationError = None
-    SDDFileNotFoundError = None
 
 
 class QualityGates:
@@ -53,14 +61,27 @@ class QualityGates:
         # Initialize command runner
         self.runner = CommandRunner(default_timeout=120)
 
+    @log_errors()
     def _load_full_config(self) -> dict:
         """Load full configuration file for optional sections (context7, custom_validations, etc.)."""
         if self._config_path.exists():
             try:
                 with open(self._config_path) as f:
                     return json.load(f)
-            except Exception:
-                pass
+            except OSError as e:
+                raise FileOperationError(
+                    operation="read",
+                    file_path=str(self._config_path),
+                    details="Failed to read configuration file",
+                    cause=e,
+                ) from e
+            except json.JSONDecodeError as e:
+                raise FileOperationError(
+                    operation="parse",
+                    file_path=str(self._config_path),
+                    details="Invalid JSON in configuration file",
+                    cause=e,
+                ) from e
         return {}
 
     def run_tests(self, language: str = None) -> tuple[bool, dict]:
@@ -149,22 +170,42 @@ class QualityGates:
         return "python"  # default
 
     def _parse_coverage(self, language: str) -> float:
-        """Parse coverage from test results."""
-        if language == "python":
-            coverage_file = Path("coverage.json")
-            if coverage_file.exists():
-                with open(coverage_file) as f:
-                    data = json.load(f)
-                return data.get("totals", {}).get("percent_covered", 0)
+        """
+        Parse coverage from test results.
 
-        elif language in ["javascript", "typescript"]:
-            coverage_file = Path("coverage/coverage-summary.json")
-            if coverage_file.exists():
-                with open(coverage_file) as f:
-                    data = json.load(f)
-                return data.get("total", {}).get("lines", {}).get("pct", 0)
+        Raises:
+            FileOperationError: If coverage file cannot be read or parsed
+        """
+        try:
+            if language == "python":
+                coverage_file = Path("coverage.json")
+                if coverage_file.exists():
+                    with open(coverage_file) as f:
+                        data = json.load(f)
+                    return data.get("totals", {}).get("percent_covered", 0)
 
-        return None
+            elif language in ["javascript", "typescript"]:
+                coverage_file = Path("coverage/coverage-summary.json")
+                if coverage_file.exists():
+                    with open(coverage_file) as f:
+                        data = json.load(f)
+                    return data.get("total", {}).get("lines", {}).get("pct", 0)
+
+            return None
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(coverage_file),
+                details="Failed to read coverage file",
+                cause=e,
+            ) from e
+        except json.JSONDecodeError as e:
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(coverage_file),
+                details="Invalid JSON in coverage file",
+                cause=e,
+            ) from e
 
     def run_security_scan(self, language: str = None) -> tuple[bool, dict]:
         """
@@ -222,17 +263,20 @@ class QualityGates:
                                         results["by_severity"][severity] = (
                                             results["by_severity"].get(severity, 0) + 1
                                         )
-                        except (json.JSONDecodeError, ValueError):
-                            # Invalid or empty JSON - skip
-                            pass
+                        except (json.JSONDecodeError, ValueError) as e:
+                            # Invalid or empty JSON - log warning but continue
+                            logger.warning(f"Failed to parse bandit report: {e}")
+                        except OSError as e:
+                            logger.warning(f"Failed to read bandit report: {e}")
                 finally:
                     # Clean up temporary file
                     try:
                         Path(bandit_report_path).unlink()
-                    except Exception:
-                        pass
-            except Exception:
-                pass  # bandit not available
+                    except OSError as e:
+                        logger.debug(f"Failed to delete temporary bandit report: {e}")
+            except (ImportError, OSError) as e:
+                # bandit not available or temp file creation failed - log and continue
+                logger.debug(f"Bandit security scan not available: {e}")
 
             # Run safety (scan only project requirements, not entire environment)
             safety_result = self.runner.run(
@@ -522,11 +566,15 @@ class QualityGates:
                 "error": e.message,
                 "suggestion": e.remediation,
             }
-        except Exception as e:
-            return False, {
-                "status": "failed",
-                "error": f"Error validating spec file: {str(e)}",
-            }
+        except (OSError, ValueError) as e:
+            # Re-raise as QualityGateError for unexpected errors during validation
+            raise QualityGateError(
+                message=f"Error validating spec file for '{work_item_id}'",
+                code=ErrorCode.QUALITY_GATE_FAILED,
+                context={"work_item_id": work_item_id, "error": str(e)},
+                remediation="Check spec file format and validator configuration",
+                cause=e,
+            ) from e
 
     def verify_context7_libraries(self) -> tuple[bool, dict]:
         """Verify important libraries via Context7 MCP."""
@@ -573,7 +621,12 @@ class QualityGates:
         return passed, results
 
     def _parse_libraries_from_stack(self) -> list[dict]:
-        """Parse libraries from stack.txt."""
+        """
+        Parse libraries from stack.txt.
+
+        Raises:
+            FileOperationError: If stack file cannot be read
+        """
         stack_file = Path(".session/tracking/stack.txt")
         libraries = []
 
@@ -595,8 +648,13 @@ class QualityGates:
                     version = parts[1] if len(parts) > 1 else "unknown"
                     libraries.append({"name": name, "version": version})
 
-        except Exception:
-            pass
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(stack_file),
+                details="Failed to read stack.txt file",
+                cause=e,
+            ) from e
 
         return libraries
 
@@ -747,7 +805,7 @@ class QualityGates:
         if work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
             return True, {"status": "skipped", "reason": "not integration test"}
 
-        print("Running integration test quality gates...")
+        logger.info("Running integration test quality gates...")
 
         results = {
             "integration_tests": {},
@@ -778,10 +836,10 @@ class QualityGates:
 
             # Check if tests passed
             if test_results.get("failed", 0) > 0:
-                print("  ✗ Integration tests failed")
+                logger.error("Integration tests failed")
                 return False, results
 
-            print(f"  ✓ Integration tests passed ({test_results.get('passed', 0)} tests)")
+            logger.info(f"Integration tests passed ({test_results.get('passed', 0)} tests)")
 
             # 2. Run performance benchmarks
             if work_item.get("performance_benchmarks"):
@@ -792,11 +850,11 @@ class QualityGates:
                 results["performance_benchmarks"] = benchmark_results
 
                 if not benchmarks_passed:
-                    print("  ✗ Performance benchmarks failed")
+                    logger.error("Performance benchmarks failed")
                     if config.get("performance_benchmarks", {}).get("required", True):
                         return False, results
                 else:
-                    print("  ✓ Performance benchmarks passed")
+                    logger.info("Performance benchmarks passed")
 
             # 3. Validate API contracts
             if work_item.get("api_contracts"):
@@ -807,11 +865,11 @@ class QualityGates:
                 results["api_contracts"] = contract_results
 
                 if not contracts_passed:
-                    print("  ✗ API contract validation failed")
+                    logger.error("API contract validation failed")
                     if config.get("api_contracts", {}).get("required", True):
                         return False, results
                 else:
-                    print("  ✓ API contracts validated")
+                    logger.info("API contracts validated")
 
             results["passed"] = True
             return True, results
@@ -825,7 +883,7 @@ class QualityGates:
             # Always teardown environment
             try:
                 runner.teardown_environment()
-            except Exception as e:
+            except (OSError, CommandExecutionError) as e:
                 # Log teardown failures but don't fail the gate
                 logger.warning(f"Environment teardown failed: {e}")
 
@@ -931,7 +989,8 @@ class QualityGates:
             try:
                 parsed_spec = spec_parser.parse_spec_file(work_item)
                 scenarios = parsed_spec.get("test_scenarios", [])
-            except Exception:
+            except (OSError, ValueError, KeyError) as e:
+                logger.debug(f"Failed to parse spec file for scenarios: {e}")
                 scenarios = []
 
             if scenarios:
@@ -956,7 +1015,8 @@ class QualityGates:
                 api_contracts = parsed_spec.get("api_contracts", "")
                 # API contracts should be documented in the spec
                 has_contracts = api_contracts and len(api_contracts.strip()) > 20
-            except Exception:
+            except (OSError, ValueError, KeyError) as e:
+                logger.debug(f"Failed to parse spec file for API contracts: {e}")
                 has_contracts = False
 
             results["checks"].append(
@@ -976,7 +1036,8 @@ class QualityGates:
                 parsed_spec = spec_parser.parse_spec_file(work_item)
                 benchmarks = parsed_spec.get("performance_benchmarks", "")
                 has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
-            except Exception:
+            except (OSError, ValueError, KeyError) as e:
+                logger.debug(f"Failed to parse spec file for performance benchmarks: {e}")
                 has_benchmarks = False
 
             if has_benchmarks:
@@ -999,7 +1060,8 @@ class QualityGates:
             scope = parsed_spec.get("scope", "")
             # Check if scope has meaningful content
             documented = scope and len(scope.strip()) > 20
-        except Exception:
+        except (OSError, ValueError, KeyError) as e:
+            logger.debug(f"Failed to parse spec file for integration points: {e}")
             documented = False
 
         results["checks"].append({"name": "Integration points documented", "passed": documented})
@@ -1244,8 +1306,9 @@ class QualityGates:
             passed, _ = validator.validate_all()
 
             return passed
-        except Exception:
+        except ImportError:
             # If environment_validator not available, return True
+            logger.debug("Environment validator module not available, skipping validation")
             return True
 
     def _validate_deployment_documentation(self, work_item: dict) -> bool:
@@ -1280,18 +1343,18 @@ def main():
     """CLI entry point."""
     gates = QualityGates()
 
-    print("Running quality gates...")
+    logger.info("Running quality gates...")
 
     # Run tests
     passed, results = gates.run_tests()
-    print(f"\nTest Execution: {'✓ PASSED' if passed else '✗ FAILED'}")
+    logger.info(f"\nTest Execution: {'✓ PASSED' if passed else '✗ FAILED'}")
     if results.get("coverage"):
-        print(f"  Coverage: {results['coverage']}%")
+        logger.info(f"  Coverage: {results['coverage']}%")
 
     # Check required gates
     all_met, missing = gates.check_required_gates()
     if not all_met:
-        print(f"\n✗ Missing required gates: {', '.join(missing)}")
+        logger.error(f"\n✗ Missing required gates: {', '.join(missing)}")
 
 
 if __name__ == "__main__":

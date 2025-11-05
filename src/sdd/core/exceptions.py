@@ -912,6 +912,23 @@ class LearningError(ValidationError):
         )
 
 
+class LearningNotFoundError(NotFoundError):
+    """
+    Raised when a learning doesn't exist.
+
+    Example:
+        >>> raise LearningNotFoundError("abc123")
+    """
+
+    def __init__(self, learning_id: str):
+        super().__init__(
+            message=f"Learning '{learning_id}' not found",
+            code=ErrorCode.LEARNING_NOT_FOUND,
+            context={"learning_id": learning_id},
+            remediation="Use search or list commands to find available learnings"
+        )
+
+
 # ============================================================================
 # Deployment Errors
 # ============================================================================
