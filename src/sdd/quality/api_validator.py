@@ -77,7 +77,11 @@ class APIContractValidator:
             # Validate contract file exists and is valid
             try:
                 self._validate_contract_file(contract_file)
-            except (SchemaValidationError, InvalidOpenAPISpecError, SDDFileNotFoundError) as e:
+            except (
+                SchemaValidationError,
+                InvalidOpenAPISpecError,
+                SDDFileNotFoundError,
+            ) as e:
                 logger.error(f"Contract validation failed for {contract_file}: {e.message}")
                 all_passed = False
                 continue
@@ -131,7 +135,8 @@ class APIContractValidator:
                     spec = json.load(f)
         except (json.JSONDecodeError, yaml.YAMLError) as e:
             raise SchemaValidationError(
-                contract_file=contract_file, details=f"Failed to parse contract file: {e}"
+                contract_file=contract_file,
+                details=f"Failed to parse contract file: {e}",
             ) from e
         except OSError as e:
             raise FileOperationError(
@@ -141,7 +146,8 @@ class APIContractValidator:
         # Validate OpenAPI structure
         if "openapi" not in spec and "swagger" not in spec:
             raise InvalidOpenAPISpecError(
-                contract_file=contract_file, details="Missing 'openapi' or 'swagger' field"
+                contract_file=contract_file,
+                details="Missing 'openapi' or 'swagger' field",
             )
 
         # Validate required fields

@@ -97,6 +97,39 @@ class SpecCompletenessConfig:
 
 
 @dataclass
+class Context7Config:
+    """Context7 library verification configuration."""
+
+    enabled: bool = False
+    important_libraries: list[str] = field(default_factory=list)
+
+
+@dataclass
+class IntegrationConfig:
+    """Integration test validation configuration."""
+
+    enabled: bool = True
+    documentation: dict[str, bool] = field(
+        default_factory=lambda: {
+            "enabled": True,
+            "architecture_diagrams": True,
+            "sequence_diagrams": True,
+            "contract_documentation": True,
+            "performance_baseline_docs": True,
+        }
+    )
+
+
+@dataclass
+class DeploymentConfig:
+    """Deployment quality gates configuration."""
+
+    enabled: bool = True
+    integration_tests: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
+    security_scans: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
+
+
+@dataclass
 class QualityGatesConfig:
     """Quality gates configuration."""
 
@@ -106,6 +139,9 @@ class QualityGatesConfig:
     security: SecurityConfig = field(default_factory=SecurityConfig)
     documentation: DocumentationConfig = field(default_factory=DocumentationConfig)
     spec_completeness: SpecCompletenessConfig = field(default_factory=SpecCompletenessConfig)
+    context7: Context7Config = field(default_factory=Context7Config)
+    integration: IntegrationConfig = field(default_factory=IntegrationConfig)
+    deployment: DeploymentConfig = field(default_factory=DeploymentConfig)
 
 
 @dataclass
@@ -200,13 +236,26 @@ class ConfigManager:
                 data = json.load(f)
 
             # Parse config sections with defaults
-            quality_gates_data = self._parse_quality_gates(data.get("quality_gates", {}))
+            quality_gates_dict = data.get("quality_gates", {})
+
+            # Handle integration_tests at top level (for backward compatibility)
+            # Merge it into quality_gates if it exists
+            if "integration_tests" in data:
+                if "integration" not in quality_gates_dict:
+                    quality_gates_dict["integration"] = data["integration_tests"]
+
+            quality_gates_data = self._parse_quality_gates(quality_gates_dict)
             git_workflow_data = data.get("git_workflow", {})
             curation_data = data.get("curation", {})
 
             # Filter curation_data to only include valid CurationConfig fields
             # This maintains backward compatibility with old configs
-            valid_curation_fields = {"auto_curate", "frequency", "dry_run", "similarity_threshold"}
+            valid_curation_fields = {
+                "auto_curate",
+                "frequency",
+                "dry_run",
+                "similarity_threshold",
+            }
             filtered_curation_data = (
                 {k: v for k, v in curation_data.items() if k in valid_curation_fields}
                 if curation_data
@@ -216,12 +265,16 @@ class ConfigManager:
             # Create config with parsed data
             self._config = SDDConfig(
                 quality_gates=quality_gates_data,
-                git_workflow=GitWorkflowConfig(**git_workflow_data)
-                if git_workflow_data
-                else GitWorkflowConfig(),
-                curation=CurationConfig(**filtered_curation_data)
-                if filtered_curation_data
-                else CurationConfig(),
+                git_workflow=(
+                    GitWorkflowConfig(**git_workflow_data)
+                    if git_workflow_data
+                    else GitWorkflowConfig()
+                ),
+                curation=(
+                    CurationConfig(**filtered_curation_data)
+                    if filtered_curation_data
+                    else CurationConfig()
+                ),
             )
 
             logger.info("Loaded configuration from %s", config_path)
@@ -269,29 +322,57 @@ class ConfigManager:
             ConfigValidationError: If quality_gates structure is invalid
         """
         try:
-            # Parse nested configs
-            test_exec_data = data.get("test_execution", {})
-            linting_data = data.get("linting", {})
-            formatting_data = data.get("formatting", {})
-            security_data = data.get("security", {})
-            documentation_data = data.get("documentation", {})
-            spec_completeness_data = data.get("spec_completeness", {})
+            # Parse nested configs with field filtering
+            # Helper to filter only valid fields for a dataclass
+            def filter_fields(data: dict, config_class: type) -> dict:
+                """Filter dict to only include fields that exist in the dataclass."""
+                if not data:
+                    return {}
+                import dataclasses
+
+                valid_fields = {f.name for f in dataclasses.fields(config_class)}
+                return {k: v for k, v in data.items() if k in valid_fields}
+
+            test_exec_data = filter_fields(data.get("test_execution", {}), ExecutionConfig)
+            linting_data = filter_fields(data.get("linting", {}), LintingConfig)
+            formatting_data = filter_fields(data.get("formatting", {}), FormattingConfig)
+            security_data = filter_fields(data.get("security", {}), SecurityConfig)
+            documentation_data = filter_fields(data.get("documentation", {}), DocumentationConfig)
+            spec_completeness_data = filter_fields(
+                data.get("spec_completeness", {}), SpecCompletenessConfig
+            )
+            context7_data = filter_fields(data.get("context7", {}), Context7Config)
+            integration_data = filter_fields(data.get("integration", {}), IntegrationConfig)
+            deployment_data = filter_fields(data.get("deployment", {}), DeploymentConfig)
 
             return QualityGatesConfig(
-                test_execution=ExecutionConfig(**test_exec_data)
-                if test_exec_data
-                else ExecutionConfig(),
-                linting=LintingConfig(**linting_data) if linting_data else LintingConfig(),
-                formatting=FormattingConfig(**formatting_data)
-                if formatting_data
-                else FormattingConfig(),
-                security=SecurityConfig(**security_data) if security_data else SecurityConfig(),
-                documentation=DocumentationConfig(**documentation_data)
-                if documentation_data
-                else DocumentationConfig(),
-                spec_completeness=SpecCompletenessConfig(**spec_completeness_data)
-                if spec_completeness_data
-                else SpecCompletenessConfig(),
+                test_execution=(
+                    ExecutionConfig(**test_exec_data) if test_exec_data else ExecutionConfig()
+                ),
+                linting=(LintingConfig(**linting_data) if linting_data else LintingConfig()),
+                formatting=(
+                    FormattingConfig(**formatting_data) if formatting_data else FormattingConfig()
+                ),
+                security=(SecurityConfig(**security_data) if security_data else SecurityConfig()),
+                documentation=(
+                    DocumentationConfig(**documentation_data)
+                    if documentation_data
+                    else DocumentationConfig()
+                ),
+                spec_completeness=(
+                    SpecCompletenessConfig(**spec_completeness_data)
+                    if spec_completeness_data
+                    else SpecCompletenessConfig()
+                ),
+                context7=(Context7Config(**context7_data) if context7_data else Context7Config()),
+                integration=(
+                    IntegrationConfig(**integration_data)
+                    if integration_data
+                    else IntegrationConfig()
+                ),
+                deployment=(
+                    DeploymentConfig(**deployment_data) if deployment_data else DeploymentConfig()
+                ),
             )
         except TypeError as e:
             # Collect validation errors

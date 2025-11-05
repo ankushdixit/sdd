@@ -82,7 +82,10 @@ class EnvironmentValidator:
             raise ValidationError(
                 message=f"Missing or empty required environment variables: {', '.join(missing_vars)}",
                 code=ErrorCode.MISSING_REQUIRED_FIELD,
-                context={"missing_variables": missing_vars, "environment": self.environment},
+                context={
+                    "missing_variables": missing_vars,
+                    "environment": self.environment,
+                },
                 remediation=f"Set the following environment variables: {', '.join(missing_vars)}",
             )
 
