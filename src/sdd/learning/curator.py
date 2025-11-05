@@ -34,6 +34,7 @@ from sdd.core.exceptions import (
 )
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.learning.similarity import LearningSimilarityEngine
 
 logger = get_logger(__name__)
 
@@ -74,6 +75,9 @@ class LearningsCurator:
 
         # Initialize CommandRunner
         self.runner = CommandRunner(default_timeout=10, working_dir=self.project_root)
+
+        # Initialize similarity engine
+        self.similarity_engine = LearningSimilarityEngine()
 
     @log_errors()
     def curate(self, dry_run: bool = False) -> None:
@@ -342,111 +346,12 @@ class LearningsCurator:
         return False
 
     def _merge_similar_learnings(self, learnings: dict) -> int:
-        """Merge similar learnings"""
-        merged_count = 0
-        categories = learnings.get("categories", {})
-
-        for category_name, category_learnings in categories.items():
-            # Group by similarity (simple keyword matching for now)
-            to_remove = []
-
-            for i, learning_a in enumerate(category_learnings):
-                if i in to_remove:
-                    continue
-
-                for j in range(i + 1, len(category_learnings)):
-                    if j in to_remove:
-                        continue
-
-                    learning_b = category_learnings[j]
-
-                    # Simple similarity check
-                    if self._are_similar(learning_a, learning_b):
-                        # Merge into first learning
-                        self._merge_learning(learning_a, learning_b)
-                        to_remove.append(j)
-                        merged_count += 1
-
-            # Remove merged learnings
-            for idx in sorted(to_remove, reverse=True):
-                category_learnings.pop(idx)
-
-        return merged_count
+        """Merge similar learnings using similarity engine"""
+        return self.similarity_engine.merge_similar_learnings(learnings)
 
     def _are_similar(self, learning_a: dict, learning_b: dict) -> bool:
-        """Check if two learnings are similar using enhanced semantic comparison"""
-        content_a = learning_a.get("content", "").lower()
-        content_b = learning_b.get("content", "").lower()
-
-        # Exact match
-        if content_a == content_b:
-            return True
-
-        # Remove common stopwords for better comparison
-        stopwords = {
-            "the",
-            "a",
-            "an",
-            "and",
-            "or",
-            "but",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "of",
-            "with",
-            "is",
-            "are",
-            "was",
-            "were",
-            "be",
-            "been",
-            "being",
-            "have",
-            "has",
-            "had",
-            "do",
-            "does",
-            "did",
-            "will",
-            "would",
-            "should",
-            "could",
-            "may",
-            "might",
-        }
-
-        words_a = set(w for w in content_a.split() if w not in stopwords)
-        words_b = set(w for w in content_b.split() if w not in stopwords)
-
-        if len(words_a) == 0 or len(words_b) == 0:
-            return False
-
-        # Jaccard similarity (overlap coefficient)
-        overlap = len(words_a & words_b)
-        total = len(words_a | words_b)
-        jaccard = overlap / total if total > 0 else 0
-
-        # Containment similarity (one learning contains the other)
-        min_size = min(len(words_a), len(words_b))
-        containment = overlap / min_size if min_size > 0 else 0
-
-        # Consider similar if high Jaccard OR high containment
-        return jaccard > 0.6 or containment > 0.8
-
-    def _merge_learning(self, target: dict, source: dict) -> None:
-        """Merge source learning into target"""
-        # Merge applies_to
-        target_applies = set(target.get("applies_to", []))
-        source_applies = set(source.get("applies_to", []))
-        target["applies_to"] = list(target_applies | source_applies)
-
-        # Add note about merge
-        if "merged_from" not in target:
-            target["merged_from"] = []
-        target["merged_from"].append(source.get("learned_in", "unknown"))
+        """Check if two learnings are similar using similarity engine"""
+        return self.similarity_engine.are_similar(learning_a, learning_b)
 
     def _archive_old_learnings(self, learnings: dict, max_age_sessions: int = 50) -> int:
         """Archive old, unreferenced learnings"""
@@ -1103,45 +1008,9 @@ class LearningsCurator:
                 print()
 
     def get_related_learnings(self, learning_id: str, limit: int = 5) -> list[dict]:
-        """Get similar learnings using similarity algorithms"""
+        """Get similar learnings using similarity engine"""
         learnings = self._load_learnings()
-        categories = learnings.get("categories", {})
-
-        # Find target learning
-        target = None
-        for category_learnings in categories.values():
-            for learning in category_learnings:
-                if learning.get("id") == learning_id:
-                    target = learning
-                    break
-            if target:
-                break
-
-        if not target:
-            return []
-
-        # Calculate similarity scores
-        similarities = []
-        for category_name, category_learnings in categories.items():
-            for learning in category_learnings:
-                if learning.get("id") == learning_id:
-                    continue
-
-                # Use existing similarity algorithm
-                if self._are_similar(target, learning):
-                    # Calculate a simple similarity score (0-100)
-                    # Based on word overlap
-                    target_words = set(target.get("content", "").lower().split())
-                    learning_words = set(learning.get("content", "").lower().split())
-                    overlap = len(target_words & learning_words)
-                    total = len(target_words | learning_words)
-                    score = int(overlap / total * 100) if total > 0 else 0
-
-                    similarities.append((score, {**learning, "category": category_name}))
-
-        # Sort by score and return top N
-        similarities.sort(reverse=True, key=lambda x: x[0])
-        return [learning for _, learning in similarities[:limit]]
+        return self.similarity_engine.get_related_learnings(learnings, learning_id, limit)
 
     def generate_statistics(self) -> dict:
         """Generate learning statistics"""
