@@ -8,6 +8,8 @@ actually making any changes.
 Updated in Phase 5.7.3 to use spec_parser for checking work item completeness.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
