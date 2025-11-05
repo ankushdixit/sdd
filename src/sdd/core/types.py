@@ -3,9 +3,15 @@
 This module provides type-safe enums for work item properties, replacing
 magic strings throughout the codebase. All enums inherit from str for
 JSON serialization compatibility.
+
+It also provides TypedDict definitions for structured data and type aliases
+for improved code clarity.
 """
 
+from __future__ import annotations
+
 from enum import Enum
+from typing import Any, TypedDict
 
 from sdd.core.exceptions import ErrorCode, ValidationError
 
@@ -170,3 +176,137 @@ class GitStatus(str, Enum):
     def values(cls) -> list[str]:
         """Return list of all valid git status values."""
         return [item.value for item in cls]
+
+
+# Type Aliases
+WorkItemID = str
+"""Type alias for work item identifiers."""
+
+MilestoneID = str
+"""Type alias for milestone identifiers."""
+
+SessionID = int
+"""Type alias for session identifiers."""
+
+
+# TypedDict Definitions
+class WorkItemDict(TypedDict, total=False):
+    """Typed dictionary for work item data structure.
+
+    Attributes:
+        id: Unique work item identifier
+        type: Type of work item (feature, bug, etc.)
+        title: Human-readable title
+        status: Current status (not_started, in_progress, etc.)
+        priority: Priority level (critical, high, medium, low)
+        description: Detailed description
+        dependencies: List of work item IDs this depends on
+        milestone: Optional milestone this belongs to
+        created_at: ISO format timestamp of creation
+        updated_at: ISO format timestamp of last update
+        spec_file: Path to specification file
+        git_status: Git workflow status
+        git_branch: Git branch name
+    """
+
+    id: WorkItemID
+    type: str
+    title: str
+    status: str
+    priority: str
+    description: str
+    dependencies: list[WorkItemID]
+    milestone: str
+    created_at: str
+    updated_at: str
+    spec_file: str
+    git_status: str
+    git_branch: str
+
+
+class WorkItemsData(TypedDict):
+    """Typed dictionary for work_items.json file structure.
+
+    Attributes:
+        work_items: Dictionary mapping work item IDs to work item data
+        metadata: Additional metadata about the work items collection
+    """
+
+    work_items: dict[WorkItemID, WorkItemDict]
+    metadata: dict[str, Any]
+
+
+class LearningDict(TypedDict, total=False):
+    """Typed dictionary for learning entry data structure.
+
+    Attributes:
+        id: Unique learning identifier
+        session_id: Session where learning was captured
+        work_item_id: Work item associated with learning
+        category: Learning category (best_practices, gotcha, etc.)
+        content: Learning content/description
+        tags: List of tags for categorization
+        created_at: ISO format timestamp
+        context: Additional context information
+    """
+
+    id: str
+    session_id: SessionID
+    work_item_id: WorkItemID
+    category: str
+    content: str
+    tags: list[str]
+    created_at: str
+    context: dict[str, Any]
+
+
+class MilestoneDict(TypedDict, total=False):
+    """Typed dictionary for milestone data structure.
+
+    Attributes:
+        id: Unique milestone identifier
+        title: Milestone title
+        description: Milestone description
+        target_date: Target completion date
+        status: Milestone status
+        work_items: List of work item IDs in this milestone
+    """
+
+    id: MilestoneID
+    title: str
+    description: str
+    target_date: str
+    status: str
+    work_items: list[WorkItemID]
+
+
+class ConfigDict(TypedDict, total=False):
+    """Typed dictionary for SDD configuration structure.
+
+    Attributes:
+        project_name: Name of the project
+        version: Configuration version
+        quality_gates: Quality gate configuration
+        learning: Learning system configuration
+        git: Git integration configuration
+    """
+
+    project_name: str
+    version: str
+    quality_gates: dict[str, Any]
+    learning: dict[str, Any]
+    git: dict[str, Any]
+
+
+class QualityGateResult(TypedDict):
+    """Typed dictionary for quality gate results.
+
+    Attributes:
+        passed: Whether the quality gate passed
+        message: Result message
+        details: Additional details about the result
+    """
+
+    passed: bool
+    message: str
+    details: dict[str, Any]

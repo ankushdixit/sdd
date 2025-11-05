@@ -67,7 +67,7 @@ class JSONFileOperations:
 
         try:
             with open(file_path, encoding="utf-8") as f:
-                data = json.load(f)
+                data: dict[str, Any] = json.load(f)
         except json.JSONDecodeError as e:
             raise FileOperationError(
                 operation="parse",

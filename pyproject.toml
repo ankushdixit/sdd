@@ -37,6 +37,7 @@ quality = [
     "ruff>=0.1.6,<0.2.0",
     "bandit>=1.7.5,<2.0.0",
     "safety>=2.3.5,<3.0.0",
+    "mypy>=1.8.0,<2.0.0",
 ]
 viz = [
     "graphviz>=0.20.1,<0.21.0",
@@ -92,3 +93,32 @@ exclude_lines = [
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+strict_concatenate = true
+files = ["src/sdd"]
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "jsonschema.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "graphviz.*"
+ignore_missing_imports = true

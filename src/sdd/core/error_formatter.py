@@ -16,7 +16,7 @@ Usage:
 """
 
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 from sdd.core.exceptions import ErrorCategory, SDDError
 
@@ -120,7 +120,7 @@ class ErrorFormatter:
         return symbols.get(category, "❌")
 
     @staticmethod
-    def print_error(error: Exception, verbose: bool = False, file=None):
+    def print_error(error: Exception, verbose: bool = False, file: Any = None) -> None:
         """
         Print formatted error to stderr.
 

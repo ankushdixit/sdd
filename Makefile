@@ -1,4 +1,4 @@
-.PHONY: help install test lint format clean build
+.PHONY: help install test lint format typecheck clean build
 
 help:
 	@echo "SDD - Session-Driven Development"
@@ -8,6 +8,7 @@ help:
 	@echo "  install   - Install dependencies"
 	@echo "  test      - Run test suite"
 	@echo "  lint      - Run linting (ruff + bandit)"
+	@echo "  typecheck - Run type checking with mypy"
 	@echo "  format    - Format code with ruff"
 	@echo "  clean     - Remove build artifacts and caches"
 	@echo "  build     - Build distribution packages"
@@ -23,6 +24,9 @@ lint:
 	ruff check .
 	bandit -r scripts/ sdd_cli.py
 
+typecheck:
+	mypy src/sdd
+
 format:
 	ruff check --fix .
 	ruff format .
@@ -34,6 +38,7 @@ clean:
 	rm -rf src/*.egg-info
 	rm -rf .pytest_cache/
 	rm -rf .ruff_cache/
+	rm -rf .mypy_cache/
 	rm -rf htmlcov/
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete

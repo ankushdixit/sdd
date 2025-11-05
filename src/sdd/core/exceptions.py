@@ -361,7 +361,7 @@ class SessionNotFoundError(NotFoundError):
         >>> raise SessionNotFoundError()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             message="No active session found",
             code=ErrorCode.SESSION_NOT_FOUND,

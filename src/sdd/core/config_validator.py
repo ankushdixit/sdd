@@ -48,7 +48,8 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
             raise SDDFileNotFoundError(str(config_path), file_type="config")
         try:
             with open(config_path) as f:
-                return json.load(f)
+                config: dict[str, Any] = json.load(f)
+                return config
         except json.JSONDecodeError as e:
             raise ValidationError(
                 message=f"Invalid JSON in config file: {config_path}",
@@ -78,7 +79,8 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
     if not schema_path.exists():
         # Schema missing is a warning, not an error - allow validation to be skipped
         logger.warning(f"Schema file not found: {schema_path}, skipping validation")
-        return config
+        config_dict: dict[str, Any] = config
+        return config_dict
 
     try:
         with open(schema_path) as f:
@@ -95,7 +97,8 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
     # Validate
     try:
         jsonschema.validate(instance=config, schema=schema)
-        return config
+        validated_config: dict[str, Any] = config
+        return validated_config
     except jsonschema.ValidationError as e:
         error_msg = _format_validation_error(e)
         raise ConfigValidationError(config_path=str(config_path), errors=[error_msg]) from e
@@ -140,7 +143,7 @@ def load_and_validate_config(config_path: Path, schema_path: Path) -> dict[str, 
     return validate_config(config_path, schema_path)
 
 
-def main():
+def main() -> None:
     """
     CLI entry point for manual validation.
 

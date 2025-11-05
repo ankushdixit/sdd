@@ -35,6 +35,10 @@ coverage.xml
 htmlcov/
 .tox/
 
+# Type checking
+.mypy_cache/
+.mypy_baseline_report.txt
+
 # Session data (don't commit .session directories from testing projects)
 **/.session/
 !templates/

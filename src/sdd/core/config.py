@@ -164,7 +164,7 @@ class ConfigManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with default configuration if not already initialized."""
         if self._config is None:
             self._config = SDDConfig()
@@ -308,6 +308,7 @@ class ConfigManager:
         Returns:
             Quality gates configuration with all sub-configurations
         """
+        assert self._config is not None, "Config not initialized"
         return self._config.quality_gates
 
     @property
@@ -317,6 +318,7 @@ class ConfigManager:
         Returns:
             Git workflow configuration
         """
+        assert self._config is not None, "Config not initialized"
         return self._config.git_workflow
 
     @property
@@ -326,6 +328,7 @@ class ConfigManager:
         Returns:
             Learning curation configuration
         """
+        assert self._config is not None, "Config not initialized"
         return self._config.curation
 
     def get_config(self) -> SDDConfig:
@@ -334,6 +337,7 @@ class ConfigManager:
         Returns:
             Complete SDD configuration
         """
+        assert self._config is not None, "Config not initialized"
         return self._config
 
     def invalidate_cache(self) -> None:

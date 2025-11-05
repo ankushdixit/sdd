@@ -13,11 +13,13 @@ Usage:
         return json.load(open(path))
 """
 
+from __future__ import annotations
+
 import functools
 import logging
 import subprocess
 import time
-from typing import Callable, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 from sdd.core.exceptions import ErrorCode, GitError, SDDError, SubprocessError, SystemError
 from sdd.core.exceptions import TimeoutError as SDDTimeoutError
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def with_timeout(seconds: int, operation_name: str):
+def with_timeout(seconds: int, operation_name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to add timeout to function execution.
 
@@ -37,6 +39,9 @@ def with_timeout(seconds: int, operation_name: str):
     Args:
         seconds: Timeout in seconds
         operation_name: Name of operation for error message
+
+    Returns:
+        Decorator function
 
     Raises:
         TimeoutError: If function exceeds timeout
@@ -49,11 +54,11 @@ def with_timeout(seconds: int, operation_name: str):
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args: Any, **kwargs: Any) -> T:
             try:
                 import signal
 
-                def timeout_handler(signum, frame):
+                def timeout_handler(signum: int, frame: Any) -> None:
                     raise SDDTimeoutError(operation=operation_name, timeout_seconds=seconds)
 
                 # Set up timeout signal (Unix only)
@@ -79,8 +84,8 @@ def with_retry(
     max_attempts: int = 3,
     delay_seconds: float = 1.0,
     backoff_multiplier: float = 2.0,
-    exceptions: tuple = (Exception,),
-):
+    exceptions: tuple[type[Exception], ...] = (Exception,),
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to retry function on failure.
 
@@ -90,6 +95,9 @@ def with_retry(
         backoff_multiplier: Multiply delay by this after each attempt
         exceptions: Tuple of exceptions to catch and retry
 
+    Returns:
+        Decorator function
+
     Example:
         >>> @with_retry(max_attempts=3, delay_seconds=2.0)
         ... def load_file(path: Path) -> dict:
@@ -98,7 +106,7 @@ def with_retry(
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args: Any, **kwargs: Any) -> T:
             delay = delay_seconds
             last_exception = None
 
@@ -118,19 +126,25 @@ def with_retry(
                         logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
 
             # Re-raise the last exception
-            raise last_exception
+            if last_exception:
+                raise last_exception
+            # This should never happen, but mypy needs it
+            raise RuntimeError(f"{func.__name__} completed without returning or raising")
 
         return wrapper
 
     return decorator
 
 
-def log_errors(logger_instance: Optional[logging.Logger] = None):
+def log_errors(logger_instance: Optional[logging.Logger] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to log exceptions with structured data.
 
     Args:
         logger_instance: Logger to use (defaults to function's module logger)
+
+    Returns:
+        Decorator function
 
     Example:
         >>> @log_errors()
@@ -141,7 +155,7 @@ def log_errors(logger_instance: Optional[logging.Logger] = None):
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args: Any, **kwargs: Any) -> T:
             log = logger_instance or logging.getLogger(func.__module__)
 
             try:
@@ -185,7 +199,7 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
     """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> T:
+    def wrapper(*args: Any, **kwargs: Any) -> T:
         try:
             return func(*args, **kwargs)
         except subprocess.TimeoutExpired as e:
@@ -228,7 +242,7 @@ def convert_file_errors(func: Callable[..., T]) -> Callable[..., T]:
     """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> T:
+    def wrapper(*args: Any, **kwargs: Any) -> T:
         import builtins
 
         from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
@@ -263,16 +277,16 @@ class ErrorContext:
     """
 
     def __init__(
-        self, operation: str, cleanup: Optional[Callable[[], None]] = None, **context_data
-    ):
+        self, operation: str, cleanup: Optional[Callable[[], None]] = None, **context_data: Any
+    ) -> None:
         self.operation = operation
         self.cleanup = cleanup
         self.context_data = context_data
 
-    def __enter__(self):
+    def __enter__(self) -> ErrorContext:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         # Run cleanup regardless of success/failure
         if self.cleanup:
             try:
@@ -289,7 +303,7 @@ class ErrorContext:
 
 
 def safe_execute(
-    func: Callable[..., T], *args, default: Optional[T] = None, log_errors: bool = True, **kwargs
+    func: Callable[..., T], *args: Any, default: Optional[T] = None, log_errors: bool = True, **kwargs: Any
 ) -> Optional[T]:
     """
     Execute function and return default value on error instead of raising.
