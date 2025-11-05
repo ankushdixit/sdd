@@ -17,14 +17,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.deployment.executor import DeploymentExecutor
 from sdd.core.exceptions import (
-    PreDeploymentCheckError,
     DeploymentStepError,
-    SmokeTestError,
+    PreDeploymentCheckError,
     RollbackError,
+    SmokeTestError,
     ValidationError,
 )
+from sdd.deployment.executor import DeploymentExecutor
 
 
 @pytest.fixture
@@ -373,7 +373,7 @@ class TestSmokeTests:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        results = executor.run_smoke_tests()
+        _ = executor.run_smoke_tests()
 
         # Assert
         assert executor.config["smoke_tests"]["enabled"] is not None
@@ -550,7 +550,9 @@ class TestDeploymentExecutionFailures:
 
                 assert exc_info.value.context["step_number"] == 2
                 assert exc_info.value.context["step_description"] == "step2"
-                assert len(exc_info.value.context["results"]["steps"]) == 2  # Should stop after failed step
+                assert (
+                    len(exc_info.value.context["results"]["steps"]) == 2
+                )  # Should stop after failed step
 
     def test_execute_deployment_stops_on_first_failure(self, sample_work_item):
         """Test that execute_deployment stops executing steps after first failure."""
