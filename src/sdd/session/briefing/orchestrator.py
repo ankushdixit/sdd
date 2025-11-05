@@ -7,6 +7,7 @@ Coordinates all briefing components to generate comprehensive session briefings.
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.exceptions import GitError, SystemError
 from sdd.core.logging_config import get_logger
 
 from .documentation_loader import DocumentationLoader
@@ -65,7 +66,13 @@ class SessionBriefing:
         current_tree = self.tree_generator.load_current_tree()
         work_item_spec = self.work_item_loader.load_work_item_spec(item)
         env_checks = self.formatter.validate_environment()
-        git_status = self.git_context.check_git_status()
+
+        # Check git status - gracefully handle errors as this is informational
+        try:
+            git_status = self.git_context.check_git_status()
+        except (GitError, SystemError) as e:
+            logger.warning(f"Failed to check git status: {e.message}")
+            git_status = {"clean": False, "status": f"Error: {e.message}", "branch": None}
 
         # Validate spec completeness
         spec_validation_warning = self._validate_spec(item_id, item["type"])
@@ -104,14 +111,24 @@ class SessionBriefing:
             Validation warning string or None if valid
         """
         try:
+            from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+            from sdd.core.exceptions import SpecValidationError
             from sdd.work_items.spec_validator import (
                 format_validation_report,
                 validate_spec_file,
             )
 
-            is_valid, errors = validate_spec_file(item_id, work_item_type)
-            if not is_valid:
-                return format_validation_report(item_id, work_item_type, errors)
+            try:
+                validate_spec_file(item_id, work_item_type)
+                # If no exception, spec is valid
+                return None
+            except SpecValidationError as e:
+                # Spec has validation errors
+                return format_validation_report(item_id, work_item_type, e)
+            except (SDDFileNotFoundError, Exception):
+                # Spec file doesn't exist or other error - this is not critical for briefing
+                # Just return None and let the briefing proceed
+                return None
         except ImportError:
             # Gracefully handle if spec_validator not available
             logger.debug("Spec validator not available")

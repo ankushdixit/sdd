@@ -77,6 +77,8 @@ class TestLoadStatus:
     def test_load_status_invalid_json(self, tmp_path, monkeypatch):
         """Test load_status raises error for invalid JSON."""
         # Arrange
+        from sdd.core.exceptions import FileOperationError
+
         monkeypatch.chdir(tmp_path)
         session_dir = tmp_path / ".session" / "tracking"
         session_dir.mkdir(parents=True)
@@ -84,7 +86,7 @@ class TestLoadStatus:
         status_file.write_text("invalid json{")
 
         # Act & Assert
-        with pytest.raises(json.JSONDecodeError):
+        with pytest.raises(FileOperationError, match="Invalid JSON in status file"):
             load_status()
 
 
@@ -117,15 +119,19 @@ class TestLoadWorkItems:
     def test_load_work_items_file_not_found(self, tmp_path, monkeypatch):
         """Test load_work_items raises error when file doesn't exist."""
         # Arrange
+        from sdd.core.exceptions import FileOperationError
+
         monkeypatch.chdir(tmp_path)
 
         # Act & Assert
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileOperationError, match="Work items file not found"):
             load_work_items()
 
     def test_load_work_items_invalid_json(self, tmp_path, monkeypatch):
         """Test load_work_items raises error for invalid JSON."""
         # Arrange
+        from sdd.core.exceptions import FileOperationError
+
         monkeypatch.chdir(tmp_path)
         session_dir = tmp_path / ".session" / "tracking"
         session_dir.mkdir(parents=True)
@@ -133,7 +139,7 @@ class TestLoadWorkItems:
         work_items_file.write_text("not valid json")
 
         # Act & Assert
-        with pytest.raises(json.JSONDecodeError):
+        with pytest.raises(FileOperationError, match="Invalid JSON in work items file"):
             load_work_items()
 
 

@@ -9,6 +9,13 @@ from unittest.mock import patch
 
 import pytest
 
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.work_items.delete import delete_work_item, find_dependents
 
 
@@ -150,15 +157,15 @@ class TestFindDependents:
 class TestDeleteWorkItem:
     """Tests for delete_work_item function."""
 
-    def test_delete_work_item_nonexistent(self, project_with_work_items, capsys):
+    def test_delete_work_item_nonexistent(self, project_with_work_items):
         """Test deleting a work item that doesn't exist."""
-        result = delete_work_item(
-            "nonexistent_item", delete_spec=False, project_root=project_with_work_items
-        )
+        with pytest.raises(WorkItemNotFoundError) as exc_info:
+            delete_work_item(
+                "nonexistent_item", delete_spec=False, project_root=project_with_work_items
+            )
 
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Error: Work item 'nonexistent_item' not found" in captured.out
+        assert "nonexistent_item" in str(exc_info.value)
+        assert exc_info.value.context["work_item_id"] == "nonexistent_item"
 
     def test_delete_work_item_keep_spec(self, project_with_work_items):
         """Test deleting work item while keeping spec file."""
@@ -240,16 +247,16 @@ class TestDeleteWorkItem:
         assert updated_data["metadata"]["completed"] == 0  # One less completed
         assert updated_data["metadata"]["in_progress"] == 1
 
-    def test_delete_work_item_no_work_items_file(self, tmp_path, capsys):
+    def test_delete_work_item_no_work_items_file(self, tmp_path):
         """Test deleting when work_items.json doesn't exist."""
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        result = delete_work_item("any_item", delete_spec=False, project_root=project_root)
+        with pytest.raises(SDDFileNotFoundError) as exc_info:
+            delete_work_item("any_item", delete_spec=False, project_root=project_root)
 
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Error: No work items found" in captured.out
+        assert "work_items.json" in exc_info.value.context["file_path"]
+        assert exc_info.value.context["file_type"] == "work items"
 
     def test_delete_work_item_spec_not_found(self, project_with_work_items, capsys):
         """Test deleting when spec file doesn't exist."""
@@ -325,19 +332,16 @@ class TestDeleteWorkItem:
         assert "Deletion cancelled" in captured.out
 
     @patch("sys.stdin.isatty")
-    def test_delete_work_item_non_interactive_no_flags(
-        self, mock_isatty, project_with_work_items, capsys
-    ):
-        """Test non-interactive mode without flags shows error."""
+    def test_delete_work_item_non_interactive_no_flags(self, mock_isatty, project_with_work_items):
+        """Test non-interactive mode without flags raises error."""
         mock_isatty.return_value = False
 
-        result = delete_work_item("feature_isolated", project_root=project_with_work_items)
+        with pytest.raises(ValidationError) as exc_info:
+            delete_work_item("feature_isolated", project_root=project_with_work_items)
 
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Cannot run interactive deletion in non-interactive mode" in captured.out
-        assert "--keep-spec" in captured.out
-        assert "--delete-spec" in captured.out
+        assert "non-interactive mode" in exc_info.value.message
+        assert "--keep-spec" in exc_info.value.remediation
+        assert "--delete-spec" in exc_info.value.remediation
 
     def test_delete_work_item_dependents_not_modified(self, project_with_work_items):
         """Test that dependent work items are not modified during deletion."""

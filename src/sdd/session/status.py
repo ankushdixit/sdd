@@ -2,38 +2,107 @@
 """Display current session status."""
 
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.exceptions import (
+    FileNotFoundError,
+    FileOperationError,
+    SessionNotFoundError,
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.core.types import Priority, WorkItemStatus
+
+logger = logging.getLogger(__name__)
 
 
 def get_session_status():
-    """Get current session status."""
+    """
+    Get current session status.
+
+    Loads and displays the current session status including:
+    - Work item information
+    - Time elapsed
+    - Git changes
+    - Milestone progress
+    - Next items
+
+    Returns:
+        int: Exit code (0 for success, error code for failure)
+
+    Raises:
+        SessionNotFoundError: If no active session exists
+        FileNotFoundError: If required session files are missing
+        FileOperationError: If file read operations fail
+        ValidationError: If session data is invalid
+        WorkItemNotFoundError: If work item doesn't exist
+    """
     session_dir = Path(".session")
     status_file = session_dir / "tracking" / "status_update.json"
 
     if not status_file.exists():
-        print("No active session.")
-        return 1
+        raise SessionNotFoundError()
 
     # Load status
-    status = json.loads(status_file.read_text())
+    try:
+        status = json.loads(status_file.read_text())
+    except json.JSONDecodeError as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(status_file),
+            details=f"Invalid JSON: {e}",
+            cause=e,
+        )
+    except OSError as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(status_file),
+            details=str(e),
+            cause=e,
+        )
+
     work_item_id = status.get("current_work_item")
 
     if not work_item_id:
-        print("No active work item in this session.")
-        return 1
+        raise ValidationError(
+            message="No active work item in this session",
+            context={"status_file": str(status_file)},
+            remediation="Start a work item with 'sdd start <work_item_id>'",
+        )
 
     # Load work item
     work_items_file = session_dir / "tracking" / "work_items.json"
-    data = json.loads(work_items_file.read_text())
+
+    if not work_items_file.exists():
+        raise FileNotFoundError(
+            file_path=str(work_items_file),
+            file_type="work items",
+        )
+
+    try:
+        data = json.loads(work_items_file.read_text())
+    except json.JSONDecodeError as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(work_items_file),
+            details=f"Invalid JSON: {e}",
+            cause=e,
+        )
+    except OSError as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(work_items_file),
+            details=str(e),
+            cause=e,
+        )
+
     item = data["work_items"].get(work_item_id)
 
     if not item:
-        print(f"Work item {work_item_id} not found.")
-        return 1
+        raise WorkItemNotFoundError(work_item_id)
 
     print("\nCurrent Session Status")
     print("=" * 80)
@@ -72,8 +141,10 @@ def get_session_status():
             if len(lines) > 10:
                 print(f"  ... and {len(lines) - 10} more")
             print()
-    except Exception:
-        pass
+    except Exception as e:
+        # Git operations are optional for status display
+        # Log but don't fail if git command fails
+        logger.debug(f"Failed to get git changes: {e}")
 
     # Git branch
     git_info = item.get("git", {})

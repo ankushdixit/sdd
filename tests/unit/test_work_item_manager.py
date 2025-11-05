@@ -10,6 +10,14 @@ from unittest.mock import patch
 
 import pytest
 
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    SpecValidationError,
+    ValidationError,
+    WorkItemAlreadyExistsError,
+    WorkItemNotFoundError,
+)
 from sdd.work_items.manager import WorkItemManager
 
 
@@ -416,19 +424,16 @@ class TestCreateWorkItemFromArgs:
         assert result == "feature_test_feature"
         assert work_item_manager.work_items_file.exists()
 
-    def test_create_work_item_from_args_invalid_type(self, work_item_manager, capsys):
+    def test_create_work_item_from_args_invalid_type(self, work_item_manager):
         """Test that invalid work item type is rejected."""
-        # Act
-        result = work_item_manager.create_work_item_from_args(
-            "invalid_type", "Test Item", "high", ""
-        )
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager.create_work_item_from_args("invalid_type", "Test Item", "high", "")
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "Invalid work item type" in captured.out
+        assert "Invalid work item type" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_WORK_ITEM_TYPE
 
-    def test_create_work_item_from_args_invalid_priority(self, work_item_manager, tmp_path, capsys):
+    def test_create_work_item_from_args_invalid_priority(self, work_item_manager, tmp_path):
         """Test that invalid priority defaults to 'high'."""
         # Arrange
         templates_dir = tmp_path / "templates"
@@ -444,9 +449,6 @@ class TestCreateWorkItemFromArgs:
 
         # Assert
         assert result is not None
-        captured = capsys.readouterr()
-        assert "Invalid priority" in captured.out
-
         data = json.loads(work_item_manager.work_items_file.read_text())
         assert data["work_items"][result]["priority"] == "high"
 
@@ -472,9 +474,7 @@ class TestCreateWorkItemFromArgs:
         assert "feature_foundation" in data["work_items"][result]["dependencies"]
         assert "feature_auth" in data["work_items"][result]["dependencies"]
 
-    def test_create_work_item_from_args_duplicate_id(
-        self, work_item_manager_with_data, tmp_path, capsys
-    ):
+    def test_create_work_item_from_args_duplicate_id(self, work_item_manager_with_data, tmp_path):
         """Test that duplicate work item ID is rejected."""
         # Arrange
         templates_dir = tmp_path / "templates"
@@ -483,23 +483,22 @@ class TestCreateWorkItemFromArgs:
         template_file.write_text("# Feature: [Feature Name]")
         work_item_manager_with_data.templates_dir = templates_dir
 
-        # Act
-        result = work_item_manager_with_data.create_work_item_from_args(
-            "feature",
-            "Foundation",  # Will generate same ID as existing item
-            "high",
-            "",
-        )
+        # Act & Assert
+        with pytest.raises(WorkItemAlreadyExistsError) as exc_info:
+            work_item_manager_with_data.create_work_item_from_args(
+                "feature",
+                "Foundation",  # Will generate same ID as existing item
+                "high",
+                "",
+            )
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "already exists" in captured.out
+        assert "feature_foundation" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.WORK_ITEM_ALREADY_EXISTS
 
     def test_create_work_item_from_args_nonexistent_dependency(
-        self, work_item_manager_with_data, tmp_path, capsys
+        self, work_item_manager_with_data, tmp_path
     ):
-        """Test warning when dependency doesn't exist."""
+        """Test that nonexistent dependency is still accepted (warning only)."""
         # Arrange
         templates_dir = tmp_path / "templates"
         templates_dir.mkdir()
@@ -512,60 +511,56 @@ class TestCreateWorkItemFromArgs:
             "feature", "New Feature", "high", "nonexistent_dep"
         )
 
-        # Assert
+        # Assert - work item should be created despite nonexistent dependency
         assert result is not None
-        captured = capsys.readouterr()
-        assert "does not exist" in captured.out
+        data = json.loads(work_item_manager_with_data.work_items_file.read_text())
+        assert "nonexistent_dep" in data["work_items"][result]["dependencies"]
 
 
 class TestCreateWorkItemInteractive:
     """Tests for interactive work item creation."""
 
-    def test_create_work_item_non_interactive_environment(self, work_item_manager, capsys):
+    def test_create_work_item_non_interactive_environment(self, work_item_manager):
         """Test that interactive creation fails in non-interactive environment."""
-        # Arrange
+        # Arrange & Act & Assert
         with patch("sys.stdin.isatty", return_value=False):
-            # Act
-            result = work_item_manager.create_work_item()
+            with pytest.raises(ValidationError) as exc_info:
+                work_item_manager.create_work_item()
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "non-interactive" in captured.out.lower()
+            assert "non-interactive" in str(exc_info.value).lower()
+            assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
     @patch("sys.stdin.isatty", return_value=True)
     @patch("builtins.input")
     def test_create_work_item_interactive_eoferror_on_type(
-        self, mock_input, mock_isatty, work_item_manager, capsys
+        self, mock_input, mock_isatty, work_item_manager
     ):
         """Test that EOFError during type selection is handled."""
         # Arrange
         mock_input.side_effect = EOFError()
 
-        # Act
-        result = work_item_manager.create_work_item()
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager.create_work_item()
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "Interactive input unavailable" in captured.out
+        assert "Interactive input unavailable" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
     @patch("sys.stdin.isatty", return_value=True)
     @patch("builtins.input")
     def test_create_work_item_interactive_eoferror_on_title(
-        self, mock_input, mock_isatty, work_item_manager, capsys
+        self, mock_input, mock_isatty, work_item_manager
     ):
         """Test that EOFError during title input is handled."""
         # Arrange
         mock_input.side_effect = ["1", EOFError()]  # Select feature, then EOFError on title
 
-        # Act
-        result = work_item_manager.create_work_item()
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager.create_work_item()
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "Interactive input unavailable" in captured.out
+        assert "Interactive input unavailable" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
 
 class TestPromptMethods:
@@ -622,17 +617,16 @@ class TestPromptMethods:
         # Assert
         assert result == "Test Title"
 
-    def test_prompt_title_empty_returns_none(self, work_item_manager, capsys):
-        """Test _prompt_title with empty input returns None."""
+    def test_prompt_title_empty_returns_none(self, work_item_manager):
+        """Test _prompt_title with empty input raises ValidationError."""
         # Arrange
         with patch("builtins.input", return_value=""):
-            # Act
-            result = work_item_manager._prompt_title()
+            # Act & Assert
+            with pytest.raises(ValidationError) as exc_info:
+                work_item_manager._prompt_title()
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "required" in captured.out.lower()
+            assert "required" in str(exc_info.value).lower()
+            assert exc_info.value.code == ErrorCode.MISSING_REQUIRED_FIELD
 
     def test_prompt_priority_default(self, work_item_manager):
         """Test _prompt_priority defaults to 'high'."""
@@ -936,25 +930,23 @@ class TestSortItems:
 class TestShowWorkItem:
     """Tests for displaying work item details."""
 
-    def test_show_work_item_not_found(self, work_item_manager_with_data, capsys):
+    def test_show_work_item_not_found(self, work_item_manager_with_data):
         """Test showing work item that doesn't exist."""
-        # Act
-        result = work_item_manager_with_data.show_work_item("nonexistent")
+        # Act & Assert
+        with pytest.raises(WorkItemNotFoundError) as exc_info:
+            work_item_manager_with_data.show_work_item("nonexistent")
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "not found" in captured.out
+        assert "nonexistent" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.WORK_ITEM_NOT_FOUND
 
-    def test_show_work_item_no_file(self, work_item_manager, capsys):
+    def test_show_work_item_no_file(self, work_item_manager):
         """Test showing work item when no work items file exists."""
-        # Act
-        result = work_item_manager.show_work_item("test")
+        # Act & Assert
+        with pytest.raises(FileOperationError) as exc_info:
+            work_item_manager.show_work_item("test")
 
-        # Assert
-        assert result is None
-        captured = capsys.readouterr()
-        assert "No work items found" in captured.out
+        assert "No work items found" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
     def test_show_work_item_displays_basic_info(self, work_item_manager_with_data, capsys):
         """Test that basic work item information is displayed."""
@@ -994,109 +986,96 @@ class TestShowWorkItem:
 class TestUpdateWorkItem:
     """Tests for updating work items."""
 
-    def test_update_work_item_no_file(self, work_item_manager, capsys):
+    def test_update_work_item_no_file(self, work_item_manager):
         """Test updating work item when no file exists."""
-        # Act
-        result = work_item_manager.update_work_item("test", status="completed")
+        # Act & Assert
+        with pytest.raises(FileOperationError) as exc_info:
+            work_item_manager.update_work_item("test", status="completed")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "No work items found" in captured.out
+        assert "No work items found" in str(exc_info.value)
 
-    def test_update_work_item_not_found(self, work_item_manager_with_data, capsys):
+    def test_update_work_item_not_found(self, work_item_manager_with_data):
         """Test updating non-existent work item."""
-        # Act
-        result = work_item_manager_with_data.update_work_item("nonexistent", status="completed")
+        # Act & Assert
+        with pytest.raises(WorkItemNotFoundError) as exc_info:
+            work_item_manager_with_data.update_work_item("nonexistent", status="completed")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "not found" in captured.out
+        assert "nonexistent" in str(exc_info.value)
 
     def test_update_work_item_status(self, work_item_manager_with_data):
         """Test updating work item status."""
         # Act
-        result = work_item_manager_with_data.update_work_item("feature_auth", status="completed")
+        work_item_manager_with_data.update_work_item("feature_auth", status="completed")
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
         assert data["work_items"]["feature_auth"]["status"] == "completed"
 
-    def test_update_work_item_invalid_status(self, work_item_manager_with_data, capsys):
+    def test_update_work_item_invalid_status(self, work_item_manager_with_data):
         """Test updating with invalid status."""
-        # Act
-        result = work_item_manager_with_data.update_work_item("feature_auth", status="invalid")
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager_with_data.update_work_item("feature_auth", status="invalid")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Invalid status" in captured.out
+        assert "Invalid status" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_STATUS
 
     def test_update_work_item_priority(self, work_item_manager_with_data):
         """Test updating work item priority."""
         # Act
-        result = work_item_manager_with_data.update_work_item("feature_auth", priority="critical")
+        work_item_manager_with_data.update_work_item("feature_auth", priority="critical")
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
         assert data["work_items"]["feature_auth"]["priority"] == "critical"
 
-    def test_update_work_item_invalid_priority(self, work_item_manager_with_data, capsys):
+    def test_update_work_item_invalid_priority(self, work_item_manager_with_data):
         """Test updating with invalid priority."""
-        # Act
-        result = work_item_manager_with_data.update_work_item("feature_auth", priority="invalid")
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager_with_data.update_work_item("feature_auth", priority="invalid")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Invalid priority" in captured.out
+        assert "Invalid priority" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_PRIORITY
 
     def test_update_work_item_milestone(self, work_item_manager_with_data):
         """Test updating work item milestone."""
         # Act
-        result = work_item_manager_with_data.update_work_item("bug_login_issue", milestone="v1.1")
+        work_item_manager_with_data.update_work_item("bug_login_issue", milestone="v1.1")
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
         assert data["work_items"]["bug_login_issue"]["milestone"] == "v1.1"
 
     def test_update_work_item_add_dependency(self, work_item_manager_with_data):
         """Test adding dependency to work item."""
         # Act
-        result = work_item_manager_with_data.update_work_item(
+        work_item_manager_with_data.update_work_item(
             "feature_foundation", add_dependency="feature_auth"
         )
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
         assert "feature_auth" in data["work_items"]["feature_foundation"]["dependencies"]
 
-    def test_update_work_item_add_nonexistent_dependency(self, work_item_manager_with_data, capsys):
+    def test_update_work_item_add_nonexistent_dependency(self, work_item_manager_with_data):
         """Test adding non-existent dependency."""
-        # Act
-        result = work_item_manager_with_data.update_work_item(
-            "feature_foundation", add_dependency="nonexistent"
-        )
+        # Act & Assert
+        with pytest.raises(WorkItemNotFoundError) as exc_info:
+            work_item_manager_with_data.update_work_item(
+                "feature_foundation", add_dependency="nonexistent"
+            )
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "not found" in captured.out
+        assert "nonexistent" in str(exc_info.value)
 
     def test_update_work_item_remove_dependency(self, work_item_manager_with_data):
         """Test removing dependency from work item."""
         # Act
-        result = work_item_manager_with_data.update_work_item(
+        work_item_manager_with_data.update_work_item(
             "feature_auth", remove_dependency="feature_foundation"
         )
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
         assert "feature_foundation" not in data["work_items"]["feature_auth"]["dependencies"]
 
@@ -1125,48 +1104,40 @@ class TestUpdateWorkItem:
 class TestUpdateWorkItemInteractive:
     """Tests for interactive work item updates."""
 
-    def test_update_work_item_interactive_non_interactive_env(
-        self, work_item_manager_with_data, capsys
-    ):
+    def test_update_work_item_interactive_non_interactive_env(self, work_item_manager_with_data):
         """Test that interactive update fails in non-interactive environment."""
-        # Arrange
+        # Arrange & Act & Assert
         with patch("sys.stdin.isatty", return_value=False):
-            # Act
-            result = work_item_manager_with_data.update_work_item_interactive("feature_foundation")
+            with pytest.raises(ValidationError) as exc_info:
+                work_item_manager_with_data.update_work_item_interactive("feature_foundation")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "non-interactive" in captured.out.lower()
+            assert "non-interactive" in str(exc_info.value).lower()
+            assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
-    def test_update_work_item_interactive_no_file(self, work_item_manager, capsys):
+    def test_update_work_item_interactive_no_file(self, work_item_manager):
         """Test interactive update when no file exists."""
-        # Arrange
+        # Arrange & Act & Assert
         with patch("sys.stdin.isatty", return_value=True):
-            # Act
-            result = work_item_manager.update_work_item_interactive("test")
+            with pytest.raises(FileOperationError) as exc_info:
+                work_item_manager.update_work_item_interactive("test")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "No work items found" in captured.out
+            assert "No work items found" in str(exc_info.value)
 
     @patch("sys.stdin.isatty", return_value=True)
     @patch("builtins.input")
     def test_update_work_item_interactive_eoferror(
-        self, mock_input, mock_isatty, work_item_manager_with_data, capsys
+        self, mock_input, mock_isatty, work_item_manager_with_data
     ):
         """Test that EOFError during interactive update is handled."""
         # Arrange
         mock_input.side_effect = EOFError()
 
-        # Act
-        result = work_item_manager_with_data.update_work_item_interactive("feature_foundation")
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager_with_data.update_work_item_interactive("feature_foundation")
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Interactive input unavailable" in captured.out
+        assert "Interactive input unavailable" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
 
 class TestGetNextWorkItem:
@@ -1238,18 +1209,18 @@ class TestValidateIntegrationTest:
     """Tests for integration test validation."""
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
-    def test_validate_integration_test_missing_spec(self, mock_parse, work_item_manager, capsys):
+    def test_validate_integration_test_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
         mock_parse.side_effect = FileNotFoundError()
         work_item = {"id": "test", "type": "integration_test", "spec_file": "test.md"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(FileOperationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert is_valid is False
-        assert any("not found" in err for err in errors)
+        assert "not found" in str(exc_info.value).lower()
+        assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_invalid_spec(self, mock_parse, work_item_manager):
@@ -1258,12 +1229,12 @@ class TestValidateIntegrationTest:
         mock_parse.side_effect = ValueError("Invalid spec")
         work_item = {"id": "test", "type": "integration_test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert is_valid is False
-        assert any("Invalid spec" in err for err in errors)
+        assert "Invalid spec" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_required_sections(
@@ -1280,12 +1251,12 @@ class TestValidateIntegrationTest:
         }
         work_item = {"id": "test", "dependencies": ["dep1"]}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert is_valid is False
-        assert len(errors) > 0
+        assert len(exc_info.value.context["validation_errors"]) > 0
+        assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_no_dependencies(self, mock_parse, work_item_manager):
@@ -1300,11 +1271,11 @@ class TestValidateIntegrationTest:
         }
         work_item = {"id": "test", "dependencies": []}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert any("dependencies" in err.lower() for err in errors)
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
@@ -1323,12 +1294,9 @@ class TestValidateIntegrationTest:
         }
         work_item = {"id": "test", "dependencies": ["dep1", "dep2"]}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
-
-        # Assert
-        assert is_valid is True
-        assert len(errors) == 0
+        # Act - should not raise
+        work_item_manager.validate_integration_test(work_item)
+        # Assert - if we get here, validation passed
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_integration_test_insufficient_acceptance_criteria(
@@ -1345,11 +1313,11 @@ class TestValidateIntegrationTest:
         }
         work_item = {"id": "test", "dependencies": ["dep1"]}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_integration_test(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert any("at least 3" in err for err in errors)
 
 
@@ -1363,12 +1331,12 @@ class TestValidateDeployment:
         mock_parse.side_effect = FileNotFoundError()
         work_item = {"id": "test", "type": "deployment", "spec_file": "test.md"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(FileOperationError) as exc_info:
+            work_item_manager.validate_deployment(work_item)
 
-        # Assert
-        assert is_valid is False
-        assert any("not found" in err for err in errors)
+        assert "not found" in str(exc_info.value).lower()
+        assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_required_sections(self, mock_parse, work_item_manager):
@@ -1384,11 +1352,11 @@ class TestValidateDeployment:
         }
         work_item = {"id": "test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_deployment(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert len(errors) > 0
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
@@ -1411,11 +1379,11 @@ class TestValidateDeployment:
         }
         work_item = {"id": "test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_deployment(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert any("pre-deployment" in err.lower() for err in errors)
         assert any("post-deployment" in err.lower() for err in errors)
 
@@ -1437,11 +1405,11 @@ class TestValidateDeployment:
         }
         work_item = {"id": "test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_deployment(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert any("rollback triggers" in err.lower() for err in errors)
         assert any("rollback steps" in err.lower() for err in errors)
 
@@ -1463,11 +1431,11 @@ class TestValidateDeployment:
         }
         work_item = {"id": "test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            work_item_manager.validate_deployment(work_item)
 
-        # Assert
-        assert is_valid is False
+        errors = exc_info.value.context["validation_errors"]
         assert any("smoke test" in err.lower() for err in errors)
 
     @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
@@ -1488,12 +1456,9 @@ class TestValidateDeployment:
         }
         work_item = {"id": "test"}
 
-        # Act
-        is_valid, errors = work_item_manager.validate_deployment(work_item)
-
-        # Assert
-        assert is_valid is True
-        assert len(errors) == 0
+        # Act - should not raise
+        work_item_manager.validate_deployment(work_item)
+        # Assert - if we get here, validation passed
 
 
 class TestMilestones:
@@ -1501,34 +1466,29 @@ class TestMilestones:
 
     def test_create_milestone_new(self, work_item_manager):
         """Test creating a new milestone."""
-        # Act
-        result = work_item_manager.create_milestone(
-            "v1.0", "Version 1.0", "First release", "2025-06-01"
-        )
+        # Act - should not raise
+        work_item_manager.create_milestone("v1.0", "Version 1.0", "First release", "2025-06-01")
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager.work_items_file.read_text())
         assert "v1.0" in data["milestones"]
         assert data["milestones"]["v1.0"]["title"] == "Version 1.0"
 
-    def test_create_milestone_duplicate(self, work_item_manager_with_data, capsys):
+    def test_create_milestone_duplicate(self, work_item_manager_with_data):
         """Test that duplicate milestone is rejected."""
-        # Act
-        result = work_item_manager_with_data.create_milestone("v1.0", "Duplicate", "Test", None)
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            work_item_manager_with_data.create_milestone("v1.0", "Duplicate", "Test", None)
 
-        # Assert
-        assert result is False
-        captured = capsys.readouterr()
-        assert "already exists" in captured.out
+        assert "already exists" in str(exc_info.value)
+        assert "v1.0" in str(exc_info.value)
 
     def test_create_milestone_no_target_date(self, work_item_manager):
         """Test creating milestone without target date."""
-        # Act
-        result = work_item_manager.create_milestone("v1.0", "Version 1.0", "First release", None)
+        # Act - should not raise
+        work_item_manager.create_milestone("v1.0", "Version 1.0", "First release", None)
 
         # Assert
-        assert result is True
         data = json.loads(work_item_manager.work_items_file.read_text())
         assert data["milestones"]["v1.0"]["target_date"] == ""
 

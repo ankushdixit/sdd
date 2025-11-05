@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Core Error Handling Infrastructure**
+  - Implemented comprehensive SDDError exception hierarchy with 50+ specialized exception types
+  - Added ErrorCode enumeration with 40+ error codes for standardized error identification
+  - Added ErrorCategory system (SYSTEM, USER, VALIDATION, NETWORK) for error classification
+  - Implemented ErrorFormatter for consistent error display with exit code mapping
+  - Added error handling decorators (@log_errors, @convert_subprocess_errors, @convert_file_errors)
+  - Created structured logging integration with context preservation and exception chaining
+  - All exceptions include context dict, remediation guidance, and proper exit codes
+
+### Changed
+- **Standardized Error Handling Migration (Phases 1-3)**
+  - Migrated 33 production files from print() and return tuples to structured exception-based error handling
+  - **Phase 1** (11 files): Core utilities and briefing components
+  - **Phase 2** (8 files): Work item management and validation
+  - **Phase 3A** (5 files): Core business logic (git/integration, quality/gates, learning/curator, session/complete, work_items/manager)
+  - **Phase 3B** (3 files): Testing infrastructure
+  - **Phase 3C** (6 files): Project management and configuration
+  - Replaced 200+ print() error statements with proper exception raising
+  - Replaced 26 return tuple patterns with exception-based error handling
+  - Replaced 8 sys.exit() calls in business logic with exceptions (CLI entry points preserved)
+  - Replaced 75+ broad Exception catches with specific exception types or catch-and-reraise pattern
+  - Added @log_errors() decorators to 40+ key functions for structured logging
+  - Updated 9 test files with pytest.raises() patterns and exception validation
+  - Quality gates intentionally kept 47 return tuples for result aggregation (not errors)
+  - All 1750 tests passing (100% coverage maintained)
+
+### Fixed
+- **Linting and Formatting**
+  - Fixed 77 type annotation warnings (Optional[X] → X | None) using ruff --unsafe-fixes
+  - Added missing ValidationError import in session/briefing.py
+  - Formatted 31 files with ruff format for consistent code style
+  - All ruff checks passing with zero errors
+
 ### Investigated
 - **Dataclass Migration Analysis**
   - Investigated replacing dictionary-based data structures with Python dataclasses across the codebase

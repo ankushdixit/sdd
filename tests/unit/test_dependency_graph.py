@@ -10,6 +10,11 @@ from unittest.mock import patch
 
 import pytest
 
+from sdd.core.exceptions import (
+    CommandExecutionError,
+    FileOperationError,
+    ValidationError,
+)
 from sdd.visualization.dependency_graph import DependencyGraphVisualizer
 
 
@@ -107,6 +112,34 @@ class TestLoadWorkItems:
 
         # Assert
         assert result == []
+
+    def test_load_work_items_invalid_json(self, tmp_path):
+        """Test that load_work_items raises FileOperationError for invalid JSON."""
+        # Arrange
+        work_items_file = tmp_path / "invalid.json"
+        work_items_file.write_text("{ invalid json }")
+        viz = DependencyGraphVisualizer(work_items_file)
+
+        # Act & Assert
+        with pytest.raises(FileOperationError) as exc_info:
+            viz.load_work_items()
+
+        assert "parse" in exc_info.value.context["operation"]
+        assert str(work_items_file) in exc_info.value.context["file_path"]
+
+    def test_load_work_items_invalid_structure(self, tmp_path):
+        """Test that load_work_items raises ValidationError for non-dict JSON."""
+        # Arrange
+        work_items_file = tmp_path / "array.json"
+        work_items_file.write_text('["not", "a", "dict"]')
+        viz = DependencyGraphVisualizer(work_items_file)
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.load_work_items()
+
+        assert "JSON object" in exc_info.value.message
+        assert exc_info.value.remediation is not None
 
     def test_load_work_items_all_items(self, tmp_path, sample_work_items_data):
         """Test that load_work_items returns all non-completed items by default."""
@@ -317,6 +350,30 @@ class TestGenerateDot:
         assert '"999" ->' not in result
         assert '"1"' in result
 
+    def test_generate_dot_invalid_work_item_not_dict(self):
+        """Test that generate_dot raises ValidationError for non-dict work items."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        work_items = ["not a dict"]
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_dot(work_items)
+
+        assert "dictionary" in exc_info.value.message
+
+    def test_generate_dot_missing_id_field(self):
+        """Test that generate_dot raises ValidationError for work items without id."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        work_items = [{"title": "No ID"}]
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_dot(work_items)
+
+        assert "id" in exc_info.value.message.lower()
+
 
 class TestGenerateAscii:
     """Tests for generate_ascii method."""
@@ -396,6 +453,30 @@ class TestGenerateAscii:
         assert "Timeline Projection:" in result
         assert "-" * 50 in result
 
+    def test_generate_ascii_invalid_work_item_not_dict(self):
+        """Test that generate_ascii raises ValidationError for non-dict work items."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        work_items = ["not a dict"]
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_ascii(work_items)
+
+        assert "dictionary" in exc_info.value.message
+
+    def test_generate_ascii_missing_id_field(self):
+        """Test that generate_ascii raises ValidationError for work items without id."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        work_items = [{"title": "No ID"}]
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_ascii(work_items)
+
+        assert "id" in exc_info.value.message.lower()
+
 
 class TestGenerateSvg:
     """Tests for generate_svg method."""
@@ -418,10 +499,9 @@ class TestGenerateSvg:
         )
 
         # Act
-        result = viz.generate_svg(dot_content, output_file)
+        viz.generate_svg(dot_content, output_file)
 
         # Assert
-        assert result is True
         mock_run.assert_called_once()
         # Check that the command includes dot, -Tsvg, and the output file
         call_args = mock_run.call_args[0][0]
@@ -432,22 +512,31 @@ class TestGenerateSvg:
 
     @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_graphviz_not_found(self, mock_run, tmp_path):
-        """Test that generate_svg handles Graphviz not installed."""
+        """Test that generate_svg raises CommandExecutionError when Graphviz not installed."""
         # Arrange
+        from sdd.core.command_runner import CommandResult
+
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
         dot_content = "digraph { a -> b; }"
-        mock_run.side_effect = FileNotFoundError()
+        # CommandRunner.run returns CommandResult with success=False, not FileNotFoundError
+        mock_run.return_value = CommandResult(
+            returncode=127,  # Command not found
+            stdout="",
+            stderr="dot: command not found",
+            command=["dot", "-Tsvg"],
+            duration_seconds=0.0,
+        )
 
-        # Act
-        result = viz.generate_svg(dot_content, output_file)
+        # Act & Assert
+        with pytest.raises(CommandExecutionError) as exc_info:
+            viz.generate_svg(dot_content, output_file)
 
-        # Assert
-        assert result is False
+        assert exc_info.value.context["returncode"] == 127
 
     @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_timeout(self, mock_run, tmp_path):
-        """Test that generate_svg handles timeout gracefully."""
+        """Test that generate_svg raises CommandExecutionError on timeout."""
         # Arrange
         from sdd.core.command_runner import CommandResult
 
@@ -463,15 +552,13 @@ class TestGenerateSvg:
             timed_out=True,
         )
 
-        # Act
-        result = viz.generate_svg(dot_content, output_file)
-
-        # Assert
-        assert result is False
+        # Act & Assert
+        with pytest.raises(CommandExecutionError):
+            viz.generate_svg(dot_content, output_file)
 
     @patch("sdd.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_nonzero_exit(self, mock_run, tmp_path):
-        """Test that generate_svg handles non-zero exit code."""
+        """Test that generate_svg raises CommandExecutionError on non-zero exit code."""
         # Arrange
         from sdd.core.command_runner import CommandResult
 
@@ -486,11 +573,36 @@ class TestGenerateSvg:
             duration_seconds=0.0,
         )
 
-        # Act
-        result = viz.generate_svg(dot_content, output_file)
+        # Act & Assert
+        with pytest.raises(CommandExecutionError) as exc_info:
+            viz.generate_svg(dot_content, output_file)
 
-        # Assert
-        assert result is False
+        assert exc_info.value.context["returncode"] == 1
+        assert "error" in exc_info.value.context["stderr"]
+
+    def test_generate_svg_empty_dot_content(self, tmp_path):
+        """Test that generate_svg raises ValidationError for empty DOT content."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        output_file = tmp_path / "output.svg"
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_svg("", output_file)
+
+        assert "empty" in exc_info.value.message.lower()
+
+    def test_generate_svg_whitespace_only_dot_content(self, tmp_path):
+        """Test that generate_svg raises ValidationError for whitespace-only DOT content."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+        output_file = tmp_path / "output.svg"
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.generate_svg("   \n\t  ", output_file)
+
+        assert "empty" in exc_info.value.message.lower()
 
 
 class TestGetBottlenecks:
@@ -619,6 +731,28 @@ class TestGetNeighborhood:
 
         # Assert
         assert result == []
+
+    def test_get_neighborhood_empty_focus_id(self, sample_work_items_list):
+        """Test that get_neighborhood raises ValidationError for empty focus_id."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.get_neighborhood(sample_work_items_list, "")
+
+        assert "empty" in exc_info.value.message.lower()
+
+    def test_get_neighborhood_whitespace_focus_id(self, sample_work_items_list):
+        """Test that get_neighborhood raises ValidationError for whitespace focus_id."""
+        # Arrange
+        viz = DependencyGraphVisualizer()
+
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            viz.get_neighborhood(sample_work_items_list, "   ")
+
+        assert "empty" in exc_info.value.message.lower()
 
     def test_get_neighborhood_recursive_dependencies(self):
         """Test that get_neighborhood handles recursive dependencies correctly."""

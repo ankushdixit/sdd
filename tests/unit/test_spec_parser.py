@@ -6,6 +6,7 @@ from work item specification markdown files.
 
 import pytest
 
+from sdd.core.exceptions import FileNotFoundError, ValidationError
 from sdd.work_items import spec_parser
 
 
@@ -900,11 +901,14 @@ None
         specs_dir.mkdir(parents=True)
 
         # Act & Assert
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError) as exc_info:
             spec_parser.parse_spec_file("nonexistent_file")
 
+        # Verify exception details
+        assert "nonexistent_file.md" in str(exc_info.value)
+
     def test_parse_spec_file_invalid_heading(self, temp_project_dir, monkeypatch):
-        """Test that parse_spec_file raises ValueError for invalid heading format."""
+        """Test that parse_spec_file raises ValidationError for invalid heading format."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -914,11 +918,15 @@ None
         spec_file.write_text("Invalid content without proper heading")
 
         # Act & Assert
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError) as exc_info:
             spec_parser.parse_spec_file("invalid_test")
 
+        # Verify exception details
+        assert "Missing H1 heading" in str(exc_info.value)
+        assert exc_info.value.code.name == "SPEC_VALIDATION_FAILED"
+
     def test_parse_spec_file_unknown_type(self, temp_project_dir, monkeypatch):
-        """Test that parse_spec_file raises ValueError for unknown work item type."""
+        """Test that parse_spec_file raises ValidationError for unknown work item type."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -928,8 +936,13 @@ None
         spec_file.write_text("# UnknownType: Test\n\nSome content")
 
         # Act & Assert
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError) as exc_info:
             spec_parser.parse_spec_file("unknown_test")
+
+        # Verify exception details
+        assert "Unknown work item type" in str(exc_info.value)
+        assert exc_info.value.code.name == "INVALID_WORK_ITEM_TYPE"
+        assert "unknowntype" in exc_info.value.context["work_type"]
 
 
 class TestLlmProcessingConfigVariations:

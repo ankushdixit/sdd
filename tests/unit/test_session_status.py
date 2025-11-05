@@ -16,20 +16,29 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 from sdd.core.command_runner import CommandResult
+from sdd.core.exceptions import (
+    FileNotFoundError,
+    FileOperationError,
+    SessionNotFoundError,
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.session.status import get_session_status
 
 
 class TestGetSessionStatusNoStatusFile:
     """Tests for get_session_status when status file doesn't exist."""
 
-    def test_no_status_file_returns_error(self, capsys):
+    def test_no_status_file_raises_session_not_found_error(self):
         """
-        Test that missing status file prints error and returns 1.
+        Test that missing status file raises SessionNotFoundError.
 
         Arrange: Mock Path.exists to return False
         Act: Call get_session_status()
-        Assert: Returns 1 and prints "No active session"
+        Assert: Raises SessionNotFoundError
         """
         with patch("sdd.session.status.Path") as mock_path:
             # Arrange
@@ -39,21 +48,20 @@ class TestGetSessionStatusNoStatusFile:
                 mock_status_file
             )
 
-            # Act
-            result = get_session_status()
+            # Act & Assert
+            with pytest.raises(SessionNotFoundError) as exc_info:
+                get_session_status()
 
-            # Assert
-            assert result == 1
-            captured = capsys.readouterr()
-            assert "No active session" in captured.out
+            assert "No active session found" in str(exc_info.value)
+            assert exc_info.value.code.name == "SESSION_NOT_FOUND"
 
-    def test_no_status_file_no_further_processing(self, capsys):
+    def test_no_status_file_error_has_remediation(self):
         """
-        Test that function exits early when status file missing.
+        Test that SessionNotFoundError has helpful remediation.
 
         Arrange: Mock Path.exists to return False
         Act: Call get_session_status()
-        Assert: No work item info displayed
+        Assert: Exception has remediation message
         """
         with patch("sdd.session.status.Path") as mock_path:
             # Arrange
@@ -63,26 +71,23 @@ class TestGetSessionStatusNoStatusFile:
                 mock_status_file
             )
 
-            # Act
-            result = get_session_status()
+            # Act & Assert
+            with pytest.raises(SessionNotFoundError) as exc_info:
+                get_session_status()
 
-            # Assert
-            assert result == 1
-            captured = capsys.readouterr()
-            assert "Work Item:" not in captured.out
-            assert "Current Session Status" not in captured.out
+            assert "sdd start" in exc_info.value.remediation
 
 
 class TestGetSessionStatusNoWorkItem:
     """Tests for get_session_status when no current work item."""
 
-    def test_no_work_item_returns_error(self, capsys):
+    def test_no_work_item_raises_validation_error(self):
         """
-        Test that missing work item ID prints error and returns 1.
+        Test that missing work item ID raises ValidationError.
 
         Arrange: Mock status file with no current_work_item
         Act: Call get_session_status()
-        Assert: Returns 1 and prints "No active work item"
+        Assert: Raises ValidationError
         """
         with patch("sdd.session.status.Path") as mock_path:
             # Arrange
@@ -94,21 +99,20 @@ class TestGetSessionStatusNoWorkItem:
                 mock_status_file
             )
 
-            # Act
-            result = get_session_status()
+            # Act & Assert
+            with pytest.raises(ValidationError) as exc_info:
+                get_session_status()
 
-            # Assert
-            assert result == 1
-            captured = capsys.readouterr()
-            assert "No active work item in this session" in captured.out
+            assert "No active work item in this session" in str(exc_info.value)
+            assert exc_info.value.category.value == "validation"
 
-    def test_empty_work_item_id_returns_error(self, capsys):
+    def test_empty_work_item_id_raises_validation_error(self):
         """
-        Test that empty work item ID prints error and returns 1.
+        Test that empty work item ID raises ValidationError.
 
         Arrange: Mock status file with empty current_work_item
         Act: Call get_session_status()
-        Assert: Returns 1 and prints "No active work item"
+        Assert: Raises ValidationError
         """
         with patch("sdd.session.status.Path") as mock_path:
             # Arrange
@@ -120,25 +124,24 @@ class TestGetSessionStatusNoWorkItem:
                 mock_status_file
             )
 
-            # Act
-            result = get_session_status()
+            # Act & Assert
+            with pytest.raises(ValidationError) as exc_info:
+                get_session_status()
 
-            # Assert
-            assert result == 1
-            captured = capsys.readouterr()
-            assert "No active work item in this session" in captured.out
+            assert "No active work item in this session" in str(exc_info.value)
+            assert "sdd start" in exc_info.value.remediation
 
 
 class TestGetSessionStatusWorkItemNotFound:
     """Tests for get_session_status when work item not found."""
 
-    def test_work_item_not_in_data_returns_error(self, capsys):
+    def test_work_item_not_in_data_raises_work_item_not_found_error(self):
         """
-        Test that missing work item in data prints error and returns 1.
+        Test that missing work item in data raises WorkItemNotFoundError.
 
         Arrange: Mock status with work item ID not in work_items.json
         Act: Call get_session_status()
-        Assert: Returns 1 and prints "Work item not found"
+        Assert: Raises WorkItemNotFoundError
         """
         with patch.object(Path, "exists", return_value=True):
             # Arrange
@@ -150,21 +153,21 @@ class TestGetSessionStatusWorkItemNotFound:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                # Act
-                result = get_session_status()
+                # Act & Assert
+                with pytest.raises(WorkItemNotFoundError) as exc_info:
+                    get_session_status()
 
-            # Assert
-            assert result == 1
-            captured = capsys.readouterr()
-            assert "Work item WI-999 not found" in captured.out
+                assert "WI-999" in str(exc_info.value)
+                assert exc_info.value.code.name == "WORK_ITEM_NOT_FOUND"
+                assert "work-list" in exc_info.value.remediation
 
-    def test_work_item_none_in_dict_returns_error(self, capsys):
+    def test_work_item_none_in_dict_raises_work_item_not_found_error(self):
         """
-        Test that None work item value prints error and returns 1.
+        Test that None work item value raises WorkItemNotFoundError.
 
         Arrange: Mock status with work item that has None value
         Act: Call get_session_status()
-        Assert: Returns 1 and prints error message
+        Assert: Raises WorkItemNotFoundError
         """
         with patch.object(Path, "exists", return_value=True):
             # Arrange
@@ -176,14 +179,101 @@ class TestGetSessionStatusWorkItemNotFound:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                # Act
-                result = get_session_status()
+                # Act & Assert
+                with pytest.raises(WorkItemNotFoundError) as exc_info:
+                    get_session_status()
 
-            # Assert
-            assert result == 1
-            # The function checks if not item, so None should trigger error
-            captured = capsys.readouterr()
-            assert "Work item WI-001 not found" in captured.out
+                assert "WI-001" in str(exc_info.value)
+                assert exc_info.value.context["work_item_id"] == "WI-001"
+
+
+class TestGetSessionStatusFileErrors:
+    """Tests for file operation errors."""
+
+    def test_status_file_invalid_json_raises_file_operation_error(self):
+        """
+        Test that invalid JSON in status file raises FileOperationError.
+
+        Arrange: Mock status file with invalid JSON
+        Act: Call get_session_status()
+        Assert: Raises FileOperationError
+        """
+        with patch.object(Path, "exists", return_value=True):
+            # Arrange - invalid JSON
+            with patch.object(Path, "read_text", return_value="{invalid json"):
+                # Act & Assert
+                with pytest.raises(FileOperationError) as exc_info:
+                    get_session_status()
+
+                assert "Invalid JSON" in str(exc_info.value)
+                assert exc_info.value.code.name == "FILE_OPERATION_FAILED"
+                assert exc_info.value.context["operation"] == "read"
+
+    def test_work_items_file_not_found_raises_file_not_found_error(self):
+        """
+        Test that missing work_items.json raises FileNotFoundError.
+
+        Arrange: Mock status file exists but work_items file doesn't
+        Act: Call get_session_status()
+        Assert: Raises FileNotFoundError
+        """
+        # Use a simpler approach: two separate reads, second Path.exists returns False
+        status_data = {"current_work_item": "WI-001"}
+
+        with patch.object(Path, "read_text", return_value=json.dumps(status_data)):
+            with patch.object(Path, "exists") as mock_exists:
+                # First exists() call is for status file (True), second is for work items file (False)
+                mock_exists.side_effect = [True, False]
+
+                # Act & Assert
+                with pytest.raises(FileNotFoundError) as exc_info:
+                    get_session_status()
+
+                assert "work_items.json" in str(exc_info.value)
+                assert exc_info.value.code.name == "FILE_NOT_FOUND"
+                assert exc_info.value.context.get("file_type") == "work items"
+
+    def test_work_items_file_invalid_json_raises_file_operation_error(self):
+        """
+        Test that invalid JSON in work_items file raises FileOperationError.
+
+        Arrange: Mock valid status file but invalid work_items JSON
+        Act: Call get_session_status()
+        Assert: Raises FileOperationError
+        """
+        with patch.object(Path, "exists", return_value=True):
+            # Arrange
+            status_data = {"current_work_item": "WI-001"}
+
+            with patch.object(
+                Path,
+                "read_text",
+                side_effect=[json.dumps(status_data), "{invalid json}"],
+            ):
+                # Act & Assert
+                with pytest.raises(FileOperationError) as exc_info:
+                    get_session_status()
+
+                assert "Invalid JSON" in str(exc_info.value)
+                assert "work_items.json" in exc_info.value.context["file_path"]
+
+    def test_status_file_read_error_raises_file_operation_error(self):
+        """
+        Test that OSError reading status file raises FileOperationError.
+
+        Arrange: Mock status file that raises OSError on read
+        Act: Call get_session_status()
+        Assert: Raises FileOperationError
+        """
+        with patch.object(Path, "exists", return_value=True):
+            # Arrange
+            with patch.object(Path, "read_text", side_effect=OSError("Permission denied")):
+                # Act & Assert
+                with pytest.raises(FileOperationError) as exc_info:
+                    get_session_status()
+
+                assert "Permission denied" in str(exc_info.value)
+                assert exc_info.value.code.name == "FILE_OPERATION_FAILED"
 
 
 class TestGetSessionStatusSuccess:
@@ -1457,11 +1547,11 @@ class TestGetSessionStatusMainEntry:
 
     def test_main_entry_error(self):
         """
-        Test that main entry point returns error code.
+        Test that main entry point raises SessionNotFoundError.
 
         Arrange: Mock no status file
         Act: Execute module as main
-        Assert: Would exit with code 1
+        Assert: Raises SessionNotFoundError
         """
         with patch("sdd.session.status.Path") as mock_path:
             # Arrange
@@ -1471,8 +1561,6 @@ class TestGetSessionStatusMainEntry:
                 mock_status_file
             )
 
-            # Act
-            result = get_session_status()
-
-            # Assert
-            assert result == 1
+            # Act & Assert
+            with pytest.raises(SessionNotFoundError):
+                get_session_status()

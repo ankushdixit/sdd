@@ -6,6 +6,8 @@ Part of the briefing module decomposition.
 
 from pathlib import Path
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -23,16 +25,25 @@ class StackDetector:
         self.session_dir = session_dir or Path(".session")
         self.stack_file = self.session_dir / "tracking" / "stack.txt"
 
+    @log_errors()
     def load_current_stack(self) -> str:
         """Load current technology stack.
 
         Returns:
             Stack information as string
+
+        Raises:
+            FileOperationError: If stack file exists but cannot be read
         """
-        if self.stack_file.exists():
-            try:
-                return self.stack_file.read_text()
-            except Exception as e:
-                logger.warning("Failed to load stack file: %s", e)
-                return "Stack not yet generated"
-        return "Stack not yet generated"
+        if not self.stack_file.exists():
+            return "Stack not yet generated"
+
+        try:
+            return self.stack_file.read_text()
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.stack_file),
+                details=f"Failed to read stack file: {e}",
+                cause=e,
+            ) from e

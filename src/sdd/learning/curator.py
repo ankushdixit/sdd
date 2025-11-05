@@ -13,7 +13,6 @@ Curates and organizes accumulated learnings:
 import argparse
 import hashlib
 import re
-import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +21,14 @@ import jsonschema
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    FileOperationError,
+    ValidationError,
+)
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 
@@ -65,8 +72,14 @@ class LearningsCurator:
         # Initialize CommandRunner
         self.runner = CommandRunner(default_timeout=10, working_dir=self.project_root)
 
+    @log_errors()
     def curate(self, dry_run: bool = False) -> None:
-        """Curate learnings"""
+        """Curate learnings
+
+        Raises:
+            FileOperationError: If reading/writing learnings file fails
+            ValidationError: If learning data is invalid
+        """
         logger.info("Starting learning curation (dry_run=%s)", dry_run)
         print("\n=== Learning Curation ===\n")
 
@@ -219,8 +232,9 @@ class LearningsCurator:
                             }
                         )
 
-            except Exception:
+            except (FileOperationError, ValidationError, ValueError, KeyError) as e:
                 # Skip invalid summary files
+                logger.warning(f"Failed to extract learnings from {summary_file}: {e}")
                 continue
 
         return learnings
@@ -447,7 +461,11 @@ class LearningsCurator:
                 session_num = self._extract_session_number(learning.get("learned_in", ""))
 
                 # Archive if too old
-                if session_num and current_session - session_num > max_age_sessions:
+                if (
+                    session_num
+                    and current_session > 0
+                    and current_session - session_num > max_age_sessions
+                ):
                     to_archive.append(i)
 
             # Move to archive
@@ -471,11 +489,12 @@ class LearningsCurator:
                 max_session = 0
                 for item in data.get("work_items", {}).values():
                     sessions = item.get("sessions", [])
-                    if sessions:
+                    if sessions and isinstance(sessions, list):
                         max_session = max(max_session, max(sessions))
                 return max_session
-        except Exception:
-            pass
+        except (FileOperationError, ValidationError, ValueError, KeyError, TypeError) as e:
+            logger.warning(f"Failed to get current session number: {e}")
+            return 0
         return 0
 
     def _extract_session_number(self, session_id: str) -> int:
@@ -485,8 +504,9 @@ class LearningsCurator:
             match = re.search(r"\d+", session_id)
             if match:
                 return int(match.group())
-        except Exception:
-            pass
+        except (ValueError, AttributeError) as e:
+            logger.debug(f"Failed to extract session number from '{session_id}': {e}")
+            return 0
         return 0
 
     def auto_curate_if_needed(self) -> bool:
@@ -516,15 +536,28 @@ class LearningsCurator:
 
         return False
 
+    @log_errors()
     def extract_from_session_summary(self, session_file: Path) -> list[dict]:
-        """Extract learnings from session summary file"""
+        """Extract learnings from session summary file
+
+        Args:
+            session_file: Path to session summary markdown file
+
+        Returns:
+            List of learning dictionaries extracted from the file
+
+        Raises:
+            FileOperationError: If file cannot be read
+            ValidationError: If learning data is invalid
+        """
         if not session_file.exists():
             return []
 
         try:
             with open(session_file) as f:
                 content = f.read()
-        except Exception:
+        except (OSError, Exception) as e:
+            logger.warning(f"Failed to read session summary {session_file}: {e}")
             return []
 
         learnings = []
@@ -562,10 +595,23 @@ class LearningsCurator:
 
         return learnings
 
+    @log_errors()
     def extract_from_git_commits(
         self, since_session: int = 0, session_id: str = None
     ) -> list[dict]:
-        """Extract learnings from git commit messages with standardized metadata"""
+        """Extract learnings from git commit messages with standardized metadata
+
+        Args:
+            since_session: Extract only commits after this session number
+            session_id: Session ID to tag learnings with
+
+        Returns:
+            List of learning dictionaries extracted from commit messages
+
+        Raises:
+            FileOperationError: If git command fails
+            ValidationError: If learning data is invalid
+        """
         try:
             # Get recent commits
             result = self.runner.run(["git", "log", "--format=%H|||%B", "-n", "100"])
@@ -612,13 +658,27 @@ class LearningsCurator:
 
             return learnings
 
-        except Exception:
+        except (FileOperationError, ValidationError) as e:
+            logger.warning(f"Failed to extract learnings from git commits: {e}")
             return []
 
+    @log_errors()
     def extract_from_code_comments(
         self, changed_files: list[Path] = None, session_id: str = None
     ) -> list[dict]:
-        """Extract learnings from inline code comments (not documentation) with standardized metadata"""
+        """Extract learnings from inline code comments (not documentation) with standardized metadata
+
+        Args:
+            changed_files: List of file paths to scan (or None to auto-detect from git)
+            session_id: Session ID to tag learnings with
+
+        Returns:
+            List of learning dictionaries extracted from code comments
+
+        Raises:
+            FileOperationError: If file reading fails
+            ValidationError: If learning data is invalid
+        """
         if changed_files is None:
             # Get recently changed files from git
             try:
@@ -632,7 +692,8 @@ class LearningsCurator:
                     ]
                 else:
                     changed_files = []
-            except Exception:
+            except (FileOperationError, ValidationError) as e:
+                logger.warning(f"Failed to get changed files from git: {e}")
                 changed_files = []
 
         learnings = []
@@ -682,7 +743,8 @@ class LearningsCurator:
                                 # Validate schema before adding
                                 if self.validate_learning(entry):
                                     learnings.append(entry)
-            except Exception:
+            except (OSError, UnicodeDecodeError) as e:
+                logger.warning(f"Failed to read file {file_path}: {e}")
                 continue
 
         return learnings
@@ -770,8 +832,8 @@ class LearningsCurator:
             logger.warning(f"Invalid learning entry: {e.message}")
             logger.debug(f"Invalid learning data: {learning}")
             return False
-        except Exception as e:
-            logger.warning(f"Unexpected error validating learning: {e}")
+        except (TypeError, KeyError) as e:
+            logger.warning(f"Invalid learning structure: {e}")
             return False
 
     def add_learning_if_new(self, learning_dict: dict) -> bool:
@@ -844,6 +906,7 @@ class LearningsCurator:
         else:
             print("Never curated\n")
 
+    @log_errors()
     def add_learning(
         self,
         content: str,
@@ -852,7 +915,22 @@ class LearningsCurator:
         tags: list = None,
         context: str = None,
     ) -> str:
-        """Add a new learning"""
+        """Add a new learning
+
+        Args:
+            content: Learning content text
+            category: Category to add learning to
+            session: Optional session number
+            tags: Optional list of tags
+            context: Optional context string
+
+        Returns:
+            Learning ID of the created learning
+
+        Raises:
+            FileOperationError: If saving learnings fails
+            ValidationError: If learning data is invalid
+        """
         learnings = self._load_learnings()
 
         # Generate unique ID
@@ -1241,9 +1319,7 @@ def main():
     session_dir = project_root / ".session"
 
     if not session_dir.exists():
-        print("Error: .session directory not found", file=sys.stderr)
-        print("Run /init to initialize the project first\n")
-        sys.exit(1)
+        raise SDDFileNotFoundError(file_path=str(session_dir), file_type="session directory")
 
     curator = LearningsCurator(project_root)
 

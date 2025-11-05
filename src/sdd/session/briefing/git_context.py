@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import ErrorCode, GitError, SystemError
 from sdd.core.logging_config import get_logger
 from sdd.core.types import GitStatus, WorkItemStatus
 
@@ -22,11 +24,17 @@ class GitContext:
         """Initialize git context handler."""
         self.runner = CommandRunner(default_timeout=5)
 
+    @log_errors()
     def check_git_status(self) -> dict[str, any]:
         """Check git status for session start.
 
         Returns:
             Dict with keys: clean (bool), status (str), branch (str or None)
+
+        Raises:
+            GitError: If git command fails
+            NotAGitRepoError: If not in a git repository
+            SystemError: If git workflow import or execution fails
         """
         try:
             # Import git workflow from new location
@@ -37,9 +45,28 @@ class GitContext:
             current_branch = workflow.get_current_branch()
 
             return {"clean": is_clean, "status": status_msg, "branch": current_branch}
+        except ImportError as e:
+            raise SystemError(
+                message="Failed to import GitWorkflow",
+                code=ErrorCode.IMPORT_FAILED,
+                context={"module": "sdd.git.integration", "error": str(e)},
+                remediation="Ensure git integration module is properly installed",
+                cause=e,
+            ) from e
+        except GitError:
+            # Re-raise GitError as-is (already standardized)
+            raise
         except Exception as e:
-            return {"clean": False, "status": f"Error checking git: {e}", "branch": None}
+            # Wrap unexpected errors
+            raise GitError(
+                message=f"Failed to check git status: {e}",
+                code=ErrorCode.GIT_COMMAND_FAILED,
+                context={"error": str(e)},
+                remediation="Check git installation and repository state",
+                cause=e,
+            ) from e
 
+    @log_errors()
     def determine_git_branch_final_status(self, branch_name: str, git_info: dict) -> str:
         """Determine the final status of a git branch by inspecting actual git state.
 
@@ -49,68 +76,93 @@ class GitContext:
 
         Returns:
             One of: "merged", "pr_created", "pr_closed", "ready_for_pr", "deleted"
+
+        Raises:
+            GitError: If git commands fail critically
+            SystemError: If JSON parsing or other operations fail
         """
         parent_branch = git_info.get("parent_branch", "main")
 
-        # Check 1: Is branch merged?
-        result = self.runner.run(["git", "branch", "--merged", parent_branch])
-        if result.success and branch_name in result.stdout:
-            logger.debug(f"Branch {branch_name} is merged to {parent_branch}")
-            return GitStatus.MERGED.value
+        try:
+            # Check 1: Is branch merged?
+            result = self.runner.run(["git", "branch", "--merged", parent_branch])
+            if result.success and branch_name in result.stdout:
+                logger.debug(f"Branch {branch_name} is merged to {parent_branch}")
+                return GitStatus.MERGED.value
 
-        # Check 2: Does PR exist? (requires gh CLI)
-        result = self.runner.run(
-            [
-                "gh",
-                "pr",
-                "list",
-                "--head",
-                branch_name,
-                "--state",
-                "all",
-                "--json",
-                "number,state",
-            ]
-        )
-        if result.success and result.stdout.strip():
-            try:
-                prs = json.loads(result.stdout)
-                if prs:
-                    pr = prs[0]  # Get first/most recent PR
-                    pr_state = pr.get("state", "").upper()
+            # Check 2: Does PR exist? (requires gh CLI)
+            result = self.runner.run(
+                [
+                    "gh",
+                    "pr",
+                    "list",
+                    "--head",
+                    branch_name,
+                    "--state",
+                    "all",
+                    "--json",
+                    "number,state",
+                ]
+            )
+            if result.success and result.stdout.strip():
+                try:
+                    prs = json.loads(result.stdout)
+                    if prs:
+                        pr = prs[0]  # Get first/most recent PR
+                        pr_state = pr.get("state", "").upper()
 
-                    if pr_state == "MERGED":
-                        logger.debug(f"Branch {branch_name} has merged PR")
-                        return GitStatus.MERGED.value
-                    elif pr_state == "CLOSED":
-                        logger.debug(f"Branch {branch_name} has closed (unmerged) PR")
-                        return GitStatus.PR_CLOSED.value
-                    elif pr_state == "OPEN":
-                        logger.debug(f"Branch {branch_name} has open PR")
-                        return GitStatus.PR_CREATED.value
-            except json.JSONDecodeError as e:
-                logger.debug(f"Error parsing PR JSON: {e}")
-        else:
-            logger.debug("gh CLI not available or no PRs found")
+                        if pr_state == "MERGED":
+                            logger.debug(f"Branch {branch_name} has merged PR")
+                            return GitStatus.MERGED.value
+                        elif pr_state == "CLOSED":
+                            logger.debug(f"Branch {branch_name} has closed (unmerged) PR")
+                            return GitStatus.PR_CLOSED.value
+                        elif pr_state == "OPEN":
+                            logger.debug(f"Branch {branch_name} has open PR")
+                            return GitStatus.PR_CREATED.value
+                except json.JSONDecodeError as e:
+                    # Log but don't fail - gh CLI output may be malformed
+                    logger.debug(f"Error parsing PR JSON: {e}")
+                    # Continue to check branch existence
+            else:
+                logger.debug("gh CLI not available or no PRs found")
 
-        # Check 3: Does branch still exist locally?
-        result = self.runner.run(["git", "show-ref", "--verify", f"refs/heads/{branch_name}"])
-        if result.success:
-            logger.debug(f"Branch {branch_name} exists locally")
-            # Branch exists locally, no PR found
-            return GitStatus.READY_FOR_PR.value
+            # Check 3: Does branch still exist locally?
+            result = self.runner.run(["git", "show-ref", "--verify", f"refs/heads/{branch_name}"])
+            if result.success:
+                logger.debug(f"Branch {branch_name} exists locally")
+                # Branch exists locally, no PR found
+                return GitStatus.READY_FOR_PR.value
 
-        # Check 4: Does branch exist remotely?
-        result = self.runner.run(["git", "ls-remote", "--heads", "origin", branch_name])
-        if result.success and result.stdout.strip():
-            logger.debug(f"Branch {branch_name} exists remotely")
-            # Branch exists remotely, no PR found
-            return GitStatus.READY_FOR_PR.value
+            # Check 4: Does branch exist remotely?
+            result = self.runner.run(["git", "ls-remote", "--heads", "origin", branch_name])
+            if result.success and result.stdout.strip():
+                logger.debug(f"Branch {branch_name} exists remotely")
+                # Branch exists remotely, no PR found
+                return GitStatus.READY_FOR_PR.value
 
-        # Branch doesn't exist and no PR found
-        logger.debug(f"Branch {branch_name} not found locally or remotely")
-        return GitStatus.DELETED.value
+            # Branch doesn't exist and no PR found
+            logger.debug(f"Branch {branch_name} not found locally or remotely")
+            return GitStatus.DELETED.value
 
+        except GitError:
+            # Re-raise GitError from CommandRunner
+            raise
+        except Exception as e:
+            # Wrap unexpected errors
+            raise GitError(
+                message=f"Failed to determine git branch status for '{branch_name}': {e}",
+                code=ErrorCode.GIT_COMMAND_FAILED,
+                context={
+                    "branch_name": branch_name,
+                    "parent_branch": parent_branch,
+                    "error": str(e),
+                },
+                remediation="Check git installation and repository state",
+                cause=e,
+            ) from e
+
+    @log_errors()
     def finalize_previous_work_item_git_status(
         self, work_items_data: dict, current_work_item_id: str
     ) -> Optional[str]:
@@ -127,6 +179,10 @@ class GitContext:
 
         Returns:
             Previous work item ID if finalized, None otherwise
+
+        Raises:
+            GitError: If git operations fail
+            SystemError: If file operations fail
         """
         work_items = work_items_data.get("work_items", {})
 
@@ -162,21 +218,58 @@ class GitContext:
 
         logger.info(f"Finalizing git status for completed work item: {previous_work_item_id}")
 
-        # Inspect actual git state
-        final_status = self.determine_git_branch_final_status(branch_name, git_info)
+        try:
+            # Inspect actual git state
+            final_status = self.determine_git_branch_final_status(branch_name, git_info)
 
-        # Update git status
-        work_items[previous_work_item_id]["git"]["status"] = final_status
+            # Update git status
+            work_items[previous_work_item_id]["git"]["status"] = final_status
 
-        # Save updated work items
-        work_items_file = Path(".session/tracking/work_items.json")
-        with open(work_items_file, "w") as f:
-            json.dump(work_items_data, f, indent=2)
+            # Save updated work items
+            work_items_file = Path(".session/tracking/work_items.json")
+            try:
+                with open(work_items_file, "w") as f:
+                    json.dump(work_items_data, f, indent=2)
+            except OSError as e:
+                raise SystemError(
+                    message=f"Failed to save work items file: {work_items_file}",
+                    code=ErrorCode.FILE_OPERATION_FAILED,
+                    context={
+                        "file_path": str(work_items_file),
+                        "work_item_id": previous_work_item_id,
+                        "error": str(e),
+                    },
+                    remediation="Check file permissions and disk space",
+                    cause=e,
+                ) from e
 
-        logger.info(f"Updated git status for {previous_work_item_id}: in_progress → {final_status}")
-        print(
-            f"✓ Finalized git status for previous work item: "
-            f"{previous_work_item_id} → {final_status}\n"
-        )
+            logger.info(
+                f"Updated git status for {previous_work_item_id}: in_progress → {final_status}"
+            )
+            print(
+                f"✓ Finalized git status for previous work item: "
+                f"{previous_work_item_id} → {final_status}\n"
+            )
 
-        return previous_work_item_id
+            return previous_work_item_id
+
+        except GitError:
+            # Re-raise GitError from determine_git_branch_final_status
+            raise
+        except SystemError:
+            # Re-raise SystemError from file operations
+            raise
+        except Exception as e:
+            # Wrap unexpected errors
+            raise SystemError(
+                message=f"Failed to finalize git status for work item '{previous_work_item_id}': {e}",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={
+                    "work_item_id": previous_work_item_id,
+                    "current_work_item_id": current_work_item_id,
+                    "branch_name": branch_name,
+                    "error": str(e),
+                },
+                remediation="Check work items data integrity and git repository state",
+                cause=e,
+            ) from e

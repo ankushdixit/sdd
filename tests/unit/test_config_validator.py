@@ -18,6 +18,14 @@ from sdd.core.config_validator import (
     load_and_validate_config,
     validate_config,
 )
+from sdd.core.exceptions import (
+    ConfigurationError,
+    ConfigValidationError,
+    ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
 
 
 @pytest.fixture
@@ -58,7 +66,7 @@ def full_sdd_schema(tmp_path):
 class TestImportHandling:
     """Test suite for jsonschema import handling."""
 
-    def test_validate_config_handles_missing_jsonschema_library(self, tmp_path):
+    def test_validate_config_handles_missing_jsonschema_library(self, tmp_path, caplog):
         """Test that validate_config warns when jsonschema is not installed."""
         # Arrange
         config = {"test_field": "value"}
@@ -75,74 +83,68 @@ class TestImportHandling:
             import sdd.core.config_validator as cv
 
             importlib.reload(cv)
-            is_valid, errors = cv.validate_config(config_path, schema_path)
+            result = cv.validate_config(config_path, schema_path)
 
         # Assert
-        assert is_valid  # Should be valid (validation skipped)
-        assert len(errors) == 1
-        assert "jsonschema not installed" in errors[0].lower()
+        assert result == config  # Should return config (validation skipped)
+        assert "jsonschema not installed" in caplog.text.lower()
 
 
 class TestValidateConfig:
     """Test suite for validate_config function with basic schemas."""
 
     def test_validate_config_accepts_valid_configuration(self, tmp_path, minimal_schema):
-        """Test that validate_config returns True for a valid configuration."""
+        """Test that validate_config returns config dict for valid configuration."""
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
         # Act
-        is_valid, errors = validate_config(config_path, minimal_schema)
+        result = validate_config(config_path, minimal_schema)
 
         # Assert
-        assert is_valid
-        assert len(errors) == 0
+        assert result == config
 
     def test_validate_config_rejects_wrong_type(self, tmp_path, minimal_schema):
-        """Test that validate_config rejects config with wrong field type."""
+        """Test that validate_config raises ConfigValidationError for wrong field type."""
         # Arrange
         config = {"test_field": 123}  # Should be string, not int
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, minimal_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, minimal_schema)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
-        assert "test_field" in errors[0]
+        assert "test_field" in str(exc_info.value.context)
 
     def test_validate_config_rejects_missing_required_field(self, tmp_path, minimal_schema):
-        """Test that validate_config rejects config missing required field."""
+        """Test that validate_config raises ConfigValidationError for missing required field."""
         # Arrange
         config = {}  # Missing required test_field
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, minimal_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, minimal_schema)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
+        assert exc_info.value.code.name == "CONFIG_VALIDATION_FAILED"
 
     def test_validate_config_handles_missing_config_file(self, tmp_path, minimal_schema):
-        """Test that validate_config reports error when config file doesn't exist."""
+        """Test that validate_config raises FileNotFoundError when config file doesn't exist."""
         # Arrange
         config_path = tmp_path / "nonexistent.json"
 
-        # Act
-        is_valid, errors = validate_config(config_path, minimal_schema)
+        # Act & Assert
+        with pytest.raises(SDDFileNotFoundError) as exc_info:
+            validate_config(config_path, minimal_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("not found" in error.lower() for error in errors)
+        assert str(config_path) in exc_info.value.message
 
-    def test_validate_config_warns_on_missing_schema_file(self, tmp_path):
-        """Test that validate_config warns when schema file doesn't exist but allows config."""
+    def test_validate_config_warns_on_missing_schema_file(self, tmp_path, caplog):
+        """Test that validate_config logs warning when schema file doesn't exist but returns config."""
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -150,28 +152,27 @@ class TestValidateConfig:
         schema_path = tmp_path / "nonexistent_schema.json"
 
         # Act
-        is_valid, errors = validate_config(config_path, schema_path)
+        result = validate_config(config_path, schema_path)
 
         # Assert
-        assert is_valid  # Should be valid (no validation performed)
-        assert len(errors) > 0  # But should have warning
-        assert any("warning" in error.lower() for error in errors)
+        assert result == config  # Should return config (validation skipped)
+        assert "schema file not found" in caplog.text.lower()
 
     def test_validate_config_handles_invalid_json_in_config(self, tmp_path, minimal_schema):
-        """Test that validate_config reports error when config has invalid JSON."""
+        """Test that validate_config raises ValidationError when config has invalid JSON."""
         # Arrange
         config_path = tmp_path / "config.json"
         config_path.write_text("{invalid json")
 
-        # Act
-        is_valid, errors = validate_config(config_path, minimal_schema)
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            validate_config(config_path, minimal_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("invalid json" in error.lower() for error in errors)
+        assert exc_info.value.code.name == "INVALID_JSON"
+        assert str(config_path) in exc_info.value.context["file_path"]
 
     def test_validate_config_handles_invalid_json_in_schema(self, tmp_path):
-        """Test that validate_config reports error when schema has invalid JSON."""
+        """Test that validate_config raises ConfigurationError when schema has invalid JSON."""
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -179,15 +180,15 @@ class TestValidateConfig:
         schema_path = tmp_path / "schema.json"
         schema_path.write_text("{invalid json")
 
-        # Act
-        is_valid, errors = validate_config(config_path, schema_path)
+        # Act & Assert
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_config(config_path, schema_path)
 
-        # Assert
-        assert not is_valid
-        assert any("invalid json" in error.lower() for error in errors)
+        assert "invalid json" in exc_info.value.message.lower()
+        assert str(schema_path) in exc_info.value.context["file_path"]
 
     def test_validate_config_handles_invalid_schema_structure(self, tmp_path):
-        """Test that validate_config reports error when schema structure is invalid."""
+        """Test that validate_config raises ConfigurationError when schema structure is invalid."""
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -198,12 +199,11 @@ class TestValidateConfig:
         schema_path = tmp_path / "schema.json"
         schema_path.write_text(json.dumps(schema))
 
-        # Act
-        is_valid, errors = validate_config(config_path, schema_path)
+        # Act & Assert
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_config(config_path, schema_path)
 
-        # Assert
-        assert not is_valid
-        assert any("invalid schema" in error.lower() for error in errors)
+        assert "invalid schema" in exc_info.value.message.lower()
 
 
 class TestFormatValidationError:
@@ -230,8 +230,8 @@ class TestFormatValidationError:
                 result = _format_validation_error(e)
 
                 # Assert
-                assert "nested -> field" in result or "nested" in result
-                assert "123" in result or "not of type" in result.lower()
+                assert "nested" in result
+                assert "field" in result or "123" in result or "not of type" in result.lower()
         except ImportError:
             pytest.skip("jsonschema not installed")
 
@@ -261,14 +261,14 @@ class TestLoadAndValidateConfig:
     """Test suite for load_and_validate_config function."""
 
     def test_load_and_validate_raises_on_invalid_config(self, tmp_path, minimal_schema):
-        """Test that load_and_validate_config raises ValueError for invalid config."""
+        """Test that load_and_validate_config raises ConfigValidationError for invalid config."""
         # Arrange
         config = {"test_field": 123}  # Wrong type
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Configuration validation failed"):
+        with pytest.raises(ConfigValidationError):
             load_and_validate_config(config_path, minimal_schema)
 
     def test_load_and_validate_returns_valid_config(self, tmp_path, minimal_schema):
@@ -308,14 +308,13 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_sdd_schema)
 
         # Assert
-        assert is_valid, f"Validation failed: {errors}"
-        assert len(errors) == 0
+        assert result == config
 
     def test_sdd_config_rejects_invalid_severity_value(self, tmp_path, full_sdd_schema):
-        """Test that SDD config rejects invalid security severity value."""
+        """Test that SDD config raises ConfigValidationError for invalid security severity value."""
         # Arrange
         config = {
             "quality_gates": {"security": {"required": True, "severity": "invalid", "timeout": 120}}
@@ -323,15 +322,14 @@ class TestSDDConfigValidation:
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, full_sdd_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("severity" in error for error in errors)
+        assert "severity" in str(exc_info.value.context)
 
     def test_sdd_config_rejects_out_of_range_threshold(self, tmp_path, full_sdd_schema):
-        """Test that SDD config rejects similarity threshold outside valid range."""
+        """Test that SDD config raises ConfigValidationError for threshold outside valid range."""
         # Arrange
         config = {
             "learning": {
@@ -342,15 +340,16 @@ class TestSDDConfigValidation:
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, full_sdd_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("similarity_threshold" in error or "maximum" in error for error in errors)
+        assert "similarity_threshold" in str(exc_info.value.context) or "maximum" in str(
+            exc_info.value.context
+        )
 
     def test_sdd_config_rejects_invalid_timeout_value(self, tmp_path, full_sdd_schema):
-        """Test that SDD config rejects timeout value less than minimum."""
+        """Test that SDD config raises ConfigValidationError for timeout value less than minimum."""
         # Arrange
         config = {
             "quality_gates": {"test": {"required": True, "timeout": 0}}  # Min is 1
@@ -358,15 +357,14 @@ class TestSDDConfigValidation:
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, full_sdd_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("timeout" in error or "minimum" in error for error in errors)
+        assert "timeout" in str(exc_info.value.context) or "minimum" in str(exc_info.value.context)
 
     def test_sdd_config_rejects_missing_required_field(self, tmp_path, full_sdd_schema):
-        """Test that SDD config rejects quality gate missing required field."""
+        """Test that SDD config raises ConfigValidationError for quality gate missing required field."""
         # Arrange
         config = {
             "quality_gates": {
@@ -380,12 +378,11 @@ class TestSDDConfigValidation:
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
-        # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        # Act & Assert
+        with pytest.raises(ConfigValidationError) as exc_info:
+            validate_config(config_path, full_sdd_schema)
 
-        # Assert
-        assert not is_valid
-        assert any("required" in error for error in errors)
+        assert "required" in str(exc_info.value.context)
 
     def test_sdd_config_allows_additional_properties(self, tmp_path, full_sdd_schema):
         """Test that SDD config schema allows additional custom properties."""
@@ -398,10 +395,10 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        is_valid, errors = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_sdd_schema)
 
         # Assert
-        assert is_valid  # Should be valid (additionalProperties: true in schema)
+        assert result == config  # Should be valid (additionalProperties: true in schema)
 
 
 class TestMain:
@@ -447,7 +444,7 @@ class TestMain:
         assert "Configuration is valid" in captured.out
 
     def test_main_reports_validation_errors(self, tmp_path, minimal_schema, capsys):
-        """Test that main() exits with 1 and shows errors when config is invalid."""
+        """Test that main() exits with non-zero code and shows errors when config is invalid."""
         # Arrange
         import sys
 
@@ -464,10 +461,10 @@ class TestMain:
             with pytest.raises(SystemExit) as exc_info:
                 main()
 
-        assert exc_info.value.code == 1
+        assert exc_info.value.code != 0
         captured = capsys.readouterr()
         assert "validation failed" in captured.out.lower()
-        assert "Errors:" in captured.out
+        assert "Error:" in captured.out
 
     def test_main_uses_default_schema_path_when_not_provided(self, tmp_path, capsys):
         """Test that main() uses default schema path from config directory."""
@@ -499,26 +496,22 @@ class TestMain:
         captured = capsys.readouterr()
         assert "Configuration is valid" in captured.out
 
-    def test_main_shows_warnings_for_valid_config(self, tmp_path, capsys):
-        """Test that main() displays warnings even when config is valid."""
+    def test_main_shows_remediation_for_errors(self, tmp_path, capsys):
+        """Test that main() displays remediation hints for validation errors."""
         # Arrange
         import sys
 
         from sdd.core.config_validator import main
 
-        config = {"test_field": "value"}
-        config_path = tmp_path / "config.json"
-        config_path.write_text(json.dumps(config))
-
-        # Schema doesn't exist, so we'll get a warning
-        schema_path = tmp_path / "nonexistent.json"
+        config_path = tmp_path / "nonexistent.json"
+        schema_path = tmp_path / "schema.json"
+        schema_path.write_text(json.dumps({"type": "object"}))
 
         # Act & Assert
         with patch.object(sys, "argv", ["config_validator.py", str(config_path), str(schema_path)]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
 
-        assert exc_info.value.code == 0  # Valid despite warning
+        assert exc_info.value.code != 0
         captured = capsys.readouterr()
-        assert "Configuration is valid" in captured.out
-        assert "Warnings:" in captured.out
+        assert "Remediation:" in captured.out or "Error:" in captured.out

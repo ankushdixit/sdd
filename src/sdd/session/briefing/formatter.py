@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.exceptions import (
+    FileOperationError,
+)
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus, WorkItemType
 
@@ -114,7 +117,15 @@ class BriefingFormatter:
             if not summary_file.exists():
                 continue
 
-            summary_content = summary_file.read_text()
+            try:
+                summary_content = summary_file.read_text()
+            except OSError as e:
+                raise FileOperationError(
+                    operation="read",
+                    file_path=str(summary_file),
+                    details=f"Failed to read session summary: {str(e)}",
+                    cause=e,
+                )
             section += f"### Session {session_num} ({started_at[:10]})\n\n"
 
             # Extract commits section
@@ -309,7 +320,17 @@ class BriefingFormatter:
             for validation in results.get("validations", []):
                 status = "✓" if validation["passed"] else "✗"
                 briefing.append(f"    {status} {validation['name']}")
+        except ImportError as e:
+            logger.warning(
+                "EnvironmentValidator module not available",
+                extra={"error": str(e), "module": "sdd.quality.env_validator"},
+            )
+            briefing.append("  Environment validation: ✗ Module not available")
         except Exception as e:
+            logger.error(
+                "Environment validation failed",
+                extra={"error": str(e), "environment": "staging"},
+            )
             briefing.append(f"  Environment validation: ✗ Error ({str(e)})")
 
         briefing.append("\n" + "=" * 60)

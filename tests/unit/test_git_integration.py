@@ -9,6 +9,13 @@ import pytest
 
 from sdd.core.command_runner import CommandResult
 from sdd.core.config import ConfigManager, GitWorkflowConfig
+from sdd.core.exceptions import (
+    CommandExecutionError,
+    ErrorCode,
+    GitError,
+    NotAGitRepoError,
+    WorkingDirNotCleanError,
+)
 from sdd.git.integration import GitWorkflow
 
 
@@ -91,13 +98,9 @@ class TestCheckGitStatus:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stdout="")
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", return_value=mock_result):
-            is_clean, msg = workflow.check_git_status()
-
-        # Assert
-        assert is_clean is True
-        assert msg == "Clean"
+            workflow.check_git_status()  # No exception means clean
 
     def test_check_git_status_dirty(self, tmp_path):
         """Test check_git_status with uncommitted changes."""
@@ -105,13 +108,11 @@ class TestCheckGitStatus:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stdout=" M file.txt\n")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            is_clean, msg = workflow.check_git_status()
-
-        # Assert
-        assert is_clean is False
-        assert "not clean" in msg.lower()
+            with pytest.raises(WorkingDirNotCleanError) as exc_info:
+                workflow.check_git_status()
+            assert "not clean" in str(exc_info.value).lower()
 
     def test_check_git_status_not_git_repo(self, tmp_path):
         """Test check_git_status when not in git repository."""
@@ -119,33 +120,30 @@ class TestCheckGitStatus:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=128, stdout="")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            is_clean, msg = workflow.check_git_status()
-
-        # Assert
-        assert is_clean is False
-        assert "not a git repository" in msg.lower()
+            with pytest.raises(NotAGitRepoError) as exc_info:
+                workflow.check_git_status()
+            assert "not a git repository" in str(exc_info.value).lower()
 
     def test_check_git_status_timeout(self, tmp_path):
         """Test check_git_status when git command times out."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("git", 5)):
-            is_clean, msg = workflow.check_git_status()
-
-        # Assert
-        assert is_clean is False
-        assert "timed out" in msg.lower()
+            with pytest.raises(CommandExecutionError) as exc_info:
+                workflow.check_git_status()
+            # The error is a CommandExecutionError which wraps the timeout
+            assert exc_info.value is not None
 
     def test_check_git_status_git_not_found(self, tmp_path):
         """Test check_git_status when git is not installed."""
         # Arrange
         workflow = GitWorkflow(project_root=tmp_path)
 
-        # Act
+        # Act & Assert
         with patch.object(
             workflow.runner,
             "run",
@@ -157,11 +155,8 @@ class TestCheckGitStatus:
                 duration_seconds=0.0,
             ),
         ):
-            is_clean, msg = workflow.check_git_status()
-
-        # Assert
-        assert is_clean is False
-        assert "not a git repository" in msg.lower() or "not found" in msg.lower()
+            with pytest.raises(NotAGitRepoError):
+                workflow.check_git_status()
 
 
 # ============================================================================
@@ -264,10 +259,9 @@ class TestCreateBranch:
             patch.object(workflow, "get_current_branch", mock_get_branch),
             patch("subprocess.run", return_value=mock_checkout),
         ):
-            success, branch_name, parent_branch = workflow.create_branch("feature_foo", 5)
+            branch_name, parent_branch = workflow.create_branch("feature_foo", 5)
 
         # Assert
-        assert success is True
         assert branch_name == "feature_foo"
         assert parent_branch == "main"
 
@@ -283,10 +277,9 @@ class TestCreateBranch:
             patch.object(workflow, "get_current_branch", mock_get_branch),
             patch("subprocess.run", return_value=mock_checkout),
         ):
-            success, branch_name, parent = workflow.create_branch("bug_123", 42)
+            branch_name, parent = workflow.create_branch("bug_123", 42)
 
         # Assert
-        assert success is True
         assert branch_name == "bug_123"
 
     def test_create_branch_captures_parent(self, tmp_path):
@@ -301,7 +294,7 @@ class TestCreateBranch:
             patch.object(workflow, "get_current_branch", mock_get_branch),
             patch("subprocess.run", return_value=mock_checkout),
         ):
-            success, branch_name, parent_branch = workflow.create_branch("feature_bar", 10)
+            branch_name, parent_branch = workflow.create_branch("feature_bar", 10)
 
         # Assert
         assert parent_branch == "develop"
@@ -313,17 +306,14 @@ class TestCreateBranch:
         mock_get_branch = Mock(return_value="main")
         mock_checkout = Mock(returncode=128, stderr="fatal: branch exists")
 
-        # Act
+        # Act & Assert
         with (
             patch.object(workflow, "get_current_branch", mock_get_branch),
             patch("subprocess.run", return_value=mock_checkout),
         ):
-            success, msg, parent = workflow.create_branch("feature_dup", 1)
-
-        # Assert
-        assert success is False
-        assert "failed to create branch" in msg.lower()
-        assert parent is None
+            with pytest.raises(GitError) as exc_info:
+                workflow.create_branch("feature_dup", 1)
+            assert "failed to create branch" in str(exc_info.value).lower()
 
     def test_create_branch_exception(self, tmp_path):
         """Test creating branch when exception occurs."""
@@ -338,16 +328,14 @@ class TestCreateBranch:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with (
             patch.object(workflow, "get_current_branch", mock_get_branch),
             patch("subprocess.run", return_value=mock_result),
         ):
-            result = workflow.create_branch("feature_err", 1)
-
-        # Assert
-        assert result[0] is False
-        assert "failed to create branch" in result[1].lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.create_branch("feature_err", 1)
+            assert "failed to create branch" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -364,13 +352,9 @@ class TestCheckoutBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stderr="")
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.checkout_branch("feature-branch")
-
-        # Assert
-        assert success is True
-        assert "switched to branch" in msg.lower()
+            workflow.checkout_branch("feature-branch")
 
     def test_checkout_branch_not_exists(self, tmp_path):
         """Test checking out a branch that doesn't exist."""
@@ -378,13 +362,11 @@ class TestCheckoutBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=1, stderr="error: pathspec 'missing' did not match")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.checkout_branch("missing-branch")
-
-        # Assert
-        assert success is False
-        assert "failed to checkout" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.checkout_branch("missing-branch")
+            assert "failed to checkout" in str(exc_info.value).lower()
 
     def test_checkout_branch_exception(self, tmp_path):
         """Test checking out branch when exception occurs."""
@@ -398,13 +380,11 @@ class TestCheckoutBranch:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.checkout_branch("some-branch")
-
-        # Assert
-        assert success is False
-        assert "failed to checkout" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.checkout_branch("some-branch")
+            assert "failed to checkout" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -425,10 +405,9 @@ class TestCommitChanges:
 
         # Act
         with patch("subprocess.run", side_effect=[mock_add, mock_commit, mock_sha]):
-            success, commit_sha = workflow.commit_changes("feat: Add new feature")
+            commit_sha = workflow.commit_changes("feat: Add new feature")
 
         # Assert
-        assert success is True
         assert commit_sha == "abc1234"
 
     def test_commit_changes_multiline_message(self, tmp_path):
@@ -442,10 +421,9 @@ class TestCommitChanges:
 
         # Act
         with patch("subprocess.run", side_effect=[mock_add, mock_commit, mock_sha]) as mock_run:
-            success, commit_sha = workflow.commit_changes(message)
+            commit_sha = workflow.commit_changes(message)
 
         # Assert
-        assert success is True
         assert commit_sha == "def5678"
         # Verify commit message was passed correctly
         assert mock_run.call_args_list[1][0][0] == ["git", "commit", "-m", message]
@@ -457,13 +435,11 @@ class TestCommitChanges:
         mock_add = Mock(returncode=0)
         mock_commit = Mock(returncode=1, stderr="nothing to commit, working tree clean")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", side_effect=[mock_add, mock_commit]):
-            success, msg = workflow.commit_changes("feat: No changes")
-
-        # Assert
-        assert success is False
-        assert "commit failed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.commit_changes("feat: No changes")
+            assert "commit failed" in str(exc_info.value).lower()
 
     def test_commit_changes_git_error(self, tmp_path):
         """Test committing when git command fails."""
@@ -472,13 +448,11 @@ class TestCommitChanges:
         mock_add = Mock(returncode=0)
         mock_commit = Mock(returncode=128, stderr="fatal: unable to commit")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", side_effect=[mock_add, mock_commit]):
-            success, msg = workflow.commit_changes("fix: Bug fix")
-
-        # Assert
-        assert success is False
-        assert "commit failed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.commit_changes("fix: Bug fix")
+            assert "commit failed" in str(exc_info.value).lower()
 
     def test_commit_changes_exception(self, tmp_path):
         """Test committing when exception occurs."""
@@ -492,13 +466,11 @@ class TestCommitChanges:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch.object(workflow.runner, "run", return_value=mock_result):
-            success, msg = workflow.commit_changes("feat: Feature")
-
-        # Assert
-        assert success is False
-        assert "staging failed" in msg.lower() or "error committing" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.commit_changes("feat: Feature")
+            assert "staging failed" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -515,13 +487,9 @@ class TestPushBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stderr="")
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_branch("feature-branch")
-
-        # Assert
-        assert success is True
-        assert "pushed to remote" in msg.lower()
+            workflow.push_branch("feature-branch")
 
     def test_push_branch_no_remote(self, tmp_path):
         """Test pushing when no remote is configured."""
@@ -529,13 +497,9 @@ class TestPushBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=128, stderr="fatal: No remote repository specified")
 
-        # Act
+        # Act & Assert - Should not raise (logs info instead)
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_branch("feature-branch")
-
-        # Assert
-        assert success is True
-        assert "no remote" in msg.lower()
+            workflow.push_branch("feature-branch")  # No exception
 
     def test_push_branch_no_upstream(self, tmp_path):
         """Test pushing when no upstream is configured."""
@@ -545,13 +509,9 @@ class TestPushBranch:
             returncode=128, stderr="fatal: The current branch has no upstream branch"
         )
 
-        # Act
+        # Act & Assert - Should not raise (logs info instead)
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_branch("feature-branch")
-
-        # Assert
-        assert success is True
-        assert "no remote" in msg.lower() or "no upstream" in msg.lower()
+            workflow.push_branch("feature-branch")  # No exception
 
     def test_push_branch_network_error(self, tmp_path):
         """Test pushing when network error occurs."""
@@ -559,13 +519,11 @@ class TestPushBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=1, stderr="fatal: unable to access")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_branch("feature-branch")
-
-        # Assert
-        assert success is False
-        assert "push failed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.push_branch("feature-branch")
+            assert "push failed" in str(exc_info.value).lower()
 
     def test_push_branch_exception(self, tmp_path):
         """Test pushing when exception occurs."""
@@ -579,13 +537,11 @@ class TestPushBranch:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_branch("feature-branch")
-
-        # Assert
-        assert success is False
-        assert "push failed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.push_branch("feature-branch")
+            assert "push failed" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -602,13 +558,9 @@ class TestDeleteRemoteBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stderr="")
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.delete_remote_branch("feature-branch")
-
-        # Assert
-        assert success is True
-        assert "deleted remote branch" in msg.lower()
+            workflow.delete_remote_branch("feature-branch")
 
     def test_delete_remote_branch_not_exists(self, tmp_path):
         """Test deleting remote branch that doesn't exist."""
@@ -616,13 +568,9 @@ class TestDeleteRemoteBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=1, stderr="error: remote ref does not exist")
 
-        # Act
+        # Act & Assert - Should not raise (logs info instead)
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.delete_remote_branch("missing-branch")
-
-        # Assert
-        assert success is True  # Not an error if already deleted
-        assert "doesn't exist" in msg.lower()
+            workflow.delete_remote_branch("missing-branch")  # No exception
 
     def test_delete_remote_branch_error(self, tmp_path):
         """Test deleting remote branch when error occurs."""
@@ -630,13 +578,11 @@ class TestDeleteRemoteBranch:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=1, stderr="fatal: unable to delete")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.delete_remote_branch("feature-branch")
-
-        # Assert
-        assert success is False
-        assert "failed to delete" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.delete_remote_branch("feature-branch")
+            assert "failed to delete" in str(exc_info.value).lower()
 
     def test_delete_remote_branch_exception(self, tmp_path):
         """Test deleting remote branch when exception occurs."""
@@ -650,13 +596,11 @@ class TestDeleteRemoteBranch:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.delete_remote_branch("feature-branch")
-
-        # Assert
-        assert success is False
-        assert "failed to delete" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.delete_remote_branch("feature-branch")
+            assert "failed to delete" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -673,13 +617,9 @@ class TestPushMainToRemote:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stderr="")
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_main_to_remote()
-
-        # Assert
-        assert success is True
-        assert "pushed main to remote" in msg.lower()
+            workflow.push_main_to_remote()
 
     def test_push_main_to_remote_custom_branch(self, tmp_path):
         """Test pushing custom branch to remote."""
@@ -687,13 +627,9 @@ class TestPushMainToRemote:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=0, stderr="")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result) as mock_run:
-            success, msg = workflow.push_main_to_remote("develop")
-
-        # Assert
-        assert success is True
-        assert "pushed develop to remote" in msg.lower()
+            workflow.push_main_to_remote("develop")
         assert mock_run.call_args[0][0] == ["git", "push", "origin", "develop"]
 
     def test_push_main_to_remote_error(self, tmp_path):
@@ -702,13 +638,11 @@ class TestPushMainToRemote:
         workflow = GitWorkflow(project_root=tmp_path)
         mock_result = Mock(returncode=1, stderr="fatal: unable to push")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_main_to_remote()
-
-        # Assert
-        assert success is False
-        assert "failed to push" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.push_main_to_remote()
+            assert "failed to push" in str(exc_info.value).lower()
 
     def test_push_main_to_remote_exception(self, tmp_path):
         """Test pushing main to remote when exception occurs."""
@@ -722,13 +656,11 @@ class TestPushMainToRemote:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_result):
-            success, msg = workflow.push_main_to_remote()
-
-        # Assert
-        assert success is False
-        assert "failed to push" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.push_main_to_remote()
+            assert "failed to push" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -754,14 +686,12 @@ class TestCreatePullRequest:
 
         # Act
         with patch("subprocess.run", side_effect=[mock_gh_check, mock_pr_create]):
-            success, msg = workflow.create_pull_request(
+            pr_url = workflow.create_pull_request(
                 "feature_1", "session-001-feature_1", work_item, 1
             )
 
         # Assert
-        assert success is True
-        assert "pr created" in msg.lower()
-        assert "github.com" in msg
+        assert "github.com" in pr_url
 
     def test_create_pull_request_gh_not_installed(self, tmp_path):
         """Test creating PR when gh CLI is not installed."""
@@ -770,15 +700,11 @@ class TestCreatePullRequest:
         work_item = {"id": "feature_1", "type": "feature", "title": "New Feature"}
         mock_gh_check = Mock(returncode=127)
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", return_value=mock_gh_check):
-            success, msg = workflow.create_pull_request(
-                "feature_1", "session-001-feature_1", work_item, 1
-            )
-
-        # Assert
-        assert success is False
-        assert "gh cli not installed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
+            assert "gh cli not installed" in str(exc_info.value).lower()
 
     def test_create_pull_request_gh_error(self, tmp_path):
         """Test creating PR when gh command fails."""
@@ -788,15 +714,11 @@ class TestCreatePullRequest:
         mock_gh_check = Mock(returncode=0)
         mock_pr_create = Mock(returncode=1, stderr="error: authentication failed")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", side_effect=[mock_gh_check, mock_pr_create]):
-            success, msg = workflow.create_pull_request(
-                "feature_1", "session-001-feature_1", work_item, 1
-            )
-
-        # Assert
-        assert success is False
-        assert "failed to create pr" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
+            assert "failed to create pr" in str(exc_info.value).lower()
 
     def test_create_pull_request_exception(self, tmp_path):
         """Test creating PR when exception occurs."""
@@ -811,18 +733,10 @@ class TestCreatePullRequest:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch.object(workflow.runner, "run", return_value=mock_result):
-            success, msg = workflow.create_pull_request(
-                "feature_1", "session-001-feature_1", work_item, 1
-            )
-
-        # Assert
-        assert success is False
-        assert any(
-            phrase in msg.lower()
-            for phrase in ["failed to create pr", "error creating pr", "gh cli not installed"]
-        )
+            with pytest.raises(GitError):
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
 
 
 # ============================================================================
@@ -984,14 +898,9 @@ class TestMergeToParent:
         mock_merge = Mock(returncode=0, stderr="")
         mock_delete = Mock(returncode=0)
 
-        # Act
+        # Act & Assert - Should not raise any exception
         with patch("subprocess.run", side_effect=[mock_checkout, mock_merge, mock_delete]):
-            success, msg = workflow.merge_to_parent("feature-branch", "main")
-
-        # Assert
-        assert success is True
-        assert "merged to main" in msg.lower()
-        assert "branch deleted" in msg.lower()
+            workflow.merge_to_parent("feature-branch", "main")
 
     def test_merge_to_parent_custom_parent(self, tmp_path):
         """Test merging to custom parent branch."""
@@ -1001,15 +910,11 @@ class TestMergeToParent:
         mock_merge = Mock(returncode=0, stderr="")
         mock_delete = Mock(returncode=0)
 
-        # Act
+        # Act & Assert
         with patch(
             "subprocess.run", side_effect=[mock_checkout, mock_merge, mock_delete]
         ) as mock_run:
-            success, msg = workflow.merge_to_parent("feature-branch", "develop")
-
-        # Assert
-        assert success is True
-        assert "merged to develop" in msg.lower()
+            workflow.merge_to_parent("feature-branch", "develop")
         # Verify checkout called with correct parent
         assert mock_run.call_args_list[0][0][0] == ["git", "checkout", "develop"]
 
@@ -1020,13 +925,11 @@ class TestMergeToParent:
         mock_checkout = Mock(returncode=0)
         mock_merge = Mock(returncode=1, stderr="CONFLICT: merge conflict in file.txt")
 
-        # Act
+        # Act & Assert
         with patch("subprocess.run", side_effect=[mock_checkout, mock_merge]):
-            success, msg = workflow.merge_to_parent("feature-branch", "main")
-
-        # Assert
-        assert success is False
-        assert "merge failed" in msg.lower()
+            with pytest.raises(GitError) as exc_info:
+                workflow.merge_to_parent("feature-branch", "main")
+            assert "merge failed" in str(exc_info.value).lower()
 
     def test_merge_to_parent_exception(self, tmp_path):
         """Test merging when exception occurs."""
@@ -1040,17 +943,11 @@ class TestMergeToParent:
             duration_seconds=0.0,
         )
 
-        # Act
+        # Act & Assert
         with patch.object(workflow.runner, "run", return_value=mock_result):
-            success, msg = workflow.merge_to_parent("feature-branch", "main")
-
-        # Assert
-        assert success is False
-        assert (
-            "merge failed" in msg.lower()
-            or "failed to checkout" in msg.lower()
-            or "error merging" in msg.lower()
-        )
+            with pytest.raises(GitError) as exc_info:
+                workflow.merge_to_parent("feature-branch", "main")
+            assert "failed to checkout" in str(exc_info.value).lower()
 
 
 # ============================================================================
@@ -1076,7 +973,7 @@ class TestStartWorkItem:
 
         # Act
         with patch.object(
-            workflow, "create_branch", return_value=(True, "session-001-feature_1", "main")
+            workflow, "create_branch", return_value=("session-001-feature_1", "main")
         ):
             result = workflow.start_work_item("feature_1", 1)
 
@@ -1110,7 +1007,7 @@ class TestStartWorkItem:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch.object(workflow, "checkout_branch", return_value=(True, "Switched to branch")):
+        with patch.object(workflow, "checkout_branch", return_value=None):
             result = workflow.start_work_item("feature_1", 1)
 
         # Assert
@@ -1128,7 +1025,11 @@ class TestStartWorkItem:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch.object(workflow, "create_branch", return_value=(False, "Branch exists", None)):
+        with patch.object(
+            workflow,
+            "create_branch",
+            side_effect=GitError("Branch exists", ErrorCode.GIT_COMMAND_FAILED),
+        ):
             result = workflow.start_work_item("feature_1", 1)
 
         # Assert
@@ -1169,8 +1070,8 @@ class TestCompleteWorkItem:
 
         # Act
         with (
-            patch.object(workflow, "commit_changes", return_value=(True, "abc1234")),
-            patch.object(workflow, "push_branch", return_value=(True, "Pushed")),
+            patch.object(workflow, "commit_changes", return_value="abc1234"),
+            patch.object(workflow, "push_branch", return_value=None),
         ):
             result = workflow.complete_work_item("feature_1", "feat: Complete feature", False, 1)
 
@@ -1214,12 +1115,12 @@ class TestCompleteWorkItem:
 
         # Act
         with (
-            patch.object(workflow, "commit_changes", return_value=(True, "abc1234")),
-            patch.object(workflow, "push_branch", return_value=(True, "Pushed")),
+            patch.object(workflow, "commit_changes", return_value="abc1234"),
+            patch.object(workflow, "push_branch", return_value=None),
             patch.object(
                 workflow,
                 "create_pull_request",
-                return_value=(True, "PR created: https://github.com/user/repo/pull/1"),
+                return_value="https://github.com/user/repo/pull/1",
             ),
         ):
             result = workflow.complete_work_item("feature_1", "feat: Complete", True, 1)
@@ -1262,11 +1163,11 @@ class TestCompleteWorkItem:
 
         # Act
         with (
-            patch.object(workflow, "commit_changes", return_value=(True, "abc1234")),
-            patch.object(workflow, "push_branch", return_value=(True, "Pushed")),
-            patch.object(workflow, "merge_to_parent", return_value=(True, "Merged")),
-            patch.object(workflow, "push_main_to_remote", return_value=(True, "Pushed main")),
-            patch.object(workflow, "delete_remote_branch", return_value=(True, "Deleted")),
+            patch.object(workflow, "commit_changes", return_value="abc1234"),
+            patch.object(workflow, "push_branch", return_value=None),
+            patch.object(workflow, "merge_to_parent", return_value=None),
+            patch.object(workflow, "push_main_to_remote", return_value=None),
+            patch.object(workflow, "delete_remote_branch", return_value=None),
         ):
             result = workflow.complete_work_item("feature_1", "feat: Complete", True, 1)
 
@@ -1320,8 +1221,14 @@ class TestCompleteWorkItem:
 
         # Act
         with (
-            patch.object(workflow, "commit_changes", return_value=(False, "nothing to commit")),
-            patch.object(workflow, "push_branch", return_value=(True, "Pushed")),
+            patch.object(
+                workflow,
+                "commit_changes",
+                side_effect=GitError(
+                    "Commit failed: nothing to commit", ErrorCode.GIT_COMMAND_FAILED
+                ),
+            ),
+            patch.object(workflow, "push_branch", return_value=None),
             patch("subprocess.run", return_value=mock_git_log),
         ):
             result = workflow.complete_work_item("feature_1", "feat: Complete", False, 1)
@@ -1356,7 +1263,11 @@ class TestCompleteWorkItem:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch.object(workflow, "commit_changes", return_value=(False, "fatal: error")):
+        with patch.object(
+            workflow,
+            "commit_changes",
+            side_effect=GitError("fatal: error", ErrorCode.GIT_COMMAND_FAILED),
+        ):
             result = workflow.complete_work_item("feature_1", "feat: Complete", False, 1)
 
         # Assert
@@ -1372,11 +1283,11 @@ class TestCompleteWorkItem:
 class TestMain:
     """Tests for main function."""
 
-    def test_main_prints_status(self, tmp_path, capsys):
-        """Test main function prints git status and current branch."""
+    def test_main_logs_status(self, tmp_path):
+        """Test main function logs git status and current branch."""
         # Arrange
         mock_workflow = Mock()
-        mock_workflow.check_git_status.return_value = (True, "Clean")
+        mock_workflow.check_git_status.return_value = None
         mock_workflow.get_current_branch.return_value = "main"
 
         # Act
@@ -1386,6 +1297,5 @@ class TestMain:
             main()
 
         # Assert
-        captured = capsys.readouterr()
-        assert "Git status:" in captured.out
-        assert "Current branch:" in captured.out
+        mock_workflow.check_git_status.assert_called_once()
+        mock_workflow.get_current_branch.assert_called_once()

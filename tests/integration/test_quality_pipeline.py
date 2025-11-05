@@ -196,8 +196,11 @@ class TestIntegrationTestsDisabled:
             mock_parse.return_value = {"test_scenarios": []}
             with patch("sdd.testing.integration_runner.IntegrationTestRunner") as mock_runner_class:
                 mock_runner = Mock()
-                mock_runner.setup_environment.return_value = (True, "Setup complete")
-                mock_runner.run_tests.return_value = (True, {"passed": 5, "failed": 0})
+                # setup_environment now raises exceptions instead of returning tuple
+                mock_runner.setup_environment.return_value = None
+                # run_tests now returns dict directly (not tuple)
+                mock_runner.run_tests.return_value = {"passed": 5, "failed": 0}
+                mock_runner.teardown_environment.return_value = None
                 mock_runner_class.return_value = mock_runner
 
                 passed, results = gates.run_integration_tests(work_item)
@@ -345,5 +348,9 @@ class TestIntegrationTestExecution:
         work_item = {"id": "INTEG-001", "type": "integration_test"}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Spec file not found for work item"):
+        from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+
+        with pytest.raises(
+            SDDFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"
+        ):
             gates.run_integration_tests(work_item)

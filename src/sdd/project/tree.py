@@ -6,10 +6,15 @@ Tracks structural changes to the project with reasoning.
 """
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileOperationError,
+)
 
 
 class TreeGenerator:
@@ -59,8 +64,16 @@ class TreeGenerator:
             ".session",
         ]
 
+    @log_errors()
     def generate_tree(self) -> str:
-        """Generate tree using tree command."""
+        """Generate tree using tree command, falls back to Python implementation.
+
+        Returns:
+            str: Project tree representation
+
+        Raises:
+            FileOperationError: If tree generation fails completely
+        """
         try:
             # Build ignore arguments
             ignore_args = []
@@ -72,14 +85,22 @@ class TreeGenerator:
             if result.success:
                 return result.stdout
             else:
+                # tree command failed, use fallback
                 return self._generate_tree_fallback()
 
-        except Exception:
+        except (OSError, FileNotFoundError):
             # tree command not available, use fallback
             return self._generate_tree_fallback()
 
     def _generate_tree_fallback(self) -> str:
-        """Fallback tree generation without tree command."""
+        """Fallback tree generation without tree command.
+
+        Returns:
+            str: Project tree representation
+
+        Raises:
+            FileOperationError: If filesystem operations fail
+        """
         lines = [str(self.project_root.name) + "/"]
 
         def should_ignore(path: Path) -> bool:
@@ -108,13 +129,21 @@ class TreeGenerator:
                     add_tree(child, prefix + extension, is_last_child)
 
         # Generate tree
-        children = sorted(self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name))
-        children = [c for c in children if not should_ignore(c)]
+        try:
+            children = sorted(self.project_root.iterdir(), key=lambda p: (not p.is_dir(), p.name))
+            children = [c for c in children if not should_ignore(c)]
 
-        for i, child in enumerate(children):
-            add_tree(child, "", i == len(children) - 1)
+            for i, child in enumerate(children):
+                add_tree(child, "", i == len(children) - 1)
 
-        return "\n".join(lines)
+            return "\n".join(lines)
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.project_root),
+                details="Failed to generate project tree",
+                cause=e,
+            ) from e
 
     def detect_changes(self, old_tree: str, new_tree: str) -> list[dict]:
         """Detect structural changes between trees."""
@@ -141,12 +170,16 @@ class TreeGenerator:
 
         return changes
 
+    @log_errors()
     def update_tree(self, session_num: int = None, non_interactive: bool = False):
         """Generate/update tree.txt and detect changes.
 
         Args:
             session_num: Current session number
             non_interactive: If True, skip interactive reasoning prompts
+
+        Raises:
+            FileOperationError: If reading/writing tree files fails
         """
         # Generate new tree
         new_tree = self.generate_tree()
@@ -154,7 +187,15 @@ class TreeGenerator:
         # Load old tree if exists
         old_tree = ""
         if self.tree_file.exists():
-            old_tree = self.tree_file.read_text()
+            try:
+                old_tree = self.tree_file.read_text()
+            except OSError as e:
+                raise FileOperationError(
+                    operation="read",
+                    file_path=str(self.tree_file),
+                    details="Failed to read existing tree file",
+                    cause=e,
+                ) from e
 
         # Detect changes
         changes = self.detect_changes(old_tree, new_tree)
@@ -168,8 +209,16 @@ class TreeGenerator:
         ]
 
         # Save new tree
-        self.tree_file.parent.mkdir(parents=True, exist_ok=True)
-        self.tree_file.write_text(new_tree)
+        try:
+            self.tree_file.parent.mkdir(parents=True, exist_ok=True)
+            self.tree_file.write_text(new_tree)
+        except OSError as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=str(self.tree_file),
+                details="Failed to write tree file",
+                cause=e,
+            ) from e
 
         # If significant changes detected, prompt for reasoning (unless non-interactive)
         if significant_changes and session_num:
@@ -195,15 +244,27 @@ class TreeGenerator:
 
         return changes
 
+    @log_errors()
     def _record_tree_update(self, session_num: int, changes: list[dict], reasoning: str):
-        """Record tree update in tree_updates.json."""
+        """Record tree update in tree_updates.json.
+
+        Args:
+            session_num: Current session number
+            changes: List of detected changes
+            reasoning: User-provided reasoning for changes
+
+        Raises:
+            FileOperationError: If writing tree updates fails
+        """
         updates = {"updates": []}
 
         if self.updates_file.exists():
             try:
                 updates = json.loads(self.updates_file.read_text())
-            except:  # noqa: E722
-                pass
+            except (json.JSONDecodeError, OSError):
+                # If tree_updates.json is corrupted or unreadable, start fresh
+                # Log warning but don't fail - we can rebuild the history
+                updates = {"updates": []}
 
         update_entry = {
             "timestamp": datetime.now().isoformat(),
@@ -215,12 +276,25 @@ class TreeGenerator:
 
         updates["updates"].append(update_entry)
 
-        self.updates_file.write_text(json.dumps(updates, indent=2))
+        try:
+            self.updates_file.write_text(json.dumps(updates, indent=2))
+        except OSError as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=str(self.updates_file),
+                details="Failed to write tree updates",
+                cause=e,
+            ) from e
 
 
 def main():
-    """CLI entry point."""
+    """CLI entry point.
+
+    Handles exceptions and provides user-friendly error messages.
+    """
     import argparse
+
+    from sdd.core.exceptions import SDDError
 
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
     parser.add_argument("--session", type=int, help="Current session number")
@@ -232,29 +306,53 @@ def main():
     )
     args = parser.parse_args()
 
-    generator = TreeGenerator()
+    try:
+        generator = TreeGenerator()
 
-    if args.show_changes:
-        if generator.updates_file.exists():
-            updates = json.loads(generator.updates_file.read_text())
-            print("Recent structural changes:")
-            for update in updates["updates"][-5:]:
-                print(f"\nSession {update['session']} ({update['timestamp']})")
-                print(f"Reasoning: {update['reasoning']}")
-                print(f"Changes: {len(update['changes'])}")
+        if args.show_changes:
+            if generator.updates_file.exists():
+                try:
+                    updates = json.loads(generator.updates_file.read_text())
+                    print("Recent structural changes:")
+                    for update in updates["updates"][-5:]:
+                        print(f"\nSession {update['session']} ({update['timestamp']})")
+                        print(f"Reasoning: {update['reasoning']}")
+                        print(f"Changes: {len(update['changes'])}")
+                except (json.JSONDecodeError, KeyError) as e:
+                    raise FileOperationError(
+                        operation="read",
+                        file_path=str(generator.updates_file),
+                        details="Failed to parse tree updates file",
+                        cause=e,
+                    ) from e
+            else:
+                print("No tree updates recorded yet")
         else:
-            print("No tree updates recorded yet")
-    else:
-        changes = generator.update_tree(
-            session_num=args.session, non_interactive=args.non_interactive
-        )
+            changes = generator.update_tree(
+                session_num=args.session, non_interactive=args.non_interactive
+            )
 
-        if changes:
-            print(f"\n✓ Tree updated with {len(changes)} changes")
-        else:
-            print("\n✓ Tree generated (no changes)")
+            if changes:
+                print(f"\n✓ Tree updated with {len(changes)} changes")
+            else:
+                print("\n✓ Tree generated (no changes)")
 
-        print(f"✓ Saved to: {generator.tree_file}")
+            print(f"✓ Saved to: {generator.tree_file}")
+
+    except SDDError as e:
+        # Handle structured SDD errors with user-friendly output
+        print(f"\nError: {e.message}", file=sys.stderr)
+        if e.remediation:
+            print(f"Suggestion: {e.remediation}", file=sys.stderr)
+        sys.exit(e.exit_code)
+    except KeyboardInterrupt:
+        print("\n\nOperation cancelled by user.", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        # Unexpected errors
+        print(f"\nUnexpected error: {e}", file=sys.stderr)
+        print("Please report this issue.", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

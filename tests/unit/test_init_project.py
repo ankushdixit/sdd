@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from sdd.core.command_runner import CommandResult
+from sdd.core.exceptions import DirectoryNotEmptyError
 from sdd.project.init import (
     check_or_init_git,
     create_initial_commit,
@@ -27,6 +28,12 @@ from sdd.project.init import (
     install_git_hooks,
     run_initial_scans,
 )
+
+
+@pytest.fixture(autouse=True)
+def configure_logging(caplog):
+    """Configure logging to capture INFO level logs for all tests."""
+    caplog.set_level("INFO")
 
 
 @pytest.fixture
@@ -78,7 +85,7 @@ def mock_template_dir(tmp_path):
 class TestCheckOrInitGit:
     """Tests for check_or_init_git function."""
 
-    def test_git_already_initialized(self, temp_project, capsys):
+    def test_git_already_initialized(self, temp_project, caplog):
         """Test when git is already initialized."""
         # Arrange
         git_dir = temp_project / ".git"
@@ -86,14 +93,13 @@ class TestCheckOrInitGit:
 
         # Act
         result = check_or_init_git(temp_project)
-        captured = capsys.readouterr()
 
         # Assert
         assert result is True
-        assert "Git repository already initialized" in captured.out
+        assert "Git repository already initialized" in caplog.text
 
     @patch("subprocess.run")
-    def test_git_initialization_success(self, mock_run, temp_project, capsys):
+    def test_git_initialization_success(self, mock_run, temp_project, caplog):
         """Test successful git initialization."""
         # Arrange
         mock_run.return_value = CommandResult(
@@ -102,12 +108,11 @@ class TestCheckOrInitGit:
 
         # Act
         result = check_or_init_git(temp_project)
-        captured = capsys.readouterr()
 
         # Assert
         assert result is True
-        assert "Initialized git repository" in captured.out
-        assert "Set default branch to 'main'" in captured.out
+        assert "Initialized git repository" in caplog.text
+        assert "Set default branch to 'main'" in caplog.text
         assert mock_run.call_count == 2
 
         # Verify git init was called
@@ -120,20 +125,16 @@ class TestCheckOrInitGit:
         assert branch_call[0][0] == ["git", "branch", "-m", "main"]
 
     @patch("subprocess.run")
-    def test_git_initialization_failure(self, mock_run, temp_project, capsys):
+    def test_git_initialization_failure(self, mock_run, temp_project):
         """Test git initialization failure."""
         # Arrange
         mock_run.side_effect = subprocess.CalledProcessError(1, "git init")
 
-        # Act
-        result = check_or_init_git(temp_project)
-        captured = capsys.readouterr()
+        # Act & Assert
+        with pytest.raises(Exception):  # CommandExecutionError or similar
+            check_or_init_git(temp_project)
 
-        # Assert
-        assert result is False
-        assert "Failed to initialize git" in captured.out
-
-    def test_git_init_default_path(self, capsys):
+    def test_git_init_default_path(self, caplog):
         """Test git initialization with default path (cwd)."""
         # Arrange
         git_dir = Path.cwd() / ".git"
@@ -141,12 +142,11 @@ class TestCheckOrInitGit:
 
         # Act
         result = check_or_init_git()
-        captured = capsys.readouterr()
 
         # Assert
         if already_exists:
             assert result is True
-            assert "Git repository already initialized" in captured.out
+            assert "Git repository already initialized" in caplog.text
         else:
             # Can't test initialization without mocking since it would modify real repo
             pass
@@ -155,18 +155,16 @@ class TestCheckOrInitGit:
 class TestInstallGitHooks:
     """Tests for install_git_hooks function."""
 
-    def test_git_hooks_dir_not_found(self, temp_project, capsys):
+    def test_git_hooks_dir_not_found(self, temp_project):
         """Test when .git/hooks directory doesn't exist."""
-        # Act
-        result = install_git_hooks(temp_project)
-        captured = capsys.readouterr()
+        # Act & Assert
+        from sdd.core.exceptions import NotAGitRepoError
 
-        # Assert
-        assert result is False
-        assert ".git/hooks directory not found" in captured.out
+        with pytest.raises(NotAGitRepoError):
+            install_git_hooks(temp_project)
 
     @patch("shutil.copy")
-    def test_install_hooks_copy_failure(self, mock_copy, temp_project, mock_template_dir, capsys):
+    def test_install_hooks_copy_failure(self, mock_copy, temp_project, mock_template_dir):
         """Test hook installation when copy fails."""
         # Arrange
         git_hooks_dir = temp_project / ".git" / "hooks"
@@ -174,6 +172,8 @@ class TestInstallGitHooks:
         mock_copy.side_effect = OSError("Permission denied")
 
         # Mock the template path to exist
+        from sdd.core.exceptions import FileOperationError
+
         with patch.object(Path, "exists", return_value=True):
             with patch("sdd.project.init.Path") as mock_path:
                 # Setup mock to return our template dir
@@ -181,13 +181,9 @@ class TestInstallGitHooks:
                 mock_file.parent.parent = mock_template_dir.parent
                 mock_path.return_value = mock_file
 
-                # Act
-                result = install_git_hooks(temp_project)
-                captured = capsys.readouterr()
-
-        # Assert
-        assert result is False
-        assert "Failed to install git hook" in captured.out
+                # Act & Assert
+                with pytest.raises(FileOperationError):
+                    install_git_hooks(temp_project)
 
 
 class TestDetectProjectType:
@@ -245,7 +241,7 @@ class TestDetectProjectType:
     @patch("builtins.input", return_value="1")
     @patch("sys.stdin.isatty", return_value=True)
     def test_detect_unknown_project_user_choice_typescript(
-        self, mock_isatty, mock_input, temp_project, monkeypatch, capsys
+        self, mock_isatty, mock_input, temp_project, monkeypatch, caplog
     ):
         """Test detecting unknown project with user choosing TypeScript."""
         # Arrange
@@ -253,11 +249,10 @@ class TestDetectProjectType:
 
         # Act
         result = detect_project_type()
-        captured = capsys.readouterr()
 
         # Assert
         assert result == "typescript"
-        assert "No project files detected" in captured.out
+        assert "No project files detected" in caplog.text
 
     @patch("builtins.input", return_value="2")
     @patch("sys.stdin.isatty", return_value=True)
@@ -306,7 +301,7 @@ class TestDetectProjectType:
 
     @patch("sys.stdin.isatty", return_value=False)
     def test_detect_unknown_project_non_interactive(
-        self, mock_isatty, temp_project, monkeypatch, capsys
+        self, mock_isatty, temp_project, monkeypatch, caplog
     ):
         """Test detecting unknown project in non-interactive mode."""
         # Arrange
@@ -314,17 +309,16 @@ class TestDetectProjectType:
 
         # Act
         result = detect_project_type()
-        captured = capsys.readouterr()
 
         # Assert
         assert result == "typescript"
-        assert "Non-interactive mode: defaulting to TypeScript" in captured.out
+        assert "Non-interactive mode: defaulting to TypeScript" in caplog.text
 
 
 class TestEnsurePackageManagerFile:
     """Tests for ensure_package_manager_file function."""
 
-    def test_update_existing_package_json_add_scripts(self, temp_project, monkeypatch, capsys):
+    def test_update_existing_package_json_add_scripts(self, temp_project, monkeypatch, caplog):
         """Test updating existing package.json to add missing scripts."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -333,11 +327,10 @@ class TestEnsurePackageManagerFile:
 
         # Act
         ensure_package_manager_file("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found package.json" in captured.out
-        assert "Added script: test" in captured.out
+        assert "Found package.json" in caplog.text
+        assert "Added script: test" in caplog.text
 
         data = json.loads(package_json.read_text())
         assert "test" in data["scripts"]
@@ -346,7 +339,7 @@ class TestEnsurePackageManagerFile:
         assert "build" in data["scripts"]  # TypeScript should have build
 
     def test_update_existing_package_json_add_dev_dependencies(
-        self, temp_project, monkeypatch, capsys
+        self, temp_project, monkeypatch, caplog
     ):
         """Test updating existing package.json to add missing devDependencies."""
         # Arrange
@@ -358,17 +351,16 @@ class TestEnsurePackageManagerFile:
 
         # Act
         ensure_package_manager_file("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Added devDependency: jest" in captured.out
+        assert "Added devDependency: jest" in caplog.text
 
         data = json.loads(package_json.read_text())
         assert "jest" in data["devDependencies"]
         assert "typescript" in data["devDependencies"]
         assert "@types/jest" in data["devDependencies"]
 
-    def test_package_json_no_modification_needed(self, temp_project, monkeypatch, capsys):
+    def test_package_json_no_modification_needed(self, temp_project, monkeypatch, caplog):
         """Test when package.json already has all required fields."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -392,14 +384,13 @@ class TestEnsurePackageManagerFile:
 
         # Act
         ensure_package_manager_file("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found package.json" in captured.out
-        assert "Added script:" not in captured.out
-        assert "Added devDependency:" not in captured.out
+        assert "Found package.json" in caplog.text
+        assert "Added script:" not in caplog.text
+        assert "Added devDependency:" not in caplog.text
 
-    def test_existing_pyproject_toml_with_dev_deps(self, temp_project, monkeypatch, capsys):
+    def test_existing_pyproject_toml_with_dev_deps(self, temp_project, monkeypatch, caplog):
         """Test when pyproject.toml exists with dev dependencies."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -408,13 +399,12 @@ class TestEnsurePackageManagerFile:
 
         # Act
         ensure_package_manager_file("python")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found pyproject.toml" in captured.out
-        assert "Add [project.optional-dependencies]" not in captured.out
+        assert "Found pyproject.toml" in caplog.text
+        assert "Add [project.optional-dependencies]" not in caplog.text
 
-    def test_existing_pyproject_toml_without_dev_deps(self, temp_project, monkeypatch, capsys):
+    def test_existing_pyproject_toml_without_dev_deps(self, temp_project, monkeypatch, caplog):
         """Test when pyproject.toml exists without dev dependencies."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -423,17 +413,16 @@ class TestEnsurePackageManagerFile:
 
         # Act
         ensure_package_manager_file("python")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found pyproject.toml" in captured.out
-        assert "Add [project.optional-dependencies]" in captured.out
+        assert "Found pyproject.toml" in caplog.text
+        assert "Add [project.optional-dependencies]" in caplog.text
 
 
 class TestEnsureConfigFiles:
     """Tests for ensure_config_files function."""
 
-    def test_existing_config_files_not_overwritten(self, temp_project, monkeypatch, capsys):
+    def test_existing_config_files_not_overwritten(self, temp_project, monkeypatch, caplog):
         """Test that existing config files are not overwritten."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -442,11 +431,10 @@ class TestEnsureConfigFiles:
 
         # Act
         ensure_config_files("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found CHANGELOG.md" in captured.out
-        assert "Created CHANGELOG.md" not in captured.out
+        assert "Found CHANGELOG.md" in caplog.text
+        assert "Created CHANGELOG.md" not in caplog.text
         assert existing_changelog.read_text() == "# My Custom Changelog"
 
 
@@ -454,7 +442,7 @@ class TestInstallDependencies:
     """Tests for install_dependencies function."""
 
     @patch("subprocess.run")
-    def test_install_npm_dependencies_success(self, mock_run, temp_project, monkeypatch, capsys):
+    def test_install_npm_dependencies_success(self, mock_run, temp_project, monkeypatch, caplog):
         """Test successful npm dependency installation."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -468,17 +456,16 @@ class TestInstallDependencies:
 
         # Act
         install_dependencies("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Installing npm dependencies" in captured.out
-        assert "Dependencies installed" in captured.out
+        assert "Installing npm dependencies" in caplog.text
+        assert "Dependencies installed" in caplog.text
         # CommandRunner.run() is called with different signature than subprocess.run()
         mock_run.assert_called_once()
         assert mock_run.call_args[0][0] == ["npm", "install"]
 
     @patch("subprocess.run")
-    def test_install_npm_dependencies_failure(self, mock_run, temp_project, monkeypatch, capsys):
+    def test_install_npm_dependencies_failure(self, mock_run, temp_project, monkeypatch, caplog):
         """Test npm dependency installation failure."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -486,14 +473,13 @@ class TestInstallDependencies:
 
         # Act
         install_dependencies("javascript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "npm install failed" in captured.out
+        assert "npm install failed" in caplog.text
 
     @patch("subprocess.run")
     def test_install_python_dependencies_create_venv(
-        self, mock_run, temp_project, monkeypatch, capsys
+        self, mock_run, temp_project, monkeypatch, caplog
     ):
         """Test creating Python venv and installing dependencies."""
         # Arrange
@@ -515,16 +501,15 @@ class TestInstallDependencies:
 
         # Act
         install_dependencies("python")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Creating Python virtual environment" in captured.out
-        assert "Created venv/" in captured.out
-        assert "Installing Python dependencies" in captured.out
+        assert "Creating Python virtual environment" in caplog.text
+        assert "Created venv/" in caplog.text
+        assert "Installing Python dependencies" in caplog.text
 
     @patch("subprocess.run")
     def test_install_python_dependencies_venv_exists(
-        self, mock_run, temp_project, monkeypatch, capsys
+        self, mock_run, temp_project, monkeypatch, caplog
     ):
         """Test installing Python dependencies when venv already exists."""
         # Arrange
@@ -540,15 +525,14 @@ class TestInstallDependencies:
 
         # Act
         install_dependencies("python")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Installing Python dependencies" in captured.out
-        assert "Creating Python virtual environment" not in captured.out
+        assert "Installing Python dependencies" in caplog.text
+        assert "Creating Python virtual environment" not in caplog.text
 
     @patch("subprocess.run")
     def test_install_python_dependencies_venv_creation_failure(
-        self, mock_run, temp_project, monkeypatch, capsys
+        self, mock_run, temp_project, monkeypatch, caplog
     ):
         """Test Python venv creation failure."""
         # Arrange
@@ -557,16 +541,15 @@ class TestInstallDependencies:
 
         # Act
         install_dependencies("python")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "venv creation failed" in captured.out
+        assert "venv creation failed" in caplog.text
 
 
 class TestCreateSmokeTests:
     """Tests for create_smoke_tests function."""
 
-    def test_existing_smoke_test_not_overwritten(self, temp_project, monkeypatch, capsys):
+    def test_existing_smoke_test_not_overwritten(self, temp_project, monkeypatch, caplog):
         """Test that existing smoke test is not overwritten."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -577,34 +560,32 @@ class TestCreateSmokeTests:
 
         # Act
         create_smoke_tests("typescript")
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Found" in captured.out
+        assert "Found" in caplog.text
         assert test_file.read_text() == "// My custom test"
 
 
 class TestCreateSessionStructure:
     """Tests for create_session_structure function."""
 
-    def test_create_session_directories(self, temp_project, monkeypatch, capsys):
+    def test_create_session_directories(self, temp_project, monkeypatch, caplog):
         """Test creating .session directory structure."""
         # Arrange
         monkeypatch.chdir(temp_project)
 
         # Act
         create_session_structure()
-        captured = capsys.readouterr()
 
         # Assert
         assert (temp_project / ".session" / "tracking").exists()
         assert (temp_project / ".session" / "briefings").exists()
         assert (temp_project / ".session" / "history").exists()
         assert (temp_project / ".session" / "specs").exists()
-        assert "Created .session/tracking/" in captured.out
-        assert "Created .session/briefings/" in captured.out
-        assert "Created .session/history/" in captured.out
-        assert "Created .session/specs/" in captured.out
+        assert "Created .session/tracking/" in caplog.text
+        assert "Created .session/briefings/" in caplog.text
+        assert "Created .session/history/" in caplog.text
+        assert "Created .session/specs/" in caplog.text
 
 
 class TestInitializeTrackingFiles:
@@ -651,7 +632,7 @@ class TestRunInitialScans:
     """Tests for run_initial_scans function."""
 
     @patch("subprocess.run")
-    def test_run_initial_scans_success(self, mock_run, temp_project, monkeypatch, capsys):
+    def test_run_initial_scans_success(self, mock_run, temp_project, monkeypatch, caplog):
         """Test successful initial scans."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -661,15 +642,14 @@ class TestRunInitialScans:
 
         # Act
         run_initial_scans()
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Generated stack.txt" in captured.out
-        assert "Generated tree.txt" in captured.out
+        assert "Generated stack.txt" in caplog.text
+        assert "Generated tree.txt" in caplog.text
         assert mock_run.call_count == 2
 
     @patch("subprocess.run")
-    def test_run_initial_scans_stack_failure(self, mock_run, temp_project, monkeypatch, capsys):
+    def test_run_initial_scans_stack_failure(self, mock_run, temp_project, monkeypatch, caplog):
         """Test when stack generation fails."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -682,13 +662,12 @@ class TestRunInitialScans:
 
         # Act
         run_initial_scans()
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Stack generation failed" in captured.out
+        assert "Stack generation failed" in caplog.text
 
     @patch("subprocess.run")
-    def test_run_initial_scans_timeout(self, mock_run, temp_project, monkeypatch, capsys):
+    def test_run_initial_scans_timeout(self, mock_run, temp_project, monkeypatch, caplog):
         """Test when scans timeout."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -696,24 +675,22 @@ class TestRunInitialScans:
 
         # Act
         run_initial_scans()
-        captured = capsys.readouterr()
 
         # Assert
-        assert "Stack generation failed" in captured.out
-        assert "timed out" in captured.out
+        assert "Stack generation failed" in caplog.text
+        assert "timed out" in caplog.text
 
 
 class TestEnsureGitignoreEntries:
     """Tests for ensure_gitignore_entries function."""
 
-    def test_create_gitignore_from_scratch(self, temp_project, monkeypatch, capsys):
+    def test_create_gitignore_from_scratch(self, temp_project, monkeypatch, caplog):
         """Test creating .gitignore from scratch."""
         # Arrange
         monkeypatch.chdir(temp_project)
 
         # Act
         ensure_gitignore_entries()
-        captured = capsys.readouterr()
 
         # Assert
         gitignore = temp_project / ".gitignore"
@@ -724,9 +701,9 @@ class TestEnsureGitignoreEntries:
         assert ".DS_Store" in content
         assert "Thumbs.db" in content
         assert "*~" in content
-        assert "Added" in captured.out and "entries to .gitignore" in captured.out
+        assert "Added" in caplog.text and "entries to .gitignore" in caplog.text
 
-    def test_update_existing_gitignore(self, temp_project, monkeypatch, capsys):
+    def test_update_existing_gitignore(self, temp_project, monkeypatch, caplog):
         """Test updating existing .gitignore."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -735,15 +712,14 @@ class TestEnsureGitignoreEntries:
 
         # Act
         ensure_gitignore_entries()
-        captured = capsys.readouterr()
 
         # Assert
         content = gitignore.read_text()
         assert "node_modules/" in content
         assert ".session/briefings/" in content
-        assert "Added" in captured.out
+        assert "Added" in caplog.text
 
-    def test_gitignore_already_complete(self, temp_project, monkeypatch, capsys):
+    def test_gitignore_already_complete(self, temp_project, monkeypatch, caplog):
         """Test when .gitignore already has all entries."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -774,12 +750,11 @@ $RECYCLE.BIN/
 
         # Act
         ensure_gitignore_entries()
-        captured = capsys.readouterr()
 
         # Assert
-        assert ".gitignore already up to date" in captured.out
+        assert ".gitignore already up to date" in caplog.text
 
-    def test_gitignore_os_patterns_section(self, temp_project, monkeypatch, capsys):
+    def test_gitignore_os_patterns_section(self, temp_project, monkeypatch):
         """Test OS-specific patterns section is added."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -800,7 +775,7 @@ class TestCreateInitialCommit:
     """Tests for create_initial_commit function."""
 
     @patch("subprocess.run")
-    def test_create_initial_commit_success(self, mock_run, temp_project, capsys):
+    def test_create_initial_commit_success(self, mock_run, temp_project, caplog):
         """Test successful initial commit creation."""
         # Arrange
         # First call checks for existing commits (no commits)
@@ -818,15 +793,14 @@ class TestCreateInitialCommit:
 
         # Act
         result = create_initial_commit(temp_project)
-        captured = capsys.readouterr()
 
         # Assert
         assert result is True
-        assert "Created initial commit" in captured.out
+        assert "Created initial commit" in caplog.text
         assert mock_run.call_count == 3
 
     @patch("subprocess.run")
-    def test_create_initial_commit_already_has_commits(self, mock_run, temp_project, capsys):
+    def test_create_initial_commit_already_has_commits(self, mock_run, temp_project, caplog):
         """Test when repository already has commits."""
         # Arrange
         mock_run.return_value = CommandResult(
@@ -835,15 +809,14 @@ class TestCreateInitialCommit:
 
         # Act
         result = create_initial_commit(temp_project)
-        captured = capsys.readouterr()
 
         # Assert
         assert result is True
-        assert "already has commits" in captured.out
-        assert "skipping initial commit" in captured.out
+        assert "already has commits" in caplog.text
+        assert "skipping initial commit" in caplog.text
 
     @patch("subprocess.run")
-    def test_create_initial_commit_failure(self, mock_run, temp_project, capsys):
+    def test_create_initial_commit_failure(self, mock_run, temp_project, caplog):
         """Test initial commit creation failure."""
         # Arrange
         mock_run.side_effect = [
@@ -856,11 +829,10 @@ class TestCreateInitialCommit:
 
         # Act
         result = create_initial_commit(temp_project)
-        captured = capsys.readouterr()
 
         # Assert
         assert result is False
-        assert "Failed to create initial commit" in captured.out
+        assert "Failed to create initial commit" in caplog.text
 
     @patch("subprocess.run")
     def test_create_initial_commit_message_format(self, mock_run, temp_project):
@@ -894,19 +866,17 @@ class TestCreateInitialCommit:
 class TestInitProject:
     """Tests for init_project main function."""
 
-    def test_init_project_already_initialized(self, temp_project, monkeypatch, capsys):
+    def test_init_project_already_initialized(self, temp_project, monkeypatch):
         """Test when project is already initialized."""
         # Arrange
         monkeypatch.chdir(temp_project)
         (temp_project / ".session").mkdir()
 
-        # Act
-        result = init_project()
-        captured = capsys.readouterr()
-
-        # Assert
-        assert result == 1
-        assert "Already initialized!" in captured.out
+        # Act & Assert
+        with pytest.raises(DirectoryNotEmptyError) as exc_info:
+            init_project()
+        assert ".session" in str(exc_info.value)
+        assert "already exists" in str(exc_info.value)
 
     @patch("sdd.project.init.create_initial_commit")
     @patch("sdd.project.init.ensure_gitignore_entries")
@@ -936,7 +906,7 @@ class TestInitProject:
         mock_commit,
         temp_project,
         monkeypatch,
-        capsys,
+        caplog,
     ):
         """Test complete initialization workflow."""
         # Arrange
@@ -948,11 +918,10 @@ class TestInitProject:
 
         # Act
         result = init_project()
-        captured = capsys.readouterr()
 
         # Assert
         assert result == 0
-        assert "SDD Initialized Successfully!" in captured.out
+        assert "SDD Initialized Successfully!" in caplog.text
         mock_git.assert_called_once()
         mock_hooks.assert_called_once()
         mock_detect.assert_called_once()
@@ -994,7 +963,7 @@ class TestInitProject:
         mock_commit,
         temp_project,
         monkeypatch,
-        capsys,
+        caplog,
     ):
         """Test initialization workflow for Python project."""
         # Arrange
@@ -1006,17 +975,16 @@ class TestInitProject:
 
         # Act
         result = init_project()
-        captured = capsys.readouterr()
 
         # Assert
         assert result == 0
-        assert "Project type: python" in captured.out
+        assert "Project type: python" in caplog.text
         mock_package.assert_called_once_with("python")
         mock_config.assert_called_once_with("python")
         mock_deps.assert_called_once_with("python")
         mock_tests.assert_called_once_with("python")
 
-    def test_init_project_success_message(self, temp_project, monkeypatch, capsys):
+    def test_init_project_success_message(self, temp_project, monkeypatch, caplog):
         """Test success message includes all created items."""
         # Arrange
         monkeypatch.chdir(temp_project)
@@ -1040,16 +1008,15 @@ class TestInitProject:
                                                     ):
                                                         # Act
                                                         result = init_project()
-                                                        captured = capsys.readouterr()
 
         # Assert
         assert result == 0
-        assert "Git repository initialized" in captured.out
-        assert "Git hooks" in captured.out
-        assert "Config files" in captured.out
-        assert "Dependencies installed" in captured.out
-        assert "Smoke tests created" in captured.out
-        assert ".session/ structure" in captured.out
-        assert "Project context" in captured.out
-        assert ".gitignore updated" in captured.out
-        assert "/sdd:work-new" in captured.out
+        assert "Git repository initialized" in caplog.text
+        assert "Git hooks" in caplog.text
+        assert "Config files" in caplog.text
+        assert "Dependencies installed" in caplog.text
+        assert "Smoke tests created" in caplog.text
+        assert ".session/ structure" in caplog.text
+        assert "Project context" in caplog.text
+        assert ".gitignore updated" in caplog.text
+        assert "/sdd:work-new" in caplog.text

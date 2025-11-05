@@ -12,6 +12,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Union
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    CommandExecutionError,
+    TimeoutError,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,15 +43,6 @@ class CommandResult:
         return self.stdout.strip() if self.stdout else self.stderr.strip()
 
 
-class CommandExecutionError(Exception):
-    """Raised when command execution fails."""
-
-    def __init__(self, message: str, result: Optional[CommandResult] = None):
-        """Initialize error with message and optional result."""
-        super().__init__(message)
-        self.result = result
-
-
 class CommandRunner:
     """Centralized command execution with consistent error handling."""
 
@@ -68,6 +65,7 @@ class CommandRunner:
         self.working_dir = working_dir
         self.raise_on_error = raise_on_error
 
+    @log_errors()
     def run(
         self,
         command: Union[str, list[str]],
@@ -146,9 +144,10 @@ class CommandRunner:
 
                 if check:
                     raise CommandExecutionError(
-                        f"Command failed with exit code {result.returncode}: "
-                        f"{' '.join(command)}\nstderr: {result.stderr}",
-                        result=cmd_result,
+                        command=" ".join(command),
+                        returncode=result.returncode,
+                        stderr=result.stderr,
+                        stdout=result.stdout,
                     )
 
                 # Retry if configured
@@ -175,9 +174,13 @@ class CommandRunner:
                 )
 
                 if check:
-                    raise CommandExecutionError(
-                        f"Command timed out after {timeout}s: {' '.join(command)}",
-                        result=cmd_result,
+                    raise TimeoutError(
+                        operation=" ".join(command),
+                        timeout_seconds=int(timeout),
+                        context={
+                            "stdout": e.stdout or "",
+                            "stderr": e.stderr or "",
+                        },
                     ) from e
 
                 # Retry if configured
@@ -189,14 +192,19 @@ class CommandRunner:
 
                 return cmd_result
 
-            except CommandExecutionError:
-                # Re-raise CommandExecutionError as-is (don't catch and re-wrap)
+            except (CommandExecutionError, TimeoutError):
+                # Re-raise our standardized errors as-is (don't catch and re-wrap)
                 raise
             except Exception as e:
                 logger.error(f"Unexpected error running command: {e}")
 
                 if check:
-                    raise CommandExecutionError(f"Unexpected error running command: {e}") from e
+                    raise CommandExecutionError(
+                        command=" ".join(command),
+                        returncode=-1,
+                        stderr=str(e),
+                        stdout="",
+                    ) from e
 
                 # Don't retry on unexpected errors
                 return CommandResult(
@@ -210,6 +218,7 @@ class CommandRunner:
         # Should never reach here
         raise RuntimeError("Retry logic error")
 
+    @log_errors()
     def run_json(self, command: Union[str, list[str]], **kwargs) -> Optional[dict]:
         """Run command and parse JSON output.
 
@@ -226,6 +235,7 @@ class CommandRunner:
             logger.error(f"Failed to parse JSON output: {e}")
             return None
 
+    @log_errors()
     def run_lines(self, command: Union[str, list[str]], **kwargs) -> list[str]:
         """Run command and return output as lines.
 

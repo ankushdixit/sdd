@@ -5,12 +5,22 @@ with multi-service orchestration using Docker Compose.
 """
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from sdd.core.exceptions import (
+    EnvironmentSetupError,
+    IntegrationExecutionError,
+    ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    TimeoutError as SDDTimeoutError,
+)
 from sdd.testing.integration_runner import IntegrationTestRunner
 
 
@@ -56,7 +66,7 @@ class TestIntegrationTestRunnerInit:
         work_item = {"type": "integration_test", "title": "Test without ID"}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Work item must have 'id' field"):
+        with pytest.raises(ValidationError, match="Work item must have 'id' field"):
             IntegrationTestRunner(work_item)
 
     def test_init_with_missing_spec_file_raises_error(self):
@@ -65,10 +75,13 @@ class TestIntegrationTestRunnerInit:
         work_item = {"id": "INTEG-002", "type": "integration_test"}
 
         with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
-            mock_parser.parse_spec_file.side_effect = FileNotFoundError("Spec file not found")
+            # Use the SDD FileNotFoundError exception
+            mock_parser.parse_spec_file.side_effect = SDDFileNotFoundError(
+                file_path=".session/specs/INTEG-002.md", file_type="spec file"
+            )
 
-            # Act & Assert
-            with pytest.raises(ValueError, match="Spec file not found for work item: INTEG-002"):
+            # Act & Assert - FileNotFoundError is re-raised directly, not wrapped
+            with pytest.raises(SDDFileNotFoundError):
                 IntegrationTestRunner(work_item)
 
     def test_init_with_invalid_spec_file_raises_error(self):
@@ -79,8 +92,8 @@ class TestIntegrationTestRunnerInit:
         with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.side_effect = Exception("Invalid YAML")
 
-            # Act & Assert
-            with pytest.raises(ValueError, match="Failed to parse spec file for INTEG-003"):
+            # Act & Assert - ValidationError wraps other exceptions
+            with pytest.raises(ValidationError, match="Failed to parse spec file for INTEG-003"):
                 IntegrationTestRunner(work_item)
 
     def test_init_results_dictionary_initialized_correctly(self):
@@ -540,15 +553,11 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stderr="")
-                with patch.object(runner, "_load_test_data", return_value=True):
-                    # Act
-                    success, message = runner.setup_environment()
-
-                    # Assert
-                    assert success
-                    assert "successful" in message.lower()
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
+                with patch.object(runner, "_load_test_data"):
+                    # Act - no exception means success
+                    runner.setup_environment()
 
     def test_setup_environment_fails_when_compose_file_missing(self, tmp_path, monkeypatch):
         """Test that setup fails when Docker Compose file doesn't exist."""
@@ -562,12 +571,11 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            # Act
-            success, message = runner.setup_environment()
+            # Act & Assert
+            with pytest.raises(SDDFileNotFoundError) as exc_info:
+                runner.setup_environment()
 
-            # Assert
-            assert not success
-            assert "not found" in message.lower()
+            assert "docker-compose.integration.yml" in str(exc_info.value)
 
     def test_setup_environment_fails_when_docker_compose_command_fails(self, tmp_path, monkeypatch):
         """Test that setup fails when docker-compose command returns non-zero exit code."""
@@ -583,15 +591,16 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=1, stderr="Error starting services")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(
+                    success=False, stderr="Error starting services", timed_out=False
+                )
 
-                # Act
-                success, message = runner.setup_environment()
+                # Act & Assert
+                with pytest.raises(EnvironmentSetupError) as exc_info:
+                    runner.setup_environment()
 
-                # Assert
-                assert not success
-                assert "failed to start" in message.lower()
+                assert "Error starting services" in str(exc_info.value)
 
     def test_setup_environment_handles_timeout(self, tmp_path, monkeypatch):
         """Test that setup handles timeout when starting services takes too long."""
@@ -607,15 +616,14 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = subprocess.TimeoutExpired("docker-compose", 180)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
-                # Act
-                success, message = runner.setup_environment()
+                # Act & Assert
+                with pytest.raises(SDDTimeoutError) as exc_info:
+                    runner.setup_environment()
 
-                # Assert
-                assert not success
-                assert "timeout" in message.lower()
+                assert exc_info.value.context["timeout_seconds"] == 180
 
     def test_setup_environment_waits_for_services_to_be_healthy(self, tmp_path, monkeypatch):
         """Test that setup waits for required services to become healthy."""
@@ -632,15 +640,14 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stderr="")
-                with patch.object(runner, "_wait_for_service", return_value=True) as mock_wait:
-                    with patch.object(runner, "_load_test_data", return_value=True):
-                        # Act
-                        success, message = runner.setup_environment()
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
+                with patch.object(runner, "_wait_for_service") as mock_wait:
+                    with patch.object(runner, "_load_test_data"):
+                        # Act - no exception means success
+                        runner.setup_environment()
 
                         # Assert
-                        assert success
                         assert mock_wait.call_count == 2  # Called for postgresql and redis
 
     def test_setup_environment_fails_when_service_not_healthy(self, tmp_path, monkeypatch):
@@ -658,15 +665,21 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stderr="")
-                with patch.object(runner, "_wait_for_service", return_value=False):
-                    # Act
-                    success, message = runner.setup_environment()
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
+                with patch.object(
+                    runner,
+                    "_wait_for_service",
+                    side_effect=SDDTimeoutError(
+                        operation="waiting for service 'postgresql' to become healthy",
+                        timeout_seconds=60,
+                    ),
+                ):
+                    # Act & Assert
+                    with pytest.raises(SDDTimeoutError) as exc_info:
+                        runner.setup_environment()
 
-                    # Assert
-                    assert not success
-                    assert "failed to become healthy" in message.lower()
+                    assert "postgresql" in str(exc_info.value)
 
     def test_setup_environment_fails_when_test_data_loading_fails(self, tmp_path, monkeypatch):
         """Test that setup fails when test data loading fails."""
@@ -682,15 +695,20 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stderr="")
-                with patch.object(runner, "_load_test_data", return_value=False):
-                    # Act
-                    success, message = runner.setup_environment()
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
+                with patch.object(
+                    runner,
+                    "_load_test_data",
+                    side_effect=EnvironmentSetupError(
+                        component="test data fixture", details="Failed to load fixture"
+                    ),
+                ):
+                    # Act & Assert
+                    with pytest.raises(EnvironmentSetupError) as exc_info:
+                        runner.setup_environment()
 
-                    # Assert
-                    assert not success
-                    assert "failed to load test data" in message.lower()
+                    assert "fixture" in str(exc_info.value).lower()
 
     def test_setup_environment_handles_generic_exception(self, tmp_path, monkeypatch):
         """Test that setup handles generic exceptions correctly."""
@@ -706,23 +724,23 @@ class TestEnvironmentSetup:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = Exception("Docker not available")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(
+                    success=False, stderr="Docker not available", timed_out=False
+                )
 
-                # Act
-                success, message = runner.setup_environment()
+                # Act & Assert
+                with pytest.raises(EnvironmentSetupError) as exc_info:
+                    runner.setup_environment()
 
-                # Assert
-                assert not success
-                assert "failed to start services" in message.lower()
-                assert "Docker not available" in message
+                assert "Docker not available" in str(exc_info.value)
 
 
 class TestWaitForService:
     """Tests for service health checking."""
 
     def test_wait_for_service_returns_true_when_service_healthy(self):
-        """Test that wait_for_service returns True when service becomes healthy."""
+        """Test that wait_for_service succeeds when service becomes healthy."""
         # Arrange
         work_item = {"id": "INTEG-029"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
@@ -731,21 +749,18 @@ class TestWaitForService:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
+            with patch.object(runner.runner, "run") as mock_run:
                 # First call returns container ID, second call shows healthy status
                 mock_run.side_effect = [
-                    Mock(returncode=0, stdout="abc123\n"),
-                    Mock(returncode=0, stdout="'healthy'"),
+                    Mock(success=True, stdout="abc123\n"),
+                    Mock(success=True, stdout="'healthy'"),
                 ]
 
-                # Act
-                result = runner._wait_for_service("test-service", timeout=5)
-
-                # Assert
-                assert result is True
+                # Act - no exception means success
+                runner._wait_for_service("test-service", timeout=5)
 
     def test_wait_for_service_returns_false_when_timeout_exceeded(self):
-        """Test that wait_for_service returns False when timeout is exceeded."""
+        """Test that wait_for_service raises TimeoutError when timeout is exceeded."""
         # Arrange
         work_item = {"id": "INTEG-030"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
@@ -754,19 +769,23 @@ class TestWaitForService:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                # Always return unhealthy
-                mock_run.side_effect = [
-                    Mock(returncode=0, stdout="abc123\n"),
-                    Mock(returncode=0, stdout="'starting'"),
-                ] * 100
+            with patch.object(runner.runner, "run") as mock_run:
+                # Always return unhealthy status
+                def mock_side_effect(*args, **kwargs):
+                    # First call: return container ID
+                    if "ps" in args[0]:
+                        return Mock(success=True, stdout="abc123\n")
+                    # Health check: always return starting (never healthy)
+                    return Mock(success=True, stdout="'starting'")
+
+                mock_run.side_effect = mock_side_effect
 
                 with patch("time.sleep"):  # Speed up test
-                    # Act
-                    result = runner._wait_for_service("test-service", timeout=1)
+                    # Act & Assert
+                    with pytest.raises(SDDTimeoutError) as exc_info:
+                        runner._wait_for_service("test-service", timeout=1)
 
-                    # Assert
-                    assert result is False
+                    assert "test-service" in str(exc_info.value)
 
     def test_wait_for_service_handles_exception_gracefully(self):
         """Test that wait_for_service handles exceptions and continues polling."""
@@ -778,27 +797,24 @@ class TestWaitForService:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                # First call raises exception, second succeeds
+            with patch.object(runner.runner, "run") as mock_run:
+                # First call fails, second succeeds
                 mock_run.side_effect = [
-                    Exception("Connection refused"),
-                    Mock(returncode=0, stdout="abc123\n"),
-                    Mock(returncode=0, stdout="'healthy'"),
+                    Mock(success=False, stdout=""),
+                    Mock(success=True, stdout="abc123\n"),
+                    Mock(success=True, stdout="'healthy'"),
                 ]
 
                 with patch("time.sleep"):
-                    # Act
-                    result = runner._wait_for_service("test-service", timeout=5)
-
-                    # Assert
-                    assert result is True
+                    # Act - no exception means success
+                    runner._wait_for_service("test-service", timeout=5)
 
 
 class TestLoadTestData:
     """Tests for test data fixture loading."""
 
     def test_load_test_data_returns_true_when_no_fixtures(self):
-        """Test that load_test_data returns True when no fixtures are configured."""
+        """Test that load_test_data succeeds when no fixtures are configured."""
         # Arrange
         work_item = {"id": "INTEG-032"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
@@ -807,11 +823,8 @@ class TestLoadTestData:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            # Act
-            result = runner._load_test_data()
-
-            # Assert
-            assert result is True
+            # Act - no exception means success
+            runner._load_test_data()
 
     def test_load_test_data_executes_fixtures_successfully(self, tmp_path):
         """Test that load_test_data executes all fixtures successfully."""
@@ -829,18 +842,17 @@ class TestLoadTestData:
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture1), str(fixture2)]
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True)
 
-                # Act
-                result = runner._load_test_data()
+                # Act - no exception means success
+                runner._load_test_data()
 
                 # Assert
-                assert result is True
                 assert mock_run.call_count == 2
 
     def test_load_test_data_returns_false_when_fixture_fails(self, tmp_path):
-        """Test that load_test_data returns False when a fixture execution fails."""
+        """Test that load_test_data raises exception when a fixture execution fails."""
         # Arrange
         fixture = tmp_path / "fixture.py"
         fixture.write_text("raise Exception('Fixture failed')")
@@ -853,14 +865,14 @@ class TestLoadTestData:
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture)]
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = subprocess.CalledProcessError(1, ["python"])
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, stderr="Fixture failed")
 
-                # Act
-                result = runner._load_test_data()
+                # Act & Assert
+                with pytest.raises(EnvironmentSetupError) as exc_info:
+                    runner._load_test_data()
 
-                # Assert
-                assert result is False
+                assert "fixture" in str(exc_info.value).lower()
 
     def test_load_test_data_skips_missing_fixtures(self, tmp_path):
         """Test that load_test_data skips missing fixture files and continues."""
@@ -873,11 +885,8 @@ class TestLoadTestData:
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(tmp_path / "nonexistent.py")]
 
-            # Act
-            result = runner._load_test_data()
-
-            # Assert
-            assert result is True  # Should succeed even with missing fixture
+            # Act - should succeed even with missing fixture (it logs warning and continues)
+            runner._load_test_data()
 
 
 class TestRunTests:
@@ -893,12 +902,11 @@ class TestRunTests:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch.object(runner, "_run_pytest", return_value=True):
-                # Act
-                all_passed, results = runner.run_tests(language="python")
+            with patch.object(runner, "_run_pytest"):
+                # Act - returns dict, raises exception on failure
+                results = runner.run_tests(language="python")
 
                 # Assert
-                assert all_passed
                 assert results["start_time"] is not None
                 assert results["end_time"] is not None
                 assert results["total_duration"] >= 0
@@ -913,12 +921,12 @@ class TestRunTests:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch.object(runner, "_run_jest", return_value=True):
-                # Act
-                all_passed, results = runner.run_tests(language="javascript")
+            with patch.object(runner, "_run_jest"):
+                # Act - returns dict
+                results = runner.run_tests(language="javascript")
 
                 # Assert
-                assert all_passed
+                assert isinstance(results, dict)
 
     def test_run_tests_detects_language_automatically(self, tmp_path, monkeypatch):
         """Test that run_tests detects project language when not specified."""
@@ -933,15 +941,15 @@ class TestRunTests:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch.object(runner, "_run_pytest", return_value=True):
+            with patch.object(runner, "_run_pytest"):
                 # Act
-                all_passed, results = runner.run_tests()
+                results = runner.run_tests()
 
                 # Assert
-                assert all_passed  # Should auto-detect python
+                assert isinstance(results, dict)  # Should auto-detect python
 
     def test_run_tests_returns_error_for_unsupported_language(self):
-        """Test that run_tests returns error for unsupported language."""
+        """Test that run_tests raises exception for unsupported language."""
         # Arrange
         work_item = {"id": "INTEG-039"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
@@ -950,13 +958,11 @@ class TestRunTests:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            # Act
-            all_passed, results = runner.run_tests(language="ruby")
+            # Act & Assert
+            with pytest.raises(ValidationError) as exc_info:
+                runner.run_tests(language="ruby")
 
-            # Assert
-            assert not all_passed
-            assert "error" in results
-            assert "unsupported" in results["error"].lower()
+            assert "ruby" in str(exc_info.value)
 
 
 class TestRunPytest:
@@ -979,8 +985,8 @@ class TestRunPytest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, timed_out=False)
                 with patch("pathlib.Path.exists", return_value=True):
                     with patch(
                         "builtins.open",
@@ -990,11 +996,10 @@ class TestRunPytest:
                             )
                         ),
                     ):
-                        # Act
-                        result = runner._run_pytest()
+                        # Act - no exception means success
+                        runner._run_pytest()
 
                         # Assert
-                        assert result is True
                         assert runner.results["passed"] == 10
                         assert runner.results["failed"] == 0
 
@@ -1008,14 +1013,14 @@ class TestRunPytest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=1)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=False, stderr="Test failures")
                 with patch("pathlib.Path.exists", return_value=False):
-                    # Act
-                    result = runner._run_pytest()
+                    # Act & Assert
+                    with pytest.raises(IntegrationExecutionError) as exc_info:
+                        runner._run_pytest()
 
-                    # Assert
-                    assert result is False
+                    assert exc_info.value.context["test_framework"] == "pytest"
 
     def test_run_pytest_handles_timeout(self):
         """Test pytest execution handles timeout correctly."""
@@ -1027,15 +1032,14 @@ class TestRunPytest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = subprocess.TimeoutExpired("pytest", 600)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
-                # Act
-                result = runner._run_pytest()
+                # Act & Assert
+                with pytest.raises(SDDTimeoutError) as exc_info:
+                    runner._run_pytest()
 
-                # Assert
-                assert result is False
-                assert "timed out" in runner.results.get("error", "").lower()
+                assert exc_info.value.context["timeout_seconds"] == 600
 
     def test_run_pytest_handles_generic_exception(self):
         """Test pytest execution handles generic exceptions correctly."""
@@ -1047,18 +1051,17 @@ class TestRunPytest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = Exception("pytest not installed")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(
+                    success=False, timed_out=False, stderr="pytest not installed"
+                )
 
-                # Act
-                result = runner._run_pytest()
+                # Act & Assert
+                with pytest.raises(IntegrationExecutionError) as exc_info:
+                    runner._run_pytest()
 
-                # Assert
-                assert result is False
-                assert (
-                    runner.results["failed"] == 0
-                )  # Command returned error, but no tests were run
-                # With CommandRunner, error details are logged but not stored in results
+                # Verify it's a test execution error
+                assert exc_info.value.context["test_framework"] == "pytest"
 
 
 class TestRunJest:
@@ -1082,8 +1085,8 @@ class TestRunJest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, timed_out=False)
                 with patch("pathlib.Path.exists", return_value=True):
                     with patch(
                         "builtins.open",
@@ -1093,11 +1096,10 @@ class TestRunJest:
                             )
                         ),
                     ):
-                        # Act
-                        result = runner._run_jest()
+                        # Act - no exception means success
+                        runner._run_jest()
 
                         # Assert
-                        assert result is True
                         assert runner.results["passed"] == 15
                         assert runner.results["failed"] == 0
                         assert runner.results["skipped"] == 2
@@ -1112,14 +1114,14 @@ class TestRunJest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=1)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=False, stderr="Test failures")
                 with patch("pathlib.Path.exists", return_value=False):
-                    # Act
-                    result = runner._run_jest()
+                    # Act & Assert
+                    with pytest.raises(IntegrationExecutionError) as exc_info:
+                        runner._run_jest()
 
-                    # Assert
-                    assert result is False
+                    assert exc_info.value.context["test_framework"] == "jest"
 
     def test_run_jest_handles_timeout(self):
         """Test Jest execution handles timeout correctly."""
@@ -1131,15 +1133,14 @@ class TestRunJest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = subprocess.TimeoutExpired("npm", 600)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
-                # Act
-                result = runner._run_jest()
+                # Act & Assert
+                with pytest.raises(SDDTimeoutError) as exc_info:
+                    runner._run_jest()
 
-                # Assert
-                assert result is False
-                assert "timed out" in runner.results.get("error", "").lower()
+                assert exc_info.value.context["timeout_seconds"] == 600
 
     def test_run_jest_handles_exception(self):
         """Test Jest execution handles generic exceptions correctly."""
@@ -1151,18 +1152,15 @@ class TestRunJest:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = Exception("npm not found")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=False, stderr="npm not found")
 
-                # Act
-                result = runner._run_jest()
+                # Act & Assert
+                with pytest.raises(IntegrationExecutionError) as exc_info:
+                    runner._run_jest()
 
-                # Assert
-                assert result is False
-                assert (
-                    runner.results["failed"] == 0
-                )  # Command returned error, but no tests were run
-                # With CommandRunner, error details are logged but not stored in results
+                # Verify it's a test execution error
+                assert exc_info.value.context["test_framework"] == "jest"
 
 
 class TestTeardownEnvironment:
@@ -1180,15 +1178,11 @@ class TestTeardownEnvironment:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stderr="")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
 
-                # Act
-                success, message = runner.teardown_environment()
-
-                # Assert
-                assert success
-                assert "successful" in message.lower()
+                # Act - no exception means success
+                runner.teardown_environment()
 
     def test_teardown_environment_fails_on_docker_compose_error(self):
         """Test teardown failure when docker-compose command fails."""
@@ -1200,15 +1194,16 @@ class TestTeardownEnvironment:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=1, stderr="Error stopping services")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(
+                    success=False, stderr="Error stopping services", timed_out=False
+                )
 
-                # Act
-                success, message = runner.teardown_environment()
+                # Act & Assert
+                with pytest.raises(EnvironmentSetupError) as exc_info:
+                    runner.teardown_environment()
 
-                # Assert
-                assert not success
-                assert "failed to tear down" in message.lower()
+                assert "Error stopping services" in str(exc_info.value)
 
     def test_teardown_environment_handles_timeout(self):
         """Test teardown handles timeout when stopping services takes too long."""
@@ -1220,15 +1215,14 @@ class TestTeardownEnvironment:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = subprocess.TimeoutExpired("docker-compose", 60)
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
-                # Act
-                success, message = runner.teardown_environment()
+                # Act & Assert
+                with pytest.raises(SDDTimeoutError) as exc_info:
+                    runner.teardown_environment()
 
-                # Assert
-                assert not success
-                assert "timeout" in message.lower()
+                assert exc_info.value.context["timeout_seconds"] == 60
 
     def test_teardown_environment_handles_generic_exception(self):
         """Test teardown handles generic exceptions correctly."""
@@ -1240,13 +1234,13 @@ class TestTeardownEnvironment:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
-            with patch("subprocess.run") as mock_run:
-                mock_run.side_effect = Exception("Docker daemon not running")
+            with patch.object(runner.runner, "run") as mock_run:
+                mock_run.return_value = Mock(
+                    success=False, stderr="Docker daemon not running", timed_out=False
+                )
 
-                # Act
-                success, message = runner.teardown_environment()
+                # Act & Assert
+                with pytest.raises(EnvironmentSetupError) as exc_info:
+                    runner.teardown_environment()
 
-                # Assert
-                assert not success
-                assert "failed to tear down services" in message.lower()
-                assert "Docker daemon not running" in message
+                assert "Docker daemon not running" in str(exc_info.value)

@@ -6,6 +6,7 @@ including validation of integration tests and deployments.
 
 import pytest
 
+from sdd.core.exceptions import FileNotFoundError, SpecValidationError
 from sdd.testing.integration_runner import IntegrationTestRunner
 from sdd.work_items.manager import WorkItemManager
 
@@ -68,12 +69,9 @@ feature_001
             "dependencies": ["feature_001"],
         }
 
-        # Act
-        is_valid, errors = manager.validate_integration_test(work_item)
-
-        # Assert
-        assert is_valid, f"Expected valid, got errors: {errors}"
-        assert len(errors) == 0
+        # Act & Assert
+        # Valid spec should not raise an exception
+        manager.validate_integration_test(work_item)
 
     def test_validate_integration_test_invalid_spec(self, temp_project_dir, monkeypatch):
         """Test that validate_integration_test detects invalid spec with missing sections."""
@@ -103,16 +101,16 @@ Some scope here.
             "dependencies": [],
         }
 
-        # Act
-        is_valid, errors = manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            manager.validate_integration_test(work_item)
 
-        # Assert
-        assert not is_valid, "Expected invalid spec"
+        errors = exc_info.value.context["validation_errors"]
         assert len(errors) > 0
         assert any("Test Scenarios" in str(e) for e in errors)
 
     def test_validate_integration_test_missing_spec_file(self, temp_project_dir, monkeypatch):
-        """Test that validate_integration_test handles missing spec file gracefully."""
+        """Test that validate_integration_test raises FileNotFoundError when spec file is missing."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -127,12 +125,11 @@ Some scope here.
             "dependencies": [],
         }
 
-        # Act
-        is_valid, errors = manager.validate_integration_test(work_item)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            manager.validate_integration_test(work_item)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
+        assert "nonexistent_test.md" in str(exc_info.value.context.get("file_path", ""))
 
     def test_validate_integration_test_missing_dependencies(self, temp_project_dir, monkeypatch):
         """Test that validate_integration_test detects missing dependencies."""
@@ -178,12 +175,12 @@ None
             "dependencies": [],
         }
 
-        # Act
-        is_valid, errors = manager.validate_integration_test(work_item)
-
-        # Assert
+        # Act & Assert
         # Should detect missing feature dependency
-        assert not is_valid
+        with pytest.raises(SpecValidationError) as exc_info:
+            manager.validate_integration_test(work_item)
+
+        errors = exc_info.value.context["validation_errors"]
         assert any("dependencies" in str(e).lower() for e in errors)
 
 
@@ -258,12 +255,9 @@ None
             "title": "Production Release v2.0",
         }
 
-        # Act
-        is_valid, errors = manager.validate_deployment(work_item)
-
-        # Assert
-        assert is_valid, f"Expected valid, got errors: {errors}"
-        assert len(errors) == 0
+        # Act & Assert
+        # Valid spec should not raise an exception
+        manager.validate_deployment(work_item)
 
     def test_validate_deployment_invalid_spec(self, temp_project_dir, monkeypatch):
         """Test that validate_deployment detects invalid spec with missing sections."""
@@ -292,11 +286,11 @@ Some scope
             "title": "Incomplete Deployment",
         }
 
-        # Act
-        is_valid, errors = manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(SpecValidationError) as exc_info:
+            manager.validate_deployment(work_item)
 
-        # Assert
-        assert not is_valid, "Expected invalid spec"
+        errors = exc_info.value.context["validation_errors"]
         assert len(errors) > 0
         assert any(
             "Deployment Procedure" in str(e)
@@ -306,7 +300,7 @@ Some scope
         )
 
     def test_validate_deployment_missing_spec_file(self, temp_project_dir, monkeypatch):
-        """Test that validate_deployment handles missing spec file gracefully."""
+        """Test that validate_deployment raises FileNotFoundError when spec file is missing."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -320,12 +314,11 @@ Some scope
             "title": "Missing Deployment",
         }
 
-        # Act
-        is_valid, errors = manager.validate_deployment(work_item)
+        # Act & Assert
+        with pytest.raises(FileNotFoundError) as exc_info:
+            manager.validate_deployment(work_item)
 
-        # Assert
-        assert not is_valid
-        assert len(errors) > 0
+        assert "nonexistent_deployment.md" in str(exc_info.value.context.get("file_path", ""))
 
 
 class TestIntegrationTestRunner:
@@ -389,7 +382,7 @@ None
         assert runner.env_requirements.get("compose_file") == "docker-compose.test.yml"
 
     def test_integration_test_runner_missing_spec(self, temp_project_dir, monkeypatch):
-        """Test that IntegrationTestRunner raises ValueError for missing spec."""
+        """Test that IntegrationTestRunner raises FileNotFoundError for missing spec."""
         # Arrange
         monkeypatch.chdir(temp_project_dir)
         specs_dir = temp_project_dir / ".session" / "specs"
@@ -398,8 +391,10 @@ None
         work_item = {"id": "nonexistent_test", "type": "integration_test"}
 
         # Act & Assert
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(FileNotFoundError) as exc_info:
             IntegrationTestRunner(work_item)
+
+        assert "nonexistent_test.md" in str(exc_info.value.context.get("file_path", ""))
 
     def test_integration_test_runner_extracts_services(self, temp_project_dir, monkeypatch):
         """Test that IntegrationTestRunner extracts required services from environment requirements."""
@@ -551,10 +546,7 @@ None
             "title": "Complete Deployment",
         }
 
-        # Act
-        int_valid, int_errors = manager.validate_integration_test(integration_item)
-        dep_valid, dep_errors = manager.validate_deployment(deployment_item)
-
-        # Assert
-        assert int_valid, f"Integration test should be valid, got errors: {int_errors}"
-        assert dep_valid, f"Deployment should be valid, got errors: {dep_errors}"
+        # Act & Assert
+        # Both should not raise exceptions (valid specs)
+        manager.validate_integration_test(integration_item)
+        manager.validate_deployment(deployment_item)

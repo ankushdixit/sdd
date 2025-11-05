@@ -11,6 +11,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    ValidationError,
+    WorkItemAlreadyExistsError,
+    WorkItemNotFoundError,
+)
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 from sdd.core.types import Priority, WorkItemStatus, WorkItemType
@@ -33,21 +41,33 @@ class WorkItemManager:
         self.specs_dir = self.session_dir / "specs"
         self.templates_dir = Path(__file__).parent.parent / "templates"
 
-    def create_work_item(self) -> Optional[str]:
-        """Interactive work item creation."""
+    @log_errors()
+    def create_work_item(self) -> str:
+        """Interactive work item creation.
+
+        Returns:
+            str: The created work item ID
+
+        Raises:
+            ValidationError: If running in non-interactive environment or invalid input
+            WorkItemAlreadyExistsError: If work item with generated ID already exists
+            FileOperationError: If spec file creation or tracking update fails
+        """
         logger.info("Starting interactive work item creation")
 
         # Check if running in non-interactive environment
         if not sys.stdin.isatty():
             logger.error("Cannot run interactive mode in non-interactive environment")
-            print("❌ Error: Cannot run interactive work item creation in non-interactive mode")
-            print("\nPlease use command-line arguments instead:")
-            print(
-                "  sdd work-new --type <type> --title <title> [--priority <priority>] [--dependencies <deps>]"
+            raise ValidationError(
+                message="Cannot run interactive work item creation in non-interactive mode",
+                code=ErrorCode.INVALID_COMMAND,
+                remediation=(
+                    "Please use command-line arguments instead:\n"
+                    "  sdd work-new --type <type> --title <title> [--priority <priority>] [--dependencies <deps>]\n"
+                    "\nExample:\n"
+                    '  sdd work-new --type feature --title "Implement calculator" --priority high'
+                ),
             )
-            print("\nExample:")
-            print('  sdd work-new --type feature --title "Implement calculator" --priority high')
-            return None
 
         print("Creating new work item...\n")
 
@@ -56,29 +76,44 @@ class WorkItemManager:
             work_type = self._prompt_type()
             if not work_type:
                 logger.debug("Work item creation cancelled - no type selected")
-                return None
+                raise ValidationError(
+                    message="Work item creation cancelled - no type selected",
+                    code=ErrorCode.INVALID_WORK_ITEM_TYPE,
+                    remediation="Select a valid work item type (1-6)",
+                )
         except EOFError:
             logger.warning("EOFError during type selection")
-            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
-            return None
+            raise ValidationError(
+                message="Interactive input unavailable",
+                code=ErrorCode.INVALID_COMMAND,
+                remediation="Use command-line arguments instead",
+            )
 
         # 2. Get title
         try:
             title = self._prompt_title()
             if not title:
                 logger.debug("Work item creation cancelled - no title provided")
-                return None
+                raise ValidationError(
+                    message="Work item creation cancelled - no title provided",
+                    code=ErrorCode.MISSING_REQUIRED_FIELD,
+                    context={"field": "title"},
+                    remediation="Title is required for work items",
+                )
         except EOFError:
             logger.warning("EOFError during title input")
-            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
-            return None
+            raise ValidationError(
+                message="Interactive input unavailable",
+                code=ErrorCode.INVALID_COMMAND,
+                remediation="Use command-line arguments instead",
+            )
 
         # 3. Get priority
         try:
             priority = self._prompt_priority()
         except EOFError:
             logger.warning("EOFError during priority input, using default 'high'")
-            print("\n⚠️  Input unavailable, using default priority 'high'")
+            logger.info("Input unavailable, using default priority 'high'")
             priority = "high"
 
         # 4. Get dependencies
@@ -86,7 +121,7 @@ class WorkItemManager:
             dependencies = self._prompt_dependencies(work_type)
         except EOFError:
             logger.warning("EOFError during dependencies input, using no dependencies")
-            print("\n⚠️  Input unavailable, no dependencies will be added")
+            logger.info("Input unavailable, no dependencies will be added")
             dependencies = []
 
         # 5. Generate ID
@@ -96,20 +131,19 @@ class WorkItemManager:
         # 6. Check for duplicates
         if self._work_item_exists(work_id):
             logger.error("Work item %s already exists", work_id)
-            print(f"❌ Error: Work item {work_id} already exists")
-            return None
+            raise WorkItemAlreadyExistsError(work_id)
 
         # 7. Create specification file
         spec_file = self._create_spec_file(work_id, work_type, title)
         if not spec_file:
             logger.warning("Could not create specification file for %s", work_id)
-            print("⚠️  Warning: Could not create specification file")
+            logger.warning("Warning: Could not create specification file")
 
         # 8. Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dependencies, spec_file)
         logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
 
-        # 9. Confirm
+        # 9. Confirm (user-facing output kept as print)
         print(f"\n{'=' * 50}")
         print("Work item created successfully!")
         print("=" * 50)
@@ -130,23 +164,42 @@ class WorkItemManager:
 
         return work_id
 
+    @log_errors()
     def create_work_item_from_args(
         self, work_type: str, title: str, priority: str = "high", dependencies: str = ""
-    ) -> Optional[str]:
-        """Create work item from command-line arguments (non-interactive)."""
+    ) -> str:
+        """Create work item from command-line arguments (non-interactive).
+
+        Args:
+            work_type: Type of work item (feature, bug, refactor, etc.)
+            title: Title of the work item
+            priority: Priority level (critical, high, medium, low)
+            dependencies: Comma-separated dependency IDs
+
+        Returns:
+            str: The created work item ID
+
+        Raises:
+            ValidationError: If work type is invalid
+            WorkItemAlreadyExistsError: If work item with generated ID already exists
+            FileOperationError: If spec file creation or tracking update fails
+        """
         logger.info("Creating work item from args: type=%s, title=%s", work_type, title)
 
         # Validate work type
         if work_type not in self.WORK_ITEM_TYPES:
             logger.error("Invalid work item type: %s", work_type)
-            print(f"❌ Error: Invalid work item type '{work_type}'")
-            print(f"Valid types: {', '.join(self.WORK_ITEM_TYPES)}")
-            return None
+            raise ValidationError(
+                message=f"Invalid work item type '{work_type}'",
+                code=ErrorCode.INVALID_WORK_ITEM_TYPE,
+                context={"work_type": work_type, "valid_types": self.WORK_ITEM_TYPES},
+                remediation=f"Valid types: {', '.join(self.WORK_ITEM_TYPES)}",
+            )
 
         # Validate priority
         if priority not in self.PRIORITIES:
             logger.warning("Invalid priority '%s', using 'high'", priority)
-            print(f"⚠️  Invalid priority '{priority}', using 'high'")
+            logger.warning("Invalid priority '%s', using 'high'", priority)
             priority = "high"
 
         # Parse dependencies
@@ -159,7 +212,7 @@ class WorkItemManager:
             for dep_id in dep_list:
                 if dep_id not in work_items_data.get("work_items", {}):
                     logger.warning("Dependency '%s' does not exist", dep_id)
-                    print(f"⚠️  Warning: Dependency '{dep_id}' does not exist")
+                    logger.warning("Warning: Dependency '%s' does not exist", dep_id)
 
         # Generate ID
         work_id = self._generate_id(work_type, title)
@@ -168,14 +221,13 @@ class WorkItemManager:
         # Check for duplicates
         if self._work_item_exists(work_id):
             logger.error("Work item %s already exists", work_id)
-            print(f"❌ Error: Work item {work_id} already exists")
-            return None
+            raise WorkItemAlreadyExistsError(work_id)
 
         # Create specification file
         spec_file = self._create_spec_file(work_id, work_type, title)
         if not spec_file:
             logger.warning("Could not create specification file for %s", work_id)
-            print("⚠️  Warning: Could not create specification file")
+            logger.warning("Warning: Could not create specification file")
 
         # Add to work_items.json
         self._add_to_tracking(work_id, work_type, title, priority, dep_list, spec_file)
@@ -226,12 +278,23 @@ class WorkItemManager:
 
         return type_map.get(choice)
 
-    def _prompt_title(self) -> Optional[str]:
-        """Prompt for work item title."""
+    def _prompt_title(self) -> str:
+        """Prompt for work item title.
+
+        Returns:
+            str: The work item title
+
+        Raises:
+            ValidationError: If title is empty
+        """
         title = input("\nTitle: ").strip()
         if not title:
-            print("❌ Error: Title is required")
-            return None
+            raise ValidationError(
+                message="Title is required",
+                code=ErrorCode.MISSING_REQUIRED_FIELD,
+                context={"field": "title"},
+                remediation="Provide a non-empty title for the work item",
+            )
         return title
 
     def _prompt_priority(self) -> str:
@@ -388,14 +451,19 @@ class WorkItemManager:
         # Save atomically
         save_json(self.work_items_file, data)
 
-    def validate_integration_test(self, work_item: dict) -> tuple[bool, list[str]]:
+    @log_errors()
+    def validate_integration_test(self, work_item: dict) -> None:
         """
         Validate integration test work item by parsing spec file.
 
         Updated in Phase 5.7.3 to use spec_parser instead of JSON fields.
 
-        Returns:
-            (is_valid: bool, errors: List[str])
+        Args:
+            work_item: Work item dictionary to validate
+
+        Raises:
+            FileOperationError: If spec file not found
+            ValidationError: If spec validation fails (with validation errors in context)
         """
         errors = []
         work_id = work_item.get("id")
@@ -405,11 +473,19 @@ class WorkItemManager:
             parsed_spec = spec_parser.parse_spec_file(work_item)
         except FileNotFoundError:
             spec_file = work_item.get("spec_file", f".session/specs/{work_id}.md")
-            errors.append(f"Spec file not found: {spec_file}")
-            return False, errors
+            raise FileOperationError(
+                operation="read",
+                file_path=spec_file,
+                details="Spec file not found",
+            )
         except ValueError as e:
-            errors.append(f"Invalid spec file: {str(e)}")
-            return False, errors
+            raise ValidationError(
+                message=f"Invalid spec file: {str(e)}",
+                code=ErrorCode.SPEC_VALIDATION_FAILED,
+                context={"work_item_id": work_id},
+                remediation=f"Fix spec file validation errors for {work_id}",
+                cause=e,
+            )
 
         # Validate required sections exist and are not empty
         required_sections = {
@@ -450,16 +526,29 @@ class WorkItemManager:
         if not dependencies:
             errors.append("Integration tests must have dependencies (component implementations)")
 
-        return len(errors) == 0, errors
+        # If errors found, raise ValidationError with all errors in context
+        if errors:
+            from sdd.core.exceptions import SpecValidationError
 
-    def validate_deployment(self, work_item: dict) -> tuple[bool, list[str]]:
+            raise SpecValidationError(
+                work_item_id=work_id,
+                errors=errors,
+                remediation=f"Fix validation errors in {work_id} spec file",
+            )
+
+    @log_errors()
+    def validate_deployment(self, work_item: dict) -> None:
         """
         Validate deployment work item by parsing spec file.
 
         Updated in Phase 5.7.3 to use spec_parser instead of JSON fields.
 
-        Returns:
-            (is_valid, errors)
+        Args:
+            work_item: Work item dictionary to validate
+
+        Raises:
+            FileOperationError: If spec file not found
+            ValidationError: If spec validation fails (with validation errors in context)
         """
         errors = []
         work_id = work_item.get("id")
@@ -469,11 +558,19 @@ class WorkItemManager:
             parsed_spec = spec_parser.parse_spec_file(work_item)
         except FileNotFoundError:
             spec_file = work_item.get("spec_file", f".session/specs/{work_id}.md")
-            errors.append(f"Spec file not found: {spec_file}")
-            return False, errors
+            raise FileOperationError(
+                operation="read",
+                file_path=spec_file,
+                details="Spec file not found",
+            )
         except ValueError as e:
-            errors.append(f"Invalid spec file: {str(e)}")
-            return False, errors
+            raise ValidationError(
+                message=f"Invalid spec file: {str(e)}",
+                code=ErrorCode.SPEC_VALIDATION_FAILED,
+                context={"work_item_id": work_id},
+                remediation=f"Fix spec file validation errors for {work_id}",
+                cause=e,
+            )
 
         # Validate required sections exist and are not empty
         required_sections = {
@@ -535,7 +632,15 @@ class WorkItemManager:
                 f"Acceptance criteria should have at least 3 items (found {len(acceptance_criteria)})"
             )
 
-        return len(errors) == 0, errors
+        # If errors found, raise ValidationError with all errors in context
+        if errors:
+            from sdd.core.exceptions import SpecValidationError
+
+            raise SpecValidationError(
+                work_item_id=work_id,
+                errors=errors,
+                remediation=f"Fix validation errors in {work_id} spec file",
+            )
 
     def list_work_items(
         self,
@@ -730,21 +835,35 @@ class WorkItemManager:
         else:
             return "[  ]"
 
-    def show_work_item(self, work_id: str) -> Optional[dict]:
-        """Display detailed information about a work item."""
+    @log_errors()
+    def show_work_item(self, work_id: str) -> dict:
+        """Display detailed information about a work item.
+
+        Args:
+            work_id: ID of the work item to display
+
+        Returns:
+            dict: The work item data
+
+        Raises:
+            FileOperationError: If work_items.json doesn't exist
+            WorkItemNotFoundError: If work item doesn't exist
+        """
         if not self.work_items_file.exists():
-            print("No work items found.")
-            return None
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.work_items_file),
+                details="No work items found",
+            )
 
         data = load_json(self.work_items_file)
         items = data.get("work_items", {})
 
         if work_id not in items:
-            print(f"❌ Error: Work item '{work_id}' not found")
-            print("\nAvailable work items:")
-            for wid in list(items.keys())[:5]:
-                print(f"  - {wid}")
-            return None
+            # Log available work items for context
+            available = list(items.keys())[:5]
+            logger.error(f"Work item '{work_id}' not found. Available: {', '.join(available)}")
+            raise WorkItemNotFoundError(work_id)
 
         item = items[work_id]
 
@@ -831,18 +950,29 @@ class WorkItemManager:
 
         return item
 
-    def update_work_item(self, work_id: str, **updates) -> bool:
-        """Update work item fields."""
+    @log_errors()
+    def update_work_item(self, work_id: str, **updates) -> None:
+        """Update work item fields.
+
+        Args:
+            work_id: ID of the work item to update
+            **updates: Field updates (status, priority, milestone, add_dependency, remove_dependency)
+
+        Raises:
+            FileOperationError: If work_items.json doesn't exist
+            WorkItemNotFoundError: If work item doesn't exist
+            ValidationError: If invalid status or priority provided
+        """
         if not self.work_items_file.exists():
-            print("No work items found.")
-            return False
+            raise FileOperationError(
+                operation="read", file_path=str(self.work_items_file), details="No work items found"
+            )
 
         data = load_json(self.work_items_file)
         items = data.get("work_items", {})
 
         if work_id not in items:
-            print(f"❌ Error: Work item '{work_id}' not found")
-            return False
+            raise WorkItemNotFoundError(work_id)
 
         item = items[work_id]
         changes = []
@@ -851,16 +981,26 @@ class WorkItemManager:
         for field, value in updates.items():
             if field == "status":
                 if value not in WorkItemStatus.values():
-                    print(f"⚠️  Invalid status: {value}")
-                    continue
+                    logger.warning("Invalid status: %s", value)
+                    raise ValidationError(
+                        message=f"Invalid status: {value}",
+                        code=ErrorCode.INVALID_STATUS,
+                        context={"status": value, "valid_statuses": WorkItemStatus.values()},
+                        remediation=f"Valid statuses: {', '.join(WorkItemStatus.values())}",
+                    )
                 old_value = item["status"]
                 item["status"] = value
                 changes.append(f"  status: {old_value} → {value}")
 
             elif field == "priority":
                 if value not in self.PRIORITIES:
-                    print(f"⚠️  Invalid priority: {value}")
-                    continue
+                    logger.warning("Invalid priority: %s", value)
+                    raise ValidationError(
+                        message=f"Invalid priority: {value}",
+                        code=ErrorCode.INVALID_PRIORITY,
+                        context={"priority": value, "valid_priorities": self.PRIORITIES},
+                        remediation=f"Valid priorities: {', '.join(self.PRIORITIES)}",
+                    )
                 old_value = item["priority"]
                 item["priority"] = value
                 changes.append(f"  priority: {old_value} → {value}")
@@ -878,7 +1018,8 @@ class WorkItemManager:
                         item["dependencies"] = deps
                         changes.append(f"  added dependency: {value}")
                     else:
-                        print(f"⚠️  Dependency '{value}' not found")
+                        logger.warning("Dependency '%s' not found", value)
+                        raise WorkItemNotFoundError(value)
 
             elif field == "remove_dependency":
                 deps = item.get("dependencies", [])
@@ -888,8 +1029,13 @@ class WorkItemManager:
                     changes.append(f"  removed dependency: {value}")
 
         if not changes:
-            print("No changes made.")
-            return False
+            logger.info("No changes made to %s", work_id)
+            raise ValidationError(
+                message="No changes made",
+                code=ErrorCode.MISSING_REQUIRED_FIELD,
+                context={"work_item_id": work_id},
+                remediation="Provide valid field updates",
+            )
 
         # Record update
         item.setdefault("update_history", []).append(
@@ -918,35 +1064,48 @@ class WorkItemManager:
 
         save_json(self.work_items_file, data)
 
+        # Success - keep user-facing output as print()
         print(f"\nUpdated {work_id}:")
         for change in changes:
             print(change)
         print()
 
-        return True
+    @log_errors()
+    def update_work_item_interactive(self, work_id: str) -> None:
+        """Interactive work item update.
 
-    def update_work_item_interactive(self, work_id: str) -> bool:
-        """Interactive work item update."""
+        Args:
+            work_id: ID of work item to update
+
+        Raises:
+            FileOperationError: If work_items.json doesn't exist
+            ValidationError: If running in non-interactive environment
+            WorkItemNotFoundError: If work item doesn't exist
+        """
         if not self.work_items_file.exists():
-            print("No work items found.")
-            return False
+            raise FileOperationError(
+                operation="read", file_path=str(self.work_items_file), details="No work items found"
+            )
 
         # Check if running in non-interactive environment
         if not sys.stdin.isatty():
             logger.error("Cannot run interactive update in non-interactive environment")
-            print("❌ Error: Cannot run interactive work item update in non-interactive mode")
-            print("\nPlease use command-line arguments instead:")
-            print("  sdd work-update <work_id> --status <status>")
-            print("  sdd work-update <work_id> --priority <priority>")
-            print("  sdd work-update <work_id> --milestone <milestone>")
-            return False
+            raise ValidationError(
+                message="Cannot run interactive work item update in non-interactive mode",
+                code=ErrorCode.INVALID_COMMAND,
+                remediation=(
+                    "Please use command-line arguments instead:\n"
+                    "  sdd work-update <work_id> --status <status>\n"
+                    "  sdd work-update <work_id> --priority <priority>\n"
+                    "  sdd work-update <work_id> --milestone <milestone>"
+                ),
+            )
 
         data = load_json(self.work_items_file)
         items = data.get("work_items", {})
 
         if work_id not in items:
-            print(f"❌ Error: Work item '{work_id}' not found")
-            return False
+            raise WorkItemNotFoundError(work_id)
 
         item = items[work_id]
 
@@ -971,26 +1130,33 @@ class WorkItemManager:
 
             if choice == "1":
                 status = input("New status (not_started/in_progress/blocked/completed): ").strip()
-                return self.update_work_item(work_id, status=status)
+                self.update_work_item(work_id, status=status)
             elif choice == "2":
                 priority = input("New priority (critical/high/medium/low): ").strip()
-                return self.update_work_item(work_id, priority=priority)
+                self.update_work_item(work_id, priority=priority)
             elif choice == "3":
                 milestone = input("Milestone name: ").strip()
-                return self.update_work_item(work_id, milestone=milestone)
+                self.update_work_item(work_id, milestone=milestone)
             elif choice == "4":
                 dep = input("Dependency ID to add: ").strip()
-                return self.update_work_item(work_id, add_dependency=dep)
+                self.update_work_item(work_id, add_dependency=dep)
             elif choice == "5":
                 dep = input("Dependency ID to remove: ").strip()
-                return self.update_work_item(work_id, remove_dependency=dep)
+                self.update_work_item(work_id, remove_dependency=dep)
             else:
-                print("Cancelled.")
-                return False
+                logger.info("Interactive update cancelled")
+                raise ValidationError(
+                    message="Interactive update cancelled",
+                    code=ErrorCode.INVALID_COMMAND,
+                    remediation="Select a valid option (1-6)",
+                )
         except EOFError:
             logger.warning("EOFError during interactive update")
-            print("\n❌ Interactive input unavailable. Use command-line arguments instead.")
-            return False
+            raise ValidationError(
+                message="Interactive input unavailable",
+                code=ErrorCode.INVALID_COMMAND,
+                remediation="Use command-line arguments instead",
+            )
 
     def get_next_work_item(self) -> Optional[dict]:
         """Find next work item to start."""
@@ -1100,10 +1266,22 @@ class WorkItemManager:
 
         return next_item
 
+    @log_errors()
     def create_milestone(
         self, name: str, title: str, description: str, target_date: Optional[str] = None
-    ) -> bool:
-        """Create a new milestone."""
+    ) -> None:
+        """Create a new milestone.
+
+        Args:
+            name: Milestone name (unique identifier)
+            title: Milestone title
+            description: Milestone description
+            target_date: Optional target completion date
+
+        Raises:
+            WorkItemAlreadyExistsError: If milestone with this name already exists (reusing for consistency)
+            FileOperationError: If saving milestone fails
+        """
         if not self.work_items_file.exists():
             data = {"work_items": {}, "milestones": {}}
         else:
@@ -1112,8 +1290,14 @@ class WorkItemManager:
                 data["milestones"] = {}
 
         if name in data["milestones"]:
-            print(f"❌ Milestone '{name}' already exists")
-            return False
+            logger.error("Milestone '%s' already exists", name)
+            # Reuse WorkItemAlreadyExistsError for consistency
+            raise ValidationError(
+                message=f"Milestone '{name}' already exists",
+                code=ErrorCode.WORK_ITEM_ALREADY_EXISTS,
+                context={"milestone_name": name},
+                remediation="Choose a different milestone name",
+            )
 
         milestone = {
             "name": name,
@@ -1127,8 +1311,8 @@ class WorkItemManager:
         data["milestones"][name] = milestone
         save_json(self.work_items_file, data)
 
+        logger.info("Created milestone: %s", name)
         print(f"✓ Created milestone: {name}")
-        return True
 
     def get_milestone_progress(self, milestone_name: str) -> dict:
         """Calculate milestone progress."""

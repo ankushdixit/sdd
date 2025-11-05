@@ -7,8 +7,8 @@ import json
 
 import pytest
 
+from sdd.core.exceptions import FileNotFoundError, FileOperationError
 from sdd.core.file_ops import (
-    FileOperationError,
     JSONFileOperations,
     backup_file,
     ensure_directory,
@@ -41,8 +41,13 @@ class TestLoadJson:
         non_existent = tmp_path / "nonexistent.json"
 
         # Act & Assert
-        with pytest.raises(FileOperationError, match="File not found"):
+        with pytest.raises(FileOperationError) as exc_info:
             load_json(non_existent)
+
+        # Verify structured exception context
+        assert exc_info.value.context["operation"] == "read"
+        assert str(non_existent) in exc_info.value.context["file_path"]
+        assert "File does not exist" in exc_info.value.context["details"]
 
     def test_load_json_complex_data(self, tmp_path):
         """Test loading JSON with complex nested data."""
@@ -220,8 +225,12 @@ class TestBackupFile:
         non_existent = tmp_path / "nonexistent.txt"
 
         # Act & Assert
-        with pytest.raises(FileNotFoundError, match="File not found"):
+        with pytest.raises(FileNotFoundError) as exc_info:
             backup_file(non_existent)
+
+        # Verify structured exception context
+        assert str(non_existent) in exc_info.value.context["file_path"]
+        assert exc_info.value.context["file_type"] == "backup source"
 
     def test_backup_file_json(self, tmp_path):
         """Test backup_file works with JSON files."""
@@ -370,8 +379,12 @@ class TestJSONFileOperations:
             non_existent = tmp_path / "missing.json"
 
             # Act & Assert
-            with pytest.raises(FileOperationError, match="File not found"):
+            with pytest.raises(FileOperationError) as exc_info:
                 JSONFileOperations.load_json(non_existent)
+
+            # Verify structured exception context
+            assert exc_info.value.context["operation"] == "read"
+            assert str(non_existent) in exc_info.value.context["file_path"]
 
         def test_load_json_invalid_json(self, tmp_path):
             """Test loading invalid JSON raises error."""
@@ -380,8 +393,13 @@ class TestJSONFileOperations:
             test_file.write_text("{invalid json")
 
             # Act & Assert
-            with pytest.raises(FileOperationError, match="Invalid JSON"):
+            with pytest.raises(FileOperationError) as exc_info:
                 JSONFileOperations.load_json(test_file)
+
+            # Verify structured exception context
+            assert exc_info.value.context["operation"] == "parse"
+            assert str(test_file) in exc_info.value.context["file_path"]
+            assert "Invalid JSON" in exc_info.value.context["details"]
 
         def test_load_json_with_validator_pass(self, tmp_path):
             """Test loading JSON with validator that passes."""
@@ -410,8 +428,12 @@ class TestJSONFileOperations:
                 return "version" in d
 
             # Act & Assert
-            with pytest.raises(FileOperationError, match="Validation failed"):
+            with pytest.raises(FileOperationError) as exc_info:
                 JSONFileOperations.load_json(test_file, validator=validator)
+
+            # Verify structured exception context
+            assert exc_info.value.context["operation"] == "validate"
+            assert str(test_file) in exc_info.value.context["file_path"]
 
         def test_load_json_empty_dict_default(self, tmp_path):
             """Test loading missing file with empty dict default."""
@@ -482,8 +504,12 @@ class TestJSONFileOperations:
             test_data = {"data": "test"}
 
             # Act & Assert
-            with pytest.raises(FileOperationError, match="Error saving"):
+            with pytest.raises(FileOperationError) as exc_info:
                 JSONFileOperations.save_json(nested_file, test_data, create_dirs=False)
+
+            # Verify structured exception context
+            assert exc_info.value.context["operation"] == "write"
+            assert str(nested_file) in exc_info.value.context["file_path"]
 
         def test_save_json_custom_indent(self, tmp_path):
             """Test save_json with custom indentation."""

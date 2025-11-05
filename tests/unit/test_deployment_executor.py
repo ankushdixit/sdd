@@ -17,6 +17,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from sdd.core.exceptions import (
+    DeploymentStepError,
+    PreDeploymentCheckError,
+    RollbackError,
+    SmokeTestError,
+    ValidationError,
+)
 from sdd.deployment.executor import DeploymentExecutor
 
 
@@ -255,13 +262,13 @@ class TestPreDeploymentValidation:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        passed, results = executor.pre_deployment_validation()
+        results = executor.pre_deployment_validation()
 
         # Assert
         assert "checks" in results
         assert "passed" in results
         assert isinstance(results["checks"], list)
-        assert isinstance(passed, bool)
+        assert results["passed"] is True
 
     def test_pre_deployment_validation_includes_integration_tests(self, sample_work_item):
         """Test that pre_deployment_validation includes integration tests check."""
@@ -270,7 +277,7 @@ class TestPreDeploymentValidation:
         executor.config["pre_deployment_checks"]["integration_tests"] = True
 
         # Act
-        passed, results = executor.pre_deployment_validation()
+        results = executor.pre_deployment_validation()
 
         # Assert
         check_names = [check["name"] for check in results["checks"]]
@@ -283,7 +290,7 @@ class TestPreDeploymentValidation:
         executor.config["pre_deployment_checks"]["security_scans"] = True
 
         # Act
-        passed, results = executor.pre_deployment_validation()
+        results = executor.pre_deployment_validation()
 
         # Assert
         check_names = [check["name"] for check in results["checks"]]
@@ -296,7 +303,7 @@ class TestPreDeploymentValidation:
         executor.config["pre_deployment_checks"]["environment_validation"] = True
 
         # Act
-        passed, results = executor.pre_deployment_validation()
+        results = executor.pre_deployment_validation()
 
         # Assert
         check_names = [check["name"] for check in results["checks"]]
@@ -312,7 +319,7 @@ class TestDeploymentExecution:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        success, results = executor.execute_deployment(dry_run=True)
+        results = executor.execute_deployment(dry_run=True)
 
         # Assert
         assert "started_at" in results
@@ -326,10 +333,9 @@ class TestDeploymentExecution:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        success, results = executor.execute_deployment(dry_run=True)
+        results = executor.execute_deployment(dry_run=True)
 
         # Assert
-        assert success is True
         assert results["success"] is True
 
     def test_execute_deployment_logs_to_deployment_log(self, sample_work_item):
@@ -355,10 +361,9 @@ class TestSmokeTests:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        passed, results = executor.run_smoke_tests()
+        results = executor.run_smoke_tests()
 
         # Assert
-        assert isinstance(passed, bool)
         assert isinstance(results, dict)
         assert "tests" in results or "status" in results
 
@@ -368,7 +373,7 @@ class TestSmokeTests:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        passed, results = executor.run_smoke_tests()
+        _ = executor.run_smoke_tests()
 
         # Assert
         assert executor.config["smoke_tests"]["enabled"] is not None
@@ -380,10 +385,9 @@ class TestSmokeTests:
         executor.config["smoke_tests"]["enabled"] = False
 
         # Act
-        passed, results = executor.run_smoke_tests()
+        results = executor.run_smoke_tests()
 
         # Assert
-        assert passed is True
         assert results.get("status") == "skipped"
 
 
@@ -396,12 +400,12 @@ class TestRollback:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        success, results = executor.rollback()
+        results = executor.rollback()
 
         # Assert
         assert "started_at" in results
         assert "completed_at" in results
-        assert isinstance(success, bool)
+        assert "success" in results
 
     def test_rollback_tracks_steps(self, sample_work_item):
         """Test that rollback tracks executed steps."""
@@ -409,7 +413,7 @@ class TestRollback:
         executor = DeploymentExecutor(sample_work_item)
 
         # Act
-        success, results = executor.rollback()
+        results = executor.rollback()
 
         # Assert
         assert "steps" in results
@@ -481,53 +485,56 @@ class TestPreDeploymentValidationFailures:
     """Tests for pre-deployment validation failure scenarios."""
 
     def test_pre_deployment_validation_fails_when_integration_tests_fail(self, sample_work_item):
-        """Test that pre_deployment_validation fails when integration tests fail."""
+        """Test that pre_deployment_validation raises exception when integration tests fail."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
         executor.config["pre_deployment_checks"]["integration_tests"] = True
 
         with patch.object(executor, "_check_integration_tests", return_value=False):
-            # Act
-            passed, results = executor.pre_deployment_validation()
+            # Act & Assert
+            with pytest.raises(PreDeploymentCheckError) as exc_info:
+                executor.pre_deployment_validation()
 
-        # Assert
-        assert passed is False
-        assert results["passed"] is False
+            assert "Integration Tests" in exc_info.value.message
+            assert "failed_checks" in exc_info.value.context
+            assert "Integration Tests" in exc_info.value.context["failed_checks"]
 
     def test_pre_deployment_validation_fails_when_security_scans_fail(self, sample_work_item):
-        """Test that pre_deployment_validation fails when security scans fail."""
+        """Test that pre_deployment_validation raises exception when security scans fail."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
         executor.config["pre_deployment_checks"]["security_scans"] = True
 
         with patch.object(executor, "_check_security_scans", return_value=False):
-            # Act
-            passed, results = executor.pre_deployment_validation()
+            # Act & Assert
+            with pytest.raises(PreDeploymentCheckError) as exc_info:
+                executor.pre_deployment_validation()
 
-        # Assert
-        assert passed is False
-        assert results["passed"] is False
+            assert "Security Scans" in exc_info.value.message
+            assert "failed_checks" in exc_info.value.context
+            assert "Security Scans" in exc_info.value.context["failed_checks"]
 
     def test_pre_deployment_validation_fails_when_environment_not_ready(self, sample_work_item):
-        """Test that pre_deployment_validation fails when environment not ready."""
+        """Test that pre_deployment_validation raises exception when environment not ready."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
         executor.config["pre_deployment_checks"]["environment_validation"] = True
 
         with patch.object(executor, "_check_environment_readiness", return_value=False):
-            # Act
-            passed, results = executor.pre_deployment_validation()
+            # Act & Assert
+            with pytest.raises(PreDeploymentCheckError) as exc_info:
+                executor.pre_deployment_validation()
 
-        # Assert
-        assert passed is False
-        assert results["passed"] is False
+            assert "Environment Readiness" in exc_info.value.message
+            assert "failed_checks" in exc_info.value.context
+            assert "Environment Readiness" in exc_info.value.context["failed_checks"]
 
 
 class TestDeploymentExecutionFailures:
     """Tests for deployment execution failure scenarios."""
 
     def test_execute_deployment_fails_when_step_fails(self, sample_work_item):
-        """Test that execute_deployment fails when a step fails."""
+        """Test that execute_deployment raises exception when a step fails."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
 
@@ -537,14 +544,15 @@ class TestDeploymentExecutionFailures:
             with patch.object(
                 executor, "_execute_deployment_step", side_effect=[True, False, True]
             ):
-                # Act
-                success, results = executor.execute_deployment()
+                # Act & Assert
+                with pytest.raises(DeploymentStepError) as exc_info:
+                    executor.execute_deployment()
 
-        # Assert
-        assert success is False
-        assert results["success"] is False
-        assert results["failed_at_step"] == 2
-        assert len(results["steps"]) == 2  # Should stop after failed step
+                assert exc_info.value.context["step_number"] == 2
+                assert exc_info.value.context["step_description"] == "step2"
+                assert (
+                    len(exc_info.value.context["results"]["steps"]) == 2
+                )  # Should stop after failed step
 
     def test_execute_deployment_stops_on_first_failure(self, sample_work_item):
         """Test that execute_deployment stops executing steps after first failure."""
@@ -560,12 +568,11 @@ class TestDeploymentExecutionFailures:
             executor, "_parse_deployment_steps", return_value=["step1", "step2", "step3"]
         ):
             with patch.object(executor, "_execute_deployment_step", side_effect=track_step):
-                # Act
-                success, results = executor.execute_deployment()
+                # Act & Assert
+                with pytest.raises(DeploymentStepError):
+                    executor.execute_deployment()
 
-        # Assert
-        assert len(steps_executed) == 2  # Should have executed only 2 steps
-        assert success is False
+                assert len(steps_executed) == 2  # Should have executed only 2 steps
 
 
 class TestSmokeTestsExecution:
@@ -581,14 +588,14 @@ class TestSmokeTestsExecution:
         with patch.object(executor, "_parse_smoke_tests", return_value=test_list):
             with patch.object(executor, "_execute_smoke_test", return_value=True):
                 # Act
-                passed, results = executor.run_smoke_tests()
+                results = executor.run_smoke_tests()
 
         # Assert
-        assert passed is True
+        assert results["passed"] is True
         assert len(results["tests"]) == 2
 
     def test_run_smoke_tests_fails_when_test_fails(self, sample_work_item):
-        """Test that run_smoke_tests fails when a test fails."""
+        """Test that run_smoke_tests raises exception when a test fails."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
         executor.config["smoke_tests"]["enabled"] = True
@@ -596,12 +603,12 @@ class TestSmokeTestsExecution:
         test_list = [{"name": "test1"}, {"name": "test2"}]
         with patch.object(executor, "_parse_smoke_tests", return_value=test_list):
             with patch.object(executor, "_execute_smoke_test", side_effect=[True, False]):
-                # Act
-                passed, results = executor.run_smoke_tests()
+                # Act & Assert
+                with pytest.raises(SmokeTestError) as exc_info:
+                    executor.run_smoke_tests()
 
-        # Assert
-        assert passed is False
-        assert results["passed"] is False
+                assert "test2" in exc_info.value.message
+                assert "failed_tests" in exc_info.value.context
 
     def test_run_smoke_tests_passes_config_to_executor(self, sample_work_item):
         """Test that run_smoke_tests passes timeout and retry config to test executor."""
@@ -625,7 +632,7 @@ class TestRollbackFailures:
     """Tests for rollback failure scenarios."""
 
     def test_rollback_fails_when_step_fails(self, sample_work_item):
-        """Test that rollback fails when a rollback step fails."""
+        """Test that rollback raises exception when a rollback step fails."""
         # Arrange
         executor = DeploymentExecutor(sample_work_item)
 
@@ -633,13 +640,12 @@ class TestRollbackFailures:
             executor, "_parse_rollback_steps", return_value=["rollback1", "rollback2"]
         ):
             with patch.object(executor, "_execute_rollback_step", side_effect=[True, False]):
-                # Act
-                success, results = executor.rollback()
+                # Act & Assert
+                with pytest.raises(RollbackError) as exc_info:
+                    executor.rollback()
 
-        # Assert
-        assert success is False
-        assert results["success"] is False
-        assert results["failed_at_step"] == 2
+                assert exc_info.value.context["step_number"] == 2
+                assert exc_info.value.context["failed_step"] == "rollback2"
 
     def test_rollback_stops_on_first_failure(self, sample_work_item):
         """Test that rollback stops executing steps after first failure."""
@@ -653,12 +659,11 @@ class TestRollbackFailures:
 
         with patch.object(executor, "_parse_rollback_steps", return_value=["rb1", "rb2", "rb3"]):
             with patch.object(executor, "_execute_rollback_step", side_effect=track_step):
-                # Act
-                success, results = executor.rollback()
+                # Act & Assert
+                with pytest.raises(RollbackError):
+                    executor.rollback()
 
-        # Assert
-        assert len(steps_executed) == 1  # Should have executed only 1 step before failing
-        assert success is False
+                assert len(steps_executed) == 1  # Should have executed only 1 step before failing
 
 
 class TestMainCLI:
@@ -669,9 +674,9 @@ class TestMainCLI:
         """Test that main executes the full deployment workflow."""
         # Arrange
         mock_executor = Mock()
-        mock_executor.pre_deployment_validation.return_value = (True, {})
-        mock_executor.execute_deployment.return_value = (True, {})
-        mock_executor.run_smoke_tests.return_value = (True, {})
+        mock_executor.pre_deployment_validation.return_value = {}
+        mock_executor.execute_deployment.return_value = {}
+        mock_executor.run_smoke_tests.return_value = {}
         mock_executor_class.return_value = mock_executor
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
@@ -688,71 +693,71 @@ class TestMainCLI:
 
     @patch("sdd.deployment.executor.DeploymentExecutor")
     def test_main_exits_when_pre_deployment_fails(self, mock_executor_class):
-        """Test that main exits when pre-deployment validation fails."""
+        """Test that main raises exception when pre-deployment validation fails."""
         # Arrange
         mock_executor = Mock()
-        mock_executor.pre_deployment_validation.return_value = (False, {})
+        mock_executor.pre_deployment_validation.side_effect = PreDeploymentCheckError(
+            check_name="integration_tests", details="Tests failed"
+        )
         mock_executor_class.return_value = mock_executor
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
-            # Act
+            # Act & Assert
             from sdd.deployment.executor import main
 
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(PreDeploymentCheckError):
                 main()
-
-        # Assert
-        assert exc_info.value.code == 1
 
     @patch("sdd.deployment.executor.DeploymentExecutor")
     def test_main_rolls_back_when_deployment_fails(self, mock_executor_class):
         """Test that main initiates rollback when deployment fails."""
         # Arrange
         mock_executor = Mock()
-        mock_executor.pre_deployment_validation.return_value = (True, {})
-        mock_executor.execute_deployment.return_value = (False, {})
+        mock_executor.pre_deployment_validation.return_value = {}
+        mock_executor.execute_deployment.side_effect = DeploymentStepError(
+            step_number=1, step_description="test step"
+        )
+        mock_executor.rollback.return_value = {}
         mock_executor_class.return_value = mock_executor
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
-            # Act
+            # Act & Assert
             from sdd.deployment.executor import main
 
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(DeploymentStepError):
                 main()
 
-        # Assert
-        assert exc_info.value.code == 1
-        mock_executor.rollback.assert_called_once()
+            mock_executor.rollback.assert_called_once()
 
     @patch("sdd.deployment.executor.DeploymentExecutor")
     def test_main_rolls_back_when_smoke_tests_fail(self, mock_executor_class):
         """Test that main initiates rollback when smoke tests fail."""
         # Arrange
         mock_executor = Mock()
-        mock_executor.pre_deployment_validation.return_value = (True, {})
-        mock_executor.execute_deployment.return_value = (True, {})
-        mock_executor.run_smoke_tests.return_value = (False, {})
+        mock_executor.pre_deployment_validation.return_value = {}
+        mock_executor.execute_deployment.return_value = {}
+        mock_executor.run_smoke_tests.side_effect = SmokeTestError(
+            test_name="health_check", details="Test failed"
+        )
+        mock_executor.rollback.return_value = {}
         mock_executor_class.return_value = mock_executor
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
-            # Act
+            # Act & Assert
             from sdd.deployment.executor import main
 
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(SmokeTestError):
                 main()
 
-        # Assert
-        assert exc_info.value.code == 1
-        mock_executor.rollback.assert_called_once()
+            mock_executor.rollback.assert_called_once()
 
     def test_main_requires_work_item_argument(self):
-        """Test that main exits with error when no work item ID provided."""
+        """Test that main raises exception when no work item ID provided."""
         # Arrange & Act
         with patch("sys.argv", ["deployment_executor.py"]):
             from sdd.deployment.executor import main
 
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(ValidationError) as exc_info:
                 main()
 
-        # Assert
-        assert exc_info.value.code == 1
+            assert "work_item_id" in exc_info.value.message.lower()

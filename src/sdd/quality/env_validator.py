@@ -11,7 +11,13 @@ Validates:
 - Infrastructure (load balancers, DNS)
 """
 
+import logging
 import os
+
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import ErrorCode, ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class EnvironmentValidator:
@@ -40,7 +46,8 @@ class EnvironmentValidator:
 
         return results["passed"], results
 
-    def validate_configuration(self, required_vars: list[str]) -> tuple[bool, dict]:
+    @log_errors()
+    def validate_configuration(self, required_vars: list[str]) -> dict:
         """
         Validate required environment variables and secrets.
 
@@ -48,9 +55,13 @@ class EnvironmentValidator:
             required_vars: List of required environment variable names
 
         Returns:
-            (passed, results)
+            Dict with validation results
+
+        Raises:
+            ValidationError: If any required environment variable is missing or empty
         """
         results = {"checks": [], "passed": True}
+        missing_vars = []
 
         for var in required_vars:
             value = os.environ.get(var)
@@ -62,8 +73,17 @@ class EnvironmentValidator:
 
             if not check_passed:
                 results["passed"] = False
+                missing_vars.append(var)
 
-        return results["passed"], results
+        if missing_vars:
+            raise ValidationError(
+                message=f"Missing or empty required environment variables: {', '.join(missing_vars)}",
+                code=ErrorCode.MISSING_REQUIRED_FIELD,
+                context={"missing_variables": missing_vars, "environment": self.environment},
+                remediation=f"Set the following environment variables: {', '.join(missing_vars)}",
+            )
+
+        return results
 
     def validate_dependencies(self) -> tuple[bool, dict]:
         """
@@ -180,11 +200,19 @@ class EnvironmentValidator:
 
         # Configuration
         if required_env_vars:
-            passed, results = self.validate_configuration(required_env_vars)
-            all_results["validations"].append(
-                {"name": "Configuration", "passed": passed, "details": results}
-            )
-            if not passed:
+            try:
+                results = self.validate_configuration(required_env_vars)
+                all_results["validations"].append(
+                    {"name": "Configuration", "passed": True, "details": results}
+                )
+            except ValidationError as e:
+                all_results["validations"].append(
+                    {
+                        "name": "Configuration",
+                        "passed": False,
+                        "details": {"error": e.message, "context": e.context},
+                    }
+                )
                 all_results["passed"] = False
 
         # Dependencies
@@ -231,24 +259,37 @@ class EnvironmentValidator:
 
 
 def main():
-    """CLI entry point."""
+    """CLI entry point.
+
+    Raises:
+        SystemExit: Always exits with code 0 on success, 1 on failure
+    """
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: environment_validator.py <environment>")
+        logger.error("Missing required argument: environment")
+        print("Usage: environment_validator.py <environment>", file=sys.stderr)
         sys.exit(1)
 
     environment = sys.argv[1]
     validator = EnvironmentValidator(environment)
 
-    passed, results = validator.validate_all()
+    try:
+        passed, results = validator.validate_all()
 
-    print(f"\nEnvironment Validation: {'✓ PASSED' if passed else '✗ FAILED'}")
-    for validation in results["validations"]:
-        status = "✓" if validation["passed"] else "✗"
-        print(f"  {status} {validation['name']}")
+        print(f"\nEnvironment Validation: {'✓ PASSED' if passed else '✗ FAILED'}")
+        for validation in results["validations"]:
+            status = "✓" if validation["passed"] else "✗"
+            print(f"  {status} {validation['name']}")
 
-    sys.exit(0 if passed else 1)
+        sys.exit(0 if passed else 1)
+    except ValidationError as e:
+        logger.error(f"Validation failed: {e.message}", extra=e.to_dict())
+        print("\nEnvironment Validation: ✗ FAILED", file=sys.stderr)
+        print(f"Error: {e.message}", file=sys.stderr)
+        if e.remediation:
+            print(f"Remediation: {e.remediation}", file=sys.stderr)
+        sys.exit(e.exit_code)
 
 
 if __name__ == "__main__":

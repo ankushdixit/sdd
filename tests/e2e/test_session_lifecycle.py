@@ -12,6 +12,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
+from sdd.core.exceptions import SpecValidationError
 from sdd.quality.gates import QualityGates
 from sdd.session.briefing import generate_briefing, load_work_item_spec
 from sdd.work_items.spec_parser import parse_spec_file
@@ -96,9 +99,8 @@ Comprehensive testing strategy including:
         self.create_spec_file(work_item_id, spec_content)
 
         # Step 2: Validate spec completeness
-        is_valid, errors = validate_spec_file(work_item_id, work_item_type)
-        assert is_valid, f"Spec should be valid, errors: {errors}"
-        assert len(errors) == 0
+        # validate_spec_file now raises exceptions instead of returning tuples
+        validate_spec_file(work_item_id, work_item_type)  # No exception = valid
 
         # Step 3: Parse spec for structured data
         parsed_data = parse_spec_file(work_item_id)
@@ -199,8 +201,7 @@ curl -X POST https://api.example.com/auth/login
         self.create_spec_file(work_item_id, spec_content)
 
         # Validate deployment spec
-        is_valid, errors = validate_spec_file(work_item_id, work_item_type)
-        assert is_valid, f"Deployment spec should be valid, errors: {errors}"
+        validate_spec_file(work_item_id, work_item_type)  # No exception = valid
 
         # Parse deployment spec
         parsed_data = parse_spec_file(work_item_id)
@@ -253,9 +254,12 @@ Just an overview, missing many required sections.
         self.create_spec_file(work_item_id, incomplete_spec)
 
         # Validation should fail
-        is_valid, errors = validate_spec_file(work_item_id, work_item_type)
-        assert not is_valid, "Incomplete spec should fail validation"
-        assert len(errors) > 0
+        with pytest.raises(SpecValidationError) as exc_info:
+            validate_spec_file(work_item_id, work_item_type)
+
+        # Check that the exception contains expected validation errors
+        errors = exc_info.value.context.get("validation_errors", [])
+        assert len(errors) > 0, "Should have validation errors"
         assert any("Rationale" in error for error in errors)
         assert any("Implementation Details" in error for error in errors)
         assert any("Testing Strategy" in error for error in errors)

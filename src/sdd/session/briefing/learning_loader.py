@@ -9,6 +9,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -31,11 +32,30 @@ class LearningLoader:
 
         Returns:
             Learnings data structure
+
+        Raises:
+            FileOperationError: If file read or JSON parsing fails
         """
         if not self.learnings_file.exists():
             return {"learnings": []}
-        with open(self.learnings_file) as f:
-            return json.load(f)
+
+        try:
+            with open(self.learnings_file) as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(self.learnings_file),
+                details=f"Invalid JSON format: {e.msg} at line {e.lineno}, column {e.colno}",
+                cause=e,
+            )
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.learnings_file),
+                details=str(e),
+                cause=e,
+            )
 
     def get_relevant_learnings(
         self, learnings_data: dict, work_item: dict, spec_content: str = ""
@@ -171,10 +191,18 @@ class LearningLoader:
 
         Returns:
             Number of days ago (defaults to 365 if parsing fails)
+
+        Note:
+            Returns 365 (considered "old") if timestamp is empty or invalid.
+            This is intentional to avoid breaking the scoring algorithm.
         """
+        if not timestamp:
+            return 365  # Empty timestamp considered old
+
         try:
             ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             delta = datetime.now() - ts
             return delta.days
-        except Exception:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to parse timestamp '{timestamp}': {e}. Treating as old learning.")
             return 365  # Default to old if parsing fails

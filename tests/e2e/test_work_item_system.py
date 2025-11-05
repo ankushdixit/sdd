@@ -492,6 +492,7 @@ class TestSessionStatus:
         )
 
         # Assert - May show no active work item or status, both are acceptable
+        # Return codes: 0=success, 1=session not found, 2=validation error (no work item)
         output = result.stdout + result.stderr
-        assert result.returncode in [0, 1], "Status command should execute"
+        assert result.returncode in [0, 1, 2], "Status command should execute"
         assert len(output) > 0, "Status command should provide output"

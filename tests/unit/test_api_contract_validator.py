@@ -7,6 +7,15 @@ specifications and detects breaking changes between contract versions.
 import json
 from pathlib import Path
 
+import pytest
+
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    InvalidOpenAPISpecError,
+    SchemaValidationError,
+)
 from sdd.quality.api_validator import APIContractValidator
 
 
@@ -68,11 +77,11 @@ class TestContractFileValidation:
         work_item = {"id": "INTEG-004"}
         validator = APIContractValidator(work_item)
 
-        # Act
-        result = validator._validate_contract_file("/nonexistent/contract.yaml")
+        # Act & Assert
+        with pytest.raises(SDDFileNotFoundError) as exc_info:
+            validator._validate_contract_file("/nonexistent/contract.yaml")
 
-        # Assert
-        assert result is False
+        assert "/nonexistent/contract.yaml" in str(exc_info.value.context.get("file_path", ""))
 
     def test_validate_contract_file_valid_yaml(self, tmp_path):
         """Test validation passes for valid OpenAPI YAML file."""
@@ -95,11 +104,10 @@ paths:
           description: Success
 """)
 
-        # Act
-        result = validator._validate_contract_file(str(valid_yaml))
+        # Act - method now returns None on success (no exception = success)
+        validator._validate_contract_file(str(valid_yaml))
 
-        # Assert
-        assert result is True
+        # Assert - method completes without raising
 
     def test_validate_contract_file_valid_json(self, tmp_path):
         """Test validation passes for valid OpenAPI JSON file."""
@@ -125,11 +133,10 @@ paths:
             )
         )
 
-        # Act
-        result = validator._validate_contract_file(str(valid_json))
+        # Act - method now returns None on success (no exception = success)
+        validator._validate_contract_file(str(valid_json))
 
-        # Assert
-        assert result is True
+        # Assert - method completes without raising
 
     def test_validate_contract_file_missing_paths(self, tmp_path):
         """Test validation fails when contract is missing required 'paths' field."""
@@ -145,11 +152,11 @@ info:
   version: 1.0.0
 """)
 
-        # Act
-        result = validator._validate_contract_file(str(invalid_yaml))
+        # Act & Assert
+        with pytest.raises(SchemaValidationError) as exc_info:
+            validator._validate_contract_file(str(invalid_yaml))
 
-        # Assert
-        assert result is False
+        assert "Missing 'paths' field" in str(exc_info.value.context.get("details", ""))
 
     def test_validate_contract_file_invalid_yaml_syntax(self, tmp_path):
         """Test validation fails for invalid YAML syntax."""
@@ -160,11 +167,11 @@ info:
         invalid_yaml = tmp_path / "invalid-syntax.yaml"
         invalid_yaml.write_text("not: valid: yaml: [unclosed")
 
-        # Act
-        result = validator._validate_contract_file(str(invalid_yaml))
+        # Act & Assert
+        with pytest.raises(SchemaValidationError) as exc_info:
+            validator._validate_contract_file(str(invalid_yaml))
 
-        # Assert
-        assert result is False
+        assert "Failed to parse contract file" in str(exc_info.value.context.get("details", ""))
 
     def test_validate_contract_file_missing_openapi_field(self, tmp_path):
         """Test validation fails when missing both 'openapi' and 'swagger' fields."""
@@ -183,11 +190,13 @@ paths:
       summary: Get users
 """)
 
-        # Act
-        result = validator._validate_contract_file(str(invalid_yaml))
+        # Act & Assert
+        with pytest.raises(InvalidOpenAPISpecError) as exc_info:
+            validator._validate_contract_file(str(invalid_yaml))
 
-        # Assert
-        assert result is False
+        assert "Missing 'openapi' or 'swagger' field" in str(
+            exc_info.value.context.get("details", "")
+        )
 
 
 class TestBreakingChangeDetection:
@@ -567,7 +576,8 @@ class TestFileStructure:
         content = file_path.read_text()
 
         # Act & Assert
-        assert "def main():" in content
+        # The main() function may have decorators, so just check for 'def main()' anywhere
+        assert "def main(" in content
 
 
 class TestContractValidation:

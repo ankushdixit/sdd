@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from sdd.core.exceptions import ErrorCode, ValidationError
 from sdd.core.types import GitStatus, Priority, WorkItemStatus, WorkItemType
 
 
@@ -35,13 +36,22 @@ class TestWorkItemType:
         assert WorkItemType("refactor") == WorkItemType.REFACTOR
 
     def test_value_validation_invalid(self):
-        """Test invalid value raises ValueError."""
-        with pytest.raises(ValueError):
+        """Test invalid value raises ValidationError."""
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemType("invalid")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_WORK_ITEM_TYPE
+        assert "work_item_type" in exc_info.value.context
+        assert exc_info.value.context["work_item_type"] == "invalid"
+        assert "valid_types" in exc_info.value.context
+        assert exc_info.value.remediation is not None
+
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemType("features")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_WORK_ITEM_TYPE
+
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemType("")
+        assert exc_info.value.code == ErrorCode.INVALID_WORK_ITEM_TYPE
 
     def test_values_method(self):
         """Test values() returns all valid values."""
@@ -108,13 +118,22 @@ class TestWorkItemStatus:
         assert WorkItemStatus("completed") == WorkItemStatus.COMPLETED
 
     def test_value_validation_invalid(self):
-        """Test invalid value raises ValueError."""
-        with pytest.raises(ValueError):
+        """Test invalid value raises ValidationError."""
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemStatus("invalid")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_STATUS
+        assert "status" in exc_info.value.context
+        assert exc_info.value.context["status"] == "invalid"
+        assert "valid_statuses" in exc_info.value.context
+        assert exc_info.value.remediation is not None
+
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemStatus("done")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_STATUS
+
+        with pytest.raises(ValidationError) as exc_info:
             WorkItemStatus("")
+        assert exc_info.value.code == ErrorCode.INVALID_STATUS
 
     def test_values_method(self):
         """Test values() returns all valid values."""
@@ -179,13 +198,22 @@ class TestPriority:
         assert Priority("low") == Priority.LOW
 
     def test_value_validation_invalid(self):
-        """Test invalid value raises ValueError."""
-        with pytest.raises(ValueError):
+        """Test invalid value raises ValidationError."""
+        with pytest.raises(ValidationError) as exc_info:
             Priority("invalid")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_PRIORITY
+        assert "priority" in exc_info.value.context
+        assert exc_info.value.context["priority"] == "invalid"
+        assert "valid_priorities" in exc_info.value.context
+        assert exc_info.value.remediation is not None
+
+        with pytest.raises(ValidationError) as exc_info:
             Priority("urgent")
-        with pytest.raises(ValueError):
+        assert exc_info.value.code == ErrorCode.INVALID_PRIORITY
+
+        with pytest.raises(ValidationError) as exc_info:
             Priority("")
+        assert exc_info.value.code == ErrorCode.INVALID_PRIORITY
 
     def test_values_method(self):
         """Test values() returns all valid values."""

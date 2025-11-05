@@ -10,7 +10,10 @@ from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
+import pytest
+
 from sdd.core.command_runner import CommandResult
+from sdd.core.exceptions import SpecValidationError
 from sdd.quality.gates import QualityGates
 
 
@@ -1350,7 +1353,9 @@ class TestQualityGatesSpecCompleteness:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.validate_spec_file", return_value=(False, errors)):
+        # Mock validate_spec_file to raise SpecValidationError
+        with patch("sdd.quality.gates.validate_spec_file") as mock_validate:
+            mock_validate.side_effect = SpecValidationError(work_item_id="WI-001", errors=errors)
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -2822,17 +2827,20 @@ class TestQualityGatesAdditionalCoverage:
         assert libraries[1]["name"] == "pytest"
 
     def test_parse_libraries_from_stack_exception(self):
-        """Test parsing libraries with file read exception."""
+        """Test parsing libraries with file read exception raises FileOperationError."""
         # Arrange
+        from sdd.core.exceptions import FileOperationError
+
         with patch.object(Path, "exists", return_value=False):
             gates = QualityGates()
 
-        # Act
+        # Act & Assert
         with patch("builtins.open", side_effect=OSError("File error")):
-            libraries = gates._parse_libraries_from_stack()
+            with pytest.raises(FileOperationError) as exc_info:
+                gates._parse_libraries_from_stack()
 
-        # Assert
-        assert libraries == []
+            assert "Failed to read stack.txt file" in str(exc_info.value)
+            assert exc_info.value.context["operation"] == "read"
 
     def test_run_custom_validations_unknown_rule_type(self):
         """Test custom validations with unknown rule type."""

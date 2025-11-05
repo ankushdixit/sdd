@@ -13,7 +13,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.learning.curator import LEARNING_SCHEMA, LearningsCurator
+from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from sdd.learning.curator import LEARNING_SCHEMA, LearningsCurator, main
 
 
 @pytest.fixture(autouse=True)
@@ -2113,3 +2114,21 @@ class TestCurateDryRun:
 
         # Assert
         assert "Dry run" in captured.out or "dry run" in captured.out.lower()
+
+
+class TestMainFunctionErrorHandling:
+    """Tests for main() function error handling."""
+
+    def test_main_raises_file_not_found_when_session_dir_missing(self, tmp_path):
+        """Test that main() raises SDDFileNotFoundError when .session dir doesn't exist."""
+        # Arrange
+
+        with patch("sys.argv", ["curator.py", "curate"]):
+            with patch("pathlib.Path.cwd", return_value=tmp_path):
+                # Act & Assert
+                with pytest.raises(SDDFileNotFoundError) as exc_info:
+                    main()
+
+                # Verify exception details
+                assert ".session" in str(exc_info.value)
+                assert exc_info.value.context["file_type"] == "session directory"

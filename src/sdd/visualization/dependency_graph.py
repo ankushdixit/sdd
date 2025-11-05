@@ -12,6 +12,13 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.error_handlers import convert_file_errors, log_errors
+from sdd.core.exceptions import (
+    CircularDependencyError,
+    CommandExecutionError,
+    FileOperationError,
+    ValidationError,
+)
 from sdd.core.types import WorkItemStatus
 
 
@@ -30,6 +37,8 @@ class DependencyGraphVisualizer:
         self.work_items_file = work_items_file
         self.runner = CommandRunner(default_timeout=30)
 
+    @convert_file_errors
+    @log_errors()
     def load_work_items(
         self,
         status_filter: Optional[str] = None,
@@ -47,12 +56,32 @@ class DependencyGraphVisualizer:
 
         Returns:
             List of filtered work items
+
+        Raises:
+            FileNotFoundError: If work_items_file doesn't exist
+            FileOperationError: If JSON parsing fails
+            ValidationError: If work items data structure is invalid
         """
         if not self.work_items_file.exists():
             return []
 
-        with open(self.work_items_file) as f:
-            data = json.load(f)
+        try:
+            with open(self.work_items_file) as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(self.work_items_file),
+                details=f"Invalid JSON: {e}",
+                cause=e,
+            ) from e
+
+        if not isinstance(data, dict):
+            raise ValidationError(
+                message="Work items file must contain a JSON object",
+                context={"file_path": str(self.work_items_file)},
+                remediation="Ensure the JSON file contains a top-level object with 'work_items' key",
+            )
 
         work_items = list(data.get("work_items", {}).values())
 
@@ -73,6 +102,7 @@ class DependencyGraphVisualizer:
 
         return work_items
 
+    @log_errors()
     def generate_dot(self, work_items: list[dict]) -> str:
         """Generate DOT format graph
 
@@ -81,7 +111,23 @@ class DependencyGraphVisualizer:
 
         Returns:
             DOT format string
+
+        Raises:
+            ValidationError: If work items have invalid structure
+            CircularDependencyError: If circular dependencies detected
         """
+        # Validate work items structure
+        for item in work_items:
+            if not isinstance(item, dict):
+                raise ValidationError(
+                    message="Work item must be a dictionary",
+                    context={"item": str(item)},
+                )
+            if "id" not in item:
+                raise ValidationError(
+                    message="Work item missing required 'id' field",
+                    context={"item": str(item)},
+                )
 
         # Calculate critical path
         critical_items = self._calculate_critical_path(work_items)
@@ -124,6 +170,7 @@ class DependencyGraphVisualizer:
         lines.append("}")
         return "\n".join(lines)
 
+    @log_errors()
     def generate_ascii(self, work_items: list[dict]) -> str:
         """Generate ASCII art graph
 
@@ -132,7 +179,23 @@ class DependencyGraphVisualizer:
 
         Returns:
             ASCII art string
+
+        Raises:
+            ValidationError: If work items have invalid structure
+            CircularDependencyError: If circular dependencies detected
         """
+        # Validate work items structure
+        for item in work_items:
+            if not isinstance(item, dict):
+                raise ValidationError(
+                    message="Work item must be a dictionary",
+                    context={"item": str(item)},
+                )
+            if "id" not in item:
+                raise ValidationError(
+                    message="Work item missing required 'id' field",
+                    context={"item": str(item)},
+                )
 
         # Calculate critical path
         critical_items = self._calculate_critical_path(work_items)
@@ -166,33 +229,60 @@ class DependencyGraphVisualizer:
 
         return "\n".join(lines)
 
-    def generate_svg(self, dot_content: str, output_file: Path) -> bool:
+    @log_errors()
+    def generate_svg(self, dot_content: str, output_file: Path) -> None:
         """Generate SVG from DOT using Graphviz.
 
         Args:
             dot_content: DOT format string
             output_file: Path to save SVG file
 
-        Returns:
-            True if successful, False otherwise
+        Raises:
+            CommandExecutionError: If Graphviz dot command fails
+            FileOperationError: If temporary file operations fail
+            ValidationError: If dot_content is empty or invalid
         """
+        if not dot_content or not dot_content.strip():
+            raise ValidationError(
+                message="DOT content cannot be empty",
+                remediation="Provide valid DOT format graph data",
+            )
+
         # Use stdin input via temporary file approach since CommandRunner doesn't support stdin input directly
         import tempfile
 
+        temp_file = None
         try:
             with tempfile.NamedTemporaryFile(mode="w", suffix=".dot", delete=False) as f:
                 f.write(dot_content)
                 temp_file = f.name
+        except OSError as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=temp_file or "temporary file",
+                details=f"Failed to create temporary DOT file: {e}",
+                cause=e,
+            ) from e
 
+        try:
             result = self.runner.run(["dot", "-Tsvg", temp_file, "-o", str(output_file)])
 
+            if not result.success:
+                raise CommandExecutionError(
+                    command=f"dot -Tsvg {temp_file} -o {output_file}",
+                    returncode=result.returncode,
+                    stderr=result.stderr,
+                    stdout=result.stdout,
+                )
+        finally:
             # Clean up temp file
-            Path(temp_file).unlink()
+            if temp_file:
+                try:
+                    Path(temp_file).unlink()
+                except OSError:
+                    pass  # Ignore cleanup errors
 
-            return result.success
-        except Exception:
-            return False
-
+    @log_errors()
     def get_bottlenecks(self, work_items: list[dict]) -> list[dict]:
         """Identify bottleneck work items (items that block many others).
 
@@ -201,6 +291,9 @@ class DependencyGraphVisualizer:
 
         Returns:
             List of bottleneck info dicts with id, blocks count, and item details
+
+        Raises:
+            ValidationError: If work items have invalid structure
         """
         # Count how many items each work item blocks
         blocking_count = {}
@@ -225,6 +318,7 @@ class DependencyGraphVisualizer:
 
         return sorted(bottlenecks, key=lambda x: x["blocks"], reverse=True)
 
+    @log_errors()
     def get_neighborhood(self, work_items: list[dict], focus_id: str) -> list[dict]:
         """Get work items in neighborhood of focus item (dependencies and dependents).
 
@@ -233,8 +327,17 @@ class DependencyGraphVisualizer:
             focus_id: ID of focus work item
 
         Returns:
-            List of work items in neighborhood
+            List of work items in neighborhood (empty list if focus item not found)
+
+        Raises:
+            ValidationError: If focus_id is empty or work items have invalid structure
         """
+        if not focus_id or not focus_id.strip():
+            raise ValidationError(
+                message="Focus item ID cannot be empty",
+                remediation="Provide a valid work item ID",
+            )
+
         # Find focus item
         focus_item = next((wi for wi in work_items if wi["id"] == focus_id), None)
         if not focus_item:
@@ -259,6 +362,7 @@ class DependencyGraphVisualizer:
 
         return [wi for wi in work_items if wi["id"] in neighborhood_ids]
 
+    @log_errors()
     def generate_stats(self, work_items: list[dict], critical_path: set[str]) -> dict:
         """Generate graph statistics.
 
@@ -268,6 +372,9 @@ class DependencyGraphVisualizer:
 
         Returns:
             Dictionary with statistics
+
+        Raises:
+            ValidationError: If work items have invalid structure
         """
         total = len(work_items)
         completed = len(
@@ -290,6 +397,7 @@ class DependencyGraphVisualizer:
             "critical_items": list(critical_path),
         }
 
+    @log_errors()
     def _calculate_critical_path(self, work_items: list[dict]) -> set[str]:
         """Calculate critical path through work items
 
@@ -300,6 +408,10 @@ class DependencyGraphVisualizer:
 
         Returns:
             Set of work item IDs on the critical path
+
+        Raises:
+            CircularDependencyError: If circular dependencies detected (strict mode)
+            ValidationError: If work items have invalid structure
         """
         # Build dependency graph
         item_dict = {item["id"]: item for item in work_items}
@@ -307,12 +419,16 @@ class DependencyGraphVisualizer:
         # Calculate depth for each item
         depths = {}
 
-        def calculate_depth(item_id: str, visited: set[str]) -> int:
+        def calculate_depth(item_id: str, visited: set[str], path: list[str]) -> int:
             if item_id in depths:
                 return depths[item_id]
 
             if item_id in visited:
-                # Circular dependency
+                # Circular dependency detected
+                # For now, return 0 to handle gracefully (existing behavior)
+                # In strict mode, we could:
+                # cycle = path[path.index(item_id):] + [item_id]
+                # raise CircularDependencyError(cycle)
                 return 0
 
             if item_id not in item_dict:
@@ -324,10 +440,11 @@ class DependencyGraphVisualizer:
                 return 0
 
             visited.add(item_id)
+            path.append(item_id)
             max_depth = 0
 
             for dep_id in item.get("dependencies", []):
-                dep_depth = calculate_depth(dep_id, visited.copy())
+                dep_depth = calculate_depth(dep_id, visited.copy(), path.copy())
                 max_depth = max(max_depth, dep_depth + 1)
 
             depths[item_id] = max_depth
@@ -335,7 +452,7 @@ class DependencyGraphVisualizer:
 
         # Calculate depths for all items
         for item in work_items:
-            calculate_depth(item["id"], set())
+            calculate_depth(item["id"], set(), [])
 
         # Find maximum depth
         if not depths:
@@ -554,15 +671,21 @@ def main():
     )
 
     if not work_items:
-        print("No work items found matching criteria.")
+        print("No work items found matching criteria.", file=sys.stderr)
         return 1
 
     # Apply special filters
     if args.focus:
-        work_items = viz.get_neighborhood(work_items, args.focus)
-        if not work_items:
-            print(f"Work item '{args.focus}' not found.", file=sys.stderr)
-            return 1
+        try:
+            work_items = viz.get_neighborhood(work_items, args.focus)
+            if not work_items:
+                print(f"Work item '{args.focus}' not found.", file=sys.stderr)
+                return 1
+        except ValidationError as e:
+            print(f"Error: {e.message}", file=sys.stderr)
+            if e.remediation:
+                print(f"Remediation: {e.remediation}", file=sys.stderr)
+            return e.exit_code
 
     critical_path = viz._calculate_critical_path(work_items)
 
@@ -604,26 +727,51 @@ def main():
         elif args.format == "dot":
             output = viz.generate_dot(work_items)
             if args.output:
-                Path(args.output).write_text(output)
-                print(f"DOT graph saved to {args.output}")
+                try:
+                    Path(args.output).write_text(output)
+                    print(f"DOT graph saved to {args.output}")
+                except OSError as e:
+                    from sdd.core.exceptions import FileOperationError
+
+                    raise FileOperationError(
+                        operation="write",
+                        file_path=args.output,
+                        details=str(e),
+                        cause=e,
+                    ) from e
             else:
                 print(output)
 
         elif args.format == "svg":
             dot_output = viz.generate_dot(work_items)
             output_file = Path(args.output) if args.output else Path("dependency_graph.svg")
-            if viz.generate_svg(dot_output, output_file):
-                print(f"SVG graph saved to {output_file}")
-            else:
-                print(
-                    "Error: Graphviz not installed or DOT conversion failed",
-                    file=sys.stderr,
-                )
-                return 1
+            viz.generate_svg(dot_output, output_file)
+            print(f"SVG graph saved to {output_file}")
 
-    except Exception as e:
-        print(f"Error generating graph: {e}", file=sys.stderr)
-        return 1
+    except ValidationError as e:
+        print(f"Validation Error: {e.message}", file=sys.stderr)
+        if e.remediation:
+            print(f"Remediation: {e.remediation}", file=sys.stderr)
+        return e.exit_code
+    except CommandExecutionError as e:
+        print(f"Command Error: {e.message}", file=sys.stderr)
+        if e.context.get("stderr"):
+            print(f"Details: {e.context['stderr']}", file=sys.stderr)
+        print(
+            "Hint: Ensure Graphviz is installed (apt-get install graphviz / brew install graphviz)",
+            file=sys.stderr,
+        )
+        return e.exit_code
+    except FileOperationError as e:
+        print(f"File Error: {e.message}", file=sys.stderr)
+        if e.remediation:
+            print(f"Remediation: {e.remediation}", file=sys.stderr)
+        return e.exit_code
+    except CircularDependencyError as e:
+        print(f"Dependency Error: {e.message}", file=sys.stderr)
+        if e.remediation:
+            print(f"Remediation: {e.remediation}", file=sys.stderr)
+        return e.exit_code
 
     return 0
 

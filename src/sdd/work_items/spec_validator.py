@@ -12,6 +12,12 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileNotFoundError,
+    FileOperationError,
+    SpecValidationError,
+)
 from sdd.core.types import WorkItemType
 from sdd.work_items.spec_parser import (
     extract_checklist,
@@ -323,7 +329,8 @@ def check_rollback_subsections(spec_content: str) -> list[str]:
     return errors
 
 
-def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, list[str]]:
+@log_errors()
+def validate_spec_file(work_item_id: str, work_item_type: str) -> None:
     """
     Validate a work item specification file for completeness and correctness.
 
@@ -331,10 +338,10 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, li
         work_item_id: ID of the work item
         work_item_type: Type of work item (feature, bug, refactor, security, integration_test, deployment)
 
-    Returns:
-        Tuple of (is_valid, error_messages)
-        - is_valid: True if spec passes all validation checks
-        - error_messages: List of validation errors (empty if valid)
+    Raises:
+        FileNotFoundError: If spec file doesn't exist
+        FileOperationError: If spec file cannot be read
+        SpecValidationError: If spec validation fails (contains list of validation errors)
     """
     # Try to load work items to get spec_file path
     # If work_items.json doesn't exist, fallback to default pattern (for backwards compatibility/tests)
@@ -352,7 +359,7 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, li
             if work_item_id in work_items_data.get("work_items", {}):
                 work_item = work_items_data["work_items"][work_item_id]
                 spec_file_path = work_item.get("spec_file")
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             # If loading fails, fallback to default pattern
             pass
 
@@ -363,13 +370,15 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, li
     spec_path = Path(spec_file_path)
 
     if not spec_path.exists():
-        return False, [f"Spec file not found: {spec_path}"]
+        raise FileNotFoundError(file_path=str(spec_path), file_type="spec")
 
     # Read spec content
     try:
         spec_content = spec_path.read_text(encoding="utf-8")
-    except Exception as e:
-        return False, [f"Error reading spec file: {str(e)}"]
+    except OSError as e:
+        raise FileOperationError(
+            operation="read", file_path=str(spec_path), details=str(e), cause=e
+        )
 
     # Collect all errors
     errors = []
@@ -410,25 +419,29 @@ def validate_spec_file(work_item_id: str, work_item_type: str) -> tuple[bool, li
     if "rollback_procedure_subsections" in special_requirements:
         errors.extend(check_rollback_subsections(spec_content))
 
-    # Return validation result
-    is_valid = len(errors) == 0
-    return is_valid, errors
+    # Raise SpecValidationError if any validation errors found
+    if errors:
+        raise SpecValidationError(work_item_id=work_item_id, errors=errors)
 
 
-def format_validation_report(work_item_id: str, work_item_type: str, errors: list[str]) -> str:
+def format_validation_report(
+    work_item_id: str, work_item_type: str, validation_error: Optional[SpecValidationError] = None
+) -> str:
     """
     Format validation errors into a human-readable report.
 
     Args:
         work_item_id: ID of the work item
         work_item_type: Type of work item
-        errors: List of validation error messages
+        validation_error: SpecValidationError containing validation errors, None if valid
 
     Returns:
         Formatted validation report
     """
-    if not errors:
+    if not validation_error:
         return f"✅ Spec file for '{work_item_id}' ({work_item_type}) is valid"
+
+    errors = validation_error.context.get("validation_errors", [])
 
     report = f"❌ Spec file for '{work_item_id}' ({work_item_type}) has validation errors:\n\n"
 
@@ -455,8 +468,17 @@ if __name__ == "__main__":
     work_item_id = sys.argv[1]
     work_item_type = sys.argv[2]
 
-    is_valid, errors = validate_spec_file(work_item_id, work_item_type)
-    report = format_validation_report(work_item_id, work_item_type, errors)
-
-    print(report)
-    sys.exit(0 if is_valid else 1)
+    try:
+        validate_spec_file(work_item_id, work_item_type)
+        report = format_validation_report(work_item_id, work_item_type)
+        print(report)
+        sys.exit(0)
+    except SpecValidationError as e:
+        report = format_validation_report(work_item_id, work_item_type, e)
+        print(report)
+        sys.exit(e.exit_code)
+    except (FileNotFoundError, FileOperationError) as e:
+        print(f"Error: {e.message}")
+        if e.remediation:
+            print(f"Remediation: {e.remediation}")
+        sys.exit(e.exit_code)

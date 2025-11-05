@@ -14,6 +14,16 @@ from unittest.mock import Mock, patch
 import pytest
 
 from sdd.core.command_runner import CommandResult
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    GitError,
+    NotAGitRepoError,
+    SessionNotFoundError,
+    SpecValidationError,
+    ValidationError,
+)
 from sdd.session.validate import SessionValidator
 
 
@@ -192,7 +202,7 @@ class TestCheckGitStatus:
         assert "2 files" in result["message"]
 
     def test_check_git_status_fails_when_not_git_repository(self, temp_session_dir):
-        """Test check_git_status returns passed=False when directory is not a git repo."""
+        """Test check_git_status raises NotAGitRepoError when directory is not a git repo."""
         # Arrange
         project_root = temp_session_dir.parent
         with patch("sdd.session.validate.QualityGates"):
@@ -206,28 +216,40 @@ class TestCheckGitStatus:
             duration_seconds=0.1,
         )
 
-        # Act
+        # Act & Assert
         with patch.object(validator.runner, "run", return_value=mock_status):
-            result = validator.check_git_status()
+            with pytest.raises(NotAGitRepoError) as exc_info:
+                validator.check_git_status()
 
-        # Assert
-        assert result["passed"] is False
-        assert "Not a git repository" in result["message"]
+        # Verify exception details
+        assert str(temp_session_dir.parent) in str(exc_info.value.context)
 
-    def test_check_git_status_handles_subprocess_exception(self, temp_session_dir):
-        """Test check_git_status handles subprocess exceptions gracefully."""
+    def test_check_git_status_raises_git_error_on_branch_failure(self, temp_session_dir):
+        """Test check_git_status raises GitError when branch command fails."""
         # Arrange
         project_root = temp_session_dir.parent
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        # Act
-        with patch.object(validator.runner, "run", side_effect=Exception("Git command failed")):
-            result = validator.check_git_status()
+        mock_status = CommandResult(
+            returncode=0, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
+        )
 
-        # Assert
-        assert result["passed"] is False
-        assert "Git check failed" in result["message"]
+        mock_branch_fail = CommandResult(
+            returncode=1,
+            stdout="",
+            stderr="fatal: not a valid object name",
+            command=["git", "branch"],
+            duration_seconds=0.1,
+        )
+
+        # Act & Assert
+        with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch_fail]):
+            with pytest.raises(GitError) as exc_info:
+                validator.check_git_status()
+
+        # Verify exception
+        assert "Failed to get current branch" in exc_info.value.message
 
 
 class TestPreviewQualityGates:
@@ -389,21 +411,21 @@ class TestValidateWorkItemCriteria:
     """Test suite for validate_work_item_criteria method."""
 
     def test_validate_work_item_criteria_fails_when_no_active_session(self, temp_session_dir):
-        """Test validate_work_item_criteria returns passed=False when status file doesn't exist."""
+        """Test validate_work_item_criteria raises SessionNotFoundError when status file doesn't exist."""
         # Arrange
         project_root = temp_session_dir.parent
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        # Act
-        result = validator.validate_work_item_criteria()
+        # Act & Assert
+        with pytest.raises(SessionNotFoundError) as exc_info:
+            validator.validate_work_item_criteria()
 
-        # Assert
-        assert result["passed"] is False
-        assert result["message"] == "No active session"
+        # Verify exception
+        assert "No active session" in exc_info.value.message
 
     def test_validate_work_item_criteria_fails_when_no_current_work_item(self, temp_session_dir):
-        """Test validate_work_item_criteria returns passed=False when no current work item set."""
+        """Test validate_work_item_criteria raises ValidationError when no current work item set."""
         # Arrange
         project_root = temp_session_dir.parent
         status_file = temp_session_dir / "tracking" / "status_update.json"
@@ -412,15 +434,15 @@ class TestValidateWorkItemCriteria:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        # Act
-        result = validator.validate_work_item_criteria()
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            validator.validate_work_item_criteria()
 
-        # Assert
-        assert result["passed"] is False
-        assert result["message"] == "No current work item"
+        # Verify exception
+        assert "No current work item" in exc_info.value.message
 
     def test_validate_work_item_criteria_fails_when_spec_file_missing(self, temp_session_dir):
-        """Test validate_work_item_criteria returns passed=False when spec file doesn't exist."""
+        """Test validate_work_item_criteria raises FileNotFoundError when spec file doesn't exist."""
         # Arrange
         project_root = temp_session_dir.parent
 
@@ -443,15 +465,16 @@ class TestValidateWorkItemCriteria:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        # Act
-        result = validator.validate_work_item_criteria()
+        # Act & Assert
+        with pytest.raises(SDDFileNotFoundError) as exc_info:
+            validator.validate_work_item_criteria()
 
-        # Assert
-        assert result["passed"] is False
-        assert "Spec file missing" in result["message"]
+        # Verify exception
+        assert "WORK-001.md" in exc_info.value.message
+        assert exc_info.value.context.get("file_type") == "spec"
 
     def test_validate_work_item_criteria_fails_when_spec_file_invalid(self, temp_session_dir):
-        """Test validate_work_item_criteria returns passed=False when spec parsing fails."""
+        """Test validate_work_item_criteria raises SpecValidationError when spec parsing fails."""
         # Arrange
         project_root = temp_session_dir.parent
 
@@ -478,15 +501,16 @@ class TestValidateWorkItemCriteria:
         with patch("sdd.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
-        # Act
+        # Act & Assert
         with patch(
             "sdd.work_items.spec_parser.parse_spec_file", side_effect=Exception("Parse error")
         ):
-            result = validator.validate_work_item_criteria()
+            with pytest.raises(SpecValidationError) as exc_info:
+                validator.validate_work_item_criteria()
 
-        # Assert
-        assert result["passed"] is False
-        assert "Spec file invalid" in result["message"]
+        # Verify exception
+        assert "WORK-001" in exc_info.value.message
+        assert "Parse error" in str(exc_info.value.context.get("validation_errors"))
 
     def test_validate_work_item_criteria_fails_when_acceptance_criteria_insufficient(
         self, temp_session_dir
@@ -796,8 +820,8 @@ class TestValidate:
         captured = capsys.readouterr()
         assert "Session ready to complete!" in captured.out
 
-    def test_validate_some_checks_fail(self, temp_session_dir, mock_quality_gates, capsys):
-        """Test validate returns ready=False when some checks fail."""
+    def test_validate_raises_exception_on_git_error(self, temp_session_dir, mock_quality_gates):
+        """Test validate raises exception when git check fails."""
         # Arrange
         project_root = temp_session_dir.parent
 
@@ -809,16 +833,10 @@ class TestValidate:
             returncode=128, stdout="", stderr="", command=["git", "status"], duration_seconds=0.1
         )
 
-        # Act
+        # Act & Assert
         with patch.object(validator.runner, "run", return_value=mock_status):
-            result = validator.validate()
-
-        # Assert
-        assert result["ready"] is False
-
-        # Check console output
-        captured = capsys.readouterr()
-        assert "Session not ready to complete" in captured.out
+            with pytest.raises(NotAGitRepoError):
+                validator.validate()
 
     def test_validate_passes_auto_fix_parameter(self, temp_session_dir, mock_quality_gates):
         """Test validate passes auto_fix parameter to quality gates preview."""
