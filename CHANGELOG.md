@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Refactor: Decompose learning curator god-class into modular architecture**
+  - Decomposed monolithic 1,226-line `LearningsCurator` god-class into 8 focused, single-responsibility modules
+  - Created 6 new specialized modules: `categorizer.py`, `archiver.py`, `extractor.py`, `repository.py`, `reporter.py`, `validator.py`
+  - Refactored main `curator.py` from 1,226 to 369 lines (-70% reduction) by delegating to specialized modules
+  - Implemented dependency injection pattern with clear module responsibilities:
+    - `LearningCategorizer`: Auto-categorization with keyword scoring (124 lines)
+    - `LearningArchiver`: Archive management for old learnings (116 lines)
+    - `LearningExtractor`: Extract from sessions, git commits, code comments (343 lines)
+    - `LearningRepository`: CRUD operations and data persistence (247 lines)
+    - `LearningReporter`: Reports, statistics, search, timeline (349 lines)
+    - `LearningValidator`: Validation logic and JSON schema (142 lines)
+  - Added 13 compatibility wrapper methods to maintain backward compatibility with existing tests
+  - Fixed `FileOperationError` exception handling in extractor for graceful JSON parsing failures
+  - All 2,143 tests passing (100% pass rate) including 212 learning-related tests
+  - Fixed all quality issues: ruff formatting (4 files), mypy type checking (2 errors)
+  - Benefits: Single responsibility principle, improved testability, better code navigation, extensibility, loose coupling
+
 - **Refactor: Complete Quality Gates modularization into specialized checker architecture**
   - Decomposed monolithic 1,370-line `gates.py` god class into 10 focused, single-responsibility checker classes
   - Created modular checker architecture with abstract `QualityChecker` base class and `CheckResult` dataclass

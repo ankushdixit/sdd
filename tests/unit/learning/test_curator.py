@@ -14,7 +14,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.learning.curator import LEARNING_SCHEMA, LearningsCurator, main
+from sdd.learning.curator import LearningsCurator, main
+from sdd.learning.validator import LEARNING_SCHEMA
 
 
 @pytest.fixture(autouse=True)
