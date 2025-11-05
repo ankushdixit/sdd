@@ -5,7 +5,6 @@ sorting, and displaying work items.
 """
 
 import json
-from pathlib import Path
 
 import pytest
 

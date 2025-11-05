@@ -5,7 +5,6 @@ ID generation, spec file creation, and interactive prompts.
 """
 
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
