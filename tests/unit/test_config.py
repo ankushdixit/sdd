@@ -18,7 +18,7 @@ from sdd.core.config import (
     SpecCompletenessConfig,
     get_config_manager,
 )
-from sdd.core.exceptions import ConfigurationError, ConfigValidationError
+from sdd.core.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -166,30 +166,30 @@ class TestConfigManager:
         assert "JSON syntax" in exc_info.value.remediation
 
     def test_load_invalid_structure(self, config_file):
-        """Test loading with invalid config structure."""
-        # Write config with structure that will cause TypeError (unknown kwargs)
-        invalid_data = {
+        """Test loading with unknown fields (forward compatibility)."""
+        # Write config with unknown fields - should be silently ignored for forward compatibility
+        data_with_unknown_fields = {
             "quality_gates": {
                 "test_execution": {
-                    "unknown_field": "value",  # Field doesn't exist in dataclass
-                    "another_bad_field": 123,
+                    "enabled": True,
+                    "required": True,
+                    "coverage_threshold": 80,
+                    "unknown_field": "value",  # Unknown field - will be filtered out
+                    "another_bad_field": 123,  # Unknown field - will be filtered out
                 }
             }
         }
         with open(config_file, "w") as f:
-            json.dump(invalid_data, f)
+            json.dump(data_with_unknown_fields, f)
 
         manager = ConfigManager()
 
-        # Should raise ConfigValidationError when dataclass rejects unknown kwargs
-        with pytest.raises(ConfigValidationError) as exc_info:
-            manager.load_config(config_file)
+        # Should load successfully, filtering out unknown fields for forward compatibility
+        manager.load_config(config_file)
 
-        # Check error details
-        assert str(config_file) in exc_info.value.context["config_path"]
-        assert "validation_errors" in exc_info.value.context
-        assert len(exc_info.value.context["validation_errors"]) > 0
-        assert exc_info.value.remediation is not None
+        # Verify known fields were loaded correctly
+        assert manager.quality_gates.test_execution.enabled is True
+        assert manager.quality_gates.test_execution.coverage_threshold == 80
 
     def test_caching_behavior(self, config_file, valid_config_data):
         """Test that config is cached and not re-read."""
@@ -301,7 +301,9 @@ class TestConfigManager:
         assert isinstance(config.quality_gates.formatting, FormattingConfig)
         assert isinstance(config.quality_gates.security, SecurityConfig)
         assert isinstance(config.quality_gates.documentation, DocumentationConfig)
-        assert isinstance(config.quality_gates.spec_completeness, SpecCompletenessConfig)
+        assert isinstance(
+            config.quality_gates.spec_completeness, SpecCompletenessConfig
+        )
 
         # Test default values
         assert config.quality_gates.test_execution.enabled is True
@@ -386,30 +388,28 @@ class TestConfigManager:
         assert "permissions" in exc_info.value.remediation.lower()
 
     def test_invalid_quality_gates_structure(self, config_file):
-        """Test loading with invalid quality_gates nested structure."""
-        # Create config with completely invalid quality_gates structure (unknown field)
-        invalid_data = {
+        """Test loading with unknown fields in quality_gates (forward compatibility)."""
+        # Create config with unknown fields - should be filtered out for forward compatibility
+        data_with_unknown_field = {
             "quality_gates": {
                 "test_execution": {
-                    "invalid_unknown_field": "value",  # Unknown field
+                    "enabled": True,
+                    "coverage_threshold": 85,
+                    "invalid_unknown_field": "value",  # Unknown field - will be filtered out
                 }
             }
         }
         with open(config_file, "w") as f:
-            json.dump(invalid_data, f)
+            json.dump(data_with_unknown_field, f)
 
         manager = ConfigManager()
 
-        # Should raise ConfigValidationError from _parse_quality_gates
-        with pytest.raises(ConfigValidationError) as exc_info:
-            manager.load_config(config_file)
+        # Should load successfully, filtering out unknown fields
+        manager.load_config(config_file)
 
-        # Verify error context
-        error = exc_info.value
-        assert "validation_errors" in error.context
-        assert error.context["error_count"] > 0
-        assert str(config_file) in error.context["config_path"]
-        assert "configuration.md" in error.remediation
+        # Verify known fields were loaded correctly
+        assert manager.quality_gates.test_execution.enabled is True
+        assert manager.quality_gates.test_execution.coverage_threshold == 85
 
     def test_os_error_during_load(self, config_file, monkeypatch):
         """Test handling of OSError during config loading."""

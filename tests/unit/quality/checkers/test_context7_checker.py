@@ -545,12 +545,7 @@ class TestContext7CheckerIntegration:
         """Test full workflow handles comments and whitespace correctly."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text(
-            "# Testing libraries\n"
-            "  pytest  7.4.0  \n"
-            "\n"
-            "# Data science\n"
-            "  numpy  1.24.0  \n"
-            "\n"
+            "# Testing libraries\n  pytest  7.4.0  \n\n# Data science\n  numpy  1.24.0  \n\n"
         )
 
         checker = Context7Checker(basic_config, temp_project_dir)

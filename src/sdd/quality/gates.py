@@ -421,6 +421,7 @@ class QualityGates:
             work_item=work_item,
             config=self.config.integration.__dict__,
             runner=self.runner,
+            config_path=self._config_path,
         )
         result = checker.run()
         return result.passed, result.details
@@ -435,6 +436,7 @@ class QualityGates:
             work_item=work_item,
             config=self.config.integration.__dict__,
             runner=self.runner,
+            config_path=self._config_path,
         )
         result = checker.validate_environment()
         return result.passed, result.details
@@ -449,6 +451,7 @@ class QualityGates:
             work_item=work_item,
             config=self.config.integration.__dict__,
             runner=self.runner,
+            config_path=self._config_path,
         )
         result = checker.validate_documentation()
         return result.passed, result.details

@@ -171,7 +171,11 @@ class TestIntegrationTestsDisabled:
         config_file.write_text(json.dumps(config))
         gates = QualityGates(config_path=config_file)
 
-        work_item = {"id": "INTEG-001", "type": "integration_test", "title": "Integration Test"}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "title": "Integration Test",
+        }
 
         # Act
         passed, results = gates.run_integration_tests(work_item)
@@ -189,12 +193,18 @@ class TestIntegrationTestsDisabled:
         config_file.write_text(json.dumps(config))
         gates = QualityGates(config_path=config_file)
 
-        work_item = {"id": "INTEG-001", "type": "integration_test", "title": "Integration Test"}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "title": "Integration Test",
+        }
 
         # Act
         with patch("sdd.work_items.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"test_scenarios": []}
-            with patch("sdd.testing.integration_runner.IntegrationTestRunner") as mock_runner_class:
+            with patch(
+                "sdd.testing.integration_runner.IntegrationTestRunner"
+            ) as mock_runner_class:
                 mock_runner = Mock()
                 # setup_environment now raises exceptions instead of returning tuple
                 mock_runner.setup_environment.return_value = None
@@ -218,7 +228,11 @@ class TestEnvironmentValidation:
         # Arrange
         mock_run.return_value = Mock(returncode=0)
         gates = QualityGates()
-        work_item = {"id": "INTEG-001", "type": "integration_test", "environment_requirements": {}}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "environment_requirements": {},
+        }
 
         # Act
         passed, results = gates.validate_integration_environment(work_item)
@@ -233,7 +247,11 @@ class TestEnvironmentValidation:
         # Arrange
         mock_run.return_value = Mock(returncode=0)
         gates = QualityGates()
-        work_item = {"id": "INTEG-001", "type": "integration_test", "environment_requirements": {}}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "environment_requirements": {},
+        }
 
         # Act
         passed, results = gates.validate_integration_environment(work_item)
@@ -283,7 +301,11 @@ class TestEnvironmentValidation:
         """Test that validate_integration_environment results have correct structure."""
         # Arrange
         gates = QualityGates()
-        work_item = {"id": "INTEG-001", "type": "integration_test", "environment_requirements": {}}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "environment_requirements": {},
+        }
 
         # Act
         passed, results = gates.validate_integration_environment(work_item)
@@ -300,7 +322,9 @@ class TestEnvironmentValidation:
             assert key in results
 
     @patch("subprocess.run")
-    def test_validate_environment_passes_when_all_requirements_met(self, mock_run, temp_dir):
+    def test_validate_environment_passes_when_all_requirements_met(
+        self, mock_run, temp_dir
+    ):
         """Test that validate_integration_environment passes when all requirements are met."""
         # Arrange
         mock_run.return_value = Mock(returncode=0)
@@ -327,7 +351,11 @@ class TestEnvironmentValidation:
         # Arrange
         mock_run.side_effect = FileNotFoundError("docker not found")
         gates = QualityGates()
-        work_item = {"id": "INTEG-001", "type": "integration_test", "environment_requirements": {}}
+        work_item = {
+            "id": "INTEG-001",
+            "type": "integration_test",
+            "environment_requirements": {},
+        }
 
         # Act
         passed, results = gates.validate_integration_environment(work_item)

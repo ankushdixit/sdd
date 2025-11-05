@@ -30,6 +30,7 @@ class IntegrationChecker(QualityChecker):
         work_item: dict[str, Any],
         config: dict[str, Any],
         runner: CommandRunner | None = None,
+        config_path: Path | None = None,
     ):
         """Initialize integration checker.
 
@@ -37,11 +38,15 @@ class IntegrationChecker(QualityChecker):
             work_item: Work item dictionary (must be integration_test type)
             config: Integration test configuration
             runner: Optional CommandRunner instance (for testing)
+            config_path: Path to full config file (for loading documentation settings)
         """
         super().__init__(config)
         self.work_item = work_item
         self.runner = (
             runner if runner is not None else CommandRunner(default_timeout=30)
+        )
+        self.config_path = (
+            config_path if config_path is not None else Path(".session/config.json")
         )
 
     def name(self) -> str:
@@ -60,12 +65,12 @@ class IntegrationChecker(QualityChecker):
         """
         start_time = time.time()
 
-        if not self.is_enabled():
-            return self._create_skipped_result("disabled")
-
         # Only run for integration_test work items
         if self.work_item.get("type") != WorkItemType.INTEGRATION_TEST.value:
             return self._create_skipped_result("not integration test")
+
+        if not self.is_enabled():
+            return self._create_skipped_result("disabled")
 
         logger.info("Running integration test quality gates...")
 
@@ -260,10 +265,9 @@ class IntegrationChecker(QualityChecker):
 
         # Get integration documentation config
         full_config: dict[str, Any] = {}
-        config_path = Path(".session/config.json")
-        if config_path.exists():
+        if self.config_path.exists():
             try:
-                with open(config_path) as f:
+                with open(self.config_path) as f:
                     full_config = json.load(f)
             except (OSError, json.JSONDecodeError) as e:
                 logger.debug(f"Failed to load config: {e}")

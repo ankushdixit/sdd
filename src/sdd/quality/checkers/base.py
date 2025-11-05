@@ -40,9 +40,9 @@ class CheckResult:
         """Return check result as details dict for backward compatibility.
 
         Returns:
-            Dict containing status and info merged together
+            Dict containing status, passed, and info merged together
         """
-        result_dict: dict[str, Any] = {"status": self.status}
+        result_dict: dict[str, Any] = {"status": self.status, "passed": self.passed}
         result_dict.update(self.info)
         if self.errors:
             result_dict["errors"] = self.errors

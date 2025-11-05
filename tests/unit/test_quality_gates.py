@@ -1159,7 +1159,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_changelog_updated()
 
         # Assert
@@ -1194,7 +1196,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_changelog_updated()
 
         # Assert
@@ -1218,7 +1222,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_changelog_updated()
 
         # Assert
@@ -1242,7 +1248,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_python_docstrings()
 
         # Assert
@@ -1270,7 +1278,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_python_docstrings()
 
         # Assert
@@ -1298,7 +1308,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_python_docstrings()
 
         # Assert
@@ -1326,7 +1338,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_readme_current()
 
         # Assert
@@ -1354,7 +1368,9 @@ class TestQualityGatesDocumentation:
             gates = QualityGates()
 
         # Act
-        checker = DocumentationChecker(config=gates.config.documentation.__dict__, runner=mock_runner)
+        checker = DocumentationChecker(
+            config=gates.config.documentation.__dict__, runner=mock_runner
+        )
         result = checker._check_readme_current()
 
         # Assert
@@ -1373,7 +1389,9 @@ class TestQualityGatesSpecCompleteness:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file", return_value=(True, [])):
+        with patch(
+            "sdd.quality.checkers.spec_completeness.validate_spec_file", return_value=(True, [])
+        ):
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -1392,10 +1410,7 @@ class TestQualityGatesSpecCompleteness:
         # Act
         # Mock validate_spec_file to raise SpecValidationError
         with patch("sdd.quality.checkers.spec_completeness.validate_spec_file") as mock_validate:
-            mock_validate.side_effect = SpecValidationError(
-                work_item_id="WI-001",
-                errors=errors
-            )
+            mock_validate.side_effect = SpecValidationError(work_item_id="WI-001", errors=errors)
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -1431,7 +1446,10 @@ class TestQualityGatesSpecCompleteness:
 
         # Act
         # Simulate validator raising an OSError (caught by checker)
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file", side_effect=OSError("Validator not available")):
+        with patch(
+            "sdd.quality.checkers.spec_completeness.validate_spec_file",
+            side_effect=OSError("Validator not available"),
+        ):
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert
@@ -2114,14 +2132,19 @@ class TestQualityGatesIntegration:
 
         with (
             patch("builtins.open", mock_open(read_data=config_data)),
-            patch.object(Path, "exists", side_effect=lambda: str(Path(".session/config.json")) in str(Path.cwd() / ".session/config.json"))
+            patch.object(
+                Path,
+                "exists",
+                side_effect=lambda: str(Path(".session/config.json"))
+                in str(Path.cwd() / ".session/config.json"),
+            ),
         ):
             gates = QualityGates()
 
             # Act - Patch for the IntegrationChecker's config file read
             with (
                 patch("sdd.quality.checkers.integration.Path") as mock_path_class,
-                patch("sdd.quality.checkers.integration.open", mock_open(read_data=config_data))
+                patch("sdd.quality.checkers.integration.open", mock_open(read_data=config_data)),
             ):
                 mock_config_path = Mock()
                 mock_config_path.exists.return_value = True
@@ -2155,8 +2178,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_all_pass(self):
         """Test running deployment gates when all pass."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2190,8 +2213,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_integration_fails(self):
         """Test running deployment gates when integration tests fail."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2225,8 +2248,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_security_fails(self):
         """Test running deployment gates when security scan fails."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2818,21 +2841,48 @@ class TestQualityGatesAdditionalCoverage:
         mock_runner = Mock()
         mock_runner.run.side_effect = [
             # For git rev-parse (changelog check)
-            CommandResult(returncode=0, stdout="feature-branch", stderr="", command=["git"], duration_seconds=0.1),
+            CommandResult(
+                returncode=0,
+                stdout="feature-branch",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
             # For git log (changelog check)
-            CommandResult(returncode=0, stdout="CHANGELOG.md", stderr="", command=["git"], duration_seconds=0.1),
+            CommandResult(
+                returncode=0,
+                stdout="CHANGELOG.md",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
             # For pydocstyle (docstring check)
-            CommandResult(returncode=0, stdout="", stderr="", command=["pydocstyle"], duration_seconds=0.1),
+            CommandResult(
+                returncode=0, stdout="", stderr="", command=["pydocstyle"], duration_seconds=0.1
+            ),
             # For git diff (readme check) - should return file containing README
-            CommandResult(returncode=0, stdout="README.md\nother.txt", stderr="", command=["git"], duration_seconds=0.1),
+            CommandResult(
+                returncode=0,
+                stdout="README.md\nother.txt",
+                stderr="",
+                command=["git"],
+                duration_seconds=0.1,
+            ),
         ]
 
-        doc_config = {"enabled": True, "check_changelog": True, "check_docstrings": True, "check_readme": True}
+        doc_config = {
+            "enabled": True,
+            "check_changelog": True,
+            "check_docstrings": True,
+            "check_readme": True,
+        }
 
         # Act
         # Create pyproject.toml to pass Python project check
         (temp_dir / "pyproject.toml").touch()
-        checker = DocumentationChecker(doc_config, temp_dir, work_item=work_item, runner=mock_runner)
+        checker = DocumentationChecker(
+            doc_config, temp_dir, work_item=work_item, runner=mock_runner
+        )
         result = checker.run()
 
         # Assert
@@ -3057,8 +3107,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_environment_fails(self):
         """Test deployment gates when environment validation fails."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -3070,7 +3120,12 @@ class TestQualityGatesAdditionalCoverage:
             checker_name="deployment",
             passed=False,
             status="failed",
-            errors=[{"gate": "Environment Validation", "message": "Deployment environment validation failed"}],
+            errors=[
+                {
+                    "gate": "Environment Validation",
+                    "message": "Deployment environment validation failed",
+                }
+            ],
             info={
                 "gates": [
                     {"name": "Integration Tests", "required": True, "passed": True},
@@ -3094,8 +3149,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_documentation_fails(self):
         """Test deployment gates when documentation validation fails."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -3107,7 +3162,12 @@ class TestQualityGatesAdditionalCoverage:
             checker_name="deployment",
             passed=False,
             status="failed",
-            errors=[{"gate": "Deployment Documentation", "message": "Deployment documentation incomplete"}],
+            errors=[
+                {
+                    "gate": "Deployment Documentation",
+                    "message": "Deployment documentation incomplete",
+                }
+            ],
             info={
                 "gates": [
                     {"name": "Integration Tests", "required": True, "passed": True},
@@ -3129,8 +3189,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_rollback_fails(self):
         """Test deployment gates when rollback test fails."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
         from sdd.quality.checkers.base import CheckResult
+        from sdd.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
