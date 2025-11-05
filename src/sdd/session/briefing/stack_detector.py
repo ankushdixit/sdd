@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 class StackDetector:
     """Detect and load technology stack information."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize stack detector.
 
         Args:

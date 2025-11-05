@@ -8,6 +8,7 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
@@ -18,7 +19,7 @@ logger = get_logger(__name__)
 class LearningLoader:
     """Load and score learnings based on relevance."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize learning loader.
 
         Args:
@@ -27,7 +28,7 @@ class LearningLoader:
         self.session_dir = session_dir or Path(".session")
         self.learnings_file = self.session_dir / "tracking" / "learnings.json"
 
-    def load_learnings(self) -> dict:
+    def load_learnings(self) -> dict[str, Any]:
         """Load learnings from tracking file.
 
         Returns:
@@ -41,7 +42,7 @@ class LearningLoader:
 
         try:
             with open(self.learnings_file) as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[no-any-return]
         except json.JSONDecodeError as e:
             raise FileOperationError(
                 operation="parse",
@@ -104,7 +105,7 @@ class LearningLoader:
 
         scored = []
         for learning in all_learnings:
-            score = 0
+            score: float = 0
             content_lower = learning.get("content", "").lower()
             context_lower = learning.get("context", "").lower()
             learning_tags = set(learning.get("tags", []))

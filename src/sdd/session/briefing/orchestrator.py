@@ -27,8 +27,8 @@ class SessionBriefing:
 
     def __init__(
         self,
-        session_dir: Path = None,
-        project_root: Path = None,
+        session_dir: Path | None = None,
+        project_root: Path | None = None,
     ):
         """Initialize session briefing orchestrator.
 

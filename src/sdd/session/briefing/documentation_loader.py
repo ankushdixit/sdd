@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 class DocumentationLoader:
     """Load project documentation for context."""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize documentation loader.
 
         Args:

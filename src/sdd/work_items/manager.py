@@ -9,7 +9,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
@@ -33,7 +33,7 @@ class WorkItemManager:
     WORK_ITEM_TYPES = WorkItemType.values()
     PRIORITIES = Priority.values()
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize WorkItemManager with project root path."""
         self.project_root = project_root or Path.cwd()
         self.session_dir = self.project_root / ".session"
@@ -406,7 +406,7 @@ class WorkItemManager:
         priority: str,
         dependencies: list[str],
         spec_file: str = "",
-    ):
+    ) -> None:
         """Add work item to work_items.json."""
         # Load existing data
         if self.work_items_file.exists():
@@ -466,7 +466,7 @@ class WorkItemManager:
             ValidationError: If spec validation fails (with validation errors in context)
         """
         errors = []
-        work_id = work_item.get("id")
+        work_id: str = str(work_item.get("id", ""))
 
         # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
@@ -551,7 +551,7 @@ class WorkItemManager:
             ValidationError: If spec validation fails (with validation errors in context)
         """
         errors = []
-        work_id = work_item.get("id")
+        work_id: str = str(work_item.get("id", ""))
 
         # Parse spec file - pass full work_item dict to support custom spec filenames
         try:
@@ -732,7 +732,7 @@ class WorkItemManager:
 
         return items_list
 
-    def _display_items(self, items: list[dict]):
+    def _display_items(self, items: list[dict]) -> None:
         """Display items with color coding and indicators."""
         if not items:
             print("No work items found matching filters.")
@@ -762,7 +762,7 @@ class WorkItemManager:
         )
 
         # Group by priority
-        priority_groups = {
+        priority_groups: dict[str, list[Any]] = {
             Priority.CRITICAL.value: [],
             Priority.HIGH.value: [],
             Priority.MEDIUM.value: [],
@@ -836,7 +836,7 @@ class WorkItemManager:
             return "[  ]"
 
     @log_errors()
-    def show_work_item(self, work_id: str) -> dict:
+    def show_work_item(self, work_id: str) -> dict[str, Any]:
         """Display detailed information about a work item.
 
         Args:
@@ -948,10 +948,10 @@ class WorkItemManager:
             print(f"- View related items: /work-list --milestone {item['milestone']}")
         print()
 
-        return item
+        return item  # type: ignore[no-any-return]
 
     @log_errors()
-    def update_work_item(self, work_id: str, **updates) -> None:
+    def update_work_item(self, work_id: str, **updates: Any) -> None:
         """Update work item fields.
 
         Args:
@@ -1158,7 +1158,7 @@ class WorkItemManager:
                 remediation="Use command-line arguments instead",
             )
 
-    def get_next_work_item(self) -> Optional[dict]:
+    def get_next_work_item(self) -> Optional[dict[str, Any]]:
         """Find next work item to start."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -1264,7 +1264,7 @@ class WorkItemManager:
                 print(f"  🔴 {work_id} - Blocked by: {', '.join(blocking[:2])}")
             print()
 
-        return next_item
+        return next_item  # type: ignore[no-any-return]
 
     @log_errors()
     def create_milestone(
@@ -1283,7 +1283,7 @@ class WorkItemManager:
             FileOperationError: If saving milestone fails
         """
         if not self.work_items_file.exists():
-            data = {"work_items": {}, "milestones": {}}
+            data: dict[str, Any] = {"work_items": {}, "milestones": {}}
         else:
             data = load_json(self.work_items_file)
             if "milestones" not in data:
@@ -1392,7 +1392,7 @@ class WorkItemManager:
             print()
 
 
-def main():
+def main() -> int:
     """CLI entry point."""
     import argparse
 

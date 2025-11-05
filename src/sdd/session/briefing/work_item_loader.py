@@ -7,7 +7,7 @@ Part of the briefing module decomposition.
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from sdd.core.logging_config import get_logger
 from sdd.core.types import Priority, WorkItemStatus
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 class WorkItemLoader:
     """Load work items and their dependencies."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize work item loader.
 
         Args:
@@ -27,7 +27,7 @@ class WorkItemLoader:
         self.session_dir = session_dir or Path(".session")
         self.work_items_file = self.session_dir / "tracking" / "work_items.json"
 
-    def load_work_items(self) -> dict:
+    def load_work_items(self) -> dict[str, Any]:
         """Load work items from tracking file.
 
         Returns:
@@ -38,9 +38,9 @@ class WorkItemLoader:
             logger.warning("Work items file not found: %s", self.work_items_file)
             return {"work_items": {}}
         with open(self.work_items_file) as f:
-            return json.load(f)
+            return json.load(f)  # type: ignore[no-any-return]
 
-    def get_work_item(self, work_item_id: str, work_items_data: dict = None) -> Optional[dict]:
+    def get_work_item(self, work_item_id: str, work_items_data: dict[str, Any] | None = None) -> Optional[dict[str, Any]]:
         """Get a specific work item by ID.
 
         Args:
@@ -53,7 +53,7 @@ class WorkItemLoader:
         if work_items_data is None:
             work_items_data = self.load_work_items()
 
-        return work_items_data.get("work_items", {}).get(work_item_id)
+        return work_items_data.get("work_items", {}).get(work_item_id)  # type: ignore[no-any-return]
 
     def get_next_work_item(self, work_items_data: dict) -> tuple[Optional[str], Optional[dict]]:
         """Find next available work item where dependencies are satisfied.
@@ -115,7 +115,7 @@ class WorkItemLoader:
 
         return available[0]
 
-    def load_work_item_spec(self, work_item) -> str:
+    def load_work_item_spec(self, work_item: str | dict[str, Any]) -> str:
         """Load work item specification file.
 
         Args:
@@ -138,17 +138,17 @@ class WorkItemLoader:
                 spec_file = Path(spec_file_path)
             else:
                 # Fallback to legacy pattern for backwards compatibility
-                work_item_id = work_item.get("id")
-                if not work_item_id:
+                work_item_id_raw = work_item.get("id")
+                if not work_item_id_raw:
                     return "Specification file not found: work item has no id"
-                spec_file = self.session_dir / "specs" / f"{work_item_id}.md"
+                spec_file = self.session_dir / "specs" / f"{work_item_id_raw}.md"
 
         if spec_file.exists():
             return spec_file.read_text()
         return f"Specification file not found: {spec_file}"
 
     def update_work_item_status(
-        self, work_item_id: str, status: str, session_num: int = None
+        self, work_item_id: str, status: str, session_num: int | None = None
     ) -> bool:
         """Update work item status and optionally add session tracking.
 

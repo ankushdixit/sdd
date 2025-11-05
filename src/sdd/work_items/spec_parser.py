@@ -236,7 +236,7 @@ def parse_feature_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["overview"] = parse_section(content, "Overview")
@@ -299,7 +299,7 @@ def parse_bug_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["description"] = parse_section(content, "Description")
@@ -362,7 +362,7 @@ def parse_refactor_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["overview"] = parse_section(content, "Overview")
@@ -434,7 +434,7 @@ def parse_security_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["security_issue"] = parse_section(content, "Security Issue")
@@ -509,7 +509,7 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["scope"] = parse_section(content, "Scope")
@@ -521,13 +521,13 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
         scenarios = []
         lines = scenarios_section.split("\n")
         current_scenario = None
-        current_content = []
+        current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Scenario"):
                 # Save previous scenario if exists
                 if current_scenario:
-                    scenarios.append(
+                    scenarios.append(  # type: ignore[unreachable]
                         {
                             "name": current_scenario,
                             "content": "\n".join(current_content).strip(),
@@ -593,7 +593,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["deployment_scope"] = parse_section(content, "Deployment Scope")
@@ -632,13 +632,13 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
         tests = []
         lines = smoke_section.split("\n")
         current_test = None
-        current_content = []
+        current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Test"):
                 # Save previous test if exists
                 if current_test:
-                    tests.append(
+                    tests.append(  # type: ignore[unreachable]
                         {
                             "name": current_test,
                             "content": "\n".join(current_content).strip(),
@@ -683,7 +683,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
 
 
 @log_errors()
-def parse_spec_file(work_item) -> dict[str, Any]:
+def parse_spec_file(work_item: str | dict[str, Any]) -> dict[str, Any]:
     """
     Parse a work item specification file.
 
@@ -702,7 +702,7 @@ def parse_spec_file(work_item) -> dict[str, Any]:
     # Handle backwards compatibility: accept both dict and string
     if isinstance(work_item, str):
         # Legacy call with just work_item_id string
-        work_item_id = work_item
+        work_item_id: str | Any | None = work_item
         spec_path = Path(f".session/specs/{work_item_id}.md")
         logger.debug("Parsing spec file for work item (legacy): %s", work_item_id)
     else:

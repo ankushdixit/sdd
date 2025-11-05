@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 class BriefingFormatter:
     """Format briefing content and generate output."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize briefing formatter."""
         self.runner = CommandRunner(default_timeout=5)
 
@@ -172,7 +172,7 @@ class BriefingFormatter:
             True if command exists, False otherwise
         """
         result = self.runner.run([command, "--version"])
-        return result.success
+        return result.success  # type: ignore[no-any-return]
 
     def generate_integration_test_briefing(self, work_item: dict) -> str:
         """Generate integration test specific briefing sections.

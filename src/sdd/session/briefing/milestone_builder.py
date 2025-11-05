@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 class MilestoneBuilder:
     """Build milestone context for briefings."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize milestone builder.
 
         Args:
