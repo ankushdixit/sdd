@@ -1,5 +1,7 @@
 """Learning repository for CRUD operations and data persistence"""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from pathlib import Path

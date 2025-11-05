@@ -1,5 +1,7 @@
 """Learning categorization module"""
 
+from __future__ import annotations
+
 from typing import Any
 
 from sdd.core.logging_config import get_logger
