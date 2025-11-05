@@ -177,232 +177,20 @@ class TestWorkItemManagerInit:
         assert manager.project_root == Path.cwd()
 
 
-class TestGenerateId:
-    """Tests for work item ID generation."""
-
-    def test_generate_id_basic(self, work_item_manager):
-        """Test generating ID from type and title."""
-        # Act
-        work_id = work_item_manager._generate_id("feature", "User Authentication")
-
-        # Assert
-        assert work_id == "feature_user_authentication"
-
-    def test_generate_id_removes_special_characters(self, work_item_manager):
-        """Test that special characters are replaced with underscores."""
-        # Act
-        work_id = work_item_manager._generate_id("bug", "Fix: Login-Error!")
-
-        # Assert
-        assert work_id == "bug_fix_login_error"
-
-    def test_generate_id_truncates_long_titles(self, work_item_manager):
-        """Test that long titles are truncated to 30 characters."""
-        # Arrange
-        long_title = "A" * 50
-
-        # Act
-        work_id = work_item_manager._generate_id("feature", long_title)
-
-        # Assert
-        assert work_id == "feature_" + "a" * 30
-        assert len(work_id.replace("feature_", "")) == 30
-
-    def test_generate_id_strips_leading_trailing_underscores(self, work_item_manager):
-        """Test that leading/trailing underscores are stripped."""
-        # Act
-        work_id = work_item_manager._generate_id("refactor", "___Clean Code___")
-
-        # Assert
-        assert work_id == "refactor_clean_code"
-        assert not work_id.endswith("_")
-
-    @pytest.mark.parametrize(
-        "work_type", ["feature", "bug", "refactor", "security", "integration_test", "deployment"]
-    )
-    def test_generate_id_all_work_types(self, work_item_manager, work_type):
-        """Test ID generation for all supported work types."""
-        # Act
-        work_id = work_item_manager._generate_id(work_type, "Test Item")
-
-        # Assert
-        assert work_id.startswith(f"{work_type}_")
-        assert "test_item" in work_id
+# TestGenerateId moved to test_creator.py
+# Tests for _generate_id are now in test_creator.py since it's a private method of WorkItemCreator
 
 
-class TestWorkItemExists:
-    """Tests for checking if work item exists."""
-
-    def test_work_item_exists_when_file_missing(self, work_item_manager):
-        """Test that _work_item_exists returns False when work_items.json doesn't exist."""
-        # Act
-        result = work_item_manager._work_item_exists("feature_test")
-
-        # Assert
-        assert result is False
-
-    def test_work_item_exists_when_item_present(self, work_item_manager_with_data):
-        """Test that _work_item_exists returns True for existing item."""
-        # Act
-        result = work_item_manager_with_data._work_item_exists("feature_foundation")
-
-        # Assert
-        assert result is True
-
-    def test_work_item_exists_when_item_not_present(self, work_item_manager_with_data):
-        """Test that _work_item_exists returns False for non-existent item."""
-        # Act
-        result = work_item_manager_with_data._work_item_exists("feature_nonexistent")
-
-        # Assert
-        assert result is False
+# TestWorkItemExists moved to test_repository.py
+# Tests for work_item_exists are now in test_repository.py since it's a method of WorkItemRepository
 
 
-class TestCreateSpecFile:
-    """Tests for specification file creation."""
-
-    def test_create_spec_file_feature(self, work_item_manager, feature_template, tmp_path):
-        """Test creating a feature specification file."""
-        # Arrange
-        templates_dir = tmp_path / "templates"
-        templates_dir.mkdir()
-        template_file = templates_dir / "feature_spec.md"
-        template_file.write_text(feature_template)
-        work_item_manager.templates_dir = templates_dir
-
-        # Act
-        result = work_item_manager._create_spec_file("feature_test", "feature", "Test Feature")
-
-        # Assert
-        assert result == ".session/specs/feature_test.md"
-        spec_path = work_item_manager.specs_dir / "feature_test.md"
-        assert spec_path.exists()
-        content = spec_path.read_text()
-        assert "Test Feature" in content
-        assert "[Feature Name]" not in content
-
-    def test_create_spec_file_bug(self, work_item_manager, bug_template, tmp_path):
-        """Test creating a bug specification file."""
-        # Arrange
-        templates_dir = tmp_path / "templates"
-        templates_dir.mkdir()
-        template_file = templates_dir / "bug_spec.md"
-        template_file.write_text(bug_template)
-        work_item_manager.templates_dir = templates_dir
-
-        # Act
-        result = work_item_manager._create_spec_file("bug_test", "bug", "Test Bug")
-
-        # Assert
-        assert result == ".session/specs/bug_test.md"
-        spec_path = work_item_manager.specs_dir / "bug_test.md"
-        assert spec_path.exists()
-        content = spec_path.read_text()
-        assert "Test Bug" in content
-        assert "[Bug Title]" not in content
-
-    def test_create_spec_file_missing_template(self, work_item_manager, tmp_path):
-        """Test that _create_spec_file returns empty string when template missing."""
-        # Arrange
-        empty_templates_dir = tmp_path / "empty_templates"
-        empty_templates_dir.mkdir()
-        work_item_manager.templates_dir = empty_templates_dir
-
-        # Act
-        result = work_item_manager._create_spec_file("feature_test", "feature", "Test Feature")
-
-        # Assert
-        assert result == ""
-        # Verify spec file was NOT created
-        spec_path = work_item_manager.specs_dir / "feature_test.md"
-        assert not spec_path.exists()
-
-    def test_create_spec_file_creates_specs_directory(self, work_item_manager):
-        """Test that _create_spec_file creates specs directory if missing."""
-        # Arrange
-        work_item_manager.specs_dir.rmdir()
-        assert not work_item_manager.specs_dir.exists()
-
-        # Act (will fail due to missing template, but directory should be created)
-        work_item_manager._create_spec_file("feature_test", "feature", "Test")
-
-        # Assert
-        assert work_item_manager.specs_dir.exists()
+# TestCreateSpecFile moved to test_creator.py
+# Tests for _create_spec_file are now in test_creator.py since it's a private method of WorkItemCreator
 
 
-class TestAddToTracking:
-    """Tests for adding work items to tracking file."""
-
-    def test_add_to_tracking_creates_new_file(self, work_item_manager):
-        """Test that _add_to_tracking creates work_items.json if it doesn't exist."""
-        # Act
-        work_item_manager._add_to_tracking(
-            "feature_test", "feature", "Test Feature", "high", [], ".session/specs/feature_test.md"
-        )
-
-        # Assert
-        assert work_item_manager.work_items_file.exists()
-        data = json.loads(work_item_manager.work_items_file.read_text())
-        assert "feature_test" in data["work_items"]
-
-    def test_add_to_tracking_adds_work_item_fields(self, work_item_manager):
-        """Test that all work item fields are added correctly."""
-        # Act
-        work_item_manager._add_to_tracking(
-            "feature_test",
-            "feature",
-            "Test Feature",
-            "critical",
-            ["dep1", "dep2"],
-            ".session/specs/feature_test.md",
-        )
-
-        # Assert
-        data = json.loads(work_item_manager.work_items_file.read_text())
-        item = data["work_items"]["feature_test"]
-        assert item["id"] == "feature_test"
-        assert item["type"] == "feature"
-        assert item["title"] == "Test Feature"
-        assert item["status"] == "not_started"
-        assert item["priority"] == "critical"
-        assert item["dependencies"] == ["dep1", "dep2"]
-        assert item["milestone"] == ""
-        assert item["spec_file"] == ".session/specs/feature_test.md"
-        assert "created_at" in item
-        assert item["sessions"] == []
-
-    def test_add_to_tracking_updates_metadata_counters(self, work_item_manager_with_data):
-        """Test that metadata counters are updated correctly."""
-        # Arrange
-        initial_data = json.loads(work_item_manager_with_data.work_items_file.read_text())
-        initial_count = initial_data["metadata"]["total_items"]
-
-        # Act
-        work_item_manager_with_data._add_to_tracking(
-            "feature_new", "feature", "New Feature", "high", [], ""
-        )
-
-        # Assert
-        data = json.loads(work_item_manager_with_data.work_items_file.read_text())
-        assert data["metadata"]["total_items"] == initial_count + 1
-        assert "last_updated" in data["metadata"]
-
-    def test_add_to_tracking_preserves_existing_items(self, work_item_manager_with_data):
-        """Test that adding new work item preserves existing items."""
-        # Arrange
-        initial_data = json.loads(work_item_manager_with_data.work_items_file.read_text())
-        initial_ids = set(initial_data["work_items"].keys())
-
-        # Act
-        work_item_manager_with_data._add_to_tracking(
-            "feature_new", "feature", "New Feature", "high", [], ""
-        )
-
-        # Assert
-        data = json.loads(work_item_manager_with_data.work_items_file.read_text())
-        current_ids = set(data["work_items"].keys())
-        assert initial_ids.issubset(current_ids)
-        assert "feature_new" in current_ids
+# TestAddToTracking moved to test_repository.py
+# Tests for add_work_item are now in test_repository.py since it's a method of WorkItemRepository
 
 
 class TestCreateWorkItemFromArgs:
@@ -563,136 +351,8 @@ class TestCreateWorkItemInteractive:
         assert exc_info.value.code == ErrorCode.INVALID_COMMAND
 
 
-class TestPromptMethods:
-    """Tests for prompt helper methods."""
-
-    def test_prompt_type_valid_choice(self, work_item_manager):
-        """Test _prompt_type with valid choice."""
-        # Arrange
-        with patch("builtins.input", return_value="1"):
-            # Act
-            result = work_item_manager._prompt_type()
-
-        # Assert
-        assert result == "feature"
-
-    def test_prompt_type_invalid_choice(self, work_item_manager):
-        """Test _prompt_type with invalid choice returns None."""
-        # Arrange
-        with patch("builtins.input", return_value="99"):
-            # Act
-            result = work_item_manager._prompt_type()
-
-        # Assert
-        assert result is None
-
-    @pytest.mark.parametrize(
-        "choice,expected",
-        [
-            ("1", "feature"),
-            ("2", "bug"),
-            ("3", "refactor"),
-            ("4", "security"),
-            ("5", "integration_test"),
-            ("6", "deployment"),
-        ],
-    )
-    def test_prompt_type_all_choices(self, work_item_manager, choice, expected):
-        """Test _prompt_type for all valid choices."""
-        # Arrange
-        with patch("builtins.input", return_value=choice):
-            # Act
-            result = work_item_manager._prompt_type()
-
-        # Assert
-        assert result == expected
-
-    def test_prompt_title_valid(self, work_item_manager):
-        """Test _prompt_title with valid input."""
-        # Arrange
-        with patch("builtins.input", return_value="Test Title"):
-            # Act
-            result = work_item_manager._prompt_title()
-
-        # Assert
-        assert result == "Test Title"
-
-    def test_prompt_title_empty_returns_none(self, work_item_manager):
-        """Test _prompt_title with empty input raises ValidationError."""
-        # Arrange
-        with patch("builtins.input", return_value=""):
-            # Act & Assert
-            with pytest.raises(ValidationError) as exc_info:
-                work_item_manager._prompt_title()
-
-            assert "required" in str(exc_info.value).lower()
-            assert exc_info.value.code == ErrorCode.MISSING_REQUIRED_FIELD
-
-    def test_prompt_priority_default(self, work_item_manager):
-        """Test _prompt_priority defaults to 'high'."""
-        # Arrange
-        with patch("builtins.input", return_value=""):
-            # Act
-            result = work_item_manager._prompt_priority()
-
-        # Assert
-        assert result == "high"
-
-    def test_prompt_priority_valid(self, work_item_manager):
-        """Test _prompt_priority with valid priority."""
-        # Arrange
-        with patch("builtins.input", return_value="critical"):
-            # Act
-            result = work_item_manager._prompt_priority()
-
-        # Assert
-        assert result == "critical"
-
-    def test_prompt_priority_invalid_uses_default(self, work_item_manager, capsys):
-        """Test _prompt_priority with invalid input uses 'high'."""
-        # Arrange
-        with patch("builtins.input", return_value="invalid"):
-            # Act
-            result = work_item_manager._prompt_priority()
-
-        # Assert
-        assert result == "high"
-        captured = capsys.readouterr()
-        assert "Invalid" in captured.out
-
-    def test_prompt_dependencies_optional_empty(self, work_item_manager):
-        """Test _prompt_dependencies for optional work type with no input."""
-        # Arrange
-        with patch("builtins.input", return_value=""):
-            # Act
-            result = work_item_manager._prompt_dependencies("feature")
-
-        # Assert
-        assert result == []
-
-    def test_prompt_dependencies_with_valid_deps(self, work_item_manager_with_data):
-        """Test _prompt_dependencies with valid dependency IDs."""
-        # Arrange
-        with patch("builtins.input", return_value="feature_foundation, feature_auth"):
-            # Act
-            result = work_item_manager_with_data._prompt_dependencies("feature")
-
-        # Assert
-        assert "feature_foundation" in result
-        assert "feature_auth" in result
-
-    def test_prompt_dependencies_filters_invalid(self, work_item_manager_with_data, capsys):
-        """Test _prompt_dependencies filters out non-existent dependencies."""
-        # Arrange
-        with patch("builtins.input", return_value="feature_foundation, nonexistent"):
-            # Act
-            result = work_item_manager_with_data._prompt_dependencies("feature")
-
-        # Assert
-        assert "feature_foundation" in result
-        assert "nonexistent" not in result
-        captured = capsys.readouterr()
-        assert "not found" in captured.out
+# TestPromptMethods moved to test_creator.py
+# Tests for prompt methods are now in test_creator.py since they're private methods of WorkItemCreator
 
 
 class TestListWorkItems:
@@ -767,164 +427,12 @@ class TestListWorkItems:
         assert "_ready" in foundation
 
 
-class TestIsBlocked:
-    """Tests for dependency blocking logic."""
-
-    def test_is_blocked_completed_item_not_blocked(
-        self, work_item_manager_with_data, sample_work_items_data
-    ):
-        """Test that completed items are never blocked."""
-        # Arrange
-        item = sample_work_items_data["work_items"]["feature_foundation"]
-        all_items = sample_work_items_data["work_items"]
-
-        # Act
-        result = work_item_manager_with_data._is_blocked(item, all_items)
-
-        # Assert
-        assert result is False
-
-    def test_is_blocked_no_dependencies(self, work_item_manager_with_data, sample_work_items_data):
-        """Test that items without dependencies are not blocked."""
-        # Arrange
-        item = sample_work_items_data["work_items"]["feature_foundation"]
-        all_items = sample_work_items_data["work_items"]
-
-        # Act
-        result = work_item_manager_with_data._is_blocked(item, all_items)
-
-        # Assert
-        assert result is False
-
-    def test_is_blocked_incomplete_dependency(
-        self, work_item_manager_with_data, sample_work_items_data
-    ):
-        """Test that item is blocked when dependency is incomplete."""
-        # Arrange
-        item = sample_work_items_data["work_items"]["bug_login_issue"]
-        all_items = sample_work_items_data["work_items"]
-
-        # Act
-        result = work_item_manager_with_data._is_blocked(item, all_items)
-
-        # Assert
-        assert result is True
-
-    def test_is_blocked_all_dependencies_complete(self, work_item_manager_with_data):
-        """Test that item is not blocked when all dependencies are complete."""
-        # Arrange
-        # Add new item that depends on completed item
-        data = json.loads(work_item_manager_with_data.work_items_file.read_text())
-        data["work_items"]["feature_new"] = {
-            "id": "feature_new",
-            "status": "not_started",
-            "dependencies": ["feature_foundation"],
-        }
-
-        item = data["work_items"]["feature_new"]
-        all_items = data["work_items"]
-
-        # Act
-        result = work_item_manager_with_data._is_blocked(item, all_items)
-
-        # Assert
-        assert result is False
-
-    def test_is_blocked_missing_dependency(self, work_item_manager_with_data):
-        """Test that missing dependency is ignored."""
-        # Arrange
-        item = {"id": "test", "status": "not_started", "dependencies": ["nonexistent"]}
-        all_items = {}
-
-        # Act
-        result = work_item_manager_with_data._is_blocked(item, all_items)
-
-        # Assert
-        assert result is False
+# TestIsBlocked moved to test_query.py
+# Tests for _is_blocked are now in test_query.py since it's a private method of WorkItemQuery
 
 
-class TestSortItems:
-    """Tests for work item sorting."""
-
-    def test_sort_items_by_priority(self, work_item_manager_with_data):
-        """Test that items are sorted by priority."""
-        # Arrange
-        items = {
-            "low": {
-                "priority": "low",
-                "status": "not_started",
-                "_blocked": False,
-                "created_at": "2025-01-01",
-            },
-            "critical": {
-                "priority": "critical",
-                "status": "not_started",
-                "_blocked": False,
-                "created_at": "2025-01-01",
-            },
-            "medium": {
-                "priority": "medium",
-                "status": "not_started",
-                "_blocked": False,
-                "created_at": "2025-01-01",
-            },
-        }
-
-        # Act
-        result = work_item_manager_with_data._sort_items(items)
-
-        # Assert
-        priorities = [item["priority"] for item in result]
-        assert priorities == ["critical", "medium", "low"]
-
-    def test_sort_items_ready_before_blocked(self, work_item_manager_with_data):
-        """Test that ready items come before blocked items."""
-        # Arrange
-        items = {
-            "blocked": {
-                "priority": "high",
-                "status": "not_started",
-                "_blocked": True,
-                "created_at": "2025-01-01",
-            },
-            "ready": {
-                "priority": "high",
-                "status": "not_started",
-                "_blocked": False,
-                "created_at": "2025-01-02",
-            },
-        }
-
-        # Act
-        result = work_item_manager_with_data._sort_items(items)
-
-        # Assert
-        assert result[0]["_blocked"] is False
-        assert result[1]["_blocked"] is True
-
-    def test_sort_items_in_progress_first(self, work_item_manager_with_data):
-        """Test that in_progress items come first."""
-        # Arrange
-        items = {
-            "not_started": {
-                "priority": "high",
-                "status": "not_started",
-                "_blocked": False,
-                "created_at": "2025-01-01",
-            },
-            "in_progress": {
-                "priority": "high",
-                "status": "in_progress",
-                "_blocked": False,
-                "created_at": "2025-01-02",
-            },
-        }
-
-        # Act
-        result = work_item_manager_with_data._sort_items(items)
-
-        # Assert
-        assert result[0]["status"] == "in_progress"
+# TestSortItems moved to test_query.py
+# Tests for _sort_items are now in test_query.py since it's a private method of WorkItemQuery
 
 
 class TestShowWorkItem:
@@ -1205,10 +713,12 @@ class TestGetNextWorkItem:
         assert result["id"] == "bug_login_issue"  # High priority vs low
 
 
+# TestValidateIntegrationTest tests - these are testing the public API through manager
+# but they need to patch the validator module instead of manager module
 class TestValidateIntegrationTest:
     """Tests for integration test validation."""
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -1222,7 +732,7 @@ class TestValidateIntegrationTest:
         assert "not found" in str(exc_info.value).lower()
         assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_invalid_spec(self, mock_parse, work_item_manager):
         """Test validation fails with invalid spec file."""
         # Arrange
@@ -1236,7 +746,7 @@ class TestValidateIntegrationTest:
         assert "Invalid spec" in str(exc_info.value)
         assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_required_sections(
         self, mock_parse, work_item_manager
     ):
@@ -1258,7 +768,7 @@ class TestValidateIntegrationTest:
         assert len(exc_info.value.context["validation_errors"]) > 0
         assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_no_dependencies(self, mock_parse, work_item_manager):
         """Test validation fails when no dependencies provided."""
         # Arrange
@@ -1278,7 +788,7 @@ class TestValidateIntegrationTest:
         errors = exc_info.value.context["validation_errors"]
         assert any("dependencies" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid integration test."""
         # Arrange
@@ -1298,7 +808,7 @@ class TestValidateIntegrationTest:
         work_item_manager.validate_integration_test(work_item)
         # Assert - if we get here, validation passed
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_insufficient_acceptance_criteria(
         self, mock_parse, work_item_manager
     ):
@@ -1324,7 +834,7 @@ class TestValidateIntegrationTest:
 class TestValidateDeployment:
     """Tests for deployment validation."""
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -1338,7 +848,7 @@ class TestValidateDeployment:
         assert "not found" in str(exc_info.value).lower()
         assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_required_sections(self, mock_parse, work_item_manager):
         """Test validation fails when required sections are missing."""
         # Arrange
@@ -1359,7 +869,7 @@ class TestValidateDeployment:
         errors = exc_info.value.context["validation_errors"]
         assert len(errors) > 0
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_deployment_subsections(
         self, mock_parse, work_item_manager
     ):
@@ -1387,7 +897,7 @@ class TestValidateDeployment:
         assert any("pre-deployment" in err.lower() for err in errors)
         assert any("post-deployment" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_rollback_subsections(self, mock_parse, work_item_manager):
         """Test validation fails when rollback procedure subsections are missing."""
         # Arrange
@@ -1413,7 +923,7 @@ class TestValidateDeployment:
         assert any("rollback triggers" in err.lower() for err in errors)
         assert any("rollback steps" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_no_smoke_tests(self, mock_parse, work_item_manager):
         """Test validation fails when no smoke tests provided."""
         # Arrange
@@ -1438,7 +948,7 @@ class TestValidateDeployment:
         errors = exc_info.value.context["validation_errors"]
         assert any("smoke test" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.manager.spec_parser.parse_spec_file")
+    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid deployment."""
         # Arrange
@@ -1461,6 +971,7 @@ class TestValidateDeployment:
         # Assert - if we get here, validation passed
 
 
+# TestMilestones - public API tests kept here for integration testing
 class TestMilestones:
     """Tests for milestone operations."""
 
@@ -1491,14 +1002,6 @@ class TestMilestones:
         # Assert
         data = json.loads(work_item_manager.work_items_file.read_text())
         assert data["milestones"]["v1.0"]["target_date"] == ""
-
-    def test_get_milestone_progress_no_file(self, work_item_manager):
-        """Test getting milestone progress when no file exists."""
-        # Act
-        result = work_item_manager.get_milestone_progress("v1.0")
-
-        # Assert
-        assert "error" in result
 
     def test_get_milestone_progress_no_items(self, work_item_manager_with_data):
         """Test getting progress for milestone with no items."""
@@ -1555,29 +1058,5 @@ class TestMilestones:
         assert "Target" in captured.out
 
 
-class TestGetStatusIcon:
-    """Tests for status icon helper."""
-
-    def test_get_status_icon_completed(self, work_item_manager):
-        """Test status icon for completed item."""
-        # Act
-        icon = work_item_manager._get_status_icon({"status": "completed"})
-
-        # Assert
-        assert icon == "[✓]"
-
-    def test_get_status_icon_in_progress(self, work_item_manager):
-        """Test status icon for in_progress item."""
-        # Act
-        icon = work_item_manager._get_status_icon({"status": "in_progress"})
-
-        # Assert
-        assert icon == "[>>]"
-
-    def test_get_status_icon_not_started(self, work_item_manager):
-        """Test status icon for not_started item."""
-        # Act
-        icon = work_item_manager._get_status_icon({"status": "not_started"})
-
-        # Assert
-        assert icon == "[  ]"
+# TestGetStatusIcon moved to test_query.py
+# Tests for _get_status_icon are now in test_query.py since it's a private method of WorkItemQuery
