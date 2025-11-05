@@ -1173,31 +1173,6 @@ class TestSimilarityDetection:
 class TestMergingLearnings:
     """Test learning merging functionality."""
 
-    def test_merge_learning_combines_applies_to(self, curator):
-        """Test that merge combines applies_to lists."""
-        # Arrange
-        target = {"applies_to": ["module1", "module2"]}
-        source = {"applies_to": ["module3"]}
-
-        # Act
-        curator._merge_learning(target, source)
-
-        # Assert
-        assert set(target["applies_to"]) == {"module1", "module2", "module3"}
-
-    def test_merge_learning_adds_merged_from_tracking(self, curator):
-        """Test that merge adds merged_from metadata."""
-        # Arrange
-        target = {}
-        source = {"learned_in": "session_005"}
-
-        # Act
-        curator._merge_learning(target, source)
-
-        # Assert
-        assert "merged_from" in target
-        assert "session_005" in target["merged_from"]
-
     def test_merge_similar_learnings_merges_duplicates(self, curator):
         """Test merging of duplicate learnings within categories."""
         # Arrange

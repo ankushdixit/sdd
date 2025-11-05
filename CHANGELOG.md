@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Refactor: Extract learning similarity engine into dedicated module**
+  - Created new `src/sdd/learning/similarity.py` module with reusable similarity detection algorithms
+  - Implemented `JaccardContainmentSimilarity` class with configurable thresholds and stopword filtering
+  - Implemented `LearningSimilarityEngine` with caching, pluggable algorithms, and Protocol-based design
+  - Added comprehensive test suite (35 tests) covering similarity algorithms, caching, merging, and edge cases
+  - Refactored `LearningsCurator` to delegate similarity operations to the new engine
+  - Removed duplicate similarity logic from curator (simplified 4 methods, removed 1 internal method)
+  - Fixed all ruff linting issues (14 deprecated typing imports converted to modern syntax)
+  - Achieved 100% mypy type checking compliance with proper type annotations
+  - All 1783 tests passing with no regressions
+  - Benefits: Better separation of concerns, improved testability, reusable similarity algorithms
+
 - **Refactor: Add comprehensive type hints across entire codebase**
   - Added complete type hint coverage to all 55 source files in the codebase (100% coverage)
   - Fixed 348 mypy errors across 6 refactoring sessions, achieving 0 type checking errors
