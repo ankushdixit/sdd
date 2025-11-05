@@ -14,8 +14,8 @@ import os
 
 import pytest
 
-from sdd.quality.env_validator import EnvironmentValidator
 from sdd.core.exceptions import ValidationError
+from sdd.quality.env_validator import EnvironmentValidator
 
 
 class TestEnvironmentValidatorInit:
@@ -395,7 +395,9 @@ class TestValidateAll:
         validator = EnvironmentValidator("staging")
 
         # Act
-        passed, results = validator.validate_all(required_env_vars=["MISSING_VAR_1", "MISSING_VAR_2"])
+        passed, results = validator.validate_all(
+            required_env_vars=["MISSING_VAR_1", "MISSING_VAR_2"]
+        )
 
         # Assert
         assert passed is False

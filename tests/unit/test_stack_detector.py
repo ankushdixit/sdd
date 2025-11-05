@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -71,7 +71,7 @@ class TestStackDetector:
         detector = StackDetector(session_dir=temp_session_dir)
 
         # Mock Path.read_text to raise an exception
-        with patch.object(Path, 'read_text', side_effect=PermissionError("Permission denied")):
+        with patch.object(Path, "read_text", side_effect=PermissionError("Permission denied")):
             # Act & Assert
             with pytest.raises(FileOperationError) as exc_info:
                 detector.load_current_stack()
@@ -111,4 +111,4 @@ Redis 7.0"""
 
         # Assert
         assert result == stack_content
-        assert result.count('\n') == 3
+        assert result.count("\n") == 3

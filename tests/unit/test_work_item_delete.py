@@ -11,7 +11,8 @@ import pytest
 
 from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
-    FileOperationError,
+)
+from sdd.core.exceptions import (
     ValidationError,
     WorkItemNotFoundError,
 )
@@ -331,9 +332,7 @@ class TestDeleteWorkItem:
         assert "Deletion cancelled" in captured.out
 
     @patch("sys.stdin.isatty")
-    def test_delete_work_item_non_interactive_no_flags(
-        self, mock_isatty, project_with_work_items
-    ):
+    def test_delete_work_item_non_interactive_no_flags(self, mock_isatty, project_with_work_items):
         """Test non-interactive mode without flags raises error."""
         mock_isatty.return_value = False
 

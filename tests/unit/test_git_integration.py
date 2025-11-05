@@ -12,7 +12,6 @@ from sdd.core.config import ConfigManager, GitWorkflowConfig
 from sdd.core.exceptions import (
     CommandExecutionError,
     ErrorCode,
-    FileOperationError,
     GitError,
     NotAGitRepoError,
     WorkingDirNotCleanError,
@@ -704,9 +703,7 @@ class TestCreatePullRequest:
         # Act & Assert
         with patch("subprocess.run", return_value=mock_gh_check):
             with pytest.raises(GitError) as exc_info:
-                workflow.create_pull_request(
-                    "feature_1", "session-001-feature_1", work_item, 1
-                )
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
             assert "gh cli not installed" in str(exc_info.value).lower()
 
     def test_create_pull_request_gh_error(self, tmp_path):
@@ -720,9 +717,7 @@ class TestCreatePullRequest:
         # Act & Assert
         with patch("subprocess.run", side_effect=[mock_gh_check, mock_pr_create]):
             with pytest.raises(GitError) as exc_info:
-                workflow.create_pull_request(
-                    "feature_1", "session-001-feature_1", work_item, 1
-                )
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
             assert "failed to create pr" in str(exc_info.value).lower()
 
     def test_create_pull_request_exception(self, tmp_path):
@@ -741,9 +736,7 @@ class TestCreatePullRequest:
         # Act & Assert
         with patch.object(workflow.runner, "run", return_value=mock_result):
             with pytest.raises(GitError):
-                workflow.create_pull_request(
-                    "feature_1", "session-001-feature_1", work_item, 1
-                )
+                workflow.create_pull_request("feature_1", "session-001-feature_1", work_item, 1)
 
 
 # ============================================================================
@@ -1032,7 +1025,11 @@ class TestStartWorkItem:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch.object(workflow, "create_branch", side_effect=GitError("Branch exists", ErrorCode.GIT_COMMAND_FAILED)):
+        with patch.object(
+            workflow,
+            "create_branch",
+            side_effect=GitError("Branch exists", ErrorCode.GIT_COMMAND_FAILED),
+        ):
             result = workflow.start_work_item("feature_1", 1)
 
         # Assert
@@ -1224,7 +1221,13 @@ class TestCompleteWorkItem:
 
         # Act
         with (
-            patch.object(workflow, "commit_changes", side_effect=GitError("Commit failed: nothing to commit", ErrorCode.GIT_COMMAND_FAILED)),
+            patch.object(
+                workflow,
+                "commit_changes",
+                side_effect=GitError(
+                    "Commit failed: nothing to commit", ErrorCode.GIT_COMMAND_FAILED
+                ),
+            ),
             patch.object(workflow, "push_branch", return_value=None),
             patch("subprocess.run", return_value=mock_git_log),
         ):
@@ -1260,7 +1263,11 @@ class TestCompleteWorkItem:
         workflow = GitWorkflow(project_root=tmp_path)
 
         # Act
-        with patch.object(workflow, "commit_changes", side_effect=GitError("fatal: error", ErrorCode.GIT_COMMAND_FAILED)):
+        with patch.object(
+            workflow,
+            "commit_changes",
+            side_effect=GitError("fatal: error", ErrorCode.GIT_COMMAND_FAILED),
+        ):
             result = workflow.complete_work_item("feature_1", "feat: Complete", False, 1)
 
         # Assert

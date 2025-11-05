@@ -1355,10 +1355,7 @@ class TestQualityGatesSpecCompleteness:
         # Act
         # Mock validate_spec_file to raise SpecValidationError
         with patch("sdd.quality.gates.validate_spec_file") as mock_validate:
-            mock_validate.side_effect = SpecValidationError(
-                work_item_id="WI-001",
-                errors=errors
-            )
+            mock_validate.side_effect = SpecValidationError(work_item_id="WI-001", errors=errors)
             passed, results = gates.validate_spec_completeness(work_item)
 
         # Assert

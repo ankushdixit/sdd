@@ -9,19 +9,18 @@ Tests cover:
 - Error handling with structured exceptions
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
-from sdd.testing.performance import PerformanceBenchmark
+import pytest
+
 from sdd.core.exceptions import (
-    ValidationError,
     BenchmarkFailedError,
-    PerformanceRegressionError,
     LoadTestFailedError,
-    WorkItemNotFoundError,
-    PerformanceTestError,
+    PerformanceRegressionError,
+    ValidationError,
 )
+from sdd.testing.performance import PerformanceBenchmark
 
 
 class TestPerformanceBenchmarkInit:
@@ -33,8 +32,8 @@ class TestPerformanceBenchmarkInit:
             "id": "test_perf",
             "performance_benchmarks": {
                 "endpoint": "http://localhost:8000/api",
-                "response_time": {"p50": 100, "p95": 200}
-            }
+                "response_time": {"p50": 100, "p95": 200},
+            },
         }
         benchmark = PerformanceBenchmark(work_item)
 
@@ -62,16 +61,12 @@ class TestPerformanceBenchmarkInit:
 class TestLoadTestExecution:
     """Test load test execution and parsing."""
 
-    @patch('sdd.testing.performance.CommandRunner')
+    @patch("sdd.testing.performance.CommandRunner")
     def test_run_load_test_with_wrk_success(self, mock_runner_class):
         """Test successful load test execution with wrk."""
         work_item = {
             "id": "test_perf",
-            "performance_benchmarks": {
-                "load_test_duration": 30,
-                "threads": 2,
-                "connections": 50
-            }
+            "performance_benchmarks": {"load_test_duration": 30, "threads": 2, "connections": 50},
         }
 
         # Mock wrk output
@@ -132,11 +127,21 @@ Transfer/sec:      170.50KB
         # Plus 1 initial start_time and 1 final check
         mock_times = [
             0.0,  # start_time
-            0.0, 0.0, 0.1,  # iteration 1: time check, req_start, req_end
-            0.1, 0.1, 0.2,  # iteration 2
-            0.2, 0.2, 0.3,  # iteration 3
-            0.3, 0.3, 0.4,  # iteration 4
-            0.4, 0.4, 0.5,  # iteration 5
+            0.0,
+            0.0,
+            0.1,  # iteration 1: time check, req_start, req_end
+            0.1,
+            0.1,
+            0.2,  # iteration 2
+            0.2,
+            0.2,
+            0.3,  # iteration 3
+            0.3,
+            0.3,
+            0.4,  # iteration 4
+            0.4,
+            0.4,
+            0.5,  # iteration 5
             0.5,  # final time check (loop exits because 0.5 >= 0.5)
             0.5,  # total_duration calculation
         ]
@@ -145,9 +150,7 @@ Transfer/sec:      170.50KB
         mock_response = Mock()
         mock_response.status_code = 200
 
-        with patch('time.time') as mock_time_func, \
-             patch('requests.get') as mock_get:
-
+        with patch("time.time") as mock_time_func, patch("requests.get") as mock_get:
             # Set up time.time() to return sequential values
             mock_time_func.side_effect = mock_times
             mock_get.return_value = mock_response
@@ -173,9 +176,7 @@ Transfer/sec:      170.50KB
         # time() called: start_time, loop check, final duration
         mock_times = [0.0, 0.0, 1.1, 1.1]  # Start at 0, then exceed duration
 
-        with patch('time.time') as mock_time_func, \
-             patch('requests.get') as mock_get:
-
+        with patch("time.time") as mock_time_func, patch("requests.get") as mock_get:
             # Set up time.time() to return values that will exit the loop
             mock_time_func.side_effect = mock_times
             # Make all requests fail
@@ -186,7 +187,9 @@ Transfer/sec:      170.50KB
                 benchmark._run_simple_load_test("http://example.com/api", duration=1)
 
             # Verify the exception message or context contains the failure info
-            assert "Load test" in str(exc_info.value) or "No successful requests" in str(exc_info.value.context.get("details", ""))
+            assert "Load test" in str(exc_info.value) or "No successful requests" in str(
+                exc_info.value.context.get("details", "")
+            )
 
     def test_parse_latency_milliseconds(self):
         """Test parsing latency values in milliseconds."""
@@ -224,14 +227,14 @@ class TestBenchmarkValidation:
             "id": "test_perf",
             "performance_benchmarks": {
                 "response_time": {"p50": 100, "p95": 200, "p99": 300},
-                "throughput": {"minimum": 500}
-            }
+                "throughput": {"minimum": 500},
+            },
         }
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {
             "load_test": {
                 "latency": {"p50": 50, "p95": 150, "p99": 250},
-                "throughput": {"requests_per_sec": 1000}
+                "throughput": {"requests_per_sec": 1000},
             }
         }
 
@@ -240,19 +243,9 @@ class TestBenchmarkValidation:
 
     def test_check_against_requirements_p50_fails(self):
         """Test benchmark validation when p50 latency exceeds requirement."""
-        work_item = {
-            "id": "test_perf",
-            "performance_benchmarks": {
-                "response_time": {"p50": 50}
-            }
-        }
+        work_item = {"id": "test_perf", "performance_benchmarks": {"response_time": {"p50": 50}}}
         benchmark = PerformanceBenchmark(work_item)
-        benchmark.results = {
-            "load_test": {
-                "latency": {"p50": 100},
-                "throughput": {}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {"p50": 100}, "throughput": {}}}
 
         with pytest.raises(BenchmarkFailedError) as exc_info:
             benchmark._check_against_requirements()
@@ -265,19 +258,9 @@ class TestBenchmarkValidation:
 
     def test_check_against_requirements_p95_fails(self):
         """Test benchmark validation when p95 latency exceeds requirement."""
-        work_item = {
-            "id": "test_perf",
-            "performance_benchmarks": {
-                "response_time": {"p95": 150}
-            }
-        }
+        work_item = {"id": "test_perf", "performance_benchmarks": {"response_time": {"p95": 150}}}
         benchmark = PerformanceBenchmark(work_item)
-        benchmark.results = {
-            "load_test": {
-                "latency": {"p95": 200},
-                "throughput": {}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {"p95": 200}, "throughput": {}}}
 
         with pytest.raises(BenchmarkFailedError) as exc_info:
             benchmark._check_against_requirements()
@@ -286,19 +269,9 @@ class TestBenchmarkValidation:
 
     def test_check_against_requirements_p99_fails(self):
         """Test benchmark validation when p99 latency exceeds requirement."""
-        work_item = {
-            "id": "test_perf",
-            "performance_benchmarks": {
-                "response_time": {"p99": 300}
-            }
-        }
+        work_item = {"id": "test_perf", "performance_benchmarks": {"response_time": {"p99": 300}}}
         benchmark = PerformanceBenchmark(work_item)
-        benchmark.results = {
-            "load_test": {
-                "latency": {"p99": 400},
-                "throughput": {}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {"p99": 400}, "throughput": {}}}
 
         with pytest.raises(BenchmarkFailedError) as exc_info:
             benchmark._check_against_requirements()
@@ -307,19 +280,9 @@ class TestBenchmarkValidation:
 
     def test_check_against_requirements_throughput_fails(self):
         """Test benchmark validation when throughput is below minimum."""
-        work_item = {
-            "id": "test_perf",
-            "performance_benchmarks": {
-                "throughput": {"minimum": 1000}
-            }
-        }
+        work_item = {"id": "test_perf", "performance_benchmarks": {"throughput": {"minimum": 1000}}}
         benchmark = PerformanceBenchmark(work_item)
-        benchmark.results = {
-            "load_test": {
-                "latency": {},
-                "throughput": {"requests_per_sec": 500}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {}, "throughput": {"requests_per_sec": 500}}}
 
         with pytest.raises(BenchmarkFailedError) as exc_info:
             benchmark._check_against_requirements()
@@ -343,7 +306,7 @@ class TestRegressionDetection:
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch('sdd.testing.performance.load_json')
+    @patch("sdd.testing.performance.load_json")
     def test_check_for_regression_no_baseline_for_work_item(self, mock_load_json, tmp_path):
         """Test regression check when no baseline exists for work item."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -356,7 +319,7 @@ class TestRegressionDetection:
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch('sdd.testing.performance.load_json')
+    @patch("sdd.testing.performance.load_json")
     def test_check_for_regression_within_threshold(self, mock_load_json, tmp_path):
         """Test regression check when performance is within acceptable threshold."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -364,23 +327,17 @@ class TestRegressionDetection:
         benchmark.baselines_file = tmp_path / "baselines.json"
         benchmark.baselines_file.touch()
 
-        benchmark.results = {
-            "load_test": {
-                "latency": {"p50": 55, "p95": 110, "p99": 220}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {"p50": 55, "p95": 110, "p99": 220}}}
 
         mock_load_json.return_value = {
-            "test_perf": {
-                "latency": {"p50": 50, "p95": 100, "p99": 200}
-            }
+            "test_perf": {"latency": {"p50": 50, "p95": 100, "p99": 200}}
         }
 
         # 10% increase is at threshold, should pass
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch('sdd.testing.performance.load_json')
+    @patch("sdd.testing.performance.load_json")
     def test_check_for_regression_exceeds_threshold(self, mock_load_json, tmp_path):
         """Test regression check when regression exceeds threshold."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -388,16 +345,10 @@ class TestRegressionDetection:
         benchmark.baselines_file = tmp_path / "baselines.json"
         benchmark.baselines_file.touch()
 
-        benchmark.results = {
-            "load_test": {
-                "latency": {"p50": 60, "p95": 100, "p99": 200}
-            }
-        }
+        benchmark.results = {"load_test": {"latency": {"p50": 60, "p95": 100, "p99": 200}}}
 
         mock_load_json.return_value = {
-            "test_perf": {
-                "latency": {"p50": 50, "p95": 100, "p99": 200}
-            }
+            "test_perf": {"latency": {"p50": 50, "p95": 100, "p99": 200}}
         }
 
         # 20% increase in p50 should trigger regression
@@ -414,15 +365,13 @@ class TestRegressionDetection:
 class TestResourceMeasurement:
     """Test resource usage measurement."""
 
-    @patch('sdd.testing.performance.CommandRunner')
+    @patch("sdd.testing.performance.CommandRunner")
     def test_measure_resource_usage_success(self, mock_runner_class):
         """Test successful resource usage measurement."""
         work_item = {
             "id": "test_perf",
             "performance_benchmarks": {},
-            "environment_requirements": {
-                "services_required": ["postgres", "redis"]
-            }
+            "environment_requirements": {"services_required": ["postgres", "redis"]},
         }
 
         mock_runner = Mock()
@@ -449,7 +398,7 @@ class TestResourceMeasurement:
 class TestMainFunction:
     """Test main CLI entry point."""
 
-    @patch('sys.argv', ['performance.py'])
+    @patch("sys.argv", ["performance.py"])
     def test_main_no_args_raises_validation_error(self):
         """Test that main() raises ValidationError when no work_item_id provided."""
         from sdd.testing.performance import main
@@ -459,9 +408,9 @@ class TestMainFunction:
 
         assert "Missing required argument: work_item_id" in str(exc_info.value)
 
-    @patch('sys.argv', ['performance.py', 'nonexistent_item'])
-    @patch('sdd.testing.performance.load_json')
-    @patch('sys.exit')
+    @patch("sys.argv", ["performance.py", "nonexistent_item"])
+    @patch("sdd.testing.performance.load_json")
+    @patch("sys.exit")
     def test_main_work_item_not_found_raises_error(self, mock_exit, mock_load_json):
         """Test that main() handles WorkItemNotFoundError and exits with error code."""
         from sdd.testing.performance import main
@@ -484,25 +433,14 @@ class TestBenchmarkReport:
         benchmark = PerformanceBenchmark(work_item)
         benchmark.results = {
             "load_test": {
-                "latency": {
-                    "p50": 45.5,
-                    "p75": 60.2,
-                    "p90": 80.1,
-                    "p95": 95.5,
-                    "p99": 150.0
-                },
-                "throughput": {
-                    "requests_per_sec": 1000.5
-                }
+                "latency": {"p50": 45.5, "p75": 60.2, "p90": 80.1, "p95": 95.5, "p99": 150.0},
+                "throughput": {"requests_per_sec": 1000.5},
             },
             "resource_usage": {
-                "postgres": {
-                    "cpu_percent": "25.5",
-                    "memory_usage": "100MiB / 2GiB"
-                }
+                "postgres": {"cpu_percent": "25.5", "memory_usage": "100MiB / 2GiB"}
             },
             "passed": True,
-            "regression_detected": False
+            "regression_detected": False,
         }
 
         report = benchmark.generate_report()
@@ -521,7 +459,7 @@ class TestBenchmarkReport:
             "load_test": {"latency": {}, "throughput": {}},
             "resource_usage": {},
             "passed": False,
-            "regression_detected": True
+            "regression_detected": True,
         }
 
         report = benchmark.generate_report()

@@ -5,7 +5,6 @@ with multi-service orchestration using Docker Compose.
 """
 
 import json
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -13,10 +12,14 @@ import pytest
 
 from sdd.core.exceptions import (
     EnvironmentSetupError,
-    FileNotFoundError as SDDFileNotFoundError,
     IntegrationExecutionError,
-    TimeoutError as SDDTimeoutError,
     ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.exceptions import (
+    TimeoutError as SDDTimeoutError,
 )
 from sdd.testing.integration_runner import IntegrationTestRunner
 
@@ -74,8 +77,7 @@ class TestIntegrationTestRunnerInit:
         with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
             # Use the SDD FileNotFoundError exception
             mock_parser.parse_spec_file.side_effect = SDDFileNotFoundError(
-                file_path=".session/specs/INTEG-002.md",
-                file_type="spec file"
+                file_path=".session/specs/INTEG-002.md", file_type="spec file"
             )
 
             # Act & Assert - FileNotFoundError is re-raised directly, not wrapped
@@ -590,7 +592,9 @@ class TestEnvironmentSetup:
             runner = IntegrationTestRunner(work_item)
 
             with patch.object(runner.runner, "run") as mock_run:
-                mock_run.return_value = Mock(success=False, stderr="Error starting services", timed_out=False)
+                mock_run.return_value = Mock(
+                    success=False, stderr="Error starting services", timed_out=False
+                )
 
                 # Act & Assert
                 with pytest.raises(EnvironmentSetupError) as exc_info:
@@ -663,10 +667,14 @@ class TestEnvironmentSetup:
 
             with patch.object(runner.runner, "run") as mock_run:
                 mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
-                with patch.object(runner, "_wait_for_service", side_effect=SDDTimeoutError(
-                    operation="waiting for service 'postgresql' to become healthy",
-                    timeout_seconds=60
-                )):
+                with patch.object(
+                    runner,
+                    "_wait_for_service",
+                    side_effect=SDDTimeoutError(
+                        operation="waiting for service 'postgresql' to become healthy",
+                        timeout_seconds=60,
+                    ),
+                ):
                     # Act & Assert
                     with pytest.raises(SDDTimeoutError) as exc_info:
                         runner.setup_environment()
@@ -689,10 +697,13 @@ class TestEnvironmentSetup:
 
             with patch.object(runner.runner, "run") as mock_run:
                 mock_run.return_value = Mock(success=True, stderr="", timed_out=False)
-                with patch.object(runner, "_load_test_data", side_effect=EnvironmentSetupError(
-                    component="test data fixture",
-                    details="Failed to load fixture"
-                )):
+                with patch.object(
+                    runner,
+                    "_load_test_data",
+                    side_effect=EnvironmentSetupError(
+                        component="test data fixture", details="Failed to load fixture"
+                    ),
+                ):
                     # Act & Assert
                     with pytest.raises(EnvironmentSetupError) as exc_info:
                         runner.setup_environment()
@@ -714,7 +725,9 @@ class TestEnvironmentSetup:
             runner = IntegrationTestRunner(work_item)
 
             with patch.object(runner.runner, "run") as mock_run:
-                mock_run.return_value = Mock(success=False, stderr="Docker not available", timed_out=False)
+                mock_run.return_value = Mock(
+                    success=False, stderr="Docker not available", timed_out=False
+                )
 
                 # Act & Assert
                 with pytest.raises(EnvironmentSetupError) as exc_info:
@@ -1039,7 +1052,9 @@ class TestRunPytest:
             runner = IntegrationTestRunner(work_item)
 
             with patch.object(runner.runner, "run") as mock_run:
-                mock_run.return_value = Mock(success=False, timed_out=False, stderr="pytest not installed")
+                mock_run.return_value = Mock(
+                    success=False, timed_out=False, stderr="pytest not installed"
+                )
 
                 # Act & Assert
                 with pytest.raises(IntegrationExecutionError) as exc_info:
@@ -1180,7 +1195,9 @@ class TestTeardownEnvironment:
             runner = IntegrationTestRunner(work_item)
 
             with patch.object(runner.runner, "run") as mock_run:
-                mock_run.return_value = Mock(success=False, stderr="Error stopping services", timed_out=False)
+                mock_run.return_value = Mock(
+                    success=False, stderr="Error stopping services", timed_out=False
+                )
 
                 # Act & Assert
                 with pytest.raises(EnvironmentSetupError) as exc_info:
@@ -1218,7 +1235,9 @@ class TestTeardownEnvironment:
             runner = IntegrationTestRunner(work_item)
 
             with patch.object(runner.runner, "run") as mock_run:
-                mock_run.return_value = Mock(success=False, stderr="Docker daemon not running", timed_out=False)
+                mock_run.return_value = Mock(
+                    success=False, stderr="Docker daemon not running", timed_out=False
+                )
 
                 # Act & Assert
                 with pytest.raises(EnvironmentSetupError) as exc_info:

@@ -23,7 +23,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import GitError, SystemError, ErrorCode, SpecValidationError
+from sdd.core.exceptions import ErrorCode, GitError, SpecValidationError
 from sdd.session import briefing as briefing_generator
 
 
@@ -542,12 +542,11 @@ class TestLoadCurrentTree:
         # Assert
         assert result == "Tree not yet generated"
 
-    def test_load_current_tree_raises_file_operation_error_on_read_failure(
-        self, temp_session_dir
-    ):
+    def test_load_current_tree_raises_file_operation_error_on_read_failure(self, temp_session_dir):
         """Test that load_current_tree raises FileOperationError on read failure."""
-        from sdd.core.exceptions import FileOperationError
         from unittest.mock import patch
+
+        from sdd.core.exceptions import FileOperationError
 
         # Arrange
         tree_file = Path(".session/tracking/tree.txt")
@@ -757,10 +756,7 @@ class TestCheckGitStatus:
         """Test that check_git_status re-raises GitError as-is."""
         # Arrange - simulate GitError from workflow
         mock_workflow = Mock()
-        original_error = GitError(
-            message="Not a git repository",
-            code=ErrorCode.NOT_A_GIT_REPO
-        )
+        original_error = GitError(message="Not a git repository", code=ErrorCode.NOT_A_GIT_REPO)
         mock_workflow.check_git_status.side_effect = original_error
         mock_git_workflow_class.return_value = mock_workflow
 
@@ -912,7 +908,9 @@ class TestDetermineGitBranchFinalStatus:
         assert result == "merged"
 
     @patch("sdd.session.briefing.git_context.CommandRunner")
-    def test_determine_git_branch_final_status_returns_pr_created_when_open_pr(self, mock_runner_class):
+    def test_determine_git_branch_final_status_returns_pr_created_when_open_pr(
+        self, mock_runner_class
+    ):
         """Test that determine_git_branch_final_status returns 'pr_created' when PR is open."""
         # Arrange
         mock_runner = Mock()
@@ -936,7 +934,9 @@ class TestDetermineGitBranchFinalStatus:
         assert result == "pr_created"
 
     @patch("sdd.session.briefing.git_context.CommandRunner")
-    def test_determine_git_branch_final_status_returns_pr_closed_when_closed_pr(self, mock_runner_class):
+    def test_determine_git_branch_final_status_returns_pr_closed_when_closed_pr(
+        self, mock_runner_class
+    ):
         """Test that determine_git_branch_final_status returns 'pr_closed' when PR is closed."""
         # Arrange
         mock_runner = Mock()
@@ -988,7 +988,9 @@ class TestDetermineGitBranchFinalStatus:
         assert result == "ready_for_pr"
 
     @patch("sdd.session.briefing.git_context.CommandRunner")
-    def test_determine_git_branch_final_status_returns_deleted_when_not_found(self, mock_runner_class):
+    def test_determine_git_branch_final_status_returns_deleted_when_not_found(
+        self, mock_runner_class
+    ):
         """Test that determine_git_branch_final_status returns 'deleted' when branch not found."""
         # Arrange
         mock_runner = Mock()
@@ -1221,8 +1223,7 @@ class TestGenerateBriefing:
         mock_learnings.return_value = []
         # Mock validate_spec_file to raise SpecValidationError
         mock_validate_spec.side_effect = SpecValidationError(
-            work_item_id=item_id,
-            errors=["Missing acceptance criteria"]
+            work_item_id=item_id, errors=["Missing acceptance criteria"]
         )
 
         # Patch the spec validator in the correct location
@@ -1316,8 +1317,9 @@ class TestMainFunction:
     def test_main_returns_error_when_no_session_dir(self):
         """Test that main raises SessionNotFoundError when .session directory not found."""
         # Arrange - Create a temp directory without .session
-        from sdd.core.exceptions import SessionNotFoundError
         import os
+
+        from sdd.core.exceptions import SessionNotFoundError
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Change to temp directory where .session doesn't exist

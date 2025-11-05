@@ -1,22 +1,22 @@
 """Unit tests for error formatter"""
 
-import pytest
 from io import StringIO
+
 from sdd.core.error_formatter import (
     ErrorFormatter,
-    format_validation_errors,
+    format_info_message,
     format_progress_message,
     format_success_message,
+    format_validation_errors,
     format_warning_message,
-    format_info_message
 )
 from sdd.core.exceptions import (
-    WorkItemNotFoundError,
-    ValidationError,
-    GitError,
     ConfigValidationError,
+    ErrorCategory,
     ErrorCode,
-    ErrorCategory
+    GitError,
+    ValidationError,
+    WorkItemNotFoundError,
 )
 
 
@@ -37,7 +37,7 @@ class TestErrorFormatter:
         error = ValidationError(
             message="Test error",
             code=ErrorCode.INVALID_WORK_ITEM_ID,
-            context={"work_item_id": "bad-id", "field": "name"}
+            context={"work_item_id": "bad-id", "field": "name"},
         )
         formatted = ErrorFormatter.format_error(error, verbose=True)
 
@@ -51,8 +51,7 @@ class TestErrorFormatter:
     def test_format_error_with_list_context(self):
         """Test formatting error with list in context"""
         error = ConfigValidationError(
-            config_path=".session/config.json",
-            errors=["Error 1", "Error 2", "Error 3"]
+            config_path=".session/config.json", errors=["Error 1", "Error 2", "Error 3"]
         )
         formatted = ErrorFormatter.format_error(error, verbose=True)
 
@@ -63,8 +62,7 @@ class TestErrorFormatter:
     def test_format_error_with_dict_context(self):
         """Test formatting error with dict in context"""
         error = ValidationError(
-            message="Test error",
-            context={"metadata": {"key1": "value1", "key2": "value2"}}
+            message="Test error", context={"metadata": {"key1": "value1", "key2": "value2"}}
         )
         formatted = ErrorFormatter.format_error(error, verbose=True)
 
@@ -74,10 +72,7 @@ class TestErrorFormatter:
     def test_format_error_with_long_list(self):
         """Test formatting limits long lists"""
         errors = [f"Error {i}" for i in range(15)]
-        error = ConfigValidationError(
-            config_path=".session/config.json",
-            errors=errors
-        )
+        error = ConfigValidationError(config_path=".session/config.json", errors=errors)
         formatted = ErrorFormatter.format_error(error, verbose=True)
 
         assert "... and 5 more" in formatted
@@ -114,7 +109,7 @@ class TestErrorFormatter:
             ErrorCategory.SECURITY: "🔒",
             ErrorCategory.TIMEOUT: "⏱️",
             ErrorCategory.ALREADY_EXISTS: "📋",
-            ErrorCategory.PERMISSION: "🔐"
+            ErrorCategory.PERMISSION: "🔐",
         }
 
         for category, expected_symbol in symbols.items():
@@ -150,10 +145,7 @@ class TestErrorFormatter:
     def test_format_error_with_cause(self):
         """Test formatting error with cause chain"""
         original = ValueError("Original error")
-        error = ValidationError(
-            message="Validation failed",
-            cause=original
-        )
+        error = ValidationError(message="Validation failed", cause=original)
         formatted = ErrorFormatter.format_error(error, verbose=True)
 
         assert "Caused by:" in formatted
@@ -161,10 +153,7 @@ class TestErrorFormatter:
 
     def test_format_error_with_remediation(self):
         """Test remediation always shown"""
-        error = ValidationError(
-            message="Test error",
-            remediation="This is how to fix it"
-        )
+        error = ValidationError(message="Test error", remediation="This is how to fix it")
         formatted = ErrorFormatter.format_error(error, verbose=False)
 
         assert "💡" in formatted
@@ -225,9 +214,9 @@ class TestErrorFormatterIntegration:
             context={
                 "work_item_id": "my_feature",
                 "errors": ["Missing section", "Invalid format"],
-                "file_path": ".session/specs/my_feature.md"
+                "file_path": ".session/specs/my_feature.md",
             },
-            remediation="Edit the spec file to fix validation errors"
+            remediation="Edit the spec file to fix validation errors",
         )
 
         # Format in normal mode
@@ -255,8 +244,8 @@ class TestErrorFormatterIntegration:
                 "list": ["item1", "item2", "item3"],
                 "dict": {"key1": "val1", "key2": "val2"},
                 "number": 42,
-                "boolean": True
-            }
+                "boolean": True,
+            },
         )
 
         formatted = ErrorFormatter.format_error(error, verbose=True)

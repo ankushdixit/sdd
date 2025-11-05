@@ -19,10 +19,12 @@ from sdd.core.config_validator import (
     validate_config,
 )
 from sdd.core.exceptions import (
-    ConfigValidationError,
     ConfigurationError,
-    FileNotFoundError as SDDFileNotFoundError,
+    ConfigValidationError,
     ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
 )
 
 
@@ -342,7 +344,9 @@ class TestSDDConfigValidation:
         with pytest.raises(ConfigValidationError) as exc_info:
             validate_config(config_path, full_sdd_schema)
 
-        assert "similarity_threshold" in str(exc_info.value.context) or "maximum" in str(exc_info.value.context)
+        assert "similarity_threshold" in str(exc_info.value.context) or "maximum" in str(
+            exc_info.value.context
+        )
 
     def test_sdd_config_rejects_invalid_timeout_value(self, tmp_path, full_sdd_schema):
         """Test that SDD config raises ConfigValidationError for timeout value less than minimum."""

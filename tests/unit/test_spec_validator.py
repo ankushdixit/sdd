@@ -5,13 +5,14 @@ Test Suite for Phase 5.7.5: Spec File Validation System
 Tests the spec_validator module and its integration with briefing_generator and quality_gates.
 """
 
-import pytest
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
-from sdd.core.exceptions import SpecValidationError, FileNotFoundError, FileOperationError
+import pytest
+
+from sdd.core.exceptions import FileNotFoundError, SpecValidationError
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_validator import (
     check_acceptance_criteria,

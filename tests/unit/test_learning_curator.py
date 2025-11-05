@@ -2122,11 +2122,9 @@ class TestMainFunctionErrorHandling:
     def test_main_raises_file_not_found_when_session_dir_missing(self, tmp_path):
         """Test that main() raises SDDFileNotFoundError when .session dir doesn't exist."""
         # Arrange
-        import sys
-        from pathlib import Path
 
-        with patch('sys.argv', ['curator.py', 'curate']):
-            with patch('pathlib.Path.cwd', return_value=tmp_path):
+        with patch("sys.argv", ["curator.py", "curate"]):
+            with patch("pathlib.Path.cwd", return_value=tmp_path):
                 # Act & Assert
                 with pytest.raises(SDDFileNotFoundError) as exc_info:
                     main()

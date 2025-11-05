@@ -349,5 +349,8 @@ class TestIntegrationTestExecution:
 
         # Act & Assert
         from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-        with pytest.raises(SDDFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"):
+
+        with pytest.raises(
+            SDDFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"
+        ):
             gates.run_integration_tests(work_item)

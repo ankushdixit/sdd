@@ -9,12 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from sdd.quality.api_validator import APIContractValidator
 from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
-    SchemaValidationError,
-    InvalidOpenAPISpecError,
 )
+from sdd.core.exceptions import (
+    InvalidOpenAPISpecError,
+    SchemaValidationError,
+)
+from sdd.quality.api_validator import APIContractValidator
 
 
 class TestAPIContractValidatorInit:
@@ -192,7 +194,9 @@ paths:
         with pytest.raises(InvalidOpenAPISpecError) as exc_info:
             validator._validate_contract_file(str(invalid_yaml))
 
-        assert "Missing 'openapi' or 'swagger' field" in str(exc_info.value.context.get("details", ""))
+        assert "Missing 'openapi' or 'swagger' field" in str(
+            exc_info.value.context.get("details", "")
+        )
 
 
 class TestBreakingChangeDetection:

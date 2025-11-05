@@ -159,6 +159,7 @@ class TestInstallGitHooks:
         """Test when .git/hooks directory doesn't exist."""
         # Act & Assert
         from sdd.core.exceptions import NotAGitRepoError
+
         with pytest.raises(NotAGitRepoError):
             install_git_hooks(temp_project)
 
@@ -172,6 +173,7 @@ class TestInstallGitHooks:
 
         # Mock the template path to exist
         from sdd.core.exceptions import FileOperationError
+
         with patch.object(Path, "exists", return_value=True):
             with patch("sdd.project.init.Path") as mock_path:
                 # Setup mock to return our template dir

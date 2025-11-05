@@ -11,12 +11,12 @@ from unittest.mock import patch
 import pytest
 
 from sdd.core.exceptions import (
-    WorkItemNotFoundError,
-    WorkItemAlreadyExistsError,
-    ValidationError,
+    ErrorCode,
     FileOperationError,
     SpecValidationError,
-    ErrorCode,
+    ValidationError,
+    WorkItemAlreadyExistsError,
+    WorkItemNotFoundError,
 )
 from sdd.work_items.manager import WorkItemManager
 
@@ -1050,7 +1050,9 @@ class TestUpdateWorkItem:
     def test_update_work_item_add_dependency(self, work_item_manager_with_data):
         """Test adding dependency to work item."""
         # Act
-        work_item_manager_with_data.update_work_item("feature_foundation", add_dependency="feature_auth")
+        work_item_manager_with_data.update_work_item(
+            "feature_foundation", add_dependency="feature_auth"
+        )
 
         # Assert
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
@@ -1069,7 +1071,9 @@ class TestUpdateWorkItem:
     def test_update_work_item_remove_dependency(self, work_item_manager_with_data):
         """Test removing dependency from work item."""
         # Act
-        work_item_manager_with_data.update_work_item("feature_auth", remove_dependency="feature_foundation")
+        work_item_manager_with_data.update_work_item(
+            "feature_auth", remove_dependency="feature_foundation"
+        )
 
         # Assert
         data = json.loads(work_item_manager_with_data.work_items_file.read_text())
@@ -1463,9 +1467,7 @@ class TestMilestones:
     def test_create_milestone_new(self, work_item_manager):
         """Test creating a new milestone."""
         # Act - should not raise
-        work_item_manager.create_milestone(
-            "v1.0", "Version 1.0", "First release", "2025-06-01"
-        )
+        work_item_manager.create_milestone("v1.0", "Version 1.0", "First release", "2025-06-01")
 
         # Assert
         data = json.loads(work_item_manager.work_items_file.read_text())

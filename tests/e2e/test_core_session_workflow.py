@@ -364,8 +364,9 @@ class TestStackAndTreeTracking:
 
         # Set PYTHONPATH to include src directory so sdd module can be imported
         import os
+
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(src_dir)
+        env["PYTHONPATH"] = str(src_dir)
 
         # Act
         result = subprocess.run(

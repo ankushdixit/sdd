@@ -4,8 +4,8 @@ import json
 
 import pytest
 
+from sdd.core.exceptions import ErrorCode, ValidationError
 from sdd.core.types import GitStatus, Priority, WorkItemStatus, WorkItemType
-from sdd.core.exceptions import ValidationError, ErrorCode
 
 
 class TestWorkItemType:

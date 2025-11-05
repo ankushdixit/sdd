@@ -1,28 +1,28 @@
 """Unit tests for error handlers"""
 
-import pytest
-import time
 import subprocess
-from unittest.mock import Mock, patch
+import time
+
+import pytest
+
 from sdd.core.error_handlers import (
+    ErrorContext,
+    convert_file_errors,
+    convert_subprocess_errors,
+    log_errors,
+    safe_execute,
     with_retry,
     with_timeout,
-    log_errors,
-    convert_subprocess_errors,
-    convert_file_errors,
-    ErrorContext,
-    safe_execute
 )
 from sdd.core.exceptions import (
-    SDDError,
-    TimeoutError as SDDTimeoutError,
-    SubprocessError,
-    GitError,
     ErrorCode,
-    ValidationError,
+    GitError,
+    SubprocessError,
     SystemError,
-    FileNotFoundError as SDDFileNotFoundError
+    ValidationError,
 )
+from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from sdd.core.exceptions import TimeoutError as SDDTimeoutError
 
 
 class TestWithRetryDecorator:
@@ -105,10 +105,7 @@ class TestWithRetryDecorator:
 class TestWithTimeoutDecorator:
     """Test timeout decorator"""
 
-    @pytest.mark.skipif(
-        not hasattr(subprocess, 'run'),
-        reason="Requires subprocess module"
-    )
+    @pytest.mark.skipif(not hasattr(subprocess, "run"), reason="Requires subprocess module")
     def test_function_completes_within_timeout(self):
         """Test function completes before timeout"""
 
@@ -121,8 +118,8 @@ class TestWithTimeoutDecorator:
         assert result == "completed"
 
     @pytest.mark.skipif(
-        not hasattr(subprocess, 'run') or not hasattr(__import__('signal'), 'SIGALRM'),
-        reason="Requires Unix signals"
+        not hasattr(subprocess, "run") or not hasattr(__import__("signal"), "SIGALRM"),
+        reason="Requires Unix signals",
     )
     def test_function_times_out(self):
         """Test function raises timeout error"""
@@ -150,7 +147,7 @@ class TestLogErrorsDecorator:
             raise ValidationError(
                 message="Test error",
                 code=ErrorCode.INVALID_WORK_ITEM_ID,
-                context={"item_id": "test"}
+                context={"item_id": "test"},
             )
 
         with pytest.raises(ValidationError):
@@ -192,10 +189,7 @@ class TestConvertSubprocessErrors:
         @convert_subprocess_errors
         def timeout_command():
             raise subprocess.TimeoutExpired(
-                cmd=["git", "fetch"],
-                timeout=30,
-                output=b"output",
-                stderr=b"error"
+                cmd=["git", "fetch"], timeout=30, output=b"output", stderr=b"error"
             )
 
         with pytest.raises(SDDTimeoutError) as exc_info:
@@ -222,10 +216,7 @@ class TestConvertSubprocessErrors:
         @convert_subprocess_errors
         def failed_command():
             raise subprocess.CalledProcessError(
-                returncode=1,
-                cmd=["pytest", "tests/"],
-                output=b"test output",
-                stderr=b"test failed"
+                returncode=1, cmd=["pytest", "tests/"], output=b"test output", stderr=b"test failed"
             )
 
         with pytest.raises(SubprocessError) as exc_info:
@@ -253,7 +244,7 @@ class TestConvertFileErrors:
 
         @convert_file_errors
         def file_operation():
-            error = IOError("Permission denied")
+            error = OSError("Permission denied")
             error.filename = "/path/to/file"
             raise error
 

@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from sdd.core.exceptions import FileNotFoundError, SpecValidationError
 from sdd.work_items.manager import WorkItemManager
 

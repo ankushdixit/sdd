@@ -1,34 +1,29 @@
 """Unit tests for exception hierarchy"""
 
-import pytest
 from sdd.core.exceptions import (
-    SDDError,
-    ValidationError,
-    SpecValidationError,
-    NotFoundError,
-    WorkItemNotFoundError,
-    FileNotFoundError,
-    SessionNotFoundError,
+    BranchNotFoundError,
+    CircularDependencyError,
+    CommandExecutionError,
     ConfigurationError,
     ConfigValidationError,
-    GitError,
-    NotAGitRepoError,
-    WorkingDirNotCleanError,
-    BranchNotFoundError,
-    SystemError,
-    SubprocessError,
-    TimeoutError,
-    CommandExecutionError,
-    DependencyError,
-    CircularDependencyError,
-    UnmetDependencyError,
-    AlreadyExistsError,
-    SessionAlreadyActiveError,
-    WorkItemAlreadyExistsError,
-    QualityGateError,
-    QualityTestFailedError,
     ErrorCategory,
     ErrorCode,
+    FileNotFoundError,
+    GitError,
+    NotAGitRepoError,
+    QualityTestFailedError,
+    SDDError,
+    SessionAlreadyActiveError,
+    SessionNotFoundError,
+    SpecValidationError,
+    SubprocessError,
+    SystemError,
+    TimeoutError,
+    UnmetDependencyError,
+    ValidationError,
+    WorkingDirNotCleanError,
+    WorkItemAlreadyExistsError,
+    WorkItemNotFoundError,
 )
 
 
@@ -40,7 +35,7 @@ class TestSDDError:
         error = SDDError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
-            category=ErrorCategory.SYSTEM
+            category=ErrorCategory.SYSTEM,
         )
 
         assert error.message == "Test error"
@@ -56,7 +51,7 @@ class TestSDDError:
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
-            context={"file": "/path/to/file", "operation": "write"}
+            context={"file": "/path/to/file", "operation": "write"},
         )
 
         assert error.context["file"] == "/path/to/file"
@@ -68,7 +63,7 @@ class TestSDDError:
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
-            remediation="Check file permissions"
+            remediation="Check file permissions",
         )
 
         assert error.remediation == "Check file permissions"
@@ -81,7 +76,7 @@ class TestSDDError:
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
-            cause=original
+            cause=original,
         )
 
         assert error.cause is original
@@ -93,7 +88,7 @@ class TestSDDError:
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
             context={"file": "/path/to/file"},
-            remediation="Check permissions"
+            remediation="Check permissions",
         )
 
         error_dict = error.to_dict()
@@ -131,7 +126,7 @@ class TestValidationErrors:
             message="Invalid input",
             code=ErrorCode.INVALID_WORK_ITEM_ID,
             context={"work_item_id": "bad-id"},
-            remediation="Use alphanumeric characters"
+            remediation="Use alphanumeric characters",
         )
 
         assert error.category == ErrorCategory.VALIDATION
@@ -141,10 +136,7 @@ class TestValidationErrors:
     def test_spec_validation_error(self):
         """Test SpecValidationError"""
         errors = ["Missing Overview section", "Missing acceptance criteria"]
-        error = SpecValidationError(
-            work_item_id="my_feature",
-            errors=errors
-        )
+        error = SpecValidationError(work_item_id="my_feature", errors=errors)
 
         assert error.category == ErrorCategory.VALIDATION
         assert error.code == ErrorCode.SPEC_VALIDATION_FAILED
@@ -168,10 +160,7 @@ class TestNotFoundErrors:
 
     def test_file_not_found_error(self):
         """Test FileNotFoundError"""
-        error = FileNotFoundError(
-            file_path=".session/config.json",
-            file_type="configuration"
-        )
+        error = FileNotFoundError(file_path=".session/config.json", file_type="configuration")
 
         assert error.category == ErrorCategory.NOT_FOUND
         assert error.code == ErrorCode.FILE_NOT_FOUND
@@ -196,7 +185,7 @@ class TestConfigurationErrors:
         error = ConfigurationError(
             message="Invalid config value",
             code=ErrorCode.INVALID_CONFIG_VALUE,
-            context={"key": "test_command", "value": None}
+            context={"key": "test_command", "value": None},
         )
 
         assert error.category == ErrorCategory.CONFIGURATION
@@ -205,10 +194,7 @@ class TestConfigurationErrors:
     def test_config_validation_error(self):
         """Test ConfigValidationError"""
         errors = ["Missing 'project_name' field", "Invalid 'version' value"]
-        error = ConfigValidationError(
-            config_path=".session/config.json",
-            errors=errors
-        )
+        error = ConfigValidationError(config_path=".session/config.json", errors=errors)
 
         assert error.category == ErrorCategory.CONFIGURATION
         assert error.code == ErrorCode.CONFIG_VALIDATION_FAILED
@@ -263,7 +249,7 @@ class TestSystemErrors:
             command="pytest tests/",
             returncode=1,
             stderr="FAILED tests/test_foo.py",
-            stdout="collected 10 items"
+            stdout="collected 10 items",
         )
 
         assert error.category == ErrorCategory.SYSTEM
@@ -274,10 +260,7 @@ class TestSystemErrors:
 
     def test_timeout_error(self):
         """Test TimeoutError"""
-        error = TimeoutError(
-            operation="git fetch",
-            timeout_seconds=30
-        )
+        error = TimeoutError(operation="git fetch", timeout_seconds=30)
 
         assert error.category == ErrorCategory.SYSTEM
         assert error.code == ErrorCode.OPERATION_TIMEOUT
@@ -287,11 +270,7 @@ class TestSystemErrors:
 
     def test_command_execution_error(self):
         """Test CommandExecutionError"""
-        error = CommandExecutionError(
-            command="npm test",
-            returncode=1,
-            stderr="Test failed"
-        )
+        error = CommandExecutionError(command="npm test", returncode=1, stderr="Test failed")
 
         assert error.category == ErrorCategory.SYSTEM
         assert error.code == ErrorCode.COMMAND_FAILED
@@ -351,11 +330,7 @@ class TestQualityGateErrors:
     def test_quality_test_failed_error(self):
         """Test QualityTestFailedError"""
         details = ["test_foo failed", "test_bar failed"]
-        error = QualityTestFailedError(
-            failed_count=2,
-            total_count=10,
-            details=details
-        )
+        error = QualityTestFailedError(failed_count=2, total_count=10, details=details)
 
         assert error.code == ErrorCode.TEST_FAILED
         assert error.context["failed_count"] == 2

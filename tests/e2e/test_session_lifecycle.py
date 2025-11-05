@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from sdd.core.exceptions import SpecValidationError
 from sdd.quality.gates import QualityGates
 from sdd.session.briefing import generate_briefing, load_work_item_spec
