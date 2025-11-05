@@ -4,6 +4,8 @@ Documentation discovery and loading.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from sdd.core.exceptions import FileOperationError

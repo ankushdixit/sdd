@@ -8,6 +8,8 @@ Extracts structured data from markdown for use by validators, runners, and quali
 Part of Phase 5.7.2: Spec File First Architecture
 """
 
+from __future__ import annotations
+
 import json
 import re
 import sys
@@ -520,14 +522,14 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
         # Find all subsections that start with "Scenario"
         scenarios = []
         lines = scenarios_section.split("\n")
-        current_scenario = None
+        current_scenario: str | None = None
         current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Scenario"):
                 # Save previous scenario if exists
-                if current_scenario:
-                    scenarios.append(  # type: ignore[unreachable]
+                if current_scenario is not None:
+                    scenarios.append(
                         {
                             "name": current_scenario,
                             "content": "\n".join(current_content).strip(),
@@ -540,7 +542,7 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
                 current_content.append(line)
 
         # Save last scenario
-        if current_scenario:
+        if current_scenario is not None:
             scenarios.append(
                 {
                     "name": current_scenario,
@@ -631,14 +633,14 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
         # Find all subsections that start with "Test"
         tests = []
         lines = smoke_section.split("\n")
-        current_test = None
+        current_test: str | None = None
         current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Test"):
                 # Save previous test if exists
-                if current_test:
-                    tests.append(  # type: ignore[unreachable]
+                if current_test is not None:
+                    tests.append(
                         {
                             "name": current_test,
                             "content": "\n".join(current_content).strip(),
@@ -651,7 +653,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
                 current_content.append(line)
 
         # Save last test
-        if current_test:
+        if current_test is not None:
             tests.append({"name": current_test, "content": "\n".join(current_content).strip()})
 
         result["smoke_tests"] = tests
