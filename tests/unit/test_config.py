@@ -301,9 +301,7 @@ class TestConfigManager:
         assert isinstance(config.quality_gates.formatting, FormattingConfig)
         assert isinstance(config.quality_gates.security, SecurityConfig)
         assert isinstance(config.quality_gates.documentation, DocumentationConfig)
-        assert isinstance(
-            config.quality_gates.spec_completeness, SpecCompletenessConfig
-        )
+        assert isinstance(config.quality_gates.spec_completeness, SpecCompletenessConfig)
 
         # Test default values
         assert config.quality_gates.test_execution.enabled is True

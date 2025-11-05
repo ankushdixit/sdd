@@ -160,9 +160,7 @@ class QualityGates:
             "reason": reason,
         }
 
-    def run_security_scan(
-        self, language: str | None = None
-    ) -> tuple[bool, dict[str, Any]]:
+    def run_security_scan(self, language: str | None = None) -> tuple[bool, dict[str, Any]]:
         """
         Run security vulnerability scanning.
 
@@ -273,9 +271,7 @@ class QualityGates:
             "output": result.info.get("output", ""),
         }
 
-    def validate_documentation(
-        self, work_item: dict | None = None
-    ) -> tuple[bool, dict[str, Any]]:
+    def validate_documentation(self, work_item: dict | None = None) -> tuple[bool, dict[str, Any]]:
         """Validate documentation requirements.
 
         Args:
@@ -307,9 +303,7 @@ class QualityGates:
             "passed": result.passed,
         }
 
-    def validate_spec_completeness(
-        self, work_item: dict
-    ) -> tuple[bool, dict[str, Any]]:
+    def validate_spec_completeness(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """
         Validate that the work item specification file is complete.
 
@@ -321,9 +315,7 @@ class QualityGates:
         Returns:
             Tuple of (passed, results)
         """
-        logger.info(
-            f"Running spec completeness validation for work item: {work_item.get('id')}"
-        )
+        logger.info(f"Running spec completeness validation for work item: {work_item.get('id')}")
 
         # Convert config dataclass to dict for checker
         spec_config = {
@@ -331,9 +323,7 @@ class QualityGates:
         }
 
         # Create and run spec completeness checker
-        checker = SpecCompletenessChecker(
-            spec_config, self.project_root, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, self.project_root, work_item=work_item)
         result = checker.run()
 
         # Convert CheckResult to legacy format
@@ -426,9 +416,7 @@ class QualityGates:
         result = checker.run()
         return result.passed, result.details
 
-    def validate_integration_environment(
-        self, work_item: dict
-    ) -> tuple[bool, dict[str, Any]]:
+    def validate_integration_environment(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """Validate integration test environment requirements."""
         from sdd.quality.checkers.integration import IntegrationChecker
 
@@ -441,9 +429,7 @@ class QualityGates:
         result = checker.validate_environment()
         return result.passed, result.details
 
-    def validate_integration_documentation(
-        self, work_item: dict
-    ) -> tuple[bool, dict[str, Any]]:
+    def validate_integration_documentation(self, work_item: dict) -> tuple[bool, dict[str, Any]]:
         """Validate integration test documentation requirements."""
         from sdd.quality.checkers.integration import IntegrationChecker
 
@@ -502,9 +488,7 @@ class QualityGates:
         # Test results
         if "tests" in all_results:
             test_results = all_results["tests"]
-            status = (
-                "✓ PASSED" if test_results.get("status") == "passed" else "✗ FAILED"
-            )
+            status = "✓ PASSED" if test_results.get("status") == "passed" else "✗ FAILED"
             report.append(f"\nTests: {status}")
             if test_results.get("coverage"):
                 report.append(f"  Coverage: {test_results['coverage']}%")
@@ -557,9 +541,7 @@ class QualityGates:
         if "context7" in all_results:
             ctx_results = all_results["context7"]
             if ctx_results.get("status") != "skipped":
-                status = (
-                    "✓ PASSED" if ctx_results.get("status") == "passed" else "✗ FAILED"
-                )
+                status = "✓ PASSED" if ctx_results.get("status") == "passed" else "✗ FAILED"
                 report.append(f"\nContext7: {status}")
                 report.append(f"  Verified: {ctx_results.get('verified', 0)}")
                 report.append(f"  Failed: {ctx_results.get('failed', 0)}")
@@ -567,9 +549,7 @@ class QualityGates:
         # Custom validations results
         if "custom" in all_results:
             custom_results = all_results["custom"]
-            status = (
-                "✓ PASSED" if custom_results.get("status") == "passed" else "✗ FAILED"
-            )
+            status = "✓ PASSED" if custom_results.get("status") == "passed" else "✗ FAILED"
             report.append(f"\nCustom Validations: {status}")
             for validation in custom_results.get("validations", []):
                 val_status = "✓" if validation["passed"] else "✗"

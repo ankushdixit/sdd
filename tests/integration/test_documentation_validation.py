@@ -136,16 +136,13 @@ class TestArchitectureDiagramValidation:
 
         # Assert
         has_arch_check = any(
-            c["name"] == "Integration architecture diagram"
-            for c in results.get("checks", [])
+            c["name"] == "Integration architecture diagram" for c in results.get("checks", [])
         )
         assert has_arch_check
         assert "Integration architecture diagram" in results.get("missing", [])
 
     @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
-    def test_finds_architecture_diagram_in_docs(
-        self, mock_parse, temp_dir, monkeypatch
-    ):
+    def test_finds_architecture_diagram_in_docs(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds architecture diagram in docs/ directory."""
         # Arrange
         mock_parse.return_value = {
@@ -212,9 +209,7 @@ class TestArchitectureDiagramValidation:
         assert arch_check["passed"] is True
 
     @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
-    def test_finds_architecture_diagram_in_session_specs(
-        self, mock_parse, temp_dir, monkeypatch
-    ):
+    def test_finds_architecture_diagram_in_session_specs(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds architecture diagram in .session/specs/ directory."""
         # Arrange
         mock_parse.return_value = {
@@ -267,8 +262,7 @@ class TestArchitectureDiagramValidation:
 
         # Assert
         has_arch_check = any(
-            c["name"] == "Integration architecture diagram"
-            for c in results.get("checks", [])
+            c["name"] == "Integration architecture diagram" for c in results.get("checks", [])
         )
         assert has_arch_check is False
 
@@ -369,9 +363,7 @@ sequenceDiagram
         assert seq_check["passed"] is True
 
     @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
-    def test_scenario_sections_without_diagrams_fail(
-        self, mock_parse, temp_dir, monkeypatch
-    ):
+    def test_scenario_sections_without_diagrams_fail(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation fails when scenarios exist but have no diagrams."""
         # Arrange
         scenario_content = """# Integration Test
@@ -426,9 +418,7 @@ sequenceDiagram
         config_file = temp_dir / "config.json"
         config = {
             "quality_gates": {},
-            "integration_tests": {
-                "documentation": {"enabled": True, "sequence_diagrams": False}
-            },
+            "integration_tests": {"documentation": {"enabled": True, "sequence_diagrams": False}},
         }
         config_file.write_text(json.dumps(config))
 
@@ -439,9 +429,7 @@ sequenceDiagram
         passed, results = gates.validate_integration_documentation(work_item)
 
         # Assert
-        has_seq_check = any(
-            c["name"] == "Sequence diagrams" for c in results.get("checks", [])
-        )
+        has_seq_check = any(c["name"] == "Sequence diagrams" for c in results.get("checks", []))
         assert has_seq_check is False
 
 
@@ -471,9 +459,7 @@ class TestAPIContractDocumentation:
         # Act
         with patch.object(gates, "_config_path", config_file):
             with patch("builtins.open", create=True) as mock_open:
-                mock_open.return_value.__enter__.return_value.read.return_value = (
-                    json.dumps(config)
-                )
+                mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(config)
                 passed, results = gates.validate_integration_documentation(work_item)
 
         # Assert
@@ -512,11 +498,7 @@ class TestAPIContractDocumentation:
 
         # Assert
         contract_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "API contracts documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "API contracts documented"),
             None,
         )
         assert contract_check is not None
@@ -548,11 +530,7 @@ class TestAPIContractDocumentation:
 
         # Assert
         contract_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "API contracts documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "API contracts documented"),
             None,
         )
         assert contract_check["passed"] is False
@@ -661,8 +639,7 @@ class TestPerformanceBaselineDocumentation:
 
         # Assert
         has_baseline_check = any(
-            c["name"] == "Performance baseline documented"
-            for c in results.get("checks", [])
+            c["name"] == "Performance baseline documented" for c in results.get("checks", [])
         )
         assert has_baseline_check is False
 
@@ -700,11 +677,7 @@ class TestIntegrationPointsDocumentation:
 
         # Assert
         points_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "Integration points documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "Integration points documented"),
             None,
         )
         assert points_check is not None
@@ -723,11 +696,7 @@ class TestIntegrationPointsDocumentation:
 
         # Assert
         points_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "Integration points documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "Integration points documented"),
             None,
         )
         assert points_check["passed"] is False
@@ -746,11 +715,7 @@ class TestIntegrationPointsDocumentation:
 
         # Assert
         points_check = next(
-            (
-                c
-                for c in results.get("checks", [])
-                if c["name"] == "Integration points documented"
-            ),
+            (c for c in results.get("checks", []) if c["name"] == "Integration points documented"),
             None,
         )
         assert points_check is not None

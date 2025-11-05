@@ -125,9 +125,7 @@ class DeploymentConfig:
     """Deployment quality gates configuration."""
 
     enabled: bool = True
-    integration_tests: dict[str, bool] = field(
-        default_factory=lambda: {"enabled": True}
-    )
+    integration_tests: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
     security_scans: dict[str, bool] = field(default_factory=lambda: {"enabled": True})
 
 
@@ -140,9 +138,7 @@ class QualityGatesConfig:
     formatting: FormattingConfig = field(default_factory=FormattingConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
     documentation: DocumentationConfig = field(default_factory=DocumentationConfig)
-    spec_completeness: SpecCompletenessConfig = field(
-        default_factory=SpecCompletenessConfig
-    )
+    spec_completeness: SpecCompletenessConfig = field(default_factory=SpecCompletenessConfig)
     context7: Context7Config = field(default_factory=Context7Config)
     integration: IntegrationConfig = field(default_factory=IntegrationConfig)
     deployment: DeploymentConfig = field(default_factory=DeploymentConfig)
@@ -157,9 +153,7 @@ class GitWorkflowConfig:
     auto_create_pr: bool = True
     delete_branch_after_merge: bool = True
     pr_title_template: str = "{type}: {title}"
-    pr_body_template: str = (
-        "## Work Item: {work_item_id}\n\n{description}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)"
-    )
+    pr_body_template: str = "## Work Item: {work_item_id}\n\n{description}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 
 
 @dataclass
@@ -339,47 +333,27 @@ class ConfigManager:
                 valid_fields = {f.name for f in dataclasses.fields(config_class)}
                 return {k: v for k, v in data.items() if k in valid_fields}
 
-            test_exec_data = filter_fields(
-                data.get("test_execution", {}), ExecutionConfig
-            )
+            test_exec_data = filter_fields(data.get("test_execution", {}), ExecutionConfig)
             linting_data = filter_fields(data.get("linting", {}), LintingConfig)
-            formatting_data = filter_fields(
-                data.get("formatting", {}), FormattingConfig
-            )
+            formatting_data = filter_fields(data.get("formatting", {}), FormattingConfig)
             security_data = filter_fields(data.get("security", {}), SecurityConfig)
-            documentation_data = filter_fields(
-                data.get("documentation", {}), DocumentationConfig
-            )
+            documentation_data = filter_fields(data.get("documentation", {}), DocumentationConfig)
             spec_completeness_data = filter_fields(
                 data.get("spec_completeness", {}), SpecCompletenessConfig
             )
             context7_data = filter_fields(data.get("context7", {}), Context7Config)
-            integration_data = filter_fields(
-                data.get("integration", {}), IntegrationConfig
-            )
-            deployment_data = filter_fields(
-                data.get("deployment", {}), DeploymentConfig
-            )
+            integration_data = filter_fields(data.get("integration", {}), IntegrationConfig)
+            deployment_data = filter_fields(data.get("deployment", {}), DeploymentConfig)
 
             return QualityGatesConfig(
                 test_execution=(
-                    ExecutionConfig(**test_exec_data)
-                    if test_exec_data
-                    else ExecutionConfig()
+                    ExecutionConfig(**test_exec_data) if test_exec_data else ExecutionConfig()
                 ),
-                linting=(
-                    LintingConfig(**linting_data) if linting_data else LintingConfig()
-                ),
+                linting=(LintingConfig(**linting_data) if linting_data else LintingConfig()),
                 formatting=(
-                    FormattingConfig(**formatting_data)
-                    if formatting_data
-                    else FormattingConfig()
+                    FormattingConfig(**formatting_data) if formatting_data else FormattingConfig()
                 ),
-                security=(
-                    SecurityConfig(**security_data)
-                    if security_data
-                    else SecurityConfig()
-                ),
+                security=(SecurityConfig(**security_data) if security_data else SecurityConfig()),
                 documentation=(
                     DocumentationConfig(**documentation_data)
                     if documentation_data
@@ -390,20 +364,14 @@ class ConfigManager:
                     if spec_completeness_data
                     else SpecCompletenessConfig()
                 ),
-                context7=(
-                    Context7Config(**context7_data)
-                    if context7_data
-                    else Context7Config()
-                ),
+                context7=(Context7Config(**context7_data) if context7_data else Context7Config()),
                 integration=(
                     IntegrationConfig(**integration_data)
                     if integration_data
                     else IntegrationConfig()
                 ),
                 deployment=(
-                    DeploymentConfig(**deployment_data)
-                    if deployment_data
-                    else DeploymentConfig()
+                    DeploymentConfig(**deployment_data) if deployment_data else DeploymentConfig()
                 ),
             )
         except TypeError as e:

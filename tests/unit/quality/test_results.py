@@ -143,12 +143,8 @@ class TestResultAggregatorAggregate:
     def test_aggregate_multiple_failing_results(self, aggregator):
         """Test aggregate() with multiple failing results."""
         results = [
-            CheckResult(
-                "tests", False, "failed", [{"message": "Tests failed"}], [], {}, 5.0
-            ),
-            CheckResult(
-                "linting", False, "failed", [{"message": "Linting failed"}], [], {}, 2.0
-            ),
+            CheckResult("tests", False, "failed", [{"message": "Tests failed"}], [], {}, 5.0),
+            CheckResult("linting", False, "failed", [{"message": "Linting failed"}], [], {}, 2.0),
         ]
 
         result = aggregator.aggregate(results)
@@ -165,9 +161,7 @@ class TestResultAggregatorAggregate:
 class TestResultAggregatorByChecker:
     """Tests for by_checker mapping."""
 
-    def test_aggregate_creates_by_checker_mapping(
-        self, aggregator, passing_check_result
-    ):
+    def test_aggregate_creates_by_checker_mapping(self, aggregator, passing_check_result):
         """Test aggregate() creates by_checker mapping."""
         result = aggregator.aggregate([passing_check_result])
 
@@ -176,9 +170,7 @@ class TestResultAggregatorByChecker:
         assert checker_result["passed"] is True
         assert checker_result["status"] == "passed"
 
-    def test_aggregate_includes_all_result_fields(
-        self, aggregator, passing_check_result
-    ):
+    def test_aggregate_includes_all_result_fields(self, aggregator, passing_check_result):
         """Test aggregate() includes all CheckResult fields in by_checker."""
         result = aggregator.aggregate([passing_check_result])
 
@@ -268,9 +260,7 @@ class TestResultAggregatorExecutionTime:
         assert result["by_checker"]["tests"]["execution_time"] == 5.2
         assert result["by_checker"]["linting"]["execution_time"] == 2.3
 
-    def test_aggregate_handles_zero_execution_time(
-        self, aggregator, skipped_check_result
-    ):
+    def test_aggregate_handles_zero_execution_time(self, aggregator, skipped_check_result):
         """Test aggregate() handles zero execution time."""
         result = aggregator.aggregate([skipped_check_result])
 

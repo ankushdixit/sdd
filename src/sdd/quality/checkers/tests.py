@@ -38,9 +38,7 @@ class ExecutionChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=1200)
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=1200)
         self.language = language or self._detect_language()
 
     def name(self) -> str:
@@ -104,9 +102,7 @@ class ExecutionChecker(QualityChecker):
 
         # Command not found (test tool not available)
         if result.returncode == -1 and "not found" in result.stderr.lower():
-            return self._create_skipped_result(
-                reason=f"{command.split()[0]} not available"
-            )
+            return self._create_skipped_result(reason=f"{command.split()[0]} not available")
 
         # Treat "no tests collected" (exit code 5) as skipped, not failed
         if result.returncode == 5:
@@ -137,16 +133,12 @@ class ExecutionChecker(QualityChecker):
             errors.append(
                 {
                     "message": f"Tests failed with exit code {result.returncode}",
-                    "output": (
-                        result.stderr[:500] if result.stderr else ""
-                    ),  # Limit output
+                    "output": (result.stderr[:500] if result.stderr else ""),  # Limit output
                 }
             )
 
         if coverage is not None and coverage < threshold:
-            errors.append(
-                {"message": f"Coverage {coverage}% below threshold {threshold}%"}
-            )
+            errors.append({"message": f"Coverage {coverage}% below threshold {threshold}%"})
 
         return CheckResult(
             checker_name=self.name(),

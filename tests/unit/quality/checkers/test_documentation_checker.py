@@ -56,9 +56,7 @@ class TestDocumentationCheckerInit:
     def test_init_with_work_item(self, doc_config, temp_project_dir):
         """Test initialization with work item."""
         work_item = {"id": "WI-001", "title": "Test"}
-        checker = DocumentationChecker(
-            doc_config, temp_project_dir, work_item=work_item
-        )
+        checker = DocumentationChecker(doc_config, temp_project_dir, work_item=work_item)
 
         assert checker.work_item == work_item
 
@@ -117,9 +115,7 @@ class TestDocumentationCheckerRun:
         assert result.status == "passed"
         assert len(result.info["checks"]) == 0
 
-    def test_run_includes_execution_time(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, doc_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
@@ -140,9 +136,7 @@ class TestDocumentationCheckerRun:
 class TestDocumentationCheckerChangelog:
     """Tests for CHANGELOG validation."""
 
-    def test_check_changelog_passes_on_main_branch(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_check_changelog_passes_on_main_branch(self, doc_config, temp_project_dir, mock_runner):
         """Test CHANGELOG check passes on main branch."""
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
@@ -319,9 +313,7 @@ class TestDocumentationCheckerDocstrings:
 
         assert result is True
 
-    def test_check_docstrings_passes_when_timeout(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_check_docstrings_passes_when_timeout(self, doc_config, temp_project_dir, mock_runner):
         """Test docstring check passes when timeout occurs."""
         (temp_project_dir / "pyproject.toml").touch()
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
@@ -397,9 +389,7 @@ class TestDocumentationCheckerReadme:
 
         assert result is True
 
-    def test_check_readme_case_insensitive(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_check_readme_case_insensitive(self, doc_config, temp_project_dir, mock_runner):
         """Test README check is case insensitive."""
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
@@ -458,9 +448,7 @@ class TestDocumentationCheckerIntegration:
         assert result.status == "passed"
         assert len(result.info["checks"]) == 3
 
-    def test_run_fails_when_any_check_fails(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_run_fails_when_any_check_fails(self, doc_config, temp_project_dir, mock_runner):
         """Test run() fails when any check fails."""
         (temp_project_dir / "pyproject.toml").touch()
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
@@ -499,9 +487,7 @@ class TestDocumentationCheckerIntegration:
         assert result.status == "failed"
         assert len(result.errors) > 0
 
-    def test_run_includes_check_details(
-        self, doc_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_check_details(self, doc_config, temp_project_dir, mock_runner):
         """Test run() includes details for each check."""
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 

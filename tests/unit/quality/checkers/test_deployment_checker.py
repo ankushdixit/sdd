@@ -102,13 +102,9 @@ class TestDeploymentCheckerInit:
         assert checker.runner is not None
         assert isinstance(checker.runner, CommandRunner)
 
-    def test_init_with_custom_runner(
-        self, deployment_config, deployment_work_item, mock_runner
-    ):
+    def test_init_with_custom_runner(self, deployment_config, deployment_work_item, mock_runner):
         """Test initialization with custom runner."""
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         assert checker.runner is mock_runner
 
@@ -208,16 +204,10 @@ class TestDeploymentCheckerRun:
             info={"vulnerabilities": 0},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=True
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=True
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=True):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=True):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
@@ -265,16 +255,10 @@ class TestDeploymentCheckerRun:
             info={},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=True
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=True
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=True):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=True):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
@@ -320,16 +304,10 @@ class TestDeploymentCheckerRun:
             info={},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=True
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=True
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=True):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=True):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
@@ -374,26 +352,18 @@ class TestDeploymentCheckerRun:
             info={},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         # Environment validation fails
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=False
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=True
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=False):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=True):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
         assert result.passed is False
         assert result.status == "failed"
         assert len(result.errors) > 0
-        assert any(
-            "Environment Validation" in str(e.get("gate", "")) for e in result.errors
-        )
+        assert any("Environment Validation" in str(e.get("gate", "")) for e in result.errors)
 
     @patch("sdd.quality.checkers.integration.IntegrationChecker")
     @patch("sdd.quality.checkers.security.SecurityChecker")
@@ -431,26 +401,18 @@ class TestDeploymentCheckerRun:
             info={},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         # Documentation validation fails
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=True
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=False
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=True):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=False):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
         assert result.passed is False
         assert result.status == "failed"
         assert len(result.errors) > 0
-        assert any(
-            "Deployment Documentation" in str(e.get("gate", "")) for e in result.errors
-        )
+        assert any("Deployment Documentation" in str(e.get("gate", "")) for e in result.errors)
 
     @patch("sdd.quality.checkers.integration.IntegrationChecker")
     @patch("sdd.quality.checkers.security.SecurityChecker")
@@ -479,16 +441,10 @@ class TestDeploymentCheckerRun:
             info={},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
-        with patch.object(
-            checker, "_validate_deployment_environment", return_value=True
-        ):
-            with patch.object(
-                checker, "_validate_deployment_documentation", return_value=True
-            ):
+        with patch.object(checker, "_validate_deployment_environment", return_value=True):
+            with patch.object(checker, "_validate_deployment_documentation", return_value=True):
                 with patch.object(checker, "_check_rollback_tested", return_value=True):
                     result = checker.run()
 
@@ -543,9 +499,7 @@ class TestDeploymentEnvironmentValidation:
             assert result is True
             mock_validator.assert_called_once_with("production")
 
-    def test_validate_environment_defaults_to_staging(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_environment_defaults_to_staging(self, deployment_config, mock_runner):
         """Test environment validation defaults to staging when not specified."""
         work_item = {
             "id": "WI-001",
@@ -587,9 +541,7 @@ class TestDeploymentEnvironmentValidation:
 
             assert result is False
 
-    def test_validate_environment_handles_import_error(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_environment_handles_import_error(self, deployment_config, mock_runner):
         """Test environment validation handles ImportError gracefully."""
         work_item = {
             "id": "WI-001",
@@ -615,9 +567,7 @@ class TestDeploymentDocumentationValidation:
         self, deployment_config, deployment_work_item, mock_runner
     ):
         """Test documentation validation passes with all required sections."""
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         result = checker._validate_deployment_documentation()
 
@@ -653,9 +603,7 @@ class TestDeploymentDocumentationValidation:
 
         assert result is False
 
-    def test_validate_documentation_checks_rollback_procedure(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_documentation_checks_rollback_procedure(self, deployment_config, mock_runner):
         """Test documentation validation checks for rollback procedure."""
         work_item = {
             "id": "WI-001",
@@ -672,9 +620,7 @@ class TestDeploymentDocumentationValidation:
 
         assert result is False
 
-    def test_validate_documentation_checks_smoke_tests(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_documentation_checks_smoke_tests(self, deployment_config, mock_runner):
         """Test documentation validation checks for smoke tests."""
         work_item = {
             "id": "WI-001",
@@ -693,9 +639,7 @@ class TestDeploymentDocumentationValidation:
 
         assert result is False
 
-    def test_validate_documentation_checks_monitoring(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_documentation_checks_monitoring(self, deployment_config, mock_runner):
         """Test documentation validation checks for monitoring & alerting."""
         work_item = {
             "id": "WI-001",
@@ -716,9 +660,7 @@ class TestDeploymentDocumentationValidation:
 
         assert result is False
 
-    def test_validate_documentation_case_insensitive(
-        self, deployment_config, mock_runner
-    ):
+    def test_validate_documentation_case_insensitive(self, deployment_config, mock_runner):
         """Test documentation validation is case insensitive."""
         work_item = {
             "id": "WI-001",
@@ -749,9 +691,7 @@ class TestRollbackTesting:
         self, deployment_config, deployment_work_item, mock_runner
     ):
         """Test rollback testing check returns True (framework stub)."""
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         result = checker._check_rollback_tested()
 
@@ -799,9 +739,7 @@ class TestDeploymentCheckerIntegration:
             info={"vulnerabilities": 0},
         )
 
-        checker = DeploymentChecker(
-            deployment_work_item, deployment_config, runner=mock_runner
-        )
+        checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
         with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
@@ -877,9 +815,7 @@ class TestDeploymentCheckerIntegration:
         assert result.status == "failed"
 
         # Should have multiple errors
-        assert (
-            len(result.errors) >= 3
-        )  # Integration, Security, Environment, Documentation
+        assert len(result.errors) >= 3  # Integration, Security, Environment, Documentation
 
         # Check that specific gates failed
         error_gates = [e.get("gate", "") for e in result.errors]

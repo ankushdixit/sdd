@@ -51,21 +51,15 @@ class TestFormattingCheckerInit:
         assert isinstance(checker.runner, CommandRunner)
         assert checker.auto_fix is False
 
-    def test_init_with_custom_runner(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_init_with_custom_runner(self, formatting_config, temp_project_dir, mock_runner):
         """Test initialization with custom runner."""
-        checker = FormattingChecker(
-            formatting_config, temp_project_dir, runner=mock_runner
-        )
+        checker = FormattingChecker(formatting_config, temp_project_dir, runner=mock_runner)
 
         assert checker.runner is mock_runner
 
     def test_init_with_explicit_language(self, formatting_config, temp_project_dir):
         """Test initialization with explicit language."""
-        checker = FormattingChecker(
-            formatting_config, temp_project_dir, language="javascript"
-        )
+        checker = FormattingChecker(formatting_config, temp_project_dir, language="javascript")
 
         assert checker.language == "javascript"
 
@@ -83,9 +77,7 @@ class TestFormattingCheckerInit:
 
         assert checker.auto_fix is True
 
-    def test_init_detects_python_from_pyproject(
-        self, formatting_config, temp_project_dir
-    ):
+    def test_init_detects_python_from_pyproject(self, formatting_config, temp_project_dir):
         """Test language detection for Python via pyproject.toml."""
         (temp_project_dir / "pyproject.toml").touch()
 
@@ -93,9 +85,7 @@ class TestFormattingCheckerInit:
 
         assert checker.language == "python"
 
-    def test_init_detects_javascript_from_package_json(
-        self, formatting_config, temp_project_dir
-    ):
+    def test_init_detects_javascript_from_package_json(self, formatting_config, temp_project_dir):
         """Test language detection for JavaScript via package.json."""
         (temp_project_dir / "package.json").touch()
 
@@ -148,14 +138,10 @@ class TestFormattingCheckerRun:
         assert result.passed is True
         assert result.status == "skipped"
 
-    def test_run_returns_skipped_when_no_command_for_language(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_returns_skipped_when_no_command_for_language(self, temp_project_dir, mock_runner):
         """Test run() returns skipped when no command configured."""
         config = {"enabled": True, "commands": {}}
-        checker = FormattingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = FormattingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         result = checker.run()
 
@@ -327,9 +313,7 @@ class TestFormattingCheckerRun:
         call_args = mock_runner.run.call_args[0][0]
         assert "--check" in " ".join(call_args)
 
-    def test_run_includes_execution_time(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
         checker = FormattingChecker(
             formatting_config, temp_project_dir, language="python", runner=mock_runner
@@ -347,9 +331,7 @@ class TestFormattingCheckerRun:
 
         assert result.execution_time > 0
 
-    def test_run_includes_formatted_info(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_formatted_info(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() includes formatted info in result."""
         checker = FormattingChecker(
             formatting_config,
@@ -378,9 +360,7 @@ class TestFormattingCheckerTimeout:
     def test_run_handles_timeout_not_required(self, temp_project_dir, mock_runner):
         """Test run() handles timeout when formatting not required."""
         config = {"enabled": True, "required": False, "commands": {"python": "black"}}
-        checker = FormattingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = FormattingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -400,9 +380,7 @@ class TestFormattingCheckerTimeout:
     def test_run_handles_timeout_required(self, temp_project_dir, mock_runner):
         """Test run() handles timeout when formatting required."""
         config = {"enabled": True, "required": True, "commands": {"python": "black"}}
-        checker = FormattingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = FormattingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -423,14 +401,10 @@ class TestFormattingCheckerTimeout:
 class TestFormattingCheckerToolNotFound:
     """Tests for missing tool handling."""
 
-    def test_run_handles_tool_not_found_not_required(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_tool_not_found_not_required(self, temp_project_dir, mock_runner):
         """Test run() handles tool not found when formatting not required."""
         config = {"enabled": True, "required": False, "commands": {"python": "black"}}
-        checker = FormattingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = FormattingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="", command=["black"], duration_seconds=0.1
@@ -444,9 +418,7 @@ class TestFormattingCheckerToolNotFound:
     def test_run_handles_tool_not_found_required(self, temp_project_dir, mock_runner):
         """Test run() handles tool not found when formatting required."""
         config = {"enabled": True, "required": True, "commands": {"python": "black"}}
-        checker = FormattingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = FormattingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="", command=["black"], duration_seconds=0.1
@@ -462,9 +434,7 @@ class TestFormattingCheckerToolNotFound:
 class TestFormattingCheckerErrorOutput:
     """Tests for error output handling."""
 
-    def test_run_includes_error_output(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_error_output(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() includes error output in result."""
         checker = FormattingChecker(
             formatting_config, temp_project_dir, language="python", runner=mock_runner
@@ -483,9 +453,7 @@ class TestFormattingCheckerErrorOutput:
         assert result.errors[0]["message"] == "Code formatting issues found"
         assert "reformat" in result.errors[0]["output"]
 
-    def test_run_limits_output_length(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_limits_output_length(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() limits output length."""
         checker = FormattingChecker(
             formatting_config, temp_project_dir, language="python", runner=mock_runner
@@ -510,9 +478,7 @@ class TestFormattingCheckerErrorOutput:
 class TestFormattingCheckerDifferentLanguages:
     """Tests for different language support."""
 
-    def test_run_javascript_formatting(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_javascript_formatting(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() for JavaScript formatting."""
         checker = FormattingChecker(
             formatting_config,
@@ -535,9 +501,7 @@ class TestFormattingCheckerDifferentLanguages:
         call_args = mock_runner.run.call_args[0][0]
         assert "prettier" in call_args
 
-    def test_run_typescript_formatting(
-        self, formatting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_typescript_formatting(self, formatting_config, temp_project_dir, mock_runner):
         """Test run() for TypeScript formatting."""
         checker = FormattingChecker(
             formatting_config,

@@ -39,13 +39,9 @@ class LintingChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=120)
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=120)
         self.language = language or self._detect_language()
-        self.auto_fix = (
-            auto_fix if auto_fix is not None else self.config.get("auto_fix", False)
-        )
+        self.auto_fix = auto_fix if auto_fix is not None else self.config.get("auto_fix", False)
 
     def name(self) -> str:
         """Return checker name."""
@@ -80,9 +76,7 @@ class LintingChecker(QualityChecker):
         commands = self.config.get("commands", {})
         command = commands.get(self.language)
         if not command:
-            logger.warning(
-                f"No linting command configured for language: {self.language}"
-            )
+            logger.warning(f"No linting command configured for language: {self.language}")
             return self._create_skipped_result(reason=f"no command for {self.language}")
 
         # Add auto-fix flag if supported

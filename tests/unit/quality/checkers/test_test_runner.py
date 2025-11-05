@@ -79,9 +79,7 @@ class TestTestRunnerInit:
 
         assert runner.language == "python"
 
-    def test_init_detects_javascript_from_package_json(
-        self, test_config, temp_project_dir
-    ):
+    def test_init_detects_javascript_from_package_json(self, test_config, temp_project_dir):
         """Test language detection for JavaScript via package.json."""
         (temp_project_dir / "package.json").touch()
 
@@ -143,23 +141,17 @@ class TestTestRunnerRun:
         assert result.passed is True
         assert result.status == "skipped"
 
-    def test_run_returns_skipped_when_no_command_for_language(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_returns_skipped_when_no_command_for_language(self, temp_project_dir, mock_runner):
         """Test run() returns skipped when no command configured."""
         config = {"enabled": True, "commands": {}}
-        runner = ExecutionChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        runner = ExecutionChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         result = runner.run()
 
         assert result.status == "skipped"
         assert result.info["reason"] == "no command for python"
 
-    def test_run_executes_test_command(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_executes_test_command(self, test_config, temp_project_dir, mock_runner):
         """Test run() executes test command."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -203,9 +195,7 @@ class TestTestRunnerRun:
         assert result.status == "passed"
         assert result.info["coverage"] == 85.0
 
-    def test_run_fails_when_tests_fail(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_fails_when_tests_fail(self, test_config, temp_project_dir, mock_runner):
         """Test run() fails when tests fail."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -270,9 +260,7 @@ class TestTestRunnerRun:
         assert result.status == "failed"
         assert "timeout" in result.info["reason"]
 
-    def test_run_handles_tool_not_found(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_tool_not_found(self, test_config, temp_project_dir, mock_runner):
         """Test run() handles test tool not found."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -291,9 +279,7 @@ class TestTestRunnerRun:
         assert result.status == "skipped"
         assert "not available" in result.info["reason"]
 
-    def test_run_handles_no_tests_collected(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_no_tests_collected(self, test_config, temp_project_dir, mock_runner):
         """Test run() handles exit code 5 (no tests collected)."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -309,9 +295,7 @@ class TestTestRunnerRun:
         assert result.info["reason"] == "no tests collected"
         assert result.passed is True
 
-    def test_run_includes_execution_time(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, test_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -356,9 +340,7 @@ class TestTestRunnerRun:
 class TestTestRunnerCoverageParsing:
     """Tests for coverage parsing."""
 
-    def test_parse_coverage_python_reads_coverage_json(
-        self, test_config, temp_project_dir
-    ):
+    def test_parse_coverage_python_reads_coverage_json(self, test_config, temp_project_dir):
         """Test _parse_coverage reads Python coverage.json file."""
         runner = ExecutionChecker(test_config, temp_project_dir, language="python")
 
@@ -380,9 +362,7 @@ class TestTestRunnerCoverageParsing:
 
         assert result is None
 
-    def test_parse_coverage_javascript_reads_coverage_summary(
-        self, test_config, temp_project_dir
-    ):
+    def test_parse_coverage_javascript_reads_coverage_summary(self, test_config, temp_project_dir):
         """Test _parse_coverage reads JavaScript coverage-summary.json."""
         runner = ExecutionChecker(test_config, temp_project_dir, language="javascript")
 
@@ -396,9 +376,7 @@ class TestTestRunnerCoverageParsing:
 
         assert result == 92.3
 
-    def test_parse_coverage_typescript_reads_coverage_summary(
-        self, test_config, temp_project_dir
-    ):
+    def test_parse_coverage_typescript_reads_coverage_summary(self, test_config, temp_project_dir):
         """Test _parse_coverage reads TypeScript coverage-summary.json."""
         runner = ExecutionChecker(test_config, temp_project_dir, language="typescript")
 
@@ -412,9 +390,7 @@ class TestTestRunnerCoverageParsing:
 
         assert result == 88.7
 
-    def test_parse_coverage_handles_json_decode_error(
-        self, test_config, temp_project_dir
-    ):
+    def test_parse_coverage_handles_json_decode_error(self, test_config, temp_project_dir):
         """Test _parse_coverage handles JSON decode errors gracefully."""
         runner = ExecutionChecker(test_config, temp_project_dir, language="python")
 
@@ -425,9 +401,7 @@ class TestTestRunnerCoverageParsing:
 
         assert result is None
 
-    def test_parse_coverage_handles_file_read_error(
-        self, test_config, temp_project_dir
-    ):
+    def test_parse_coverage_handles_file_read_error(self, test_config, temp_project_dir):
         """Test _parse_coverage handles file read errors gracefully."""
         runner = ExecutionChecker(test_config, temp_project_dir, language="python")
 
@@ -450,9 +424,7 @@ class TestTestRunnerCoverageParsing:
 class TestTestRunnerExitCodes:
     """Tests for handling pytest exit codes."""
 
-    def test_run_handles_exit_code_0_tests_passed(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_exit_code_0_tests_passed(self, test_config, temp_project_dir, mock_runner):
         """Test run() handles exit code 0 (all tests passed)."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -472,9 +444,7 @@ class TestTestRunnerExitCodes:
         assert result.passed is True
         assert result.status == "passed"
 
-    def test_run_handles_exit_code_1_tests_failed(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_exit_code_1_tests_failed(self, test_config, temp_project_dir, mock_runner):
         """Test run() handles exit code 1 (some tests failed)."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -494,9 +464,7 @@ class TestTestRunnerExitCodes:
         assert result.passed is False
         assert result.status == "failed"
 
-    def test_run_handles_exit_code_2_interrupted(
-        self, test_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_exit_code_2_interrupted(self, test_config, temp_project_dir, mock_runner):
         """Test run() handles exit code 2 (test execution interrupted)."""
         runner = ExecutionChecker(
             test_config, temp_project_dir, language="python", runner=mock_runner
@@ -544,9 +512,7 @@ class TestTestRunnerCustomThreshold:
             "coverage_threshold": 95,
             "commands": {"python": "pytest"},
         }
-        runner = ExecutionChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        runner = ExecutionChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -562,18 +528,14 @@ class TestTestRunnerCustomThreshold:
         assert result.passed is False
         assert result.info["threshold"] == 95
 
-    def test_run_passes_with_coverage_above_custom_threshold(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_passes_with_coverage_above_custom_threshold(self, temp_project_dir, mock_runner):
         """Test run() passes when coverage above custom threshold."""
         config = {
             "enabled": True,
             "coverage_threshold": 70,
             "commands": {"python": "pytest"},
         }
-        runner = ExecutionChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        runner = ExecutionChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,

@@ -42,12 +42,8 @@ class IntegrationChecker(QualityChecker):
         """
         super().__init__(config)
         self.work_item = work_item
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=30)
-        )
-        self.config_path = (
-            config_path if config_path is not None else Path(".session/config.json")
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=30)
+        self.config_path = config_path if config_path is not None else Path(".session/config.json")
 
     def name(self) -> str:
         """Return checker name."""
@@ -105,14 +101,10 @@ class IntegrationChecker(QualityChecker):
             if test_results.get("failed", 0) > 0:
                 logger.error("Integration tests failed")
                 errors.append(
-                    {
-                        "message": f"{test_results.get('failed', 0)} integration tests failed"
-                    }
+                    {"message": f"{test_results.get('failed', 0)} integration tests failed"}
                 )
 
-            logger.info(
-                f"Integration tests passed ({test_results.get('passed', 0)} tests)"
-            )
+            logger.info(f"Integration tests passed ({test_results.get('passed', 0)} tests)")
 
             # 2. Run performance benchmarks
             if self.work_item.get("performance_benchmarks"):
@@ -124,14 +116,10 @@ class IntegrationChecker(QualityChecker):
 
                 if not benchmarks_passed:
                     logger.error("Performance benchmarks failed")
-                    if self.config.get("performance_benchmarks", {}).get(
-                        "required", True
-                    ):
+                    if self.config.get("performance_benchmarks", {}).get("required", True):
                         errors.append({"message": "Performance benchmarks failed"})
                     else:
-                        warnings.append(
-                            {"message": "Performance benchmarks failed (optional)"}
-                        )
+                        warnings.append({"message": "Performance benchmarks failed (optional)"})
                 else:
                     logger.info("Performance benchmarks passed")
 
@@ -148,9 +136,7 @@ class IntegrationChecker(QualityChecker):
                     if self.config.get("api_contracts", {}).get("required", True):
                         errors.append({"message": "API contract validation failed"})
                     else:
-                        warnings.append(
-                            {"message": "API contract validation failed (optional)"}
-                        )
+                        warnings.append({"message": "API contract validation failed (optional)"})
                 else:
                     logger.info("API contracts validated")
 
@@ -221,9 +207,7 @@ class IntegrationChecker(QualityChecker):
             errors.append({"message": "Docker Compose not available"})
 
         # Check compose file exists
-        compose_file = env_requirements.get(
-            "compose_file", "docker-compose.integration.yml"
-        )
+        compose_file = env_requirements.get("compose_file", "docker-compose.integration.yml")
         if not Path(compose_file).exists():
             results["missing_config"].append(compose_file)
             errors.append({"message": f"Missing compose file: {compose_file}"})
@@ -313,9 +297,7 @@ class IntegrationChecker(QualityChecker):
                         has_sequence = True
                         break
 
-                results["checks"].append(
-                    {"name": "Sequence diagrams", "passed": has_sequence}
-                )
+                results["checks"].append({"name": "Sequence diagrams", "passed": has_sequence})
 
                 if not has_sequence:
                     results["missing"].append("Sequence diagrams for test scenarios")
@@ -350,9 +332,7 @@ class IntegrationChecker(QualityChecker):
                 benchmarks = parsed_spec.get("performance_benchmarks", "")
                 has_benchmarks = benchmarks and len(benchmarks.strip()) > 20
             except (OSError, ValueError, KeyError) as e:
-                logger.debug(
-                    f"Failed to parse spec file for performance benchmarks: {e}"
-                )
+                logger.debug(f"Failed to parse spec file for performance benchmarks: {e}")
                 has_benchmarks = False
 
             if has_benchmarks:
@@ -379,9 +359,7 @@ class IntegrationChecker(QualityChecker):
             logger.debug(f"Failed to parse spec file for integration points: {e}")
             documented = False
 
-        results["checks"].append(
-            {"name": "Integration points documented", "passed": documented}
-        )
+        results["checks"].append({"name": "Integration points documented", "passed": documented})
 
         if not documented:
             results["missing"].append("Integration points documentation")
@@ -392,9 +370,7 @@ class IntegrationChecker(QualityChecker):
 
         # Pass if all required checks pass
         passed = len(results["missing"]) == 0
-        results["summary"] = (
-            f"{passed_checks}/{total_checks} documentation requirements met"
-        )
+        results["summary"] = f"{passed_checks}/{total_checks} documentation requirements met"
 
         execution_time = time.time() - start_time
 

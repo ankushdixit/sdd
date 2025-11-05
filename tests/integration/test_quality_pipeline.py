@@ -202,9 +202,7 @@ class TestIntegrationTestsDisabled:
         # Act
         with patch("sdd.work_items.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"test_scenarios": []}
-            with patch(
-                "sdd.testing.integration_runner.IntegrationTestRunner"
-            ) as mock_runner_class:
+            with patch("sdd.testing.integration_runner.IntegrationTestRunner") as mock_runner_class:
                 mock_runner = Mock()
                 # setup_environment now raises exceptions instead of returning tuple
                 mock_runner.setup_environment.return_value = None
@@ -322,9 +320,7 @@ class TestEnvironmentValidation:
             assert key in results
 
     @patch("subprocess.run")
-    def test_validate_environment_passes_when_all_requirements_met(
-        self, mock_run, temp_dir
-    ):
+    def test_validate_environment_passes_when_all_requirements_met(self, mock_run, temp_dir):
         """Test that validate_integration_environment passes when all requirements are met."""
         # Arrange
         mock_run.return_value = Mock(returncode=0)

@@ -37,9 +37,7 @@ class ConsoleReporter(Reporter):
         report.append(f"Passed: {aggregated_results['passed_checks']}")
         report.append(f"Failed: {aggregated_results['failed_checks']}")
         report.append(f"Skipped: {aggregated_results['skipped_checks']}")
-        report.append(
-            f"Execution Time: {aggregated_results['total_execution_time']:.2f}s"
-        )
+        report.append(f"Execution Time: {aggregated_results['total_execution_time']:.2f}s")
 
         # Individual checker results
         report.append("\n" + "-" * 60)

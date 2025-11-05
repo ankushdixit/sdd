@@ -51,9 +51,7 @@ class TestLintingCheckerInit:
         assert isinstance(checker.runner, CommandRunner)
         assert checker.auto_fix is False
 
-    def test_init_with_custom_runner(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_init_with_custom_runner(self, linting_config, temp_project_dir, mock_runner):
         """Test initialization with custom runner."""
         checker = LintingChecker(linting_config, temp_project_dir, runner=mock_runner)
 
@@ -61,9 +59,7 @@ class TestLintingCheckerInit:
 
     def test_init_with_explicit_language(self, linting_config, temp_project_dir):
         """Test initialization with explicit language."""
-        checker = LintingChecker(
-            linting_config, temp_project_dir, language="javascript"
-        )
+        checker = LintingChecker(linting_config, temp_project_dir, language="javascript")
 
         assert checker.language == "javascript"
 
@@ -97,9 +93,7 @@ class TestLintingCheckerInit:
 
         assert checker.language == "python"
 
-    def test_init_detects_javascript_from_package_json(
-        self, linting_config, temp_project_dir
-    ):
+    def test_init_detects_javascript_from_package_json(self, linting_config, temp_project_dir):
         """Test language detection for JavaScript via package.json."""
         (temp_project_dir / "package.json").touch()
 
@@ -152,23 +146,17 @@ class TestLintingCheckerRun:
         assert result.passed is True
         assert result.status == "skipped"
 
-    def test_run_returns_skipped_when_no_command_for_language(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_returns_skipped_when_no_command_for_language(self, temp_project_dir, mock_runner):
         """Test run() returns skipped when no command configured."""
         config = {"enabled": True, "commands": {}}
-        checker = LintingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = LintingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         result = checker.run()
 
         assert result.status == "skipped"
         assert result.info["reason"] == "no command for python"
 
-    def test_run_executes_linting_command(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_executes_linting_command(self, linting_config, temp_project_dir, mock_runner):
         """Test run() executes linting command."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -189,9 +177,7 @@ class TestLintingCheckerRun:
         assert "ruff" in call_args
         assert "check" in call_args
 
-    def test_run_passes_when_no_issues(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_passes_when_no_issues(self, linting_config, temp_project_dir, mock_runner):
         """Test run() passes when no linting issues found."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -210,9 +196,7 @@ class TestLintingCheckerRun:
         assert result.passed is True
         assert result.status == "passed"
 
-    def test_run_fails_when_issues_found(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_fails_when_issues_found(self, linting_config, temp_project_dir, mock_runner):
         """Test run() fails when linting issues found."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -282,9 +266,7 @@ class TestLintingCheckerRun:
         call_args = mock_runner.run.call_args[0][0]
         assert "--fix" in " ".join(call_args)
 
-    def test_run_includes_execution_time(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, linting_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -302,9 +284,7 @@ class TestLintingCheckerRun:
 
         assert result.execution_time > 0
 
-    def test_run_includes_auto_fixed_info(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_auto_fixed_info(self, linting_config, temp_project_dir, mock_runner):
         """Test run() includes auto_fixed info in result."""
         checker = LintingChecker(
             linting_config,
@@ -337,9 +317,7 @@ class TestLintingCheckerTimeout:
             "required": False,
             "commands": {"python": "ruff check"},
         }
-        checker = LintingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = LintingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -363,9 +341,7 @@ class TestLintingCheckerTimeout:
             "required": True,
             "commands": {"python": "ruff check"},
         }
-        checker = LintingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = LintingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -386,18 +362,14 @@ class TestLintingCheckerTimeout:
 class TestLintingCheckerToolNotFound:
     """Tests for missing tool handling."""
 
-    def test_run_handles_tool_not_found_not_required(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_tool_not_found_not_required(self, temp_project_dir, mock_runner):
         """Test run() handles tool not found when linting not required."""
         config = {
             "enabled": True,
             "required": False,
             "commands": {"python": "ruff check"},
         }
-        checker = LintingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = LintingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="", command=["ruff"], duration_seconds=0.1
@@ -415,9 +387,7 @@ class TestLintingCheckerToolNotFound:
             "required": True,
             "commands": {"python": "ruff check"},
         }
-        checker = LintingChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = LintingChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=-1, stdout="", stderr="", command=["ruff"], duration_seconds=0.1
@@ -433,9 +403,7 @@ class TestLintingCheckerToolNotFound:
 class TestLintingCheckerErrorOutput:
     """Tests for error output handling."""
 
-    def test_run_includes_error_output(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_error_output(self, linting_config, temp_project_dir, mock_runner):
         """Test run() includes error output in result."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -454,9 +422,7 @@ class TestLintingCheckerErrorOutput:
         assert result.errors[0]["message"] == "Linting found 3 issue(s)"
         assert "line too long" in result.errors[0]["output"]
 
-    def test_run_limits_output_length(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_limits_output_length(self, linting_config, temp_project_dir, mock_runner):
         """Test run() limits output length."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="python", runner=mock_runner
@@ -481,9 +447,7 @@ class TestLintingCheckerErrorOutput:
 class TestLintingCheckerDifferentLanguages:
     """Tests for different language support."""
 
-    def test_run_javascript_linting(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_javascript_linting(self, linting_config, temp_project_dir, mock_runner):
         """Test run() for JavaScript linting."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="javascript", runner=mock_runner
@@ -503,9 +467,7 @@ class TestLintingCheckerDifferentLanguages:
         call_args = mock_runner.run.call_args[0][0]
         assert "eslint" in call_args
 
-    def test_run_typescript_linting(
-        self, linting_config, temp_project_dir, mock_runner
-    ):
+    def test_run_typescript_linting(self, linting_config, temp_project_dir, mock_runner):
         """Test run() for TypeScript linting."""
         checker = LintingChecker(
             linting_config, temp_project_dir, language="typescript", runner=mock_runner

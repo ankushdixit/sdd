@@ -117,9 +117,7 @@ class TestContext7CheckerRun:
         assert result.status == "skipped"
         assert result.info["reason"] == "not enabled"
 
-    def test_run_returns_skipped_when_no_stack_txt(
-        self, basic_config, temp_project_dir
-    ):
+    def test_run_returns_skipped_when_no_stack_txt(self, basic_config, temp_project_dir):
         """Test run() returns skipped when stack.txt doesn't exist."""
         # Don't create stack.txt
         checker = Context7Checker(basic_config, temp_project_dir)
@@ -198,9 +196,7 @@ class TestContext7CheckerRun:
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("pytest 7.4.0\nnumpy 1.24.0\nrequests 2.31.0\n")
 
-        checker = Context7Checker(
-            config_with_important_libs, temp_project_dir, runner=mock_runner
-        )
+        checker = Context7Checker(config_with_important_libs, temp_project_dir, runner=mock_runner)
 
         with patch.object(checker, "_query_context7", return_value=True):
             result = checker.run()
@@ -223,9 +219,7 @@ class TestContext7CheckerRun:
 
         assert result.execution_time > 0
 
-    def test_run_handles_file_operation_error(
-        self, basic_config, temp_project_dir, mock_runner
-    ):
+    def test_run_handles_file_operation_error(self, basic_config, temp_project_dir, mock_runner):
         """Test run() handles file operation errors gracefully."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("pytest 7.4.0\n")
@@ -298,9 +292,7 @@ class TestContext7CheckerParseLibraries:
     def test_parse_libraries_ignores_comments(self, basic_config, temp_project_dir):
         """Test parsing ignores comment lines."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
-        stack_file.write_text(
-            "# Core libraries\npytest 7.4.0\n# Data libraries\nnumpy 1.24.0\n"
-        )
+        stack_file.write_text("# Core libraries\npytest 7.4.0\n# Data libraries\nnumpy 1.24.0\n")
 
         checker = Context7Checker(basic_config, temp_project_dir)
 
@@ -310,9 +302,7 @@ class TestContext7CheckerParseLibraries:
         assert libraries[0] == {"name": "pytest", "version": "7.4.0"}
         assert libraries[1] == {"name": "numpy", "version": "1.24.0"}
 
-    def test_parse_libraries_handles_extra_whitespace(
-        self, basic_config, temp_project_dir
-    ):
+    def test_parse_libraries_handles_extra_whitespace(self, basic_config, temp_project_dir):
         """Test parsing handles extra whitespace."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("  pytest  7.4.0  \n  numpy  1.24.0  \n")
@@ -325,9 +315,7 @@ class TestContext7CheckerParseLibraries:
         assert libraries[0] == {"name": "pytest", "version": "7.4.0"}
         assert libraries[1] == {"name": "numpy", "version": "1.24.0"}
 
-    def test_parse_libraries_handles_parenthetical_info(
-        self, basic_config, temp_project_dir
-    ):
+    def test_parse_libraries_handles_parenthetical_info(self, basic_config, temp_project_dir):
         """Test parsing handles parenthetical information."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("pytest (testing)\nnumpy (data)\n")
@@ -340,9 +328,7 @@ class TestContext7CheckerParseLibraries:
         assert libraries[0] == {"name": "pytest", "version": "(testing)"}
         assert libraries[1] == {"name": "numpy", "version": "(data)"}
 
-    def test_parse_libraries_raises_on_file_not_found(
-        self, basic_config, temp_project_dir
-    ):
+    def test_parse_libraries_raises_on_file_not_found(self, basic_config, temp_project_dir):
         """Test parsing raises FileOperationError when file not found."""
         stack_file = temp_project_dir / ".session" / "tracking" / "nonexistent.txt"
 
@@ -355,9 +341,7 @@ class TestContext7CheckerParseLibraries:
         assert "nonexistent.txt" in exc_info.value.context["file_path"]
         assert "Failed to read stack.txt file" in exc_info.value.context["details"]
 
-    def test_parse_libraries_raises_on_permission_error(
-        self, basic_config, temp_project_dir
-    ):
+    def test_parse_libraries_raises_on_permission_error(self, basic_config, temp_project_dir):
         """Test parsing raises FileOperationError on permission error."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("pytest 7.4.0\n")
@@ -388,24 +372,13 @@ class TestContext7CheckerParseLibraries:
 class TestContext7CheckerShouldVerify:
     """Tests for _should_verify_library method."""
 
-    def test_should_verify_all_when_no_important_list(
-        self, basic_config, temp_project_dir
-    ):
+    def test_should_verify_all_when_no_important_list(self, basic_config, temp_project_dir):
         """Test all libraries are verified when no important list configured."""
         checker = Context7Checker(basic_config, temp_project_dir)
 
-        assert (
-            checker._should_verify_library({"name": "pytest", "version": "7.4.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "numpy", "version": "1.24.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "requests", "version": "2.31.0"})
-            is True
-        )
+        assert checker._should_verify_library({"name": "pytest", "version": "7.4.0"}) is True
+        assert checker._should_verify_library({"name": "numpy", "version": "1.24.0"}) is True
+        assert checker._should_verify_library({"name": "requests", "version": "2.31.0"}) is True
 
     def test_should_verify_only_important_when_list_configured(
         self, config_with_important_libs, temp_project_dir
@@ -413,26 +386,11 @@ class TestContext7CheckerShouldVerify:
         """Test only important libraries are verified when list configured."""
         checker = Context7Checker(config_with_important_libs, temp_project_dir)
 
-        assert (
-            checker._should_verify_library({"name": "pytest", "version": "7.4.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "numpy", "version": "1.24.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "pandas", "version": "2.0.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "requests", "version": "2.31.0"})
-            is False
-        )
-        assert (
-            checker._should_verify_library({"name": "django", "version": "4.2.0"})
-            is False
-        )
+        assert checker._should_verify_library({"name": "pytest", "version": "7.4.0"}) is True
+        assert checker._should_verify_library({"name": "numpy", "version": "1.24.0"}) is True
+        assert checker._should_verify_library({"name": "pandas", "version": "2.0.0"}) is True
+        assert checker._should_verify_library({"name": "requests", "version": "2.31.0"}) is False
+        assert checker._should_verify_library({"name": "django", "version": "4.2.0"}) is False
 
     def test_should_verify_empty_important_list(self, temp_project_dir):
         """Test behavior with empty important libraries list."""
@@ -440,22 +398,14 @@ class TestContext7CheckerShouldVerify:
         checker = Context7Checker(config, temp_project_dir)
 
         # Empty list means verify all (no filtering)
-        assert (
-            checker._should_verify_library({"name": "pytest", "version": "7.4.0"})
-            is True
-        )
-        assert (
-            checker._should_verify_library({"name": "numpy", "version": "1.24.0"})
-            is True
-        )
+        assert checker._should_verify_library({"name": "pytest", "version": "7.4.0"}) is True
+        assert checker._should_verify_library({"name": "numpy", "version": "1.24.0"}) is True
 
 
 class TestContext7CheckerQueryContext7:
     """Tests for _query_context7 method."""
 
-    def test_query_context7_returns_true_by_default(
-        self, basic_config, temp_project_dir
-    ):
+    def test_query_context7_returns_true_by_default(self, basic_config, temp_project_dir):
         """Test _query_context7 returns True by default (stub implementation)."""
         checker = Context7Checker(basic_config, temp_project_dir)
 
@@ -463,9 +413,7 @@ class TestContext7CheckerQueryContext7:
 
         assert result is True
 
-    def test_query_context7_stub_for_all_libraries(
-        self, basic_config, temp_project_dir
-    ):
+    def test_query_context7_stub_for_all_libraries(self, basic_config, temp_project_dir):
         """Test _query_context7 stub works for all library types."""
         checker = Context7Checker(basic_config, temp_project_dir)
 
@@ -477,14 +425,10 @@ class TestContext7CheckerQueryContext7:
 class TestContext7CheckerIntegration:
     """Integration tests for Context7Checker."""
 
-    def test_full_workflow_with_mixed_results(
-        self, basic_config, temp_project_dir, mock_runner
-    ):
+    def test_full_workflow_with_mixed_results(self, basic_config, temp_project_dir, mock_runner):
         """Test full workflow with mixed verification results."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
-        stack_file.write_text(
-            "pytest 7.4.0\nnumpy 1.24.0\npandas 2.0.0\nrequests 2.31.0\n"
-        )
+        stack_file.write_text("pytest 7.4.0\nnumpy 1.24.0\npandas 2.0.0\nrequests 2.31.0\n")
 
         checker = Context7Checker(basic_config, temp_project_dir, runner=mock_runner)
 
@@ -516,9 +460,7 @@ class TestContext7CheckerIntegration:
             "pytest 7.4.0\nnumpy 1.24.0\npandas 2.0.0\nrequests 2.31.0\ndjango 4.2.0\n"
         )
 
-        checker = Context7Checker(
-            config_with_important_libs, temp_project_dir, runner=mock_runner
-        )
+        checker = Context7Checker(config_with_important_libs, temp_project_dir, runner=mock_runner)
 
         # Mock to fail pandas
         def mock_query(lib):
@@ -539,9 +481,7 @@ class TestContext7CheckerIntegration:
         assert "requests" not in library_names
         assert "django" not in library_names
 
-    def test_full_workflow_with_comments_and_whitespace(
-        self, basic_config, temp_project_dir
-    ):
+    def test_full_workflow_with_comments_and_whitespace(self, basic_config, temp_project_dir):
         """Test full workflow handles comments and whitespace correctly."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text(
@@ -556,9 +496,7 @@ class TestContext7CheckerIntegration:
         assert result.info["total_libraries"] == 2
         assert result.info["verified"] == 2
 
-    def test_result_structure_matches_checkresult_contract(
-        self, basic_config, temp_project_dir
-    ):
+    def test_result_structure_matches_checkresult_contract(self, basic_config, temp_project_dir):
         """Test result structure matches CheckResult contract."""
         stack_file = temp_project_dir / ".session" / "tracking" / "stack.txt"
         stack_file.write_text("pytest 7.4.0\n")

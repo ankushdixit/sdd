@@ -40,9 +40,7 @@ class DeploymentChecker(QualityChecker):
         """
         super().__init__(config, project_root)
         self.work_item = work_item
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=60)
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
 
     def name(self) -> str:
         """Return checker name."""
@@ -211,9 +209,7 @@ class DeploymentChecker(QualityChecker):
         # Gate 5: Rollback procedure tested
         logger.info("Checking rollback testing...")
         rollback_tested = self._check_rollback_tested()
-        gates.append(
-            {"name": "Rollback Tested", "required": True, "passed": rollback_tested}
-        )
+        gates.append({"name": "Rollback Tested", "required": True, "passed": rollback_tested})
         if not rollback_tested:
             overall_passed = False
             errors.append(
@@ -266,9 +262,7 @@ class DeploymentChecker(QualityChecker):
             return passed
         except ImportError:
             # If environment_validator not available, return True
-            logger.debug(
-                "Environment validator module not available, skipping validation"
-            )
+            logger.debug("Environment validator module not available, skipping validation")
             return True
 
     def _validate_deployment_documentation(self) -> bool:

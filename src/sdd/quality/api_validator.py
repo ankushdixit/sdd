@@ -82,9 +82,7 @@ class APIContractValidator:
                 InvalidOpenAPISpecError,
                 SDDFileNotFoundError,
             ) as e:
-                logger.error(
-                    f"Contract validation failed for {contract_file}: {e.message}"
-                )
+                logger.error(f"Contract validation failed for {contract_file}: {e.message}")
                 all_passed = False
                 continue
 
@@ -125,9 +123,7 @@ class APIContractValidator:
         contract_path = Path(contract_file)
 
         if not contract_path.exists():
-            raise SDDFileNotFoundError(
-                file_path=contract_file, file_type="API contract"
-            )
+            raise SDDFileNotFoundError(file_path=contract_file, file_type="API contract")
 
         # Load contract
         try:
@@ -163,9 +159,7 @@ class APIContractValidator:
         logger.info(f"Contract valid: {contract_file}")
 
     @log_errors()
-    def _detect_breaking_changes(
-        self, current_file: str, previous_file: str
-    ) -> list[dict]:
+    def _detect_breaking_changes(self, current_file: str, previous_file: str) -> list[dict]:
         """
         Detect breaking changes between contract versions.
 
@@ -254,9 +248,7 @@ class APIContractValidator:
                 contract_file=file_path, details=f"Failed to parse contract file: {e}"
             ) from e
 
-    def _check_endpoint_changes(
-        self, path: str, previous: dict, current: dict
-    ) -> list[dict]:
+    def _check_endpoint_changes(self, path: str, previous: dict, current: dict) -> list[dict]:
         """
         Check for breaking changes in a specific endpoint.
 

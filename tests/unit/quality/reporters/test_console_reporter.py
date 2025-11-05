@@ -186,9 +186,7 @@ class TestConsoleReporterGenerate:
 
         assert "Execution Time: 10.50s" in report
 
-    def test_generate_includes_individual_checker_results(
-        self, reporter, passing_results
-    ):
+    def test_generate_includes_individual_checker_results(self, reporter, passing_results):
         """Test generate() includes individual checker results."""
         report = reporter.generate(passing_results)
 

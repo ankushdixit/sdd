@@ -57,22 +57,16 @@ class TestCustomValidationCheckerInit:
         assert isinstance(checker.runner, CommandRunner)
         assert checker.work_item == {}
 
-    def test_init_with_custom_runner(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_init_with_custom_runner(self, custom_config, temp_project_dir, mock_runner):
         """Test initialization with custom runner."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         assert checker.runner is mock_runner
 
     def test_init_with_work_item(self, custom_config, temp_project_dir):
         """Test initialization with work item."""
         work_item = {"id": "WI-001", "validation_rules": []}
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, work_item=work_item
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, work_item=work_item)
 
         assert checker.work_item == work_item
 
@@ -86,9 +80,7 @@ class TestCustomValidationCheckerInterface:
 
         assert checker.name() == "custom_validations"
 
-    def test_is_enabled_returns_true_when_rules_exist(
-        self, custom_config, temp_project_dir
-    ):
+    def test_is_enabled_returns_true_when_rules_exist(self, custom_config, temp_project_dir):
         """Test is_enabled() returns True when rules exist."""
         checker = CustomValidationChecker(custom_config, temp_project_dir)
 
@@ -106,9 +98,7 @@ class TestCustomValidationCheckerInterface:
         """Test is_enabled() returns True when work item has rules."""
         config = {"rules": []}
         work_item = {
-            "validation_rules": [
-                {"type": "command", "name": "Test", "command": "echo test"}
-            ]
+            "validation_rules": [{"type": "command", "name": "Test", "command": "echo test"}]
         }
         checker = CustomValidationChecker(config, temp_project_dir, work_item=work_item)
 
@@ -133,13 +123,9 @@ class TestCustomValidationCheckerRun:
         assert result.status == "skipped"
         assert result.info["reason"] == "no custom rules defined"
 
-    def test_run_passes_when_all_rules_pass(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_passes_when_all_rules_pass(self, custom_config, temp_project_dir, mock_runner):
         """Test run() passes when all rules pass."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -157,13 +143,9 @@ class TestCustomValidationCheckerRun:
         assert result.passed is True
         assert result.status == "passed"
 
-    def test_run_fails_when_required_rule_fails(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_fails_when_required_rule_fails(self, custom_config, temp_project_dir, mock_runner):
         """Test run() fails when required rule fails."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=1,
@@ -203,13 +185,9 @@ class TestCustomValidationCheckerRun:
         assert result.status == "passed"
         assert len(result.warnings) > 0
 
-    def test_run_includes_execution_time(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, custom_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -226,9 +204,7 @@ class TestCustomValidationCheckerRun:
 
         assert result.execution_time > 0
 
-    def test_run_combines_project_and_work_item_rules(
-        self, temp_project_dir, mock_runner
-    ):
+    def test_run_combines_project_and_work_item_rules(self, temp_project_dir, mock_runner):
         """Test run() combines rules from config and work item."""
         config = {
             "rules": [
@@ -270,13 +246,9 @@ class TestCustomValidationCheckerRun:
 class TestCustomValidationCheckerCommandValidation:
     """Tests for command validation rules."""
 
-    def test_run_command_validation_succeeds(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_command_validation_succeeds(self, custom_config, temp_project_dir, mock_runner):
         """Test _run_command_validation succeeds when command succeeds."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -291,13 +263,9 @@ class TestCustomValidationCheckerCommandValidation:
 
         assert result is True
 
-    def test_run_command_validation_fails(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_command_validation_fails(self, custom_config, temp_project_dir, mock_runner):
         """Test _run_command_validation fails when command fails."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=1,
@@ -316,9 +284,7 @@ class TestCustomValidationCheckerCommandValidation:
         self, custom_config, temp_project_dir, mock_runner
     ):
         """Test _run_command_validation handles missing command field."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         rule = {"type": "command", "name": "Test"}
         result = checker._run_command_validation(rule)
@@ -350,9 +316,7 @@ class TestCustomValidationCheckerFileExistsValidation:
 
         assert result is False
 
-    def test_check_file_exists_handles_missing_path(
-        self, custom_config, temp_project_dir
-    ):
+    def test_check_file_exists_handles_missing_path(self, custom_config, temp_project_dir):
         """Test _check_file_exists handles missing path field."""
         checker = CustomValidationChecker(custom_config, temp_project_dir)
 
@@ -365,13 +329,9 @@ class TestCustomValidationCheckerFileExistsValidation:
 class TestCustomValidationCheckerGrepValidation:
     """Tests for grep validation rules."""
 
-    def test_run_grep_validation_succeeds(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_grep_validation_succeeds(self, custom_config, temp_project_dir, mock_runner):
         """Test _run_grep_validation succeeds when pattern found."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -386,13 +346,9 @@ class TestCustomValidationCheckerGrepValidation:
 
         assert result is True
 
-    def test_run_grep_validation_fails(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_grep_validation_fails(self, custom_config, temp_project_dir, mock_runner):
         """Test _run_grep_validation fails when pattern not found."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=1, stdout="", stderr="", command=["grep"], duration_seconds=0.1
@@ -407,9 +363,7 @@ class TestCustomValidationCheckerGrepValidation:
         self, custom_config, temp_project_dir, mock_runner
     ):
         """Test _run_grep_validation handles missing pattern field."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         rule = {"type": "grep", "files": ".", "name": "Test"}
         result = checker._run_grep_validation(rule)
@@ -420,9 +374,7 @@ class TestCustomValidationCheckerGrepValidation:
         self, custom_config, temp_project_dir, mock_runner
     ):
         """Test _run_grep_validation uses default files when not specified."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,
@@ -445,9 +397,7 @@ class TestCustomValidationCheckerUnknownRuleType:
 
     def test_run_handles_unknown_rule_type(self, temp_project_dir, mock_runner):
         """Test run() handles unknown rule type gracefully."""
-        config = {
-            "rules": [{"type": "unknown_type", "name": "Unknown", "required": True}]
-        }
+        config = {"rules": [{"type": "unknown_type", "name": "Unknown", "required": True}]}
         checker = CustomValidationChecker(config, temp_project_dir, runner=mock_runner)
 
         result = checker.run()
@@ -460,13 +410,9 @@ class TestCustomValidationCheckerUnknownRuleType:
 class TestCustomValidationCheckerValidationDetails:
     """Tests for validation result details."""
 
-    def test_run_includes_validation_details(
-        self, custom_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_validation_details(self, custom_config, temp_project_dir, mock_runner):
         """Test run() includes detailed validation information."""
-        checker = CustomValidationChecker(
-            custom_config, temp_project_dir, runner=mock_runner
-        )
+        checker = CustomValidationChecker(custom_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
             returncode=0,

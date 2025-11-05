@@ -77,13 +77,9 @@ class TestIntegrationCheckerInit:
         assert checker.runner is not None
         assert isinstance(checker.runner, CommandRunner)
 
-    def test_init_with_custom_runner(
-        self, integration_config, integration_work_item, mock_runner
-    ):
+    def test_init_with_custom_runner(self, integration_config, integration_work_item, mock_runner):
         """Test initialization with custom runner."""
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
 
         assert checker.runner is mock_runner
 
@@ -223,9 +219,7 @@ class TestIntegrationCheckerRun:
         """Test run() handles integration test errors."""
         mock_runner_instance = Mock()
         mock_runner_class.return_value = mock_runner_instance
-        mock_runner_instance.setup_environment.side_effect = IntegrationTestError(
-            "Generic error"
-        )
+        mock_runner_instance.setup_environment.side_effect = IntegrationTestError("Generic error")
 
         checker = IntegrationChecker(integration_work_item, integration_config)
         result = checker.run()
@@ -254,9 +248,7 @@ class TestIntegrationCheckerRun:
         """Test run() tears down environment even on failure."""
         mock_runner_instance = Mock()
         mock_runner_class.return_value = mock_runner_instance
-        mock_runner_instance.setup_environment.side_effect = EnvironmentSetupError(
-            "Error"
-        )
+        mock_runner_instance.setup_environment.side_effect = EnvironmentSetupError("Error")
 
         checker = IntegrationChecker(integration_work_item, integration_config)
         checker.run()
@@ -271,9 +263,7 @@ class TestIntegrationCheckerRun:
         mock_runner_instance = Mock()
         mock_runner_class.return_value = mock_runner_instance
         mock_runner_instance.run_tests.return_value = {"passed": 5, "failed": 0}
-        mock_runner_instance.teardown_environment.side_effect = OSError(
-            "Cleanup failed"
-        )
+        mock_runner_instance.teardown_environment.side_effect = OSError("Cleanup failed")
 
         checker = IntegrationChecker(integration_work_item, integration_config)
         result = checker.run()
@@ -339,9 +329,7 @@ class TestIntegrationCheckerRun:
         result = checker.run()
 
         assert result.passed is False
-        assert any(
-            "Performance benchmarks failed" in e["message"] for e in result.errors
-        )
+        assert any("Performance benchmarks failed" in e["message"] for e in result.errors)
 
     @patch("sdd.testing.integration_runner.IntegrationTestRunner")
     @patch("sdd.testing.performance.PerformanceBenchmark")
@@ -369,8 +357,7 @@ class TestIntegrationCheckerRun:
 
         assert result.passed is True
         assert any(
-            "Performance benchmarks failed (optional)" in w["message"]
-            for w in result.warnings
+            "Performance benchmarks failed (optional)" in w["message"] for w in result.warnings
         )
 
     @patch("sdd.testing.integration_runner.IntegrationTestRunner")
@@ -429,9 +416,7 @@ class TestIntegrationCheckerRun:
         result = checker.run()
 
         assert result.passed is False
-        assert any(
-            "API contract validation failed" in e["message"] for e in result.errors
-        )
+        assert any("API contract validation failed" in e["message"] for e in result.errors)
 
     @patch("sdd.testing.integration_runner.IntegrationTestRunner")
     def test_run_includes_execution_time(
@@ -455,9 +440,7 @@ class TestIntegrationCheckerValidateEnvironment:
         self, integration_config, feature_work_item, mock_runner
     ):
         """Test validate_environment() skips non-integration work items."""
-        checker = IntegrationChecker(
-            feature_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(feature_work_item, integration_config, runner=mock_runner)
 
         result = checker.validate_environment()
 
@@ -475,12 +458,8 @@ class TestIntegrationCheckerValidateEnvironment:
         config_file.parent.mkdir()
         config_file.touch()
 
-        integration_work_item["environment_requirements"]["compose_file"] = str(
-            compose_file
-        )
-        integration_work_item["environment_requirements"]["config_files"] = [
-            str(config_file)
-        ]
+        integration_work_item["environment_requirements"]["compose_file"] = str(compose_file)
+        integration_work_item["environment_requirements"]["config_files"] = [str(config_file)]
 
         # Mock Docker commands to succeed
         mock_runner.run.return_value = CommandResult(
@@ -491,9 +470,7 @@ class TestIntegrationCheckerValidateEnvironment:
             duration_seconds=0.1,
         )
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.passed is True
@@ -509,9 +486,7 @@ class TestIntegrationCheckerValidateEnvironment:
         # Create required files
         compose_file = tmp_path / "docker-compose.integration.yml"
         compose_file.touch()
-        integration_work_item["environment_requirements"]["compose_file"] = str(
-            compose_file
-        )
+        integration_work_item["environment_requirements"]["compose_file"] = str(compose_file)
 
         # Mock Docker command to fail
         mock_runner.run.side_effect = [
@@ -531,9 +506,7 @@ class TestIntegrationCheckerValidateEnvironment:
             ),
         ]
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.passed is False
@@ -548,9 +521,7 @@ class TestIntegrationCheckerValidateEnvironment:
         # Create required files
         compose_file = tmp_path / "docker-compose.integration.yml"
         compose_file.touch()
-        integration_work_item["environment_requirements"]["compose_file"] = str(
-            compose_file
-        )
+        integration_work_item["environment_requirements"]["compose_file"] = str(compose_file)
 
         # Mock Docker Compose command to fail
         mock_runner.run.side_effect = [
@@ -570,25 +541,19 @@ class TestIntegrationCheckerValidateEnvironment:
             ),
         ]
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.passed is False
         assert result.status == "failed"
         assert result.info["docker_compose_available"] is False
-        assert any(
-            "Docker Compose not available" in e["message"] for e in result.errors
-        )
+        assert any("Docker Compose not available" in e["message"] for e in result.errors)
 
     def test_validate_environment_fails_when_compose_file_missing(
         self, integration_config, integration_work_item, mock_runner
     ):
         """Test validate_environment() fails when compose file missing."""
-        integration_work_item["environment_requirements"][
-            "compose_file"
-        ] = "missing-compose.yml"
+        integration_work_item["environment_requirements"]["compose_file"] = "missing-compose.yml"
 
         # Mock Docker commands to succeed
         mock_runner.run.return_value = CommandResult(
@@ -599,9 +564,7 @@ class TestIntegrationCheckerValidateEnvironment:
             duration_seconds=0.1,
         )
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.passed is False
@@ -616,9 +579,7 @@ class TestIntegrationCheckerValidateEnvironment:
         # Create compose file but not config files
         compose_file = tmp_path / "docker-compose.integration.yml"
         compose_file.touch()
-        integration_work_item["environment_requirements"]["compose_file"] = str(
-            compose_file
-        )
+        integration_work_item["environment_requirements"]["compose_file"] = str(compose_file)
         integration_work_item["environment_requirements"]["config_files"] = [
             "missing1.json",
             "missing2.json",
@@ -633,19 +594,14 @@ class TestIntegrationCheckerValidateEnvironment:
             duration_seconds=0.1,
         )
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.passed is False
         assert result.status == "failed"
         assert "missing1.json" in result.info["missing_config"]
         assert "missing2.json" in result.info["missing_config"]
-        assert (
-            len([e for e in result.errors if "Missing config file" in e["message"]])
-            == 2
-        )
+        assert len([e for e in result.errors if "Missing config file" in e["message"]]) == 2
 
     def test_validate_environment_includes_execution_time(
         self, integration_config, integration_work_item, mock_runner
@@ -659,9 +615,7 @@ class TestIntegrationCheckerValidateEnvironment:
             duration_seconds=0.1,
         )
 
-        checker = IntegrationChecker(
-            integration_work_item, integration_config, runner=mock_runner
-        )
+        checker = IntegrationChecker(integration_work_item, integration_config, runner=mock_runner)
         result = checker.validate_environment()
 
         assert result.execution_time > 0
@@ -689,9 +643,7 @@ class TestIntegrationCheckerValidateDocumentation:
         config_dir = tmp_path / ".session"
         config_dir.mkdir()
         config_file = config_dir / "config.json"
-        config_file.write_text(
-            '{"integration_tests": {"documentation": {"enabled": false}}}'
-        )
+        config_file.write_text('{"integration_tests": {"documentation": {"enabled": false}}}')
 
         monkeypatch.chdir(tmp_path)
 
@@ -731,9 +683,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser to return integration points
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {
                 "scope": "This is a detailed scope with integration points documented here."
             }
@@ -770,12 +720,8 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
-            mock_parse.return_value = {
-                "scope": "Detailed scope with integration points."
-            }
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+            mock_parse.return_value = {"scope": "Detailed scope with integration points."}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
             result = checker.validate_documentation()
@@ -809,9 +755,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with sequence diagrams
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "test_scenarios": [
@@ -824,8 +768,7 @@ class TestIntegrationCheckerValidateDocumentation:
 
             assert result.passed is True
             assert any(
-                c["name"] == "Sequence diagrams" and c["passed"]
-                for c in result.info["checks"]
+                c["name"] == "Sequence diagrams" and c["passed"] for c in result.info["checks"]
             )
 
     def test_validate_documentation_fails_when_sequence_diagrams_missing(
@@ -853,9 +796,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser without sequence diagrams
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope",
                 "test_scenarios": [
@@ -894,9 +835,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with API contracts
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "api_contracts": "API contracts are documented here with endpoints and schemas.",
@@ -939,9 +878,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with performance benchmarks
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "performance_benchmarks": "Performance benchmarks are documented here with latency targets.",
@@ -978,9 +915,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser to raise error
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.side_effect = ValueError("Spec file not found")
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
@@ -1014,9 +949,7 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"scope": "Integration points documented here."}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
@@ -1032,9 +965,7 @@ class TestIntegrationCheckerValidateDocumentation:
         monkeypatch.chdir(tmp_path)
 
         # Mock spec parser
-        with patch(
-            "sdd.quality.checkers.integration.spec_parser.parse_spec_file"
-        ) as mock_parse:
+        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"scope": "Integration scope"}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})

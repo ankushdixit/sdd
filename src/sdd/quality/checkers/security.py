@@ -41,9 +41,7 @@ class SecurityChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=60)
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
         self.language = language or self._detect_language()
 
     def name(self) -> str:
@@ -80,9 +78,7 @@ class SecurityChecker(QualityChecker):
         elif self.language in ["javascript", "typescript"]:
             results = self._scan_javascript()
         else:
-            return self._create_skipped_result(
-                reason=f"unsupported language: {self.language}"
-            )
+            return self._create_skipped_result(reason=f"unsupported language: {self.language}")
 
         # Check if passed based on fail_on threshold
         fail_on = self.config.get("fail_on", "high").upper()
@@ -130,9 +126,7 @@ class SecurityChecker(QualityChecker):
             # Count by severity
             for issue in bandit_results.get("results", []):
                 severity = issue.get("issue_severity", "LOW")
-                results["by_severity"][severity] = (
-                    results["by_severity"].get(severity, 0) + 1
-                )
+                results["by_severity"][severity] = results["by_severity"].get(severity, 0) + 1
                 # Add to vulnerabilities list
                 results["vulnerabilities"].append(
                     {
@@ -240,9 +234,7 @@ class SecurityChecker(QualityChecker):
                 # Count by severity
                 for vuln in audit_data.get("vulnerabilities", {}).values():
                     severity = vuln.get("severity", "low").upper()
-                    results["by_severity"][severity] = (
-                        results["by_severity"].get(severity, 0) + 1
-                    )
+                    results["by_severity"][severity] = results["by_severity"].get(severity, 0) + 1
 
             except json.JSONDecodeError:
                 logger.warning("Failed to parse npm audit output")

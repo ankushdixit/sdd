@@ -93,8 +93,6 @@ class ResultAggregator:
         if aggregated["overall_passed"]:
             summary.append("\n✓ All quality checks passed")
         else:
-            summary.append(
-                f"\n✗ Quality checks failed: {', '.join(aggregated['failed_checkers'])}"
-            )
+            summary.append(f"\n✗ Quality checks failed: {', '.join(aggregated['failed_checkers'])}")
 
         return "\n".join(summary)

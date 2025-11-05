@@ -134,9 +134,7 @@ class TestJSONReporterGenerate:
         report = reporter.generate(sample_results)
 
         # Should have minimal formatting (more compact than default)
-        assert (
-            "\n" in report or len(report) > 100
-        )  # Either has minimal newlines or is compact
+        assert "\n" in report or len(report) > 100  # Either has minimal newlines or is compact
 
     def test_generate_handles_nested_structures(self, sample_results):
         """Test generate() handles nested data structures."""
@@ -239,10 +237,7 @@ class TestJSONReporterGenerate:
         # Should match original (with potential floating point precision)
         assert parsed["overall_passed"] == sample_results["overall_passed"]
         assert parsed["total_checks"] == sample_results["total_checks"]
-        assert (
-            abs(parsed["total_execution_time"] - sample_results["total_execution_time"])
-            < 0.0001
-        )
+        assert abs(parsed["total_execution_time"] - sample_results["total_execution_time"]) < 0.0001
 
 
 class TestJSONReporterComplexData:

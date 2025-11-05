@@ -56,9 +56,7 @@ class TestSecurityCheckerInit:
         assert checker.runner is not None
         assert isinstance(checker.runner, CommandRunner)
 
-    def test_init_with_custom_runner(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_init_with_custom_runner(self, python_config, temp_project_dir, mock_runner):
         """Test initialization with custom runner."""
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
 
@@ -66,9 +64,7 @@ class TestSecurityCheckerInit:
 
     def test_init_with_explicit_language(self, python_config, temp_project_dir):
         """Test initialization with explicit language."""
-        checker = SecurityChecker(
-            python_config, temp_project_dir, language="javascript"
-        )
+        checker = SecurityChecker(python_config, temp_project_dir, language="javascript")
 
         assert checker.language == "javascript"
 
@@ -88,9 +84,7 @@ class TestSecurityCheckerInit:
 
         assert checker.language == "python"
 
-    def test_init_detects_javascript_from_package_json(
-        self, python_config, temp_project_dir
-    ):
+    def test_init_detects_javascript_from_package_json(self, python_config, temp_project_dir):
         """Test language detection for JavaScript via package.json."""
         (temp_project_dir / "package.json").touch()
 
@@ -98,9 +92,7 @@ class TestSecurityCheckerInit:
 
         assert checker.language == "javascript"
 
-    def test_init_detects_typescript_from_tsconfig(
-        self, python_config, temp_project_dir
-    ):
+    def test_init_detects_typescript_from_tsconfig(self, python_config, temp_project_dir):
         """Test language detection for TypeScript."""
         (temp_project_dir / "package.json").touch()
         (temp_project_dir / "tsconfig.json").touch()
@@ -154,9 +146,7 @@ class TestSecurityCheckerRun:
         assert result.passed is True
         assert result.status == "skipped"
 
-    def test_run_python_calls_scan_python(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_python_calls_scan_python(self, python_config, temp_project_dir, mock_runner):
         """Test run() calls _scan_python for Python projects."""
         (temp_project_dir / "pyproject.toml").touch()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -171,9 +161,7 @@ class TestSecurityCheckerRun:
             checker._scan_python.assert_called_once()
             assert result.checker_name == "security"
 
-    def test_run_javascript_calls_scan_javascript(
-        self, js_config, temp_project_dir, mock_runner
-    ):
+    def test_run_javascript_calls_scan_javascript(self, js_config, temp_project_dir, mock_runner):
         """Test run() calls _scan_javascript for JS projects."""
         (temp_project_dir / "package.json").touch()
         checker = SecurityChecker(js_config, temp_project_dir, runner=mock_runner)
@@ -188,9 +176,7 @@ class TestSecurityCheckerRun:
             checker._scan_javascript.assert_called_once()
             assert result.checker_name == "security"
 
-    def test_run_passes_with_no_vulnerabilities(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_passes_with_no_vulnerabilities(self, python_config, temp_project_dir, mock_runner):
         """Test run() passes when no vulnerabilities found."""
         checker = SecurityChecker(
             python_config, temp_project_dir, language="python", runner=mock_runner
@@ -249,9 +235,7 @@ class TestSecurityCheckerRun:
     ):
         """Test run() fails with medium severity when threshold is medium."""
         config = {"enabled": True, "fail_on": "medium"}
-        checker = SecurityChecker(
-            config, temp_project_dir, language="python", runner=mock_runner
-        )
+        checker = SecurityChecker(config, temp_project_dir, language="python", runner=mock_runner)
 
         scan_results = {
             "vulnerabilities": [{"severity": "MEDIUM", "issue": "Weak hash"}],
@@ -264,9 +248,7 @@ class TestSecurityCheckerRun:
             assert result.passed is False
             assert result.status == "failed"
 
-    def test_run_includes_execution_time(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_includes_execution_time(self, python_config, temp_project_dir, mock_runner):
         """Test run() includes execution time in result."""
         checker = SecurityChecker(
             python_config, temp_project_dir, language="python", runner=mock_runner
@@ -281,9 +263,7 @@ class TestSecurityCheckerRun:
 
             assert result.execution_time > 0
 
-    def test_run_skips_unsupported_language(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_skips_unsupported_language(self, python_config, temp_project_dir, mock_runner):
         """Test run() skips unsupported language."""
         checker = SecurityChecker(
             python_config, temp_project_dir, language="ruby", runner=mock_runner
@@ -308,9 +288,7 @@ class TestSecurityCheckerBandit:
 
         assert result is None
 
-    def test_run_bandit_executes_command(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_bandit_executes_command(self, python_config, temp_project_dir, mock_runner):
         """Test _run_bandit executes bandit command."""
         (temp_project_dir / "src").mkdir()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -336,9 +314,7 @@ class TestSecurityCheckerBandit:
         assert "-f" in call_args
         assert "json" in call_args
 
-    def test_run_bandit_parses_json_report(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_bandit_parses_json_report(self, python_config, temp_project_dir, mock_runner):
         """Test _run_bandit parses JSON report correctly."""
         (temp_project_dir / "src").mkdir()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -362,8 +338,8 @@ class TestSecurityCheckerBandit:
         with patch("tempfile.mkstemp", return_value=(1, "/tmp/bandit_report.json")):
             with patch("os.close"):
                 with patch("builtins.open", create=True) as mock_open:
-                    mock_open.return_value.__enter__.return_value.read.return_value = (
-                        json.dumps(bandit_output)
+                    mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(
+                        bandit_output
                     )
                     with patch.object(Path, "exists", return_value=True):
                         with patch.object(Path, "unlink"):
@@ -385,18 +361,14 @@ class TestSecurityCheckerBandit:
         with patch("tempfile.mkstemp", return_value=(1, "/tmp/bandit_report.json")):
             with patch("os.close"):
                 with patch("builtins.open", create=True) as mock_open:
-                    mock_open.return_value.__enter__.return_value.read.return_value = (
-                        "invalid json"
-                    )
+                    mock_open.return_value.__enter__.return_value.read.return_value = "invalid json"
                     with patch.object(Path, "exists", return_value=True):
                         with patch.object(Path, "unlink"):
                             result = checker._run_bandit()
 
         assert result is None
 
-    def test_run_bandit_cleans_up_temp_file(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_bandit_cleans_up_temp_file(self, python_config, temp_project_dir, mock_runner):
         """Test _run_bandit cleans up temporary file."""
         (temp_project_dir / "src").mkdir()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -433,9 +405,7 @@ class TestSecurityCheckerSafety:
 
         assert result == []
 
-    def test_run_safety_executes_command(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_safety_executes_command(self, python_config, temp_project_dir, mock_runner):
         """Test _run_safety executes safety command."""
         (temp_project_dir / "requirements.txt").touch()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -456,9 +426,7 @@ class TestSecurityCheckerSafety:
         assert "check" in call_args
         assert "--json" in call_args
 
-    def test_run_safety_parses_json_output(
-        self, python_config, temp_project_dir, mock_runner
-    ):
+    def test_run_safety_parses_json_output(self, python_config, temp_project_dir, mock_runner):
         """Test _run_safety parses JSON output correctly."""
         (temp_project_dir / "requirements.txt").touch()
         checker = SecurityChecker(python_config, temp_project_dir, runner=mock_runner)
@@ -518,9 +486,7 @@ class TestSecurityCheckerNpmAudit:
         assert result["vulnerabilities"] == []
         assert result["by_severity"] == {}
 
-    def test_scan_javascript_executes_npm_audit(
-        self, js_config, temp_project_dir, mock_runner
-    ):
+    def test_scan_javascript_executes_npm_audit(self, js_config, temp_project_dir, mock_runner):
         """Test _scan_javascript executes npm audit command."""
         (temp_project_dir / "package.json").touch()
         checker = SecurityChecker(js_config, temp_project_dir, runner=mock_runner)
@@ -541,9 +507,7 @@ class TestSecurityCheckerNpmAudit:
         assert "audit" in call_args
         assert "--json" in call_args
 
-    def test_scan_javascript_parses_audit_output(
-        self, js_config, temp_project_dir, mock_runner
-    ):
+    def test_scan_javascript_parses_audit_output(self, js_config, temp_project_dir, mock_runner):
         """Test _scan_javascript parses npm audit output."""
         (temp_project_dir / "package.json").touch()
         checker = SecurityChecker(js_config, temp_project_dir, runner=mock_runner)
@@ -635,8 +599,8 @@ class TestSecurityCheckerPythonIntegration:
         with patch("tempfile.mkstemp", return_value=(1, "/tmp/bandit_report.json")):
             with patch("os.close"):
                 with patch("builtins.open", create=True) as mock_open:
-                    mock_open.return_value.__enter__.return_value.read.return_value = (
-                        json.dumps(bandit_output)
+                    mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(
+                        bandit_output
                     )
                     with patch.object(Path, "exists", return_value=True):
                         with patch.object(Path, "unlink"):

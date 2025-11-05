@@ -38,9 +38,7 @@ class TestSpecCompletenessCheckerInit:
     def test_init_with_work_item(self, spec_config, temp_project_dir):
         """Test initialization with work item."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         assert checker.work_item == work_item
 
@@ -86,9 +84,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_fails_when_work_item_missing_id(self, spec_config, temp_project_dir):
         """Test run() fails when work item missing id."""
         work_item = {"type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         result = checker.run()
 
@@ -99,9 +95,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_fails_when_work_item_missing_type(self, spec_config, temp_project_dir):
         """Test run() fails when work item missing type."""
         work_item = {"id": "WI-001"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         result = checker.run()
 
@@ -112,9 +106,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_passes_when_spec_valid(self, spec_config, temp_project_dir):
         """Test run() passes when spec file is valid."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()
@@ -126,9 +118,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_fails_with_validation_errors(self, spec_config, temp_project_dir):
         """Test run() fails when spec validation fails."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         validation_error = SpecValidationError(
             work_item_id="WI-001",
@@ -150,13 +140,9 @@ class TestSpecCompletenessCheckerRun:
     def test_run_fails_when_spec_file_not_found(self, spec_config, temp_project_dir):
         """Test run() fails when spec file not found."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        file_error = SDDFileNotFoundError(
-            file_path=".session/specs/WI-001.md", file_type="spec"
-        )
+        file_error = SDDFileNotFoundError(file_path=".session/specs/WI-001.md", file_type="spec")
 
         with patch(
             "sdd.quality.checkers.spec_completeness.validate_spec_file",
@@ -172,9 +158,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_handles_generic_errors(self, spec_config, temp_project_dir):
         """Test run() handles generic errors."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         with patch(
             "sdd.quality.checkers.spec_completeness.validate_spec_file",
@@ -189,9 +173,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_includes_execution_time(self, spec_config, temp_project_dir):
         """Test run() includes execution time in result."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()
@@ -201,9 +183,7 @@ class TestSpecCompletenessCheckerRun:
     def test_run_includes_work_item_id_in_messages(self, spec_config, temp_project_dir):
         """Test run() includes work item ID in messages."""
         work_item = {"id": "WI-001", "type": "feature"}
-        checker = SpecCompletenessChecker(
-            spec_config, temp_project_dir, work_item=work_item
-        )
+        checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()

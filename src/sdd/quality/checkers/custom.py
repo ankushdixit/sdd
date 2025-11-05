@@ -37,9 +37,7 @@ class CustomValidationChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = (
-            runner if runner is not None else CommandRunner(default_timeout=60)
-        )
+        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
         self.work_item = work_item or {}
 
     def name(self) -> str:
@@ -102,16 +100,12 @@ class CustomValidationChecker(QualityChecker):
         errors = []
         for validation in validations:
             if not validation["passed"] and validation["required"]:
-                errors.append(
-                    {"message": f"Required validation failed: {validation['name']}"}
-                )
+                errors.append({"message": f"Required validation failed: {validation['name']}"})
 
         warnings = []
         for validation in validations:
             if not validation["passed"] and not validation["required"]:
-                warnings.append(
-                    {"message": f"Optional validation failed: {validation['name']}"}
-                )
+                warnings.append({"message": f"Optional validation failed: {validation['name']}"})
 
         return CheckResult(
             checker_name=self.name(),

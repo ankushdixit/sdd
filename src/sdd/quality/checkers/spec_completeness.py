@@ -122,8 +122,6 @@ class SpecCompletenessChecker(QualityChecker):
                 status="failed",
                 errors=[{"message": f"Error validating spec file: {str(e)}"}],
                 warnings=[],
-                info={
-                    "suggestion": "Check spec file format and validator configuration"
-                },
+                info={"suggestion": "Check spec file format and validator configuration"},
                 execution_time=execution_time,
             )
