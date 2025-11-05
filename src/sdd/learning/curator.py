@@ -10,6 +10,8 @@ Curates and organizes accumulated learnings:
 5. Generates learning summary reports
 """
 
+from __future__ import annotations
+
 import argparse
 import hashlib
 import re

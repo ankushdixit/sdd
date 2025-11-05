@@ -5,11 +5,13 @@ Work Item Manager - Core work item operations.
 Handles creation, listing, showing, updating work items.
 """
 
+from __future__ import annotations
+
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
@@ -254,7 +256,7 @@ class WorkItemManager:
 
         return work_id
 
-    def _prompt_type(self) -> Optional[str]:
+    def _prompt_type(self) -> str | None:
         """Prompt user to select work item type."""
         print("Select work item type:")
         print("1. feature - Standard feature development")
@@ -644,9 +646,9 @@ class WorkItemManager:
 
     def list_work_items(
         self,
-        status_filter: Optional[str] = None,
-        type_filter: Optional[str] = None,
-        milestone_filter: Optional[str] = None,
+        status_filter: str | None = None,
+        type_filter: str | None = None,
+        milestone_filter: str | None = None,
     ) -> dict:
         """List work items with optional filtering."""
         if not self.work_items_file.exists():
@@ -1158,7 +1160,7 @@ class WorkItemManager:
                 remediation="Use command-line arguments instead",
             )
 
-    def get_next_work_item(self) -> Optional[dict[str, Any]]:
+    def get_next_work_item(self) -> dict[str, Any] | None:
         """Find next work item to start."""
         if not self.work_items_file.exists():
             print("No work items found.")
@@ -1268,7 +1270,7 @@ class WorkItemManager:
 
     @log_errors()
     def create_milestone(
-        self, name: str, title: str, description: str, target_date: Optional[str] = None
+        self, name: str, title: str, description: str, target_date: str | None = None
     ) -> None:
         """Create a new milestone.
 

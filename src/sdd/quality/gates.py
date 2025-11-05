@@ -12,6 +12,8 @@ Provides comprehensive validation including:
 Updated in Phase 5.7.3 to use spec_parser for reading work item specifications.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path

@@ -14,7 +14,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
@@ -44,7 +44,7 @@ def strip_html_comments(content: str) -> str:
     return re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
 
 
-def parse_section(content: str, section_name: str) -> Optional[str]:
+def parse_section(content: str, section_name: str) -> str | None:
     """
     Extract content between '## SectionName' and next '##' heading.
 
@@ -84,7 +84,7 @@ def parse_section(content: str, section_name: str) -> Optional[str]:
     return "\n".join(section_content).strip()
 
 
-def extract_subsection(section_content: str, subsection_name: str) -> Optional[str]:
+def extract_subsection(section_content: str, subsection_name: str) -> str | None:
     """
     Extract content under '### SubsectionName' within a section.
 

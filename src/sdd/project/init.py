@@ -4,6 +4,8 @@ Deterministic SDD initialization - transforms any project into working SDD proje
 Philosophy: Don't check and warn - CREATE and FIX.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import shutil
