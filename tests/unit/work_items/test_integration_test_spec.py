@@ -22,7 +22,7 @@ def project_root():
     Returns:
         Path: Absolute path to project root directory.
     """
-    return Path(__file__).parent.parent.parent
+    return Path(__file__).parent.parent.parent.parent
 
 
 @pytest.fixture

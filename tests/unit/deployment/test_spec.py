@@ -22,7 +22,7 @@ class TestDeploymentTemplate:
     def test_deployment_template_exists(self):
         """Test that deployment template file exists."""
         # Arrange
-        project_root = Path(__file__).parent.parent.parent
+        project_root = Path(__file__).parent.parent.parent.parent
         template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
 
         # Act & Assert
@@ -31,7 +31,7 @@ class TestDeploymentTemplate:
     def test_deployment_template_has_required_sections(self):
         """Test that deployment template contains all required sections."""
         # Arrange
-        project_root = Path(__file__).parent.parent.parent
+        project_root = Path(__file__).parent.parent.parent.parent
         template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
@@ -54,7 +54,7 @@ class TestDeploymentTemplate:
     def test_deployment_template_has_environment_config(self):
         """Test that deployment template includes environment configuration section."""
         # Arrange
-        project_root = Path(__file__).parent.parent.parent
+        project_root = Path(__file__).parent.parent.parent.parent
         template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
@@ -64,7 +64,7 @@ class TestDeploymentTemplate:
     def test_deployment_template_has_monitoring_section(self):
         """Test that deployment template includes monitoring and alerting section."""
         # Arrange
-        project_root = Path(__file__).parent.parent.parent
+        project_root = Path(__file__).parent.parent.parent.parent
         template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
