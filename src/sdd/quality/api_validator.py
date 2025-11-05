@@ -12,6 +12,7 @@ Supports:
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -43,7 +44,7 @@ class APIContractValidator:
         """
         self.work_item = work_item
         self.contracts = work_item.get("api_contracts", [])
-        self.results = {
+        self.results: dict[str, Any] = {
             "contracts_validated": 0,
             "breaking_changes": [],
             "warnings": [],
@@ -51,7 +52,7 @@ class APIContractValidator:
         }
 
     @log_errors()
-    def validate_contracts(self) -> tuple[bool, dict]:
+    def validate_contracts(self) -> tuple[bool, dict[str, Any]]:
         """
         Validate all API contracts.
 
@@ -210,7 +211,7 @@ class APIContractValidator:
         return breaking_changes
 
     @convert_file_errors
-    def _load_spec(self, file_path: str) -> dict:
+    def _load_spec(self, file_path: str) -> dict[str, Any]:
         """
         Load OpenAPI/Swagger spec from file.
 
@@ -232,10 +233,10 @@ class APIContractValidator:
         try:
             if file_path.endswith(".yaml") or file_path.endswith(".yml"):
                 with open(path) as f:
-                    return yaml.safe_load(f)
+                    return yaml.safe_load(f)  # type: ignore[no-any-return]
             else:
                 with open(path) as f:
-                    return json.load(f)
+                    return json.load(f)  # type: ignore[no-any-return]
         except (json.JSONDecodeError, yaml.YAMLError) as e:
             raise SchemaValidationError(
                 contract_file=file_path, details=f"Failed to parse contract file: {e}"

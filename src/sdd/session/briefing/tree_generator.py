@@ -4,6 +4,8 @@ Project directory tree loading.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from sdd.core.error_handlers import log_errors
@@ -16,7 +18,7 @@ logger = get_logger(__name__)
 class TreeGenerator:
     """Load and generate project directory tree."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize tree generator.
 
         Args:

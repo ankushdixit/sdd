@@ -8,11 +8,13 @@ Extracts structured data from markdown for use by validators, runners, and quali
 Part of Phase 5.7.2: Spec File First Architecture
 """
 
+from __future__ import annotations
+
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
@@ -42,7 +44,7 @@ def strip_html_comments(content: str) -> str:
     return re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
 
 
-def parse_section(content: str, section_name: str) -> Optional[str]:
+def parse_section(content: str, section_name: str) -> str | None:
     """
     Extract content between '## SectionName' and next '##' heading.
 
@@ -82,7 +84,7 @@ def parse_section(content: str, section_name: str) -> Optional[str]:
     return "\n".join(section_content).strip()
 
 
-def extract_subsection(section_content: str, subsection_name: str) -> Optional[str]:
+def extract_subsection(section_content: str, subsection_name: str) -> str | None:
     """
     Extract content under '### SubsectionName' within a section.
 
@@ -236,7 +238,7 @@ def parse_feature_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["overview"] = parse_section(content, "Overview")
@@ -299,7 +301,7 @@ def parse_bug_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["description"] = parse_section(content, "Description")
@@ -362,7 +364,7 @@ def parse_refactor_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["overview"] = parse_section(content, "Overview")
@@ -434,7 +436,7 @@ def parse_security_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["security_issue"] = parse_section(content, "Security Issue")
@@ -509,7 +511,7 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["scope"] = parse_section(content, "Scope")
@@ -520,13 +522,13 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
         # Find all subsections that start with "Scenario"
         scenarios = []
         lines = scenarios_section.split("\n")
-        current_scenario = None
-        current_content = []
+        current_scenario: str | None = None
+        current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Scenario"):
                 # Save previous scenario if exists
-                if current_scenario:
+                if current_scenario is not None:
                     scenarios.append(
                         {
                             "name": current_scenario,
@@ -540,7 +542,7 @@ def parse_integration_test_spec(content: str) -> dict[str, Any]:
                 current_content.append(line)
 
         # Save last scenario
-        if current_scenario:
+        if current_scenario is not None:
             scenarios.append(
                 {
                     "name": current_scenario,
@@ -593,7 +595,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
     # Strip HTML comments first
     content = strip_html_comments(content)
 
-    result = {}
+    result: dict[str, Any] = {}
 
     # Extract main sections
     result["deployment_scope"] = parse_section(content, "Deployment Scope")
@@ -631,13 +633,13 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
         # Find all subsections that start with "Test"
         tests = []
         lines = smoke_section.split("\n")
-        current_test = None
-        current_content = []
+        current_test: str | None = None
+        current_content: list[str] = []
 
         for line in lines:
             if line.startswith("### Test"):
                 # Save previous test if exists
-                if current_test:
+                if current_test is not None:
                     tests.append(
                         {
                             "name": current_test,
@@ -651,7 +653,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
                 current_content.append(line)
 
         # Save last test
-        if current_test:
+        if current_test is not None:
             tests.append({"name": current_test, "content": "\n".join(current_content).strip()})
 
         result["smoke_tests"] = tests
@@ -683,7 +685,7 @@ def parse_deployment_spec(content: str) -> dict[str, Any]:
 
 
 @log_errors()
-def parse_spec_file(work_item) -> dict[str, Any]:
+def parse_spec_file(work_item: str | dict[str, Any]) -> dict[str, Any]:
     """
     Parse a work item specification file.
 
@@ -702,7 +704,7 @@ def parse_spec_file(work_item) -> dict[str, Any]:
     # Handle backwards compatibility: accept both dict and string
     if isinstance(work_item, str):
         # Legacy call with just work_item_id string
-        work_item_id = work_item
+        work_item_id: str | Any | None = work_item
         spec_path = Path(f".session/specs/{work_item_id}.md")
         logger.debug("Parsing spec file for work item (legacy): %s", work_item_id)
     else:

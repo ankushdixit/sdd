@@ -15,6 +15,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Add scripts directory to path for imports
 from sdd.core.command_runner import CommandRunner
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @log_errors()
-def load_status():
+def load_status() -> dict[str, Any] | None:
     """Load current session status.
 
     Returns:
@@ -45,21 +46,25 @@ def load_status():
 
     try:
         with open(status_file) as f:
-            return json.load(f)
+            return json.load(f)  # type: ignore[no-any-return]
     except json.JSONDecodeError as e:
         raise FileOperationError(
-            f"Invalid JSON in status file: {status_file}",
-            {"path": str(status_file), "error": str(e)},
+            operation="parse",
+            file_path=str(status_file),
+            details=f"Invalid JSON: {e}",
+            cause=e,
         ) from e
     except OSError as e:
         raise FileOperationError(
-            f"Failed to read status file: {status_file}",
-            {"path": str(status_file), "error": str(e)},
+            operation="read",
+            file_path=str(status_file),
+            details=str(e),
+            cause=e,
         ) from e
 
 
 @log_errors()
-def load_work_items():
+def load_work_items() -> dict[str, Any]:
     """Load work items.
 
     Returns:
@@ -72,25 +77,32 @@ def load_work_items():
 
     try:
         with open(work_items_file) as f:
-            return json.load(f)
+            return json.load(f)  # type: ignore[no-any-return]
     except FileNotFoundError as e:
         raise FileOperationError(
-            f"Work items file not found: {work_items_file}", {"path": str(work_items_file)}
+            operation="read",
+            file_path=str(work_items_file),
+            details="File not found",
+            cause=e,
         ) from e
     except json.JSONDecodeError as e:
         raise FileOperationError(
-            f"Invalid JSON in work items file: {work_items_file}",
-            {"path": str(work_items_file), "error": str(e)},
+            operation="parse",
+            file_path=str(work_items_file),
+            details=f"Invalid JSON: {e}",
+            cause=e,
         ) from e
     except OSError as e:
         raise FileOperationError(
-            f"Failed to read work items file: {work_items_file}",
-            {"path": str(work_items_file), "error": str(e)},
+            operation="read",
+            file_path=str(work_items_file),
+            details=str(e),
+            cause=e,
         ) from e
 
 
 @log_errors()
-def run_quality_gates(work_item=None):
+def run_quality_gates(work_item: dict | None = None) -> tuple[dict, bool, list]:
     """Run comprehensive quality gates using QualityGates class.
 
     Args:
@@ -171,7 +183,7 @@ def run_quality_gates(work_item=None):
 
 
 @log_errors()
-def update_all_tracking(session_num):
+def update_all_tracking(session_num: int) -> bool:
     """Update stack, tree, and other tracking files.
 
     Args:
@@ -252,7 +264,7 @@ def update_all_tracking(session_num):
 
 
 @log_errors()
-def trigger_curation_if_needed(session_num):
+def trigger_curation_if_needed(session_num: int) -> None:
     """Check if curation should run and trigger it.
 
     Args:
@@ -302,7 +314,7 @@ def trigger_curation_if_needed(session_num):
 
 
 @log_errors()
-def auto_extract_learnings(session_num):
+def auto_extract_learnings(session_num: int) -> int:
     """Auto-extract learnings from session artifacts.
 
     Args:
@@ -361,7 +373,7 @@ def auto_extract_learnings(session_num):
 
 
 @log_errors()
-def extract_learnings_from_session(learnings_file=None):
+def extract_learnings_from_session(learnings_file: Path | None = None) -> list[str]:
     """Extract learnings from work done in session (manual input or file).
 
     Args:
@@ -422,7 +434,9 @@ def extract_learnings_from_session(learnings_file=None):
 
 
 @log_errors()
-def complete_git_workflow(work_item_id, commit_message, session_num):
+def complete_git_workflow(
+    work_item_id: str, commit_message: str, session_num: int
+) -> dict[str, Any]:
     """Complete git workflow (commit, push, optionally merge or create PR).
 
     Args:
@@ -471,7 +485,7 @@ def complete_git_workflow(work_item_id, commit_message, session_num):
 
 
 @log_errors()
-def record_session_commits(work_item_id):
+def record_session_commits(work_item_id: str) -> None:
     """Record commits made during session to work item tracking (Bug #15 fix).
 
     Args:
@@ -534,7 +548,7 @@ def record_session_commits(work_item_id):
 
 
 @log_errors()
-def generate_commit_message(status, work_item):
+def generate_commit_message(status: dict, work_item: dict) -> str:
     """Generate standardized commit message.
 
     Updated in Phase 5.7.3 to read rationale from spec file instead of
@@ -583,7 +597,9 @@ def generate_commit_message(status, work_item):
 
 
 @log_errors()
-def generate_summary(status, work_items_data, gate_results, learnings=None):
+def generate_summary(
+    status: dict, work_items_data: dict, gate_results: dict, learnings: list | None = None
+) -> str:
     """Generate comprehensive session summary.
 
     Args:
@@ -940,7 +956,7 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
 
 
 @log_errors()
-def main():
+def main() -> int:
     """Enhanced main entry point with full tracking updates.
 
     Returns:

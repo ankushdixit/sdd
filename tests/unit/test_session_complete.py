@@ -86,7 +86,7 @@ class TestLoadStatus:
         status_file.write_text("invalid json{")
 
         # Act & Assert
-        with pytest.raises(FileOperationError, match="Invalid JSON in status file"):
+        with pytest.raises(FileOperationError, match="File parse operation failed"):
             load_status()
 
 
@@ -124,7 +124,7 @@ class TestLoadWorkItems:
         monkeypatch.chdir(tmp_path)
 
         # Act & Assert
-        with pytest.raises(FileOperationError, match="Work items file not found"):
+        with pytest.raises(FileOperationError, match="File read operation failed"):
             load_work_items()
 
     def test_load_work_items_invalid_json(self, tmp_path, monkeypatch):
@@ -139,7 +139,7 @@ class TestLoadWorkItems:
         work_items_file.write_text("not valid json")
 
         # Act & Assert
-        with pytest.raises(FileOperationError, match="Invalid JSON in work items file"):
+        with pytest.raises(FileOperationError, match="File parse operation failed"):
             load_work_items()
 
 

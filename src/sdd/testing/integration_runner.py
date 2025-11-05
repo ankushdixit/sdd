@@ -12,12 +12,15 @@ Supports:
 Updated in Phase 5.7.3 to use spec_parser for reading test specifications.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.exceptions import (
@@ -79,11 +82,11 @@ class IntegrationTestRunner:
         env_req_text = parsed_spec.get("environment_requirements", "")
         self.env_requirements = self._parse_environment_requirements(env_req_text)
 
-        self.results = {
+        self.results: dict[str, Any] = {
             "scenarios": [],
             "start_time": None,
             "end_time": None,
-            "total_duration": 0,
+            "total_duration": 0.0,
             "passed": 0,
             "failed": 0,
             "skipped": 0,
@@ -258,7 +261,7 @@ class IntegrationTestRunner:
                     context={"fixture": fixture, "stderr": result.stderr},
                 )
 
-    def run_tests(self, language: str = None) -> dict:
+    def run_tests(self, language: str | None = None) -> dict[str, Any]:
         """
         Execute all integration test scenarios.
 
@@ -468,7 +471,7 @@ Status: {"PASSED" if self.results["failed"] == 0 else "FAILED"}
         return report
 
 
-def main():
+def main() -> None:
     """
     CLI entry point.
 

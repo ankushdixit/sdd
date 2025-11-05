@@ -6,7 +6,7 @@ Part of the briefing module decomposition.
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import log_errors
@@ -20,12 +20,12 @@ logger = get_logger(__name__)
 class GitContext:
     """Handle git status and branch information."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize git context handler."""
         self.runner = CommandRunner(default_timeout=5)
 
     @log_errors()
-    def check_git_status(self) -> dict[str, any]:
+    def check_git_status(self) -> dict[str, Any]:
         """Check git status for session start.
 
         Returns:
@@ -41,7 +41,9 @@ class GitContext:
             from sdd.git.integration import GitWorkflow
 
             workflow = GitWorkflow()
-            is_clean, status_msg = workflow.check_git_status()
+            is_clean: bool
+            status_msg: str
+            is_clean, status_msg = workflow.check_git_status()  # type: ignore[misc]
             current_branch = workflow.get_current_branch()
 
             return {"clean": is_clean, "status": status_msg, "branch": current_branch}

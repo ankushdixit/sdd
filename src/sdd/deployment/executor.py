@@ -10,9 +10,12 @@ Provides automated deployment execution with:
 - Deployment state tracking
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sdd.core.error_handlers import convert_file_errors, log_errors
 from sdd.core.exceptions import (
@@ -28,16 +31,16 @@ from sdd.core.exceptions import (
 class DeploymentExecutor:
     """Deployment execution and validation."""
 
-    def __init__(self, work_item: dict, config_path: Path = None):
+    def __init__(self, work_item: dict[str, Any], config_path: Path | None = None) -> None:
         """Initialize deployment executor."""
         if config_path is None:
             config_path = Path(".session/config.json")
         self.work_item = work_item
         self.config = self._load_config(config_path)
-        self.deployment_log = []
+        self.deployment_log: list[dict[str, Any]] = []
 
     @convert_file_errors
-    def _load_config(self, config_path: Path) -> dict:
+    def _load_config(self, config_path: Path) -> dict[str, Any]:
         """
         Load deployment configuration.
 
@@ -61,9 +64,10 @@ class DeploymentExecutor:
                 operation="parse", file_path=str(config_path), details=f"Invalid JSON: {e}", cause=e
             ) from e
 
-        return config.get("deployment", self._default_config())
+        deployment_config = config.get("deployment", self._default_config())
+        return deployment_config  # type: ignore[no-any-return]
 
-    def _default_config(self) -> dict:
+    def _default_config(self) -> dict[str, Any]:
         """Default deployment configuration."""
         return {
             "pre_deployment_checks": {
@@ -85,7 +89,7 @@ class DeploymentExecutor:
         }
 
     @log_errors()
-    def pre_deployment_validation(self) -> dict:
+    def pre_deployment_validation(self) -> dict[str, Any]:
         """
         Run pre-deployment validation checks.
 
@@ -95,8 +99,8 @@ class DeploymentExecutor:
         Raises:
             PreDeploymentCheckError: If any validation check fails
         """
-        results = {"checks": [], "passed": True}
-        failed_checks = []
+        results: dict[str, Any] = {"checks": [], "passed": True}
+        failed_checks: list[str] = []
 
         # Check integration tests
         if self.config["pre_deployment_checks"].get("integration_tests"):
@@ -135,7 +139,7 @@ class DeploymentExecutor:
         return results
 
     @log_errors()
-    def execute_deployment(self, dry_run: bool = False) -> dict:
+    def execute_deployment(self, dry_run: bool = False) -> dict[str, Any]:
         """
         Execute deployment procedure.
 
@@ -148,7 +152,7 @@ class DeploymentExecutor:
         Raises:
             DeploymentStepError: If any deployment step fails
         """
-        results = {
+        results: dict[str, Any] = {
             "started_at": datetime.now().isoformat(),
             "steps": [],
             "success": True,
@@ -181,7 +185,7 @@ class DeploymentExecutor:
         return results
 
     @log_errors()
-    def run_smoke_tests(self) -> dict:
+    def run_smoke_tests(self) -> dict[str, Any]:
         """
         Run smoke tests to verify deployment.
 
@@ -192,7 +196,7 @@ class DeploymentExecutor:
             SmokeTestError: If any smoke test fails
         """
         config = self.config["smoke_tests"]
-        results = {"tests": [], "passed": True}
+        results: dict[str, Any] = {"tests": [], "passed": True}
 
         if not config.get("enabled"):
             return {"status": "skipped"}
@@ -230,7 +234,7 @@ class DeploymentExecutor:
         return results
 
     @log_errors()
-    def rollback(self) -> dict:
+    def rollback(self) -> dict[str, Any]:
         """
         Execute rollback procedure.
 
@@ -240,7 +244,7 @@ class DeploymentExecutor:
         Raises:
             RollbackError: If any rollback step fails
         """
-        results = {
+        results: dict[str, Any] = {
             "started_at": datetime.now().isoformat(),
             "steps": [],
             "success": True,
@@ -332,7 +336,7 @@ class DeploymentExecutor:
         # Should handle partial rollbacks and verification of rollback success
         return True
 
-    def _log(self, event: str, data: dict):
+    def _log(self, event: str, data: dict[str, Any]) -> None:
         """Log deployment event."""
         log_entry = {
             "timestamp": datetime.now().isoformat(),
@@ -341,12 +345,12 @@ class DeploymentExecutor:
         }
         self.deployment_log.append(log_entry)
 
-    def get_deployment_log(self) -> list[dict]:
+    def get_deployment_log(self) -> list[dict[str, Any]]:
         """Get deployment log."""
         return self.deployment_log
 
 
-def main():
+def main() -> None:
     """
     CLI entry point.
 

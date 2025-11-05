@@ -4,8 +4,9 @@ Session briefing orchestrator.
 Coordinates all briefing components to generate comprehensive session briefings.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 from sdd.core.exceptions import GitError, SystemError
 from sdd.core.logging_config import get_logger
@@ -27,8 +28,8 @@ class SessionBriefing:
 
     def __init__(
         self,
-        session_dir: Path = None,
-        project_root: Path = None,
+        session_dir: Path | None = None,
+        project_root: Path | None = None,
     ):
         """Initialize session briefing orchestrator.
 
@@ -100,7 +101,7 @@ class SessionBriefing:
             relevant_learnings=relevant_learnings,
         )
 
-    def _validate_spec(self, item_id: str, work_item_type: str) -> Optional[str]:
+    def _validate_spec(self, item_id: str, work_item_type: str) -> str | None:
         """Validate spec completeness and return warning if incomplete.
 
         Args:

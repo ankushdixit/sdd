@@ -11,11 +11,12 @@ Handles:
 - PR creation and management
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 class GitWorkflow:
     """Manage git workflow for sessions."""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None) -> None:
         """Initialize GitWorkflow with project root path."""
         self.project_root = project_root or Path.cwd()
         self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
@@ -67,15 +68,16 @@ class GitWorkflow:
             raise NotAGitRepoError("Not a git repository")
 
         if result.stdout.strip():
-            raise WorkingDirNotCleanError("Working directory not clean (uncommitted changes)")
+            changes = result.stdout.strip().split("\n")
+            raise WorkingDirNotCleanError(changes=changes)
 
-    def get_current_branch(self) -> Optional[str]:
+    def get_current_branch(self) -> str | None:
         """Get current git branch name."""
         result = self.runner.run(["git", "branch", "--show-current"], timeout=5)
         return result.stdout.strip() if result.success else None
 
     @convert_subprocess_errors
-    def create_branch(self, work_item_id: str, session_num: int) -> tuple[str, Optional[str]]:
+    def create_branch(self, work_item_id: str, session_num: int) -> tuple[str, str | None]:
         """Create a new branch for work item.
 
         Args:
@@ -331,7 +333,12 @@ class GitWorkflow:
             with open(self.work_items_file) as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            raise FileOperationError(f"Failed to load work items: {e}")
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.work_items_file),
+                details=f"Failed to load work items: {e}",
+                cause=e,
+            ) from e
 
         work_item = data["work_items"][work_item_id]
 
@@ -373,7 +380,12 @@ class GitWorkflow:
                     with open(self.work_items_file, "w") as f:
                         json.dump(data, f, indent=2)
                 except OSError as e:
-                    raise FileOperationError(f"Failed to save work items: {e}")
+                    raise FileOperationError(
+                        operation="write",
+                        file_path=str(self.work_items_file),
+                        details=f"Failed to save work items: {e}",
+                        cause=e,
+                    ) from e
 
                 return {
                     "action": "created",
@@ -415,7 +427,12 @@ class GitWorkflow:
             with open(self.work_items_file) as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            raise FileOperationError(f"Failed to load work items: {e}")
+            raise FileOperationError(
+                operation="read",
+                file_path=str(self.work_items_file),
+                details=f"Failed to load work items: {e}",
+                cause=e,
+            ) from e
 
         work_item = data["work_items"][work_item_id]
 
@@ -553,7 +570,12 @@ class GitWorkflow:
             with open(self.work_items_file, "w") as f:
                 json.dump(data, f, indent=2)
         except OSError as e:
-            raise FileOperationError(f"Failed to save work items: {e}")
+            raise FileOperationError(
+                operation="write",
+                file_path=str(self.work_items_file),
+                details=f"Failed to save work items: {e}",
+                cause=e,
+            ) from e
 
         return {
             "success": True,
@@ -563,7 +585,7 @@ class GitWorkflow:
         }
 
 
-def main():
+def main() -> None:
     """CLI entry point for testing."""
     workflow = GitWorkflow()
 

@@ -10,7 +10,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
@@ -164,10 +164,13 @@ class CommandRunner:
 
                 logger.error(f"Command timed out after {timeout}s: {' '.join(command)}")
 
+                stdout_str = e.stdout.decode() if isinstance(e.stdout, bytes) else (e.stdout or "")
+                stderr_str = e.stderr.decode() if isinstance(e.stderr, bytes) else (e.stderr or "")
+
                 cmd_result = CommandResult(
                     returncode=-1,
-                    stdout=e.stdout or "",
-                    stderr=e.stderr or "",
+                    stdout=stdout_str,
+                    stderr=stderr_str,
                     command=command,
                     duration_seconds=duration,
                     timed_out=True,
@@ -219,8 +222,12 @@ class CommandRunner:
         raise RuntimeError("Retry logic error")
 
     @log_errors()
-    def run_json(self, command: Union[str, list[str]], **kwargs) -> Optional[dict]:
+    def run_json(self, command: Union[str, list[str]], **kwargs: Any) -> Optional[dict[str, Any]]:
         """Run command and parse JSON output.
+
+        Args:
+            command: Command to run
+            **kwargs: Additional arguments passed to run()
 
         Returns:
             Parsed JSON dict or None if parse fails
@@ -230,14 +237,19 @@ class CommandRunner:
             return None
 
         try:
-            return json.loads(result.stdout)
+            parsed: dict[str, Any] = json.loads(result.stdout)
+            return parsed
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON output: {e}")
             return None
 
     @log_errors()
-    def run_lines(self, command: Union[str, list[str]], **kwargs) -> list[str]:
+    def run_lines(self, command: Union[str, list[str]], **kwargs: Any) -> list[str]:
         """Run command and return output as lines.
+
+        Args:
+            command: Command to run
+            **kwargs: Additional arguments passed to run()
 
         Returns:
             List of non-empty lines
@@ -253,6 +265,14 @@ class CommandRunner:
 _default_runner = CommandRunner()
 
 
-def run_command(command: Union[str, list[str]], **kwargs) -> CommandResult:
-    """Convenience function to run command with default runner."""
+def run_command(command: Union[str, list[str]], **kwargs: Any) -> CommandResult:
+    """Convenience function to run command with default runner.
+
+    Args:
+        command: Command to run
+        **kwargs: Additional arguments passed to run()
+
+    Returns:
+        Command result
+    """
     return _default_runner.run(command, **kwargs)

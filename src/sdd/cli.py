@@ -15,6 +15,8 @@ Examples:
     sdd learn-search "authentication"
 """
 
+from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
@@ -88,7 +90,7 @@ COMMANDS = {
 }
 
 
-def parse_work_list_args(args):
+def parse_work_list_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-list command."""
     parser = argparse.ArgumentParser(description="List work items")
     parser.add_argument("--status", help="Filter by status")
@@ -97,14 +99,14 @@ def parse_work_list_args(args):
     return parser.parse_args(args)
 
 
-def parse_work_show_args(args):
+def parse_work_show_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-show command."""
     parser = argparse.ArgumentParser(description="Show work item details")
     parser.add_argument("work_id", help="Work item ID")
     return parser.parse_args(args)
 
 
-def parse_work_new_args(args):
+def parse_work_new_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-new command."""
     parser = argparse.ArgumentParser(description="Create a new work item")
     parser.add_argument(
@@ -123,7 +125,7 @@ def parse_work_new_args(args):
     return parser.parse_args(args)
 
 
-def parse_work_update_args(args):
+def parse_work_update_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-update command."""
     parser = argparse.ArgumentParser(description="Update work item fields")
     parser.add_argument("work_id", help="Work item ID")
@@ -137,7 +139,7 @@ def parse_work_update_args(args):
     return parser.parse_args(args)
 
 
-def route_command(command_name, args):
+def route_command(command_name: str, args: list[str]) -> int:
     """
     Route command to appropriate script/function.
 
@@ -186,7 +188,7 @@ def route_command(command_name, args):
 
             func = getattr(module, function_name)
             result = func()
-            return result if result is not None else 0
+            return int(result) if result is not None else 0
 
         elif class_name:
             # Class-based commands: instantiate class and call method
@@ -275,7 +277,7 @@ def route_command(command_name, args):
             # Standalone function commands
             func = getattr(module, function_name)
             result = func()
-            return result if result is not None else 0
+            return int(result) if result is not None else 0
 
     except ModuleNotFoundError as e:
         raise SystemError(
@@ -306,7 +308,7 @@ def route_command(command_name, args):
         ) from e
 
 
-def main():
+def main() -> int:
     """
     Main entry point for CLI with centralized error handling.
 

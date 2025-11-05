@@ -11,10 +11,13 @@ Detects:
 - External APIs (from code inspection)
 """
 
+from __future__ import annotations
+
 import json
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import FileOperationError
@@ -23,7 +26,7 @@ from sdd.core.exceptions import FileOperationError
 class StackGenerator:
     """Generate technology stack documentation."""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize StackGenerator with project root path."""
         self.project_root = project_root or Path.cwd()
         self.stack_file = self.project_root / ".session" / "tracking" / "stack.txt"
@@ -85,7 +88,7 @@ class StackGenerator:
 
         if language in version_commands:
 
-            def detect_version():
+            def detect_version() -> str:
                 runner = CommandRunner(default_timeout=2)
                 result = runner.run(version_commands[language])
                 if result.success:
@@ -95,7 +98,8 @@ class StackGenerator:
                         return version_match.group(1)
                 return ""
 
-            return safe_execute(detect_version, default="", log_errors=False)
+            result = safe_execute(detect_version, default="", log_errors=False)
+            return result or ""
 
         return ""
 
@@ -103,7 +107,12 @@ class StackGenerator:
         """Detect frameworks from imports and config files."""
         from sdd.core.error_handlers import safe_execute
 
-        frameworks = {"backend": [], "frontend": [], "testing": [], "database": []}
+        frameworks: dict[str, list[str]] = {
+            "backend": [],
+            "frontend": [],
+            "testing": [],
+            "database": [],
+        }
 
         # Check Python imports
         if (self.project_root / "requirements.txt").exists():
@@ -134,7 +143,7 @@ class StackGenerator:
         # Check JavaScript/TypeScript frameworks
         if (self.project_root / "package.json").exists():
 
-            def parse_package_json():
+            def parse_package_json() -> None:
                 try:
                     content = (self.project_root / "package.json").read_text()
                     package = json.loads(content)
@@ -205,7 +214,7 @@ class StackGenerator:
         # Check for context7 usage in code
         for py_file in self.project_root.rglob("*.py"):
 
-            def read_py_file():
+            def read_py_file() -> bool:
                 content = py_file.read_text()
                 if "context7" in content.lower() or "mcp__context7" in content:
                     if "Context7 (library documentation)" not in mcp_servers:
@@ -293,7 +302,9 @@ class StackGenerator:
         return changes
 
     @log_errors()
-    def update_stack(self, session_num: int = None, non_interactive: bool = False):
+    def update_stack(
+        self, session_num: int | None = None, non_interactive: bool = False
+    ) -> list[dict[str, str]]:
         """Generate/update stack.txt and detect changes.
 
         Args:
@@ -346,18 +357,20 @@ class StackGenerator:
 
         return changes
 
-    def _record_stack_update(self, session_num: int, changes: list[dict], reasoning: str):
+    def _record_stack_update(
+        self, session_num: int, changes: list[dict[str, Any]], reasoning: str
+    ) -> None:
         """Record stack update in stack_updates.json."""
         from sdd.core.error_handlers import safe_execute
 
-        updates = {"updates": []}
+        updates: dict[str, Any] = {"updates": []}
 
         if self.updates_file.exists():
 
-            def load_updates():
+            def load_updates() -> dict[str, Any]:
                 try:
                     content = self.updates_file.read_text()
-                    return json.loads(content)
+                    return json.loads(content)  # type: ignore[no-any-return]
                 except json.JSONDecodeError as e:
                     raise FileOperationError(
                         operation="parse",
@@ -387,7 +400,7 @@ class StackGenerator:
             )
 
 
-def main():
+def main() -> None:
     """CLI entry point."""
     import argparse
 

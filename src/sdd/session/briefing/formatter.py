@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 class BriefingFormatter:
     """Format briefing content and generate output."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize briefing formatter."""
         self.runner = CommandRunner(default_timeout=5)
 

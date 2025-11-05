@@ -4,9 +4,10 @@ Milestone context building.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Optional
 
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus
@@ -17,7 +18,7 @@ logger = get_logger(__name__)
 class MilestoneBuilder:
     """Build milestone context for briefings."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize milestone builder.
 
         Args:
@@ -26,7 +27,7 @@ class MilestoneBuilder:
         self.session_dir = session_dir or Path(".session")
         self.work_items_file = self.session_dir / "tracking" / "work_items.json"
 
-    def load_milestone_context(self, work_item: dict) -> Optional[dict]:
+    def load_milestone_context(self, work_item: dict) -> dict | None:
         """Load milestone context for briefing.
 
         Args:

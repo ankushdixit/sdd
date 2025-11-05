@@ -4,6 +4,8 @@ Technology stack detection and information loading.
 Part of the briefing module decomposition.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from sdd.core.error_handlers import log_errors
@@ -16,7 +18,7 @@ logger = get_logger(__name__)
 class StackDetector:
     """Detect and load technology stack information."""
 
-    def __init__(self, session_dir: Path = None):
+    def __init__(self, session_dir: Path | None = None):
         """Initialize stack detector.
 
         Args:

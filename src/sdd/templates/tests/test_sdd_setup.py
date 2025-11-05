@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 
-def test_project_structure():
+def test_project_structure() -> None:
     """Verify SDD project structure exists."""
     assert Path(".session/tracking").exists(), ".session/tracking directory missing"
     assert Path(".session/specs").exists(), ".session/specs directory missing"
@@ -15,7 +15,7 @@ def test_project_structure():
     assert Path(".session/history").exists(), ".session/history directory missing"
 
 
-def test_tracking_files():
+def test_tracking_files() -> None:
     """Verify tracking files exist and are valid JSON."""
     work_items_file = Path(".session/tracking/work_items.json")
     assert work_items_file.exists(), "work_items.json missing"
@@ -33,7 +33,7 @@ def test_tracking_files():
         assert "categories" in data
 
 
-def test_session_config():
+def test_session_config() -> None:
     """Verify session config exists and is valid."""
     config_file = Path(".session/config.json")
     assert config_file.exists(), "config.json missing"
@@ -44,7 +44,7 @@ def test_session_config():
         assert "curation" in data
 
 
-def test_project_metadata():
+def test_project_metadata() -> None:
     """Verify project has basic metadata files."""
     # At least one of these should exist
     has_metadata = (
@@ -57,7 +57,7 @@ def test_project_metadata():
     )
 
 
-def test_initial_commit_exists():
+def test_initial_commit_exists() -> None:
     """Verify that an initial commit was created during sdd init."""
     # Check if .git directory exists
     assert Path(".git").exists(), "Git repository not initialized"

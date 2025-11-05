@@ -216,7 +216,7 @@ def delete_work_item(
     return True
 
 
-def main():
+def main() -> int:
     """CLI entry point for work item deletion."""
     import argparse
 

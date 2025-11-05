@@ -576,7 +576,7 @@ class TestFileStructure:
         content = file_path.read_text()
 
         # Act & Assert
-        assert "def main():" in content
+        assert "def main()" in content
 
     def test_regression_threshold_is_ten_percent(self):
         """Test that regression threshold is set to 10% (1.1)."""
