@@ -24,6 +24,18 @@ import shutil
 import sys
 from pathlib import Path
 
+from sdd.core.exceptions import (
+    ErrorCode,
+    FileOperationError,
+    ValidationError,
+)
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+)
+from sdd.core.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class PluginSyncer:
     """Handles syncing from main SDD repo to claude-plugins marketplace."""
@@ -61,75 +73,169 @@ class PluginSyncer:
         self.dry_run = dry_run
         self.changes: list[str] = []
 
-    def validate_repos(self) -> bool:
-        """Validate that both repositories exist and have expected structure."""
+    def validate_repos(self) -> None:
+        """
+        Validate that both repositories exist and have expected structure.
+
+        Raises:
+            SDDFileNotFoundError: If repository path doesn't exist
+            ValidationError: If repository is missing expected files/directories
+        """
         # Check main repo
         if not self.main_repo.exists():
-            print(f"❌ Main repo not found: {self.main_repo}")
-            return False
+            raise SDDFileNotFoundError(
+                file_path=str(self.main_repo),
+                file_type="main repository"
+            )
 
         main_markers = ["src/sdd/cli.py", "pyproject.toml", ".claude/commands"]
         for marker in main_markers:
             if not (self.main_repo / marker).exists():
-                print(f"❌ Main repo missing expected file/dir: {marker}")
-                return False
+                raise ValidationError(
+                    message=f"Main repository missing expected file/directory: {marker}",
+                    code=ErrorCode.CONFIG_VALIDATION_FAILED,
+                    context={
+                        "repository": str(self.main_repo),
+                        "missing_marker": marker,
+                        "marker_type": "file" if "." in marker else "directory"
+                    },
+                    remediation=f"Ensure {self.main_repo} is a valid SDD repository"
+                )
 
         # Check plugin repo
         if not self.plugin_repo.exists():
-            print(f"❌ Plugin repo not found: {self.plugin_repo}")
-            return False
+            raise SDDFileNotFoundError(
+                file_path=str(self.plugin_repo),
+                file_type="plugin repository"
+            )
 
         plugin_markers = ["sdd", "sdd/.claude-plugin/plugin.json"]
         for marker in plugin_markers:
             if not (self.plugin_repo / marker).exists():
-                print(f"❌ Plugin repo missing expected file/dir: {marker}")
-                return False
+                raise ValidationError(
+                    message=f"Plugin repository missing expected file/directory: {marker}",
+                    code=ErrorCode.CONFIG_VALIDATION_FAILED,
+                    context={
+                        "repository": str(self.plugin_repo),
+                        "missing_marker": marker,
+                        "marker_type": "file" if "plugin.json" in marker else "directory"
+                    },
+                    remediation=f"Ensure {self.plugin_repo} is a valid claude-plugins repository"
+                )
 
-        print("✅ Repository validation passed")
-        return True
+        logger.info("Repository validation passed")
 
     def get_version_from_main(self) -> str:
-        """Extract version from pyproject.toml in main repo."""
+        """
+        Extract version from pyproject.toml in main repo.
+
+        Returns:
+            Version string (e.g., "0.5.7")
+
+        Raises:
+            SDDFileNotFoundError: If pyproject.toml doesn't exist
+            ValidationError: If version field not found in pyproject.toml
+            FileOperationError: If file cannot be read
+        """
         pyproject_path = self.main_repo / "pyproject.toml"
         if not pyproject_path.exists():
-            raise FileNotFoundError(f"pyproject.toml not found in {self.main_repo}")
+            raise SDDFileNotFoundError(
+                file_path=str(pyproject_path),
+                file_type="pyproject.toml"
+            )
 
-        with open(pyproject_path) as f:
-            for line in f:
-                if line.strip().startswith("version"):
-                    # Extract version from line like: version = "0.5.7"
-                    version = line.split("=")[1].strip().strip('"')
-                    return version
+        try:
+            with open(pyproject_path) as f:
+                for line in f:
+                    if line.strip().startswith("version"):
+                        # Extract version from line like: version = "0.5.7"
+                        version = line.split("=")[1].strip().strip('"')
+                        return version
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(pyproject_path),
+                details=str(e),
+                cause=e
+            )
 
-        raise ValueError("Version not found in pyproject.toml")
+        raise ValidationError(
+            message="Version not found in pyproject.toml",
+            code=ErrorCode.MISSING_REQUIRED_FIELD,
+            context={
+                "file_path": str(pyproject_path),
+                "expected_field": "version"
+            },
+            remediation="Ensure pyproject.toml contains a 'version = \"x.y.z\"' line"
+        )
 
     def update_plugin_version(self, version: str) -> None:
-        """Update version in plugin.json."""
+        """
+        Update version in plugin.json.
+
+        Args:
+            version: Version string to set (e.g., "0.5.7")
+
+        Raises:
+            FileOperationError: If plugin.json cannot be read, parsed, or written
+        """
         plugin_json_path = self.plugin_repo / "sdd" / ".claude-plugin" / "plugin.json"
 
         if self.dry_run:
-            print(f"[DRY RUN] Would update plugin.json version to {version}")
+            logger.info(f"[DRY RUN] Would update plugin.json version to {version}")
             self.changes.append(f"Update plugin.json version to {version}")
             return
 
-        with open(plugin_json_path) as f:
-            plugin_data = json.load(f)
+        try:
+            with open(plugin_json_path) as f:
+                plugin_data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise FileOperationError(
+                operation="parse",
+                file_path=str(plugin_json_path),
+                details=f"Invalid JSON: {e}",
+                cause=e
+            )
+        except OSError as e:
+            raise FileOperationError(
+                operation="read",
+                file_path=str(plugin_json_path),
+                details=str(e),
+                cause=e
+            )
 
         old_version = plugin_data.get("version", "unknown")
         plugin_data["version"] = version
 
-        with open(plugin_json_path, "w") as f:
-            json.dump(plugin_data, f, indent=2)
-            f.write("\n")  # Add trailing newline
+        try:
+            with open(plugin_json_path, "w") as f:
+                json.dump(plugin_data, f, indent=2)
+                f.write("\n")  # Add trailing newline
+        except OSError as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=str(plugin_json_path),
+                details=str(e),
+                cause=e
+            )
 
         change_msg = f"Updated plugin.json version: {old_version} → {version}"
-        print(f"✅ {change_msg}")
+        logger.info(change_msg)
         self.changes.append(change_msg)
 
     def sync_file(self, src: Path, dest: Path) -> None:
-        """Sync a single file from source to destination."""
+        """
+        Sync a single file from source to destination.
+
+        Args:
+            src: Source file path
+            dest: Destination file path
+
+        Raises:
+            FileOperationError: If file copy operation fails
+        """
         if self.dry_run:
-            print(
+            logger.info(
                 f"[DRY RUN] Would copy: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
             )
             self.changes.append(
@@ -137,20 +243,38 @@ class PluginSyncer:
             )
             return
 
-        # Create parent directory if needed
-        dest.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            # Create parent directory if needed
+            dest.parent.mkdir(parents=True, exist_ok=True)
 
-        # Copy file
-        shutil.copy2(src, dest)
-        print(
-            f"✅ Copied: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
+            # Copy file
+            shutil.copy2(src, dest)
+        except (OSError, shutil.Error) as e:
+            raise FileOperationError(
+                operation="copy",
+                file_path=str(src),
+                details=f"Failed to copy to {dest}: {e}",
+                cause=e
+            )
+
+        logger.info(
+            f"Copied: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
         )
         self.changes.append(f"Copied {src.relative_to(self.main_repo)}")
 
     def sync_directory(self, src: Path, dest: Path) -> None:
-        """Sync a directory from source to destination."""
+        """
+        Sync a directory from source to destination.
+
+        Args:
+            src: Source directory path
+            dest: Destination directory path
+
+        Raises:
+            FileOperationError: If directory sync operation fails
+        """
         if self.dry_run:
-            print(
+            logger.info(
                 f"[DRY RUN] Would sync directory: {src.relative_to(self.main_repo)} → {dest.relative_to(self.plugin_repo)}"
             )
 
@@ -161,30 +285,43 @@ class PluginSyncer:
             )
             return
 
-        # Remove existing destination if it exists
-        if dest.exists():
-            shutil.rmtree(dest)
+        try:
+            # Remove existing destination if it exists
+            if dest.exists():
+                shutil.rmtree(dest)
 
-        # Copy entire directory tree
-        shutil.copytree(src, dest)
+            # Copy entire directory tree
+            shutil.copytree(src, dest)
+        except (OSError, shutil.Error) as e:
+            raise FileOperationError(
+                operation="sync_directory",
+                file_path=str(src),
+                details=f"Failed to sync directory to {dest}: {e}",
+                cause=e
+            )
 
         # Count files synced
         file_count = sum(1 for _ in dest.rglob("*") if _.is_file())
-        print(f"✅ Synced directory: {src.relative_to(self.main_repo)} ({file_count} files)")
+        logger.info(f"Synced directory: {src.relative_to(self.main_repo)} ({file_count} files)")
         self.changes.append(
             f"Synced directory {src.relative_to(self.main_repo)} ({file_count} files)"
         )
 
     def sync_all_files(self) -> None:
-        """Sync all files according to FILE_MAPPINGS."""
-        print("\n🔄 Syncing files...")
+        """
+        Sync all files according to FILE_MAPPINGS.
+
+        Raises:
+            FileOperationError: If any file/directory sync operation fails
+        """
+        logger.info("Syncing files...")
 
         for src_rel, dest_rel, is_directory in self.FILE_MAPPINGS:
             src = self.main_repo / src_rel
             dest = self.plugin_repo / dest_rel
 
             if not src.exists():
-                print(f"⚠️  Source not found (skipping): {src_rel}")
+                logger.warning(f"Source not found (skipping): {src_rel}")
                 continue
 
             if is_directory:
@@ -212,26 +349,23 @@ class PluginSyncer:
 
         return "\n".join(summary_lines)
 
-    def sync(self) -> bool:
+    def sync(self) -> None:
         """
         Execute the sync process.
 
-        Returns:
-            True if sync succeeded, False otherwise
+        Raises:
+            SDDFileNotFoundError: If repository paths don't exist
+            ValidationError: If repositories are missing expected files
+            FileOperationError: If file operations fail
         """
-        print("🚀 Starting plugin sync...\n")
+        logger.info("Starting plugin sync...")
 
         # Validate repositories
-        if not self.validate_repos():
-            return False
+        self.validate_repos()
 
         # Get version from main repo
-        try:
-            version = self.get_version_from_main()
-            print(f"📦 Main repo version: {version}\n")
-        except (FileNotFoundError, ValueError) as e:
-            print(f"❌ Error getting version: {e}")
-            return False
+        version = self.get_version_from_main()
+        logger.info(f"Main repo version: {version}")
 
         # Update plugin version
         self.update_plugin_version(version)
@@ -240,20 +374,28 @@ class PluginSyncer:
         self.sync_all_files()
 
         # Print summary
-        print("\n" + "=" * 60)
-        print(self.generate_summary())
-        print("=" * 60)
+        logger.info("=" * 60)
+        logger.info(self.generate_summary())
+        logger.info("=" * 60)
 
         if self.dry_run:
-            print("\n⚠️  This was a DRY RUN - no changes were made")
+            logger.warning("This was a DRY RUN - no changes were made")
         else:
-            print("\n✅ Sync completed successfully!")
-
-        return True
+            logger.info("Sync completed successfully!")
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+
+    Exit codes:
+        0: Success
+        1: General error
+        2: Validation error
+        3: File not found
+        4: Configuration error
+        5: System/file operation error
+    """
     parser = argparse.ArgumentParser(
         description="Sync SDD main repository to claude-plugins marketplace repository"
     )
@@ -284,8 +426,27 @@ def main():
         dry_run=args.dry_run,
     )
 
-    success = syncer.sync()
-    sys.exit(0 if success else 1)
+    try:
+        syncer.sync()
+        sys.exit(0)
+    except SDDFileNotFoundError as e:
+        logger.error(f"File not found: {e.message}")
+        if e.remediation:
+            logger.error(f"Remediation: {e.remediation}")
+        sys.exit(e.exit_code)
+    except ValidationError as e:
+        logger.error(f"Validation error: {e.message}")
+        if e.remediation:
+            logger.error(f"Remediation: {e.remediation}")
+        sys.exit(e.exit_code)
+    except FileOperationError as e:
+        logger.error(f"File operation error: {e.message}")
+        if e.remediation:
+            logger.error(f"Remediation: {e.remediation}")
+        sys.exit(e.exit_code)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

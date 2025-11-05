@@ -9,6 +9,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from sdd.core.error_handlers import log_errors
+from sdd.core.exceptions import (
+    FileNotFoundError as SDDFileNotFoundError,
+    FileOperationError,
+    ValidationError,
+    WorkItemNotFoundError,
+)
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemStatus
@@ -35,6 +42,7 @@ def find_dependents(work_items: dict, work_item_id: str) -> list[str]:
     return dependents
 
 
+@log_errors()
 def delete_work_item(
     work_item_id: str, delete_spec: Optional[bool] = None, project_root: Optional[Path] = None
 ) -> bool:
@@ -47,7 +55,13 @@ def delete_work_item(
         project_root: Project root path (defaults to current directory)
 
     Returns:
-        True if deletion successful, False otherwise
+        True if deletion successful, False if user cancels
+
+    Raises:
+        SDDFileNotFoundError: If work_items.json doesn't exist
+        WorkItemNotFoundError: If work item ID doesn't exist
+        FileOperationError: If unable to load or save work items file
+        ValidationError: If running in non-interactive mode without flags
     """
     # Setup paths
     if project_root is None:
@@ -59,29 +73,29 @@ def delete_work_item(
     # Check if work items file exists
     if not work_items_file.exists():
         logger.error("Work items file not found")
-        print("❌ Error: No work items found.")
-        return False
+        raise SDDFileNotFoundError(
+            file_path=str(work_items_file),
+            file_type="work items"
+        )
 
     # Load work items
     try:
         work_items_data = load_json(work_items_file)
-    except Exception as e:
+    except (OSError, IOError, ValueError) as e:
         logger.error("Failed to load work items: %s", e)
-        print(f"❌ Error: Failed to load work items: {e}")
-        return False
+        raise FileOperationError(
+            operation="read",
+            file_path=str(work_items_file),
+            details=str(e),
+            cause=e
+        ) from e
 
     work_items = work_items_data.get("work_items", {})
 
     # Validate work item exists
     if work_item_id not in work_items:
         logger.error("Work item '%s' not found", work_item_id)
-        print(f"❌ Error: Work item '{work_item_id}' not found.")
-        print("\nAvailable work items:")
-        for wid in list(work_items.keys())[:5]:
-            print(f"  - {wid}")
-        if len(work_items) > 5:
-            print(f"  ... and {len(work_items) - 5} more")
-        return False
+        raise WorkItemNotFoundError(work_item_id)
 
     item = work_items[work_item_id]
 
@@ -111,11 +125,14 @@ def delete_work_item(
         # Interactive mode
         if not sys.stdin.isatty():
             logger.error("Cannot run interactive mode in non-interactive environment")
-            print("\n❌ Error: Cannot run interactive deletion in non-interactive mode")
-            print("\nPlease use command-line flags:")
-            print("  sdd work-delete <work_item_id> --keep-spec   (delete work item only)")
-            print("  sdd work-delete <work_item_id> --delete-spec (delete work item and spec)")
-            return False
+            raise ValidationError(
+                message="Cannot run interactive deletion in non-interactive mode",
+                remediation=(
+                    "Use command-line flags:\n"
+                    "  sdd work-delete <work_item_id> --keep-spec   (delete work item only)\n"
+                    "  sdd work-delete <work_item_id> --delete-spec (delete work item and spec)"
+                )
+            )
 
         print("\nOptions:")
         print("  1. Delete work item only (keep spec file)")
@@ -168,10 +185,14 @@ def delete_work_item(
         save_json(work_items_file, work_items_data)
         logger.info("Successfully updated work_items.json")
         print(f"✓ Deleted work item '{work_item_id}'")
-    except Exception as e:
+    except (OSError, IOError) as e:
         logger.error("Failed to save work items: %s", e)
-        print(f"❌ Error: Failed to save changes: {e}")
-        return False
+        raise FileOperationError(
+            operation="write",
+            file_path=str(work_items_file),
+            details=str(e),
+            cause=e
+        ) from e
 
     # Delete spec file if requested
     if delete_spec:
@@ -183,7 +204,7 @@ def delete_work_item(
                 spec_path.unlink()
                 logger.info("Deleted spec file: %s", spec_file_path)
                 print(f"✓ Deleted spec file '{spec_file_path}'")
-            except Exception as e:
+            except (OSError, IOError, PermissionError) as e:
                 logger.warning("Failed to delete spec file: %s", e)
                 print(f"⚠️  Warning: Could not delete spec file: {e}")
         else:
@@ -224,16 +245,44 @@ def main():
     # Determine delete_spec value
     delete_spec_value = None
     if args.keep_spec and args.delete_spec:
-        print("❌ Error: Cannot specify both --keep-spec and --delete-spec")
-        return 1
+        raise ValidationError(
+            message="Cannot specify both --keep-spec and --delete-spec",
+            remediation="Choose only one option: --keep-spec OR --delete-spec"
+        )
     elif args.keep_spec:
         delete_spec_value = False
     elif args.delete_spec:
         delete_spec_value = True
 
     # Perform deletion
-    success = delete_work_item(args.work_item_id, delete_spec=delete_spec_value)
-    return 0 if success else 1
+    try:
+        success = delete_work_item(args.work_item_id, delete_spec=delete_spec_value)
+        return 0 if success else 1
+    except WorkItemNotFoundError as e:
+        print(f"❌ Error: {e.message}")
+        if e.remediation:
+            print(f"\n{e.remediation}")
+        # Show available work items
+        try:
+            from pathlib import Path
+            work_items_file = Path.cwd() / ".session" / "tracking" / "work_items.json"
+            if work_items_file.exists():
+                work_items_data = load_json(work_items_file)
+                work_items = work_items_data.get("work_items", {})
+                if work_items:
+                    print("\nAvailable work items:")
+                    for wid in list(work_items.keys())[:5]:
+                        print(f"  - {wid}")
+                    if len(work_items) > 5:
+                        print(f"  ... and {len(work_items) - 5} more")
+        except Exception:  # noqa: BLE001 - This is optional enhancement, don't fail on it
+            pass
+        return e.exit_code
+    except (SDDFileNotFoundError, FileOperationError, ValidationError) as e:
+        print(f"❌ Error: {e.message}")
+        if e.remediation:
+            print(f"\n{e.remediation}")
+        return e.exit_code
 
 
 if __name__ == "__main__":

@@ -5,50 +5,94 @@ Philosophy: Don't check and warn - CREATE and FIX.
 """
 
 import json
+import logging
 import shutil
 import sys
 from pathlib import Path
 
-from sdd.core.command_runner import CommandRunner
+from sdd.core.command_runner import CommandRunner, CommandExecutionError
+from sdd.core.exceptions import (
+    DirectoryNotEmptyError,
+    ErrorCode,
+    FileNotFoundError as SDDFileNotFoundError,
+    FileOperationError,
+    GitError,
+    NotAGitRepoError,
+    ProjectInitializationError,
+    TemplateNotFoundError,
+    ValidationError,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def check_or_init_git(project_root: Path = None) -> bool:
-    """Check if git is initialized, if not initialize it."""
+    """
+    Check if git is initialized, if not initialize it.
+
+    Args:
+        project_root: Root directory of the project. Defaults to current working directory.
+
+    Returns:
+        True if git repository exists or was successfully initialized.
+
+    Raises:
+        GitError: If git initialization or branch configuration fails.
+
+    Note:
+        This function prints success messages but does not print errors - it raises exceptions instead.
+    """
     if project_root is None:
         project_root = Path.cwd()
 
     git_dir = project_root / ".git"
 
     if git_dir.exists():
-        print("✓ Git repository already initialized")
+        logger.info("Git repository already initialized")
         return True
 
-    try:
-        runner = CommandRunner(default_timeout=5, working_dir=project_root)
+    runner = CommandRunner(default_timeout=5, working_dir=project_root)
 
-        # Initialize git
-        result = runner.run(["git", "init"], check=True)
-        if result.success:
-            print("✓ Initialized git repository")
-        else:
-            raise Exception(f"Git init failed: {result.stderr}")
+    # Initialize git
+    result = runner.run(["git", "init"], check=True)
+    if not result.success:
+        raise GitError(
+            message="Failed to initialize git repository",
+            code=ErrorCode.GIT_COMMAND_FAILED,
+            context={"stderr": result.stderr, "command": "git init"},
+            remediation="Ensure git is installed and you have write permissions in the directory"
+        )
+    logger.info("Initialized git repository")
 
-        # Set default branch to main (modern convention)
-        result = runner.run(["git", "branch", "-m", "main"], check=True)
-        if result.success:
-            print("✓ Set default branch to 'main'")
-        else:
-            raise Exception(f"Branch rename failed: {result.stderr}")
+    # Set default branch to main (modern convention)
+    result = runner.run(["git", "branch", "-m", "main"], check=True)
+    if not result.success:
+        raise GitError(
+            message="Failed to set default branch to 'main'",
+            code=ErrorCode.GIT_COMMAND_FAILED,
+            context={"stderr": result.stderr, "command": "git branch -m main"},
+            remediation="Manually run 'git branch -m main' in the repository"
+        )
+    logger.info("Set default branch to 'main'")
 
-        return True
-    except Exception as e:
-        print(f"⚠️  Failed to initialize git: {e}")
-        print("   You may need to run 'git init' manually")
-        return False
+    return True
 
 
 def install_git_hooks(project_root: Path = None) -> bool:
-    """Install git hooks from templates."""
+    """
+    Install git hooks from templates.
+
+    Args:
+        project_root: Root directory of the project. Defaults to current working directory.
+
+    Returns:
+        True if git hooks were successfully installed.
+
+    Raises:
+        NotAGitRepoError: If .git/hooks directory doesn't exist (git not initialized).
+        TemplateNotFoundError: If hook template file is not found.
+        FileOperationError: If hook installation or permission setting fails.
+    """
     if project_root is None:
         project_root = Path.cwd()
 
@@ -56,8 +100,7 @@ def install_git_hooks(project_root: Path = None) -> bool:
 
     # Check if .git/hooks exists
     if not git_hooks_dir.exists():
-        print("⚠️  .git/hooks directory not found - git may not be initialized")
-        return False
+        raise NotAGitRepoError(str(project_root))
 
     # Get template directory
     template_dir = Path(__file__).parent.parent / "templates" / "git-hooks"
@@ -66,21 +109,27 @@ def install_git_hooks(project_root: Path = None) -> bool:
     hook_template = template_dir / "prepare-commit-msg"
     hook_dest = git_hooks_dir / "prepare-commit-msg"
 
-    if hook_template.exists():
-        try:
-            shutil.copy(hook_template, hook_dest)
-            # Make executable (chmod +x)
-            import stat
+    if not hook_template.exists():
+        raise TemplateNotFoundError(
+            template_name="prepare-commit-msg",
+            template_path=str(template_dir)
+        )
 
-            hook_dest.chmod(hook_dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            print("✓ Installed git prepare-commit-msg hook")
-            return True
-        except Exception as e:
-            print(f"⚠️  Failed to install git hook: {e}")
-            return False
-    else:
-        print(f"⚠️  Hook template not found: {hook_template}")
-        return False
+    try:
+        shutil.copy(hook_template, hook_dest)
+        # Make executable (chmod +x)
+        import stat
+
+        hook_dest.chmod(hook_dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        logger.info("Installed git prepare-commit-msg hook")
+        return True
+    except Exception as e:
+        raise FileOperationError(
+            operation="install",
+            file_path=str(hook_dest),
+            details=f"Failed to copy or set permissions: {str(e)}",
+            cause=e
+        )
 
 
 def detect_project_type() -> str:
@@ -93,14 +142,14 @@ def detect_project_type() -> str:
         return "python"
     else:
         # No project files found - ask user
-        print("\nNo project files detected. What type of project is this?")
-        print("1. TypeScript")
-        print("2. JavaScript")
-        print("3. Python")
+        logger.info("\nNo project files detected. What type of project is this?")
+        logger.info("1. TypeScript")
+        logger.info("2. JavaScript")
+        logger.info("3. Python")
 
         if not sys.stdin.isatty():
             # Non-interactive mode - default to TypeScript
-            print("Non-interactive mode: defaulting to TypeScript")
+            logger.info("Non-interactive mode: defaulting to TypeScript")
             return "typescript"
 
         choice = input("Enter choice (1-3): ").strip()
@@ -108,31 +157,73 @@ def detect_project_type() -> str:
 
 
 def ensure_package_manager_file(project_type: str):
-    """Create or update package manager file with required dependencies."""
+    """
+    Create or update package manager file with required dependencies.
+
+    Args:
+        project_type: Type of project (typescript, javascript, or python).
+
+    Raises:
+        ValidationError: If project_type is invalid.
+        TemplateNotFoundError: If required template file is not found.
+        FileOperationError: If file read/write operations fail.
+
+    Note:
+        Prints informational messages about created/updated files but raises exceptions on errors.
+    """
+    if project_type not in ["typescript", "javascript", "python"]:
+        raise ValidationError(
+            message=f"Invalid project type: {project_type}",
+            code=ErrorCode.INVALID_WORK_ITEM_TYPE,
+            context={"project_type": project_type},
+            remediation="Use 'typescript', 'javascript', or 'python'"
+        )
+
     template_dir = Path(__file__).parent.parent / "templates"
 
     if project_type in ["typescript", "javascript"]:
         package_json = Path("package.json")
 
         if not package_json.exists():
-            print("Creating package.json...")
+            logger.info("Creating package.json...")
             # Get project name from directory
             project_name = Path.cwd().name
             project_desc = f"A {project_type} project with Session-Driven Development"
 
             # Load template and replace placeholders
             template_path = template_dir / "package.json.template"
-            template_content = template_path.read_text()
-            content = template_content.replace("{project_name}", project_name)
-            content = content.replace("{project_description}", project_desc)
+            if not template_path.exists():
+                raise TemplateNotFoundError(
+                    template_name="package.json.template",
+                    template_path=str(template_dir)
+                )
 
-            package_json.write_text(content)
-            print(f"✓ Created package.json for {project_name}")
+            try:
+                template_content = template_path.read_text()
+                content = template_content.replace("{project_name}", project_name)
+                content = content.replace("{project_description}", project_desc)
+                package_json.write_text(content)
+                logger.info(f"Created package.json for {project_name}")
+            except Exception as e:
+                raise FileOperationError(
+                    operation="create",
+                    file_path=str(package_json),
+                    details=f"Failed to create package.json from template: {str(e)}",
+                    cause=e
+                )
         else:
-            print("✓ Found package.json")
+            logger.info("Found package.json")
             # Ensure required scripts and devDependencies exist
-            with open(package_json) as f:
-                data = json.load(f)
+            try:
+                with open(package_json) as f:
+                    data = json.load(f)
+            except json.JSONDecodeError as e:
+                raise FileOperationError(
+                    operation="parse",
+                    file_path=str(package_json),
+                    details=f"Invalid JSON in package.json: {str(e)}",
+                    cause=e
+                )
 
             # Ensure scripts
             required_scripts = {
@@ -152,7 +243,7 @@ def ensure_package_manager_file(project_type: str):
             for script, cmd in required_scripts.items():
                 if script not in data["scripts"]:
                     data["scripts"][script] = cmd
-                    print(f"  Added script: {script}")
+                    logger.info(f"Added script: {script}")
                     scripts_modified = True
 
             # Ensure devDependencies
@@ -183,44 +274,85 @@ def ensure_package_manager_file(project_type: str):
             for pkg, version in required_deps.items():
                 if pkg not in data["devDependencies"]:
                     data["devDependencies"][pkg] = version
-                    print(f"  Added devDependency: {pkg}")
+                    logger.info(f"Added devDependency: {pkg}")
                     deps_modified = True
 
             # Save back only if modified
             if scripts_modified or deps_modified:
-                with open(package_json, "w") as f:
-                    json.dump(data, f, indent=2)
-                if deps_modified:
-                    print("  Run 'npm install' to install new dependencies")
+                try:
+                    with open(package_json, "w") as f:
+                        json.dump(data, f, indent=2)
+                    if deps_modified:
+                        logger.info("Run 'npm install' to install new dependencies")
+                except Exception as e:
+                    raise FileOperationError(
+                        operation="write",
+                        file_path=str(package_json),
+                        details=f"Failed to save package.json: {str(e)}",
+                        cause=e
+                    )
 
     elif project_type == "python":
         pyproject = Path("pyproject.toml")
 
         if not pyproject.exists():
-            print("Creating pyproject.toml...")
+            logger.info("Creating pyproject.toml...")
             project_name = Path.cwd().name.replace("-", "_")
             project_desc = "A Python project with Session-Driven Development"
 
             template_path = template_dir / "pyproject.toml.template"
-            template_content = template_path.read_text()
-            content = template_content.replace("{project_name}", project_name)
-            content = template_content.replace("{project_description}", project_desc)
-
-            pyproject.write_text(content)
-            print(f"✓ Created pyproject.toml for {project_name}")
-        else:
-            print("✓ Found pyproject.toml")
-            # Check if it has dev dependencies section
-            content = pyproject.read_text()
-            if "[project.optional-dependencies]" not in content and "dev" not in content:
-                print(
-                    "  Note: Add [project.optional-dependencies] section with pytest, pytest-cov, ruff"
+            if not template_path.exists():
+                raise TemplateNotFoundError(
+                    template_name="pyproject.toml.template",
+                    template_path=str(template_dir)
                 )
-                print("  Or install manually: pip install pytest pytest-cov ruff")
+
+            try:
+                template_content = template_path.read_text()
+                content = template_content.replace("{project_name}", project_name)
+                content = template_content.replace("{project_description}", project_desc)
+                pyproject.write_text(content)
+                logger.info(f"Created pyproject.toml for {project_name}")
+            except Exception as e:
+                raise FileOperationError(
+                    operation="create",
+                    file_path=str(pyproject),
+                    details=f"Failed to create pyproject.toml from template: {str(e)}",
+                    cause=e
+                )
+        else:
+            logger.info("Found pyproject.toml")
+            # Check if it has dev dependencies section
+            try:
+                content = pyproject.read_text()
+                if "[project.optional-dependencies]" not in content and "dev" not in content:
+                    logger.info(
+                        "Note: Add [project.optional-dependencies] section with pytest, pytest-cov, ruff"
+                    )
+                    logger.info("Or install manually: pip install pytest pytest-cov ruff")
+            except Exception as e:
+                raise FileOperationError(
+                    operation="read",
+                    file_path=str(pyproject),
+                    details=f"Failed to read pyproject.toml: {str(e)}",
+                    cause=e
+                )
 
 
 def ensure_config_files(project_type: str):
-    """Create all required config files from templates."""
+    """
+    Create all required config files from templates.
+
+    Args:
+        project_type: Type of project (typescript, javascript, or python).
+
+    Raises:
+        FileOperationError: If file copy operation fails.
+
+    Note:
+        Prints informational messages about created/found files.
+        Missing templates are silently skipped (no error raised).
+    """
     template_dir = Path(__file__).parent.parent / "templates"
 
     # Common configs
@@ -249,70 +381,111 @@ def ensure_config_files(project_type: str):
         if not dest_path.exists():
             template_path = template_dir / template_name
             if template_path.exists():
-                shutil.copy(template_path, dest_path)
-                print(f"✓ Created {dest_name}")
+                try:
+                    shutil.copy(template_path, dest_path)
+                    logger.info(f"Created {dest_name}")
+                except Exception as e:
+                    raise FileOperationError(
+                        operation="copy",
+                        file_path=str(dest_path),
+                        details=f"Failed to copy config file: {str(e)}",
+                        cause=e
+                    )
         else:
-            print(f"✓ Found {dest_name}")
+            logger.info(f"Found {dest_name}")
 
 
 def install_dependencies(project_type: str):
-    """Install project dependencies."""
+    """
+    Install project dependencies.
+
+    Args:
+        project_type: Type of project (typescript, javascript, or python).
+
+    Raises:
+        CommandExecutionError: If dependency installation command fails critically.
+
+    Note:
+        Prints informational messages. Some failures are logged as warnings rather than exceptions
+        to allow the initialization to continue (user can manually install dependencies later).
+    """
     if project_type in ["typescript", "javascript"]:
         # Always run npm install to ensure new devDependencies are installed
-        print("\nInstalling npm dependencies...")
+        logger.info("\nInstalling npm dependencies...")
         try:
             runner = CommandRunner(default_timeout=300)
             result = runner.run(["npm", "install"], check=True)
             if result.success:
-                print("✓ Dependencies installed")
+                logger.info("Dependencies installed")
             else:
-                print("⚠️  npm install failed - you may need to run it manually")
-        except Exception:
-            print("⚠️  npm install failed - you may need to run it manually")
+                logger.warning("npm install failed - you may need to run it manually")
+        except Exception as e:
+            logger.warning(f"npm install failed: {e} - you may need to run it manually")
 
     elif project_type == "python":
         # Check if we're in a venv, if not create one
         if not (Path("venv").exists() or Path(".venv").exists()):
-            print("\nCreating Python virtual environment...")
+            logger.info("\nCreating Python virtual environment...")
             try:
                 runner = CommandRunner(default_timeout=60)
                 result = runner.run([sys.executable, "-m", "venv", "venv"], check=True)
                 if result.success:
-                    print("✓ Created venv/")
-                    print(
-                        "  Activate with: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)"
+                    logger.info("Created venv/")
+                    logger.info(
+                        "Activate with: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)"
                     )
                 else:
-                    print("⚠️  venv creation failed")
+                    logger.warning("venv creation failed")
                     return
-            except Exception:
-                print("⚠️  venv creation failed")
+            except Exception as e:
+                logger.warning(f"venv creation failed: {e}")
                 return
 
         # Try to install dev dependencies
-        print("\nInstalling Python dependencies...")
+        logger.info("\nInstalling Python dependencies...")
         pip_cmd = "venv/bin/pip" if Path("venv").exists() else ".venv/bin/pip"
         if Path(pip_cmd).exists():
             try:
                 runner = CommandRunner(default_timeout=300)
                 result = runner.run([pip_cmd, "install", "-e", ".[dev]"], check=True)
                 if result.success:
-                    print("✓ Dependencies installed")
+                    logger.info("Dependencies installed")
                 else:
-                    print(
-                        "⚠️  pip install failed - you may need to activate venv and install manually"
+                    logger.warning(
+                        "pip install failed - you may need to activate venv and install manually"
                     )
-            except Exception:
-                print("⚠️  pip install failed - you may need to activate venv and install manually")
+            except Exception as e:
+                logger.warning(f"pip install failed: {e} - you may need to activate venv and install manually")
         else:
-            print("⚠️  Please activate virtual environment and run: pip install -e .[dev]")
+            logger.warning("Please activate virtual environment and run: pip install -e .[dev]")
 
 
 def create_smoke_tests(project_type: str):
-    """Create initial smoke tests that validate SDD setup."""
+    """
+    Create initial smoke tests that validate SDD setup.
+
+    Args:
+        project_type: Type of project (typescript, javascript, or python).
+
+    Raises:
+        FileOperationError: If test directory creation or file copy fails.
+
+    Note:
+        Prints informational messages about created/found test files.
+        Missing templates are silently skipped (no error raised).
+    """
     template_dir = Path(__file__).parent.parent / "templates" / "tests"
     test_dir = Path("tests")
-    test_dir.mkdir(exist_ok=True)
+
+    try:
+        test_dir.mkdir(exist_ok=True)
+    except Exception as e:
+        raise FileOperationError(
+            operation="create",
+            file_path=str(test_dir),
+            details=f"Failed to create tests directory: {str(e)}",
+            cause=e
+        )
 
     if project_type == "typescript":
         test_file = test_dir / "sdd-setup.test.ts"
@@ -320,10 +493,18 @@ def create_smoke_tests(project_type: str):
         if not test_file.exists():
             template_file = template_dir / template_name
             if template_file.exists():
-                shutil.copy(template_file, test_file)
-                print(f"✓ Created smoke tests: {test_file}")
+                try:
+                    shutil.copy(template_file, test_file)
+                    logger.info(f"Created smoke tests: {test_file}")
+                except Exception as e:
+                    raise FileOperationError(
+                        operation="copy",
+                        file_path=str(test_file),
+                        details=f"Failed to copy smoke test template: {str(e)}",
+                        cause=e
+                    )
         else:
-            print(f"✓ Found {test_file}")
+            logger.info(f"Found {test_file}")
 
     elif project_type == "javascript":
         test_file = test_dir / "sdd-setup.test.js"
@@ -331,46 +512,87 @@ def create_smoke_tests(project_type: str):
         if not test_file.exists():
             template_file = template_dir / template_name
             if template_file.exists():
-                shutil.copy(template_file, test_file)
-                print(f"✓ Created smoke tests: {test_file}")
+                try:
+                    shutil.copy(template_file, test_file)
+                    logger.info(f"Created smoke tests: {test_file}")
+                except Exception as e:
+                    raise FileOperationError(
+                        operation="copy",
+                        file_path=str(test_file),
+                        details=f"Failed to copy smoke test template: {str(e)}",
+                        cause=e
+                    )
         else:
-            print(f"✓ Found {test_file}")
+            logger.info(f"Found {test_file}")
 
     elif project_type == "python":
         test_file = test_dir / "test_sdd_setup.py"
         if not test_file.exists():
             template_file = template_dir / "test_sdd_setup.py"
             if template_file.exists():
-                shutil.copy(template_file, test_file)
-                print(f"✓ Created smoke tests: {test_file}")
+                try:
+                    shutil.copy(template_file, test_file)
+                    logger.info(f"Created smoke tests: {test_file}")
+                except Exception as e:
+                    raise FileOperationError(
+                        operation="copy",
+                        file_path=str(test_file),
+                        details=f"Failed to copy smoke test template: {str(e)}",
+                        cause=e
+                    )
         else:
-            print(f"✓ Found {test_file}")
+            logger.info(f"Found {test_file}")
 
 
 def create_session_structure():
-    """Create .session directory structure."""
+    """
+    Create .session directory structure.
+
+    Raises:
+        FileOperationError: If directory creation fails.
+
+    Note:
+        Prints informational messages about created directories.
+    """
     session_dir = Path(".session")
 
-    print("\nCreating .session/ structure...")
+    logger.info("\nCreating .session/ structure...")
 
     # Create directories
-    (session_dir / "tracking").mkdir(parents=True)
-    (session_dir / "briefings").mkdir(parents=True)
-    (session_dir / "history").mkdir(parents=True)
-    (session_dir / "specs").mkdir(parents=True)
+    try:
+        (session_dir / "tracking").mkdir(parents=True)
+        (session_dir / "briefings").mkdir(parents=True)
+        (session_dir / "history").mkdir(parents=True)
+        (session_dir / "specs").mkdir(parents=True)
+    except Exception as e:
+        raise FileOperationError(
+            operation="create",
+            file_path=str(session_dir),
+            details=f"Failed to create .session directory structure: {str(e)}",
+            cause=e
+        )
 
-    print("✓ Created .session/tracking/")
-    print("✓ Created .session/briefings/")
-    print("✓ Created .session/history/")
-    print("✓ Created .session/specs/")
+    logger.info("Created .session/tracking/")
+    logger.info("Created .session/briefings/")
+    logger.info("Created .session/history/")
+    logger.info("Created .session/specs/")
 
 
 def initialize_tracking_files():
-    """Initialize tracking files from templates."""
+    """
+    Initialize tracking files from templates.
+
+    Raises:
+        FileOperationError: If file operations fail.
+        TemplateNotFoundError: If required template files are missing.
+
+    Note:
+        Creates tracking files, config.json, and schema files in .session directory.
+    """
     session_dir = Path(".session")
     template_dir = Path(__file__).parent.parent / "templates"
 
-    print("\nInitializing tracking files...")
+    logger.info("\nInitializing tracking files...")
 
     # Copy templates
     tracking_files = [
@@ -383,19 +605,35 @@ def initialize_tracking_files():
         src_path = template_dir / src
         dst_path = session_dir / dst
         if src_path.exists():
-            shutil.copy(src_path, dst_path)
-            print(f"✓ Created {dst}")
+            try:
+                shutil.copy(src_path, dst_path)
+                logger.info(f"Created {dst}")
+            except Exception as e:
+                raise FileOperationError(
+                    operation="copy",
+                    file_path=str(dst_path),
+                    details=f"Failed to copy tracking file template: {str(e)}",
+                    cause=e
+                )
 
     # Create empty files for stack and tree tracking
-    (session_dir / "tracking" / "stack_updates.json").write_text(
-        json.dumps({"updates": []}, indent=2)
-    )
-    print("✓ Created stack_updates.json")
+    try:
+        (session_dir / "tracking" / "stack_updates.json").write_text(
+            json.dumps({"updates": []}, indent=2)
+        )
+        logger.info("Created stack_updates.json")
 
-    (session_dir / "tracking" / "tree_updates.json").write_text(
-        json.dumps({"updates": []}, indent=2)
-    )
-    print("✓ Created tree_updates.json")
+        (session_dir / "tracking" / "tree_updates.json").write_text(
+            json.dumps({"updates": []}, indent=2)
+        )
+        logger.info("Created tree_updates.json")
+    except Exception as e:
+        raise FileOperationError(
+            operation="create",
+            file_path=str(session_dir / "tracking"),
+            details=f"Failed to create tracking files: {str(e)}",
+            cause=e
+        )
 
     # Create config.json with default settings
     config_data = {
@@ -498,21 +736,46 @@ def initialize_tracking_files():
             "pr_body_template": "## Summary\n\n{description}\n\n## Work Item\n- ID: {work_item_id}\n- Type: {type}\n- Session: {session_num}\n\n## Changes\n{commit_messages}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
         },
     }
-    (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
-    print("✓ Created config.json")
+    try:
+        (session_dir / "config.json").write_text(json.dumps(config_data, indent=2))
+        logger.info("Created config.json")
+    except Exception as e:
+        raise FileOperationError(
+            operation="create",
+            file_path=str(session_dir / "config.json"),
+            details=f"Failed to create config.json: {str(e)}",
+            cause=e
+        )
 
     # Copy config schema file
     schema_source = Path(__file__).parent.parent / "templates" / "config.schema.json"
     schema_dest = session_dir / "config.schema.json"
 
     if schema_source.exists() and not schema_dest.exists():
-        shutil.copy(schema_source, schema_dest)
-        print("✓ Created config.schema.json")
+        try:
+            shutil.copy(schema_source, schema_dest)
+            logger.info("Created config.schema.json")
+        except Exception as e:
+            raise FileOperationError(
+                operation="copy",
+                file_path=str(schema_dest),
+                details=f"Failed to copy config schema: {str(e)}",
+                cause=e
+            )
 
 
 def run_initial_scans():
-    """Run initial stack and tree scans with FIXED path resolution (Bug #12)."""
-    print("\nGenerating project context...")
+    """
+    Run initial stack and tree scans with FIXED path resolution (Bug #12).
+
+    Raises:
+        None - failures are logged as warnings to allow initialization to continue.
+
+    Note:
+        Uses absolute paths to stack.py and tree.py scripts.
+        Failures don't block initialization - user can generate these later.
+    """
+    logger.info("\nGenerating project context...")
 
     # Get SDD installation directory
     script_dir = Path(__file__).parent
@@ -522,29 +785,37 @@ def run_initial_scans():
     try:
         result = runner.run(["python", str(script_dir / "stack.py")], check=True)
         if result.success:
-            print("✓ Generated stack.txt")
+            logger.info("Generated stack.txt")
         else:
-            print("⚠️  Could not generate stack.txt")
+            logger.warning("Could not generate stack.txt")
             if result.stderr:
-                print(f"  Error: {result.stderr.strip()}")
+                logger.warning(f"Error: {result.stderr.strip()}")
     except Exception as e:
-        print(f"⚠️  Stack generation failed: {e}")
+        logger.warning(f"Stack generation failed: {e}")
 
     # Run tree.py with absolute path
     try:
         result = runner.run(["python", str(script_dir / "tree.py")], check=True)
         if result.success:
-            print("✓ Generated tree.txt")
+            logger.info("Generated tree.txt")
         else:
-            print("⚠️  Could not generate tree.txt")
+            logger.warning("Could not generate tree.txt")
             if result.stderr:
-                print(f"  Error: {result.stderr.strip()}")
+                logger.warning(f"Error: {result.stderr.strip()}")
     except Exception as e:
-        print(f"⚠️  Tree generation failed: {e}")
+        logger.warning(f"Tree generation failed: {e}")
 
 
 def ensure_gitignore_entries():
-    """Add .session patterns and OS-specific files to .gitignore."""
+    """
+    Add .session patterns and OS-specific files to .gitignore.
+
+    Raises:
+        FileOperationError: If .gitignore read/write operations fail.
+
+    Note:
+        Prints informational messages about updated .gitignore.
+    """
     gitignore = Path(".gitignore")
 
     required_entries = [
@@ -574,7 +845,15 @@ def ensure_gitignore_entries():
         "*~                  # Linux backup files",
     ]
 
-    existing_content = gitignore.read_text() if gitignore.exists() else ""
+    try:
+        existing_content = gitignore.read_text() if gitignore.exists() else ""
+    except Exception as e:
+        raise FileOperationError(
+            operation="read",
+            file_path=str(gitignore),
+            details=f"Failed to read .gitignore: {str(e)}",
+            cause=e
+        )
 
     entries_to_add = []
     for entry in required_entries:
@@ -598,31 +877,54 @@ def ensure_gitignore_entries():
         os_entries_to_add.extend(os_patterns_needed)
 
     if entries_to_add or os_entries_to_add:
-        print("\nUpdating .gitignore...")
-        with open(gitignore, "a") as f:
-            if existing_content and not existing_content.endswith("\n"):
-                f.write("\n")
+        logger.info("\nUpdating .gitignore...")
+        try:
+            with open(gitignore, "a") as f:
+                if existing_content and not existing_content.endswith("\n"):
+                    f.write("\n")
 
-            if entries_to_add:
-                f.write("\n# SDD-related patterns\n")
-                for entry in entries_to_add:
-                    f.write(f"{entry}\n")
+                if entries_to_add:
+                    f.write("\n# SDD-related patterns\n")
+                    for entry in entries_to_add:
+                        f.write(f"{entry}\n")
 
-            if os_entries_to_add:
-                f.write("\n")
-                for entry in os_entries_to_add:
-                    f.write(f"{entry}\n")
+                if os_entries_to_add:
+                    f.write("\n")
+                    for entry in os_entries_to_add:
+                        f.write(f"{entry}\n")
 
-        total_added = len(entries_to_add) + len(
-            [e for e in os_entries_to_add if not e.startswith("#")]
-        )
-        print(f"✓ Added {total_added} entries to .gitignore")
+            total_added = len(entries_to_add) + len(
+                [e for e in os_entries_to_add if not e.startswith("#")]
+            )
+            logger.info(f"Added {total_added} entries to .gitignore")
+        except Exception as e:
+            raise FileOperationError(
+                operation="write",
+                file_path=str(gitignore),
+                details=f"Failed to update .gitignore: {str(e)}",
+                cause=e
+            )
     else:
-        print("✓ .gitignore already up to date")
+        logger.info(".gitignore already up to date")
 
 
 def create_initial_commit(project_root: Path = None):
-    """Create initial commit after project initialization."""
+    """
+    Create initial commit after project initialization.
+
+    Args:
+        project_root: Root directory of the project. Defaults to current working directory.
+
+    Returns:
+        True if initial commit was created or already exists.
+
+    Raises:
+        GitError: If git add or commit operations fail critically.
+
+    Note:
+        Prints informational messages. Some failures are logged as warnings to allow
+        the initialization to complete (user can commit manually later).
+    """
     if project_root is None:
         project_root = Path.cwd()
 
@@ -634,7 +936,7 @@ def create_initial_commit(project_root: Path = None):
 
         # If command succeeds, there are commits
         if result.success and int(result.stdout.strip()) > 0:
-            print("✓ Git repository already has commits, skipping initial commit")
+            logger.info("Git repository already has commits, skipping initial commit")
             return True
 
     except Exception:
@@ -645,7 +947,9 @@ def create_initial_commit(project_root: Path = None):
         # Stage all initialized files
         result = runner.run(["git", "add", "-A"], check=True)
         if not result.success:
-            raise Exception(f"Git add failed: {result.stderr}")
+            logger.warning(f"Git add failed: {result.stderr}")
+            logger.warning("You may need to commit manually before starting sessions")
+            return False
 
         # Create initial commit
         commit_message = """chore: Initialize project with Session-Driven Development
@@ -662,52 +966,67 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
 
         result = runner.run(["git", "commit", "-m", commit_message], check=True)
         if not result.success:
-            raise Exception(f"Git commit failed: {result.stderr}")
+            logger.warning(f"Git commit failed: {result.stderr}")
+            logger.warning("You may need to commit manually before starting sessions")
+            return False
 
-        print("✓ Created initial commit on main branch")
+        logger.info("Created initial commit on main branch")
         return True
 
     except Exception as e:
-        print(f"⚠️  Failed to create initial commit: {e}")
-        print("   You may need to commit manually before starting sessions")
+        logger.warning(f"Failed to create initial commit: {e}")
+        logger.warning("You may need to commit manually before starting sessions")
         return False
 
 
 def init_project():
-    """Main initialization function - deterministic setup."""
-    print("🚀 Initializing Session-Driven Development...\n")
+    """
+    Main initialization function - deterministic setup.
+
+    Returns:
+        0 on success, 1 if already initialized, or raises exception on critical errors.
+
+    Raises:
+        DirectoryNotEmptyError: If .session directory already exists.
+        GitError: If git operations fail critically.
+        FileOperationError: If file operations fail critically.
+        ValidationError: If configuration or validation fails.
+
+    Note:
+        Some non-critical failures (like dependency installation) are logged as warnings
+        and don't stop the initialization process. The user can fix these manually.
+        All output is now through logger instead of print().
+    """
+    logger.info("🚀 Initializing Session-Driven Development...\n")
 
     # 1. Check if already initialized
     if Path(".session").exists():
-        print("❌ Already initialized!")
-        print("   .session/ directory already exists")
-        print("   If you need to reinitialize, delete .session/ first")
-        return 1
+        raise DirectoryNotEmptyError(".session")
 
     # 2. Check or initialize git repository
     check_or_init_git()
 
     # 3. Install git hooks
     install_git_hooks()
-    print()
+    logger.info("")
 
     # 4. Detect project type
     project_type = detect_project_type()
-    print(f"\n📦 Project type: {project_type}\n")
+    logger.info(f"\n📦 Project type: {project_type}\n")
 
     # 5. Ensure package manager file (create/update)
     ensure_package_manager_file(project_type)
 
     # 6. Ensure all config files (create from templates)
-    print()
+    logger.info("")
     ensure_config_files(project_type)
 
     # 7. Install dependencies
-    print()
+    logger.info("")
     install_dependencies(project_type)
 
     # 8. Create smoke tests
-    print()
+    logger.info("")
     create_smoke_tests(project_type)
 
     # 9. Create .session structure
@@ -720,31 +1039,31 @@ def init_project():
     run_initial_scans()
 
     # 12. Update .gitignore
-    print()
+    logger.info("")
     ensure_gitignore_entries()
 
     # 13. Create initial commit
-    print()
+    logger.info("")
     create_initial_commit()
 
     # Success summary
-    print("\n" + "=" * 60)
-    print("✅ SDD Initialized Successfully!")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("✅ SDD Initialized Successfully!")
+    logger.info("=" * 60)
 
-    print("\n📦 What was created/updated:")
-    print("  ✓ Git repository initialized with initial commit")
-    print("  ✓ Git hooks (prepare-commit-msg with CHANGELOG/LEARNING reminders)")
-    print("  ✓ Config files (.eslintrc, .prettierrc, jest.config, etc.)")
-    print("  ✓ Dependencies installed")
-    print("  ✓ Smoke tests created")
-    print("  ✓ .session/ structure with tracking files")
-    print("  ✓ Project context (stack.txt, tree.txt)")
-    print("  ✓ .gitignore updated")
+    logger.info("\n📦 What was created/updated:")
+    logger.info("  ✓ Git repository initialized with initial commit")
+    logger.info("  ✓ Git hooks (prepare-commit-msg with CHANGELOG/LEARNING reminders)")
+    logger.info("  ✓ Config files (.eslintrc, .prettierrc, jest.config, etc.)")
+    logger.info("  ✓ Dependencies installed")
+    logger.info("  ✓ Smoke tests created")
+    logger.info("  ✓ .session/ structure with tracking files")
+    logger.info("  ✓ Project context (stack.txt, tree.txt)")
+    logger.info("  ✓ .gitignore updated")
 
-    print("\n🚀 Next Step:")
-    print("  /sdd:work-new")
-    print()
+    logger.info("\n🚀 Next Step:")
+    logger.info("  /sdd:work-new")
+    logger.info("")
 
     return 0
 

@@ -1506,3 +1506,73 @@ class LoadTestFailedError(PerformanceTestError):
             context=ctx,
             remediation="Verify the endpoint is accessible and the service is running"
         )
+
+
+# ============================================================================
+# Project Initialization Errors
+# ============================================================================
+
+class ProjectInitializationError(SDDError):
+    """
+    Base exception for project initialization errors.
+
+    Example:
+        >>> raise ProjectInitializationError(
+        ...     message="Project initialization failed",
+        ...     context={"reason": "Missing template files"}
+        ... )
+    """
+
+    def __init__(
+        self,
+        message: str,
+        code: ErrorCode = ErrorCode.FILE_OPERATION_FAILED,
+        context: Optional[dict[str, Any]] = None,
+        remediation: Optional[str] = None,
+        cause: Optional[Exception] = None
+    ):
+        super().__init__(
+            message=message,
+            code=code,
+            category=ErrorCategory.SYSTEM,
+            context=context,
+            remediation=remediation,
+            cause=cause
+        )
+
+
+class DirectoryNotEmptyError(AlreadyExistsError):
+    """
+    Raised when attempting to initialize in a directory that already has SDD structure.
+
+    Example:
+        >>> raise DirectoryNotEmptyError(".session")
+    """
+
+    def __init__(self, directory: str):
+        super().__init__(
+            message=f"Directory '{directory}' already exists",
+            code=ErrorCode.FILE_ALREADY_EXISTS,
+            context={"directory": directory},
+            remediation=f"Remove '{directory}' directory or run initialization in a different location"
+        )
+
+
+class TemplateNotFoundError(FileNotFoundError):
+    """
+    Raised when a required template file is not found.
+
+    Example:
+        >>> raise TemplateNotFoundError(
+        ...     template_name="package.json.template",
+        ...     template_path="/path/to/templates"
+        ... )
+    """
+
+    def __init__(self, template_name: str, template_path: str):
+        super().__init__(
+            file_path=f"{template_path}/{template_name}",
+            file_type="template"
+        )
+        self.context["template_name"] = template_name
+        self.remediation = f"Ensure SDD is properly installed and template file exists: {template_name}"
