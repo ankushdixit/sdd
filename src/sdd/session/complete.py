@@ -931,7 +931,7 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
 
     Args:
         work_item_title: Title of the work item to display in prompt
-        non_interactive: If True, skip interactive prompt (defaults to incomplete for safety)
+        non_interactive: If True, skip interactive prompt (defaults to completed)
 
     Returns:
         True if work item should be marked complete
@@ -939,8 +939,8 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
         None if user cancelled (should abort session end)
     """
     if non_interactive:
-        # In non-interactive mode, default to incomplete for safety
-        return False
+        # In non-interactive mode, default to completed (most common case)
+        return True
 
     output.info(f'\nWork item: "{work_item_title}"\n')
     output.info("Is this work item complete?")

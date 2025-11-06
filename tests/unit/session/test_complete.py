@@ -1602,13 +1602,13 @@ class TestPromptWorkItemCompletion:
         assert result is True
         assert mock_input.call_count == 3
 
-    def test_prompt_non_interactive_defaults_false(self):
-        """Test non-interactive mode defaults to incomplete (False) for safety."""
+    def test_prompt_non_interactive_defaults_true(self):
+        """Test non-interactive mode defaults to completed (True) as most common case."""
         # Act
         result = prompt_work_item_completion("Test Feature", non_interactive=True)
 
         # Assert
-        assert result is False
+        assert result is True
 
     @patch("builtins.input", return_value="1")
     def test_prompt_displays_work_item_title(self, mock_input):

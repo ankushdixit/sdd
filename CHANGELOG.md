@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Session Completion: `/sdd:end` now defaults to marking work items as completed**
+  - Non-interactive mode (e.g., when run by Claude Code) now defaults to marking work items as "completed" instead of "in-progress"
+  - This aligns with the most common use case where developers end sessions after completing their work
+  - Use the `--incomplete` flag explicitly to keep work items as "in-progress" for multi-session work
+  - Interactive mode behavior unchanged (still defaults to completed as choice 1)
+  - Updated `src/sdd/session/complete.py:943` to return `True` in non-interactive mode
+  - Updated documentation in `.claude/commands/end.md` to reflect new default behavior
+  - Updated test `test_prompt_non_interactive_defaults_true` in `tests/unit/session/test_complete.py`
+
 ### Added
 - **Performance: Comprehensive optimization for session operations**
   - Created `src/sdd/core/cache.py` with thread-safe TTL-based caching:

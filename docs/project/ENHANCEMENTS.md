@@ -70,7 +70,7 @@ This default is counterintuitive because:
 
 **Implementation:**
 
-Change line 738-740 in `src/sdd/session/complete.py`:
+Change the default behavior in `src/sdd/session/complete.py`:
 
 ```python
 # FROM:
@@ -84,7 +84,7 @@ if non_interactive:
     return True
 ```
 
-Update documentation in `.claude/commands/end.md` line 96:
+Update documentation in `.claude/commands/end.md`:
 
 ```markdown
 # FROM:
@@ -96,15 +96,367 @@ Use `--incomplete` to keep the work item as in-progress for multi-session work.
 ```
 
 **Files Affected:**
-- `src/sdd/session/complete.py` (line 738-740)
-- `.claude/commands/end.md` (line 96)
+- `src/sdd/session/complete.py` - Session completion logic
+- `.claude/commands/end.md` - Command documentation
 - Tests for session completion
 
 **Priority:** Medium - Quality of life improvement
 
 ---
 
-### Enhancement #13: Template-Based Project Initialization
+### Enhancement #13: Interactive UI Integration
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+SDD currently uses Python's `input()` function for interactive prompts in commands like `/work-new`, `/learn`, and `/end`. This creates UX limitations in Claude Code:
+
+1. **Terminal-style input**: Python's `input()` creates terminal prompts which don't integrate well with Claude Code's UI
+2. **No rich UI components**: Cannot use dropdowns, checkboxes, multi-select, etc.
+3. **Limited validation**: Text-based input with manual validation
+4. **Poor discoverability**: Users don't know what options are available
+5. **Inconsistent UX**: Feels disconnected from Claude Code's interface
+
+**Example of current limitation:**
+
+```python
+# Current interactive prompt (src/sdd/work_items/creator.py)
+work_item_type = input("Enter work item type (feature/bug/refactor): ")
+# User types text, prone to typos, no validation until after input
+```
+
+**Desired UX:**
+```text
+Claude Code UI shows:
+┌─────────────────────────────────────┐
+│ Select work item type:              │
+│ ○ Feature                           │
+│ ○ Bug                               │
+│ ○ Refactor                          │
+│ ○ Security                          │
+│ ○ Integration Test                  │
+│ ○ Deployment                        │
+│ [Custom types if defined]           │
+└─────────────────────────────────────┘
+```
+
+**Proposed Solution:**
+
+Integrate with **Claude Code's interactive UI tools** (AskUserQuestion, forms, etc.) for rich interactive experiences:
+
+1. **Use AskUserQuestion Tool**
+   - Replace Python `input()` with Claude Code UI
+   - Radio buttons for single-select
+   - Checkboxes for multi-select
+   - Dropdowns for long lists
+   - Form fields with validation
+
+2. **Interactive Command Flow**
+   - Commands request UI interaction via Claude
+   - Claude renders UI components
+   - User interacts with UI
+   - Results passed back to command
+   - Command continues with validated input
+
+3. **Rich Input Types**
+   - Single-select (work item type, priority)
+   - Multi-select (dependencies, tags)
+   - Text input with validation (title, description)
+   - Number input with ranges (story points)
+   - Date/time pickers (milestones, deadlines)
+
+4. **Validation & Help**
+   - Input validation before submission
+   - Inline help text and examples
+   - Required vs optional fields marked
+   - Error messages in UI
+
+**Implementation:**
+
+**Interactive command adapter:**
+```python
+# Note: This file will be created during implementation
+# src/sdd/ui/interactive.py
+from typing import List, Dict, Any, Optional
+import json
+
+class InteractiveUI:
+    """Adapter for Claude Code interactive UI"""
+
+    def __init__(self, mode="claude_code"):
+        """
+        mode: "claude_code" (use Claude UI) or "terminal" (fallback to input())
+        """
+        self.mode = mode
+
+    def ask_single_select(
+        self,
+        question: str,
+        options: List[Dict[str, str]],
+        header: str,
+        default: Optional[str] = None
+    ) -> str:
+        """Ask user to select one option"""
+        if self.mode == "claude_code":
+            return self._ask_claude_single_select(question, options, header, default)
+        else:
+            return self._ask_terminal_single_select(question, options, default)
+
+    def _ask_claude_single_select(self, question, options, header, default):
+        """Use Claude Code's AskUserQuestion tool"""
+        # Format for Claude Code UI
+        request = {
+            "questions": [{
+                "question": question,
+                "header": header,
+                "multiSelect": False,
+                "options": [
+                    {
+                        "label": opt["label"],
+                        "description": opt.get("description", "")
+                    }
+                    for opt in options
+                ]
+            }]
+        }
+
+        # Output special marker that Claude Code recognizes
+        print(f"__CLAUDE_UI_REQUEST__:{json.dumps(request)}")
+
+        # Read response (Claude Code will provide via stdin or env)
+        response = input()  # This will be intercepted by Claude Code
+        return json.loads(response)["answer"]
+
+    def _ask_terminal_single_select(self, question, options, default):
+        """Fallback to terminal input"""
+        print(f"\n{question}")
+        for i, opt in enumerate(options, 1):
+            label = opt["label"]
+            desc = f" - {opt['description']}" if opt.get("description") else ""
+            default_marker = " (default)" if default == opt["label"] else ""
+            print(f"{i}. {label}{desc}{default_marker}")
+
+        while True:
+            choice = input(f"Select (1-{len(options)}): ").strip()
+            if not choice and default:
+                return default
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(options):
+                    return options[idx]["label"]
+            except ValueError:
+                pass
+            print("Invalid choice. Try again.")
+
+    def ask_multi_select(
+        self,
+        question: str,
+        options: List[Dict[str, str]],
+        header: str
+    ) -> List[str]:
+        """Ask user to select multiple options"""
+        if self.mode == "claude_code":
+            return self._ask_claude_multi_select(question, options, header)
+        else:
+            return self._ask_terminal_multi_select(question, options)
+
+    def ask_text_input(
+        self,
+        question: str,
+        validation: Optional[callable] = None,
+        placeholder: str = "",
+        required: bool = True
+    ) -> str:
+        """Ask user for text input"""
+        if self.mode == "claude_code":
+            return self._ask_claude_text_input(question, validation, placeholder, required)
+        else:
+            return self._ask_terminal_text_input(question, validation, required)
+
+    def ask_number_input(
+        self,
+        question: str,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+        default: Optional[int] = None
+    ) -> int:
+        """Ask user for number input with range validation"""
+        # Implementation for number input with validation
+        pass
+
+    def ask_confirmation(
+        self,
+        question: str,
+        default: bool = False
+    ) -> bool:
+        """Ask yes/no confirmation"""
+        if self.mode == "claude_code":
+            return self._ask_claude_confirmation(question, default)
+        else:
+            return self._ask_terminal_confirmation(question, default)
+
+# Global instance
+ui = InteractiveUI()
+```
+
+**Updated work item creation:**
+```python
+# src/sdd/work_items/creator.py (modified)
+from sdd.ui.interactive import ui
+
+def create_work_item_interactive(self):
+    """Create work item with rich UI interactions"""
+
+    # Get work item type
+    type_manager = WorkItemTypeManager()
+    all_types = type_manager.get_all_types()
+
+    type_options = [
+        {
+            "label": type_config["display_name"],
+            "description": type_config["description"]
+        }
+        for type_name, type_config in all_types.items()
+    ]
+
+    work_item_type = ui.ask_single_select(
+        question="What type of work item do you want to create?",
+        options=type_options,
+        header="Work Item Type"
+    )
+
+    # Get title
+    title = ui.ask_text_input(
+        question="Enter work item title:",
+        validation=lambda t: len(t) >= 5,
+        placeholder="e.g., Add user authentication",
+        required=True
+    )
+
+    # Get priority
+    priority = ui.ask_single_select(
+        question="What is the priority of this work item?",
+        options=[
+            {"label": "Critical", "description": "Must be done immediately"},
+            {"label": "High", "description": "Important, should be done soon"},
+            {"label": "Medium", "description": "Normal priority"},
+            {"label": "Low", "description": "Nice to have, can wait"}
+        ],
+        header="Priority",
+        default="Medium"
+    )
+
+    # Get dependencies (multi-select)
+    existing_work_items = self.list_work_items(status=["not_started", "in_progress"])
+    if existing_work_items:
+        dependency_options = [
+            {
+                "label": wi["id"],
+                "description": f"{wi['title']} ({wi['type']})"
+            }
+            for wi in existing_work_items
+        ]
+
+        dependencies = ui.ask_multi_select(
+            question="Select dependencies (work items that must be completed first):",
+            options=dependency_options,
+            header="Dependencies"
+        )
+    else:
+        dependencies = []
+
+    # Get milestone (if any exist)
+    milestones = self.get_milestones()
+    if milestones:
+        milestone_options = [
+            {"label": "None", "description": "No milestone"}
+        ] + [
+            {"label": m["name"], "description": m.get("description", "")}
+            for m in milestones
+        ]
+
+        milestone = ui.ask_single_select(
+            question="Assign to milestone?",
+            options=milestone_options,
+            header="Milestone",
+            default="None"
+        )
+        milestone = None if milestone == "None" else milestone
+    else:
+        milestone = None
+
+    # Confirmation
+    summary = f"""
+Create work item with:
+- Type: {work_item_type}
+- Title: {title}
+- Priority: {priority}
+- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
+- Milestone: {milestone or 'None'}
+    """
+    print(summary)
+
+    confirmed = ui.ask_confirmation(
+        question="Create this work item?",
+        default=True
+    )
+
+    if not confirmed:
+        print("Work item creation cancelled.")
+        return None
+
+    # Create work item
+    work_item_id = self.generate_work_item_id(title, work_item_type)
+    work_item = self.create_work_item(
+        work_item_id=work_item_id,
+        work_item_type=work_item_type,
+        title=title,
+        priority=priority,
+        dependencies=dependencies,
+        milestone=milestone
+    )
+
+    return work_item
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/ui/interactive.py` - Interactive UI adapter (will be created)
+- `src/sdd/ui/__init__.py` - UI module initialization (will be created)
+- `tests/unit/test_interactive_ui.py` - UI adapter tests
+
+**Modified:**
+- `src/sdd/work_items/creator.py` - Use InteractiveUI for `/work-new`
+- `src/sdd/learning/curator.py` - Use InteractiveUI for `/learn`
+- `src/sdd/session/complete.py` - Use InteractiveUI for `/end` confirmation
+- `src/sdd/project/init.py` - Use InteractiveUI for project setup
+- `.claude/commands/work-new.md` - Document improved UX
+- `.claude/commands/learn.md` - Document improved UX
+
+**Benefits:**
+
+1. **Better UX**: Native-feeling UI in Claude Code
+2. **Fewer errors**: Validation before submission
+3. **Discoverability**: See all options upfront
+4. **Faster workflows**: Less typing, more clicking/selecting
+5. **Accessibility**: Better keyboard navigation and screen reader support
+6. **Consistency**: Matches Claude Code's UI patterns
+7. **Graceful fallback**: Still works in terminal mode
+8. **Professional feel**: Polished, modern interface
+
+**Priority:** Medium - UX improvement, nice to have but not critical
+
+**Notes:**
+- Requires coordination with Claude Code team for UI integration points
+- Fallback to terminal `input()` ensures backward compatibility
+- Could be implemented incrementally (start with most-used commands)
+- May need custom protocol/API from Claude Code side
+
+---
+
+### Enhancement #14: Template-Based Project Initialization
 
 **Status:** 🔵 IDENTIFIED
 
@@ -243,9 +595,9 @@ src/sdd/templates/
 - `src/sdd/quality/gates.py` - May need template-aware configuration loading
 
 **New:**
-- `src/sdd/templates/template_registry.json` - Template metadata
-- `src/sdd/templates/<template-name>/` - Individual template directories
-- `src/sdd/project/template_manager.py` - Template selection and installation logic
+- `src/sdd/templates/template_registry.json` - Template metadata (will be created)
+- `src/sdd/templates/<template-name>/` - Individual template directories (will be created)
+- `src/sdd/project/template_manager.py` - Template selection and installation logic (will be created)
 - `tests/unit/test_template_manager.py` - Template system tests
 - `tests/e2e/test_template_init.py` - End-to-end template initialization tests
 
@@ -277,7 +629,7 @@ src/sdd/templates/
 
 ---
 
-### Enhancement #14: Session Briefing Optimization
+### Enhancement #15: Session Briefing Optimization
 
 **Status:** 🔵 IDENTIFIED
 
@@ -311,7 +663,8 @@ To be researched and determined during implementation. May include:
 **Files Affected:**
 
 **Modified:**
-- `src/sdd/session/start.py` - Session briefing generation
+- `src/sdd/session/briefing.py` - Session briefing generation
+- `src/sdd/session/briefing/` - Briefing module components
 - `.claude/commands/start.md` - Start command documentation
 - Briefing templates and data structures
 
@@ -331,7 +684,7 @@ To be researched and determined during implementation. May include:
 
 ---
 
-### Enhancement #15: Pre-Merge Security Gates
+### Enhancement #16: Pre-Merge Security Gates
 
 **Status:** 🔵 IDENTIFIED
 
@@ -394,6 +747,7 @@ sdd security-scan --pre-merge
 
 **Quality gate integration:**
 ```python
+# Note: This file will be created during implementation
 # src/sdd/quality/security_gates.py
 def run_pre_merge_security_gates():
     results = {
@@ -409,12 +763,12 @@ def run_pre_merge_security_gates():
 **Files Affected:**
 
 **New:**
-- `src/sdd/security/secret_scanner.py` - Secret detection
-- `src/sdd/security/sast_scanner.py` - Static analysis
-- `src/sdd/security/dependency_scanner.py` - CVE checking
-- `src/sdd/security/supply_chain_checker.py` - Package verification
-- `src/sdd/security/license_checker.py` - License compliance
-- `src/sdd/quality/security_gates.py` - Pre-merge gate orchestration
+- `src/sdd/security/secret_scanner.py` - Secret detection (will be created)
+- `src/sdd/security/sast_scanner.py` - Static analysis (will be created)
+- `src/sdd/security/dependency_scanner.py` - CVE checking (will be created)
+- `src/sdd/security/supply_chain_checker.py` - Package verification (will be created)
+- `src/sdd/security/license_checker.py` - License compliance (will be created)
+- `src/sdd/quality/security_gates.py` - Pre-merge gate orchestration (will be created)
 - `.git/hooks/pre-push` - Git hook for local enforcement
 - Tests for all security modules
 
@@ -436,7 +790,7 @@ def run_pre_merge_security_gates():
 
 ---
 
-### Enhancement #16: Continuous Security Monitoring
+### Enhancement #17: Continuous Security Monitoring
 
 **Status:** 🔵 IDENTIFIED
 
@@ -499,6 +853,7 @@ jobs:
 
 **Monitoring system:**
 ```python
+# Note: This file will be created during implementation
 # src/sdd/security/monitor.py
 class SecurityMonitor:
     def scan_for_new_cves(self):
@@ -517,16 +872,16 @@ class SecurityMonitor:
 **Files Affected:**
 
 **New:**
-- `src/sdd/security/monitor.py` - Continuous monitoring system
-- `src/sdd/security/cve_database.py` - CVE lookup and caching
-- `src/sdd/security/advisory_tracker.py` - Security advisory tracking
-- `.github/workflows/security-monitoring.yml` - Scheduled workflow
+- `src/sdd/security/monitor.py` - Continuous monitoring system (will be created)
+- `src/sdd/security/cve_database.py` - CVE lookup and caching (will be created)
+- `src/sdd/security/advisory_tracker.py` - Security advisory tracking (will be created)
+- `.github/workflows/security-monitoring.yml` - Scheduled workflow (will be created)
 - Tests for monitoring system
 
 **Modified:**
-- `src/sdd/work_items/manager.py` - Auto-create security work items
+- `src/sdd/work_items/creator.py` - Auto-create security work items
 - `.session/config.json` - Add monitoring configuration
-- `src/sdd/notifications/` - Alert mechanisms (email, Slack)
+- `src/sdd/notifications/` - Alert mechanisms (email, Slack) (will be created)
 
 **Benefits:**
 
@@ -541,7 +896,7 @@ class SecurityMonitor:
 
 ---
 
-### Enhancement #17: Test Quality Gates
+### Enhancement #18: Test Quality Gates
 
 **Status:** 🔵 IDENTIFIED
 
@@ -606,6 +961,7 @@ Implement **test quality gates** that enforce test effectiveness:
 
 **Test quality gate:**
 ```python
+# Note: This file will be created during implementation
 # src/sdd/quality/test_quality_gates.py
 class TestQualityGates:
     def check_critical_path_coverage(self, work_item):
@@ -645,15 +1001,16 @@ class TestQualityGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/test_quality_gates.py` - Test quality validation
-- `src/sdd/testing/mutation_runner.py` - Mutation testing integration
-- `src/sdd/testing/critical_path_analyzer.py` - Critical path identification
-- `src/sdd/testing/flakiness_detector.py` - Flaky test detection
-- `src/sdd/testing/performance_baseline.py` - Performance tracking
+- `src/sdd/quality/test_quality_gates.py` - Test quality validation (will be created)
+- `src/sdd/testing/mutation_runner.py` - Mutation testing integration (will be created)
+- `src/sdd/testing/critical_path_analyzer.py` - Critical path identification (will be created)
+- `src/sdd/testing/flakiness_detector.py` - Flaky test detection (will be created)
+- `src/sdd/testing/performance_baseline.py` - Performance tracking (will be created)
 - Tests for all test quality modules
 
 **Modified:**
 - `src/sdd/session/complete.py` - Add test quality gates
+- `src/sdd/session/validate.py` - Add validation checks
 - `src/sdd/work_items/spec_parser.py` - Parse testing requirements
 - `.session/config.json` - Test quality thresholds
 
@@ -669,7 +1026,7 @@ class TestQualityGates:
 
 ---
 
-### Enhancement #18: Advanced Code Quality Gates
+### Enhancement #19: Advanced Code Quality Gates
 
 **Status:** 🔵 IDENTIFIED
 
@@ -739,6 +1096,7 @@ Implement **advanced code quality gates** that enforce maintainability:
 
 **Code quality gate:**
 ```python
+# Note: This file will be created during implementation
 # src/sdd/quality/code_quality_gates.py
 class CodeQualityGates:
     def check_complexity(self, file_changes):
@@ -801,12 +1159,12 @@ class CodeQualityGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/code_quality_gates.py` - Code quality validation
-- `src/sdd/analysis/complexity_analyzer.py` - Complexity calculation
-- `src/sdd/analysis/duplication_detector.py` - Duplication detection
-- `src/sdd/analysis/dead_code_finder.py` - Dead code detection
-- `src/sdd/analysis/type_coverage.py` - TypeScript type coverage
-- `src/sdd/analysis/documentation_validator.py` - Code documentation validation
+- `src/sdd/quality/code_quality_gates.py` - Code quality validation (will be created)
+- `src/sdd/analysis/complexity_analyzer.py` - Complexity calculation (will be created)
+- `src/sdd/analysis/duplication_detector.py` - Duplication detection (will be created)
+- `src/sdd/analysis/dead_code_finder.py` - Dead code detection (will be created)
+- `src/sdd/analysis/type_coverage.py` - TypeScript type coverage (will be created)
+- `src/sdd/analysis/documentation_validator.py` - Code documentation validation (will be created)
 - Tests for all analysis modules
 
 **Modified:**
@@ -828,7 +1186,7 @@ class CodeQualityGates:
 
 ---
 
-### Enhancement #19: Production Readiness Gates
+### Enhancement #20: Production Readiness Gates
 
 **Status:** 🔵 IDENTIFIED
 
@@ -927,15 +1285,15 @@ class ProductionReadinessGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/production_gates.py` - Production readiness validation
-- `src/sdd/production/health_check_validator.py` - Health check testing
-- `src/sdd/production/metrics_validator.py` - Metrics validation
-- `src/sdd/production/migration_validator.py` - Migration safety checks
+- `src/sdd/quality/production_gates.py` - Production readiness validation (will be created)
+- `src/sdd/production/health_check_validator.py` - Health check testing (will be created)
+- `src/sdd/production/metrics_validator.py` - Metrics validation (will be created)
+- `src/sdd/production/migration_validator.py` - Migration safety checks (will be created)
 - Tests for production validation
 
 **Modified:**
 - `src/sdd/session/complete.py` - Add production gates for deployment work items
-- `src/sdd/work_items/templates/deployment.md` - Add production checklist
+- `src/sdd/templates/deployment.md` - Add production checklist
 - `.session/config.json` - Production requirements configuration
 
 **Benefits:**
@@ -950,7 +1308,7 @@ class ProductionReadinessGates:
 
 ---
 
-### Enhancement #20: Deployment Safety Gates
+### Enhancement #21: Deployment Safety Gates
 
 **Status:** 🔵 IDENTIFIED
 
@@ -1051,17 +1409,17 @@ jobs:
 **Files Affected:**
 
 **New:**
-- `src/sdd/deployment/safety_gates.py` - Deployment validation
-- `src/sdd/deployment/dry_run.py` - Dry-run execution
-- `src/sdd/deployment/breaking_change_detector.py` - API diff analysis
-- `src/sdd/deployment/rollback_tester.py` - Rollback validation
-- `src/sdd/deployment/canary.py` - Canary deployment orchestration
-- `src/sdd/deployment/smoke_tests.py` - Smoke test runner
+- `src/sdd/deployment/safety_gates.py` - Deployment validation (will be created)
+- `src/sdd/deployment/dry_run.py` - Dry-run execution (will be created)
+- `src/sdd/deployment/breaking_change_detector.py` - API diff analysis (will be created)
+- `src/sdd/deployment/rollback_tester.py` - Rollback validation (will be created)
+- `src/sdd/deployment/canary.py` - Canary deployment orchestration (will be created)
+- `src/sdd/deployment/smoke_tests.py` - Smoke test runner (will be created)
 - Tests for deployment safety
 
 **Modified:**
 - CI/CD workflows - Add deployment gates
-- `src/sdd/work_items/templates/deployment.md` - Add safety checklist
+- `src/sdd/templates/deployment.md` - Add safety checklist
 - `.session/config.json` - Deployment safety configuration
 
 **Benefits:**
@@ -1076,1265 +1434,7 @@ jobs:
 
 ---
 
-### Enhancement #21: Documentation-Driven Development
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-The AI-Augmented Solo Framework assumes developers start with Vision, PRD, and Architecture documents, but SDD currently has no workflow to:
-
-1. **Parse project documentation**: Vision, PRD, Architecture docs exist but aren't used
-2. **Generate work items from docs**: Manual work item creation from 100+ page docs is tedious
-3. **Maintain doc-code traceability**: No link between code and original requirements
-4. **Track architecture decisions**: ADRs not captured or tracked
-5. **Validate against architecture**: Work items may violate architecture constraints
-
-**Example workflow gap:**
-```
-Developer has:
-  - Vision.md (product vision)
-  - PRD.md (requirements, 50 pages)
-  - Architecture.md (system design)
-
-Current process:
-  → Manually read all docs
-  → Manually create work items
-  → Hope work items align with architecture
-  → No traceability between code and requirements
-```
-
-**Proposed Solution:**
-
-Implement **documentation-driven development workflow** that parses project docs and guides development:
-
-1. **Document Parsing and Analysis**
-   - Parse Vision, PRD, Architecture, ADR documents
-   - Extract requirements, user stories, architectural constraints
-   - Build knowledge graph of project structure
-
-2. **Smart Work Item Generation**
-   - Analyze documents and suggest work items
-   - Prioritize based on dependencies and business value
-   - Map work items to architecture components
-   - Estimate complexity from requirements
-
-3. **Architecture Decision Records (ADRs)**
-   - Template-based ADR creation
-   - Link ADRs to work items
-   - Track decision history and rationale
-   - Validate work items against ADRs
-
-4. **Document-to-Code Traceability**
-   - Link work items to requirements in docs
-   - Track which code implements which requirement
-   - Generate traceability matrix
-
-5. **Architecture Validation**
-   - Validate work items against architecture constraints
-   - Detect architecture violations
-   - Suggest architecture updates when needed
-
-6. **API-First Documentation System**
-   - Automated OpenAPI/Swagger generation from code annotations
-   - Interactive API documentation (Swagger UI, Redoc, API Explorer)
-   - API versioning and changelog automation
-   - SDK generation for multiple languages (Python, TypeScript, Go, etc.)
-   - API contract testing integration
-   - Breaking change detection between API versions
-   - API usage analytics and deprecation management
-
-**Implementation:**
-
-**Document parser:**
-```python
-# src/sdd/docs/parser.py
-class DocumentParser:
-    def parse_vision(self, vision_file):
-        # Extract business goals, target users
-
-    def parse_prd(self, prd_file):
-        # Extract requirements, user stories, acceptance criteria
-
-    def parse_architecture(self, arch_file):
-        # Extract components, constraints, patterns
-
-    def parse_adrs(self, adr_dir):
-        # Load all ADRs, build decision history
-```
-
-**Work item generator:**
-```python
-# src/sdd/work_items/generator.py
-class WorkItemGenerator:
-    def suggest_from_documents(self, docs):
-        # Analyze docs, extract requirements
-        # Generate work item suggestions
-        # Prioritize and estimate
-
-    def map_to_architecture(self, work_items, architecture):
-        # Map work items to arch components
-        # Validate against constraints
-```
-
-**API documentation generator:**
-```python
-# src/sdd/docs/api_doc_generator.py
-class APIDocumentationGenerator:
-    def generate_openapi_spec(self, codebase):
-        # Scan code for API endpoints and annotations
-        # Generate OpenAPI 3.0 specification
-        # Include schemas, parameters, responses
-
-    def generate_interactive_docs(self, openapi_spec):
-        # Generate Swagger UI / Redoc documentation
-        # Set up API explorer with try-it-out functionality
-        # Deploy to docs site
-
-    def generate_sdk(self, openapi_spec, languages):
-        # Generate client SDKs from OpenAPI spec
-        # Support Python, TypeScript, Go, Java, etc.
-        # Include usage examples and tests
-
-    def detect_breaking_changes(self, old_spec, new_spec):
-        # Compare API versions
-        # Identify breaking changes (removed endpoints, changed schemas)
-        # Generate migration guide
-
-    def track_api_versions(self):
-        # Maintain API version history
-        # Generate changelogs automatically
-        # Mark deprecated endpoints
-```
-
-**API documentation example:**
-```yaml
-# Generated OpenAPI specification
-openapi: 3.0.0
-info:
-  title: User Management API
-  version: 2.1.0
-  description: API for user authentication and profile management
-paths:
-  /api/v2/users:
-    get:
-      summary: List all users
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 10
-      responses:
-        '200':
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-    post:
-      summary: Create a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserCreate'
-      responses:
-        '201':
-          description: User created successfully
-components:
-  schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-        name:
-          type: string
-```
-
-**Commands:**
-```bash
-# Parse docs and suggest work items
-/sdd:work-suggest --from-docs
-
-# Create ADR for architectural decision
-/sdd:adr-new --title "Use PostgreSQL for primary database"
-
-# Validate work item against architecture
-/sdd:work-validate <work-item-id> --architecture
-
-# Generate traceability matrix
-/sdd:trace --requirements docs/PRD.md
-
-# Generate API documentation
-/sdd:api-docs-generate [--output swagger|redoc|both]
-
-# Generate SDK from API spec
-/sdd:api-sdk-generate --language [python|typescript|go|java]
-
-# Check for breaking API changes
-/sdd:api-breaking-changes --compare v1.0.0..v2.0.0
-```
-
-**ADR template:**
-```markdown
-# ADR-NNN: [Decision Title]
-
-**Status:** Proposed | Accepted | Deprecated | Superseded
-
-**Context:**
-Why is this decision needed?
-
-**Decision:**
-What did we decide?
-
-**Alternatives Considered:**
-1. Option A - [pros/cons]
-2. Option B - [pros/cons]
-
-**Consequences:**
-- Positive: [benefits]
-- Negative: [trade-offs]
-
-**Related Work Items:**
-- feature_xxx
-- bug_yyy
-
-**References:**
-- [External resources]
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/docs/parser.py` - Document parsing
-- `src/sdd/docs/vision_parser.py` - Vision document parser
-- `src/sdd/docs/prd_parser.py` - PRD parser
-- `src/sdd/docs/architecture_parser.py` - Architecture parser
-- `src/sdd/docs/api_doc_generator.py` - API documentation generator
-- `src/sdd/work_items/generator.py` - Work item generator
-- `src/sdd/architecture/adr_manager.py` - ADR management
-- `src/sdd/architecture/validator.py` - Architecture validation
-- `src/sdd/traceability/tracker.py` - Requirement traceability
-- `src/sdd/api/openapi_generator.py` - OpenAPI specification generator
-- `src/sdd/api/sdk_generator.py` - Multi-language SDK generator
-- `src/sdd/api/breaking_change_detector.py` - API version comparator
-- `.claude/commands/work-suggest.md` - Work suggestion command
-- `.claude/commands/adr-new.md` - ADR creation command
-- `.claude/commands/api-docs-generate.md` - API docs generation command
-- `.claude/commands/api-sdk-generate.md` - SDK generation command
-- `.claude/commands/api-breaking-changes.md` - Breaking change detection command
-- `docs/adr/` - ADR directory
-- `docs/api/` - Generated API documentation
-- Tests for document parsing and generation
-
-**Modified:**
-- `src/sdd/work_items/manager.py` - Support generated work items
-- `src/sdd/work_items/spec_parser.py` - Parse architecture constraints
-- `.session/tracking/work_items.json` - Add traceability fields
-
-**Benefits:**
-
-1. **Faster planning**: Auto-generate work items from docs
-2. **Alignment**: Work items guaranteed to match requirements
-3. **Traceability**: Know which code implements which requirement
-4. **Architecture compliance**: Work validated against architecture
-5. **Decision history**: ADRs track why decisions were made
-6. **Knowledge capture**: Documentation drives development
-7. **API-first development**: Automated API documentation from code
-8. **Multi-language SDKs**: Auto-generated client libraries
-9. **API stability**: Breaking change detection prevents client disruption
-10. **Developer experience**: Interactive API documentation and examples
-
-**Priority:** High - Bridges gap between planning and implementation
-
-**Notes:**
-- Requires project documentation to exist (Vision, PRD, Architecture)
-- Parser supports Markdown and common doc formats
-- AI can assist with initial document creation if needed
-
----
-
-### Enhancement #22: Performance Testing Framework
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Performance issues are discovered in production, not development:
-
-1. **No performance baselines**: Don't know expected performance
-2. **No load testing**: System untested under realistic load
-3. **No regression detection**: Performance degradations unnoticed
-4. **No bottleneck identification**: Slow endpoints unknown
-
-**Example:**
-```
-Feature added → All tests pass ✓ → Deploy
-                                 → Production: 5s response times ❌
-                                 → Users complain
-                                 → No baseline to compare
-```
-
-**Proposed Solution:**
-
-Implement **comprehensive performance testing framework**:
-
-1. **Performance Benchmarks in Specs**
-   - Define performance requirements in work items
-   - Example: "API must respond in <200ms at p95"
-   - Enforce benchmarks before merge
-
-2. **Automated Load Testing**
-   - Run load tests in CI/CD
-   - Tools: k6, wrk, Gatling, Locust
-   - Test realistic traffic patterns
-
-3. **Performance Regression Detection**
-   - Compare results against baseline
-   - Fail if performance degrades >10%
-   - Track performance over time
-
-4. **Bottleneck Identification**
-   - Profile slow endpoints
-   - Identify database query issues
-   - Find N+1 queries, missing indexes
-
-5. **Performance Baseline Tracking**
-   - Store baselines in `.session/tracking/performance_baselines.json`
-   - Update baselines when performance improves
-   - Historical performance charts
-
-**Implementation:**
-
-**Performance spec in work item:**
-```markdown
-## Performance Requirements
-
-**Response Time Targets:**
-- GET /api/users: <100ms (p50), <200ms (p95)
-- POST /api/orders: <500ms (p50), <1s (p95)
-- Database queries: <50ms average
-
-**Throughput Targets:**
-- 1000 requests/second sustained
-- 5000 concurrent users
-
-**Resource Limits:**
-- Memory: <512MB
-- CPU: <50% average
-```
-
-**Load testing:**
-```python
-# src/sdd/performance/load_tester.py
-class LoadTester:
-    def run_load_test(self, work_item):
-        # Extract performance requirements
-        # Run k6/wrk load test
-        # Compare against baseline
-        # Return pass/fail + metrics
-
-    def detect_regression(self, current, baseline):
-        # Compare metrics
-        # Fail if >10% slower
-```
-
-**k6 test generation:**
-```javascript
-// tests/performance/api_test.js (auto-generated)
-import http from 'k6/http';
-import { check } from 'k6';
-
-export let options = {
-  stages: [
-    { duration: '2m', target: 100 },  // Ramp to 100 users
-    { duration: '5m', target: 100 },  // Stay at 100
-    { duration: '2m', target: 0 },    // Ramp down
-  ],
-  thresholds: {
-    'http_req_duration': ['p(95)<200'],  // 95% requests <200ms
-  },
-};
-
-export default function() {
-  let res = http.get('http://localhost:3000/api/users');
-  check(res, {
-    'status is 200': (r) => r.status === 200,
-    'response time OK': (r) => r.timings.duration < 200,
-  });
-}
-```
-
-**Baseline tracking:**
-```json
-// .session/tracking/performance_baselines.json
-{
-  "endpoints": {
-    "/api/users": {
-      "p50": 85,
-      "p95": 180,
-      "last_updated": "2025-10-29",
-      "session": "session_015"
-    }
-  }
-}
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/performance/load_tester.py` - Load testing orchestration
-- `src/sdd/performance/baseline_manager.py` - Baseline tracking
-- `src/sdd/performance/regression_detector.py` - Regression detection
-- `src/sdd/performance/profiler.py` - Performance profiling
-- `tests/performance/` - Generated load tests
-- `.session/tracking/performance_baselines.json` - Baseline storage
-- Tests for performance framework
-
-**Modified:**
-- `src/sdd/quality/gates.py` - Add performance gates
-- `src/sdd/work_items/spec_parser.py` - Parse performance requirements
-- `.session/config.json` - Performance testing configuration
-- CI/CD workflows - Add performance testing job
-
-**Benefits:**
-
-1. **Prevent regressions**: Catch slowdowns before production
-2. **Meet SLAs**: Enforce performance requirements
-3. **Capacity planning**: Know system limits
-4. **Bottleneck identification**: Find and fix slow code
-5. **Performance visibility**: Track performance over time
-
-**Priority:** High - Performance issues cause production incidents
-
----
-
-### Enhancement #23: Operations & Observability
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-After deployment, there's no operational support infrastructure:
-
-1. **No health monitoring**: Can't tell if service is healthy
-2. **No incident detection**: Issues discovered by users, not monitoring
-3. **No performance dashboards**: Can't see system performance
-4. **No capacity planning**: Don't know when to scale
-5. **No alert management**: Alerts missing or too noisy
-
-**Example:**
-```
-Deploy to production ✓ → Service running
-                      → Database runs out of connections ❌
-                      → No alert
-                      → Users report errors
-                      → 2 hours to discover issue
-```
-
-**Proposed Solution:**
-
-Implement **comprehensive operations and observability infrastructure**:
-
-1. **Health Check Monitoring**
-   - Monitor `/health` endpoint continuously
-   - Alert on failures
-   - Track uptime metrics
-   - Integration with UptimeRobot, Pingdom, Datadog
-
-2. **Incident Detection and Response**
-   - Automatic incident creation on alerts
-   - Incident runbooks linked to alerts
-   - PagerDuty/Opsgenie integration
-   - Incident timeline and resolution tracking
-
-3. **Performance Metrics Dashboards**
-   - Real-time metrics visualization
-   - Request rates, latency, error rates
-   - Database performance metrics
-   - Infrastructure metrics (CPU, memory, disk)
-   - Tools: Grafana, Datadog, New Relic
-
-4. **Capacity Planning**
-   - Track resource usage trends
-   - Predict when scaling needed
-   - Cost optimization recommendations
-   - Alert on approaching limits
-
-5. **Intelligent Alerting**
-   - Reduce alert noise (no alert fatigue)
-   - Alert prioritization (critical vs warning)
-   - Alert aggregation and correlation
-   - Alert routing and escalation
-
-**Implementation:**
-
-**Health monitoring:**
-```python
-# src/sdd/operations/health_monitor.py
-class HealthMonitor:
-    def setup_monitoring(self, endpoints):
-        # Configure health check monitoring
-        # Set up alerts
-
-    def check_health(self):
-        # Poll health endpoints
-        # Detect failures
-        # Create incidents
-```
-
-**Incident management:**
-```python
-# src/sdd/operations/incident_manager.py
-class IncidentManager:
-    def create_incident(self, alert):
-        # Create incident from alert
-        # Link to runbook
-        # Notify on-call
-
-    def track_incident(self, incident_id):
-        # Track resolution steps
-        # Update timeline
-```
-
-**Dashboards:**
-```yaml
-# monitoring/dashboards/api_dashboard.yml
-dashboard:
-  title: "API Performance"
-  panels:
-    - title: "Request Rate"
-      metric: "http_requests_total"
-    - title: "Response Time (p95)"
-      metric: "http_request_duration_p95"
-    - title: "Error Rate"
-      metric: "http_errors_total / http_requests_total"
-    - title: "Database Connections"
-      metric: "db_connections_active"
-```
-
-**Alert configuration:**
-```yaml
-# monitoring/alerts/api_alerts.yml
-alerts:
-  - name: "High Error Rate"
-    condition: "error_rate > 5%"
-    severity: "critical"
-    notify: ["email", "pagerduty"]
-
-  - name: "Slow Response Time"
-    condition: "p95_latency > 1s"
-    severity: "warning"
-    notify: ["email"]
-
-  - name: "Database Connection Pool Exhausted"
-    condition: "db_connections > 90%"
-    severity: "critical"
-    runbook: "docs/runbooks/db_connections.md"
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/operations/health_monitor.py` - Health monitoring
-- `src/sdd/operations/incident_manager.py` - Incident management
-- `src/sdd/operations/metrics_collector.py` - Metrics collection
-- `src/sdd/operations/capacity_planner.py` - Capacity planning
-- `src/sdd/operations/alert_manager.py` - Alert management
-- `monitoring/dashboards/` - Dashboard configurations
-- `monitoring/alerts/` - Alert configurations
-- `docs/runbooks/` - Incident runbooks
-- Tests for operations modules
-
-**Modified:**
-- `.session/config.json` - Monitoring configuration
-- `src/sdd/quality/production_gates.py` - Verify monitoring setup
-- CI/CD workflows - Deploy monitoring configs
-
-**Benefits:**
-
-1. **Proactive issue detection**: Find problems before users
-2. **Faster incident response**: Automated incident creation
-3. **Performance visibility**: Know system health at all times
-4. **Capacity planning**: Scale before running out of resources
-5. **Reduced alert fatigue**: Intelligent alerting
-6. **Operational confidence**: Always know system status
-
-**Priority:** High - Essential for production operations
-
----
-
-### Enhancement #24: Continuous Improvement System
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Development processes don't improve over time. No mechanism to:
-
-1. **Learn from work items**: Patterns and lessons lost
-2. **Track technical debt**: Debt accumulates unnoticed
-3. **Measure velocity**: Don't know if getting faster or slower
-4. **Identify bottlenecks**: Process inefficiencies unknown
-5. **Optimize workflows**: No data-driven improvements
-
-**Example:**
-```
-Work item completed → Next work item started
-                    → No reflection on what worked/didn't work
-                    → Same issues repeat
-                    → No improvement
-```
-
-**Proposed Solution:**
-
-Implement **continuous improvement system** that tracks metrics and suggests optimizations:
-
-1. **Automated Retrospectives**
-   - After each work item or milestone, generate retrospective
-   - Analyze what went well, what didn't
-   - Track lessons learned
-   - Suggest improvements
-
-2. **Technical Debt Tracking**
-   - Identify technical debt during development
-   - Track debt accumulation over time
-   - Prioritize debt paydown
-   - Measure debt ratio
-
-3. **DORA Metrics Dashboard**
-   - Deployment frequency: How often deploying
-   - Lead time: Time from commit to production
-   - Change failure rate: % of deployments that fail
-   - Mean time to recovery (MTTR): Time to fix production issues
-
-4. **Velocity and Cycle Time Tracking**
-   - Track work item completion time
-   - Measure velocity (story points/week)
-   - Identify slowdowns
-   - Trend analysis
-
-5. **Process Optimization Recommendations**
-   - Analyze bottlenecks in workflow
-   - Suggest process improvements
-   - A/B test process changes
-   - Measure impact of improvements
-
-**Implementation:**
-
-**Retrospective generator:**
-```python
-# src/sdd/improvement/retrospective.py
-class RetrospectiveGenerator:
-    def generate_retrospective(self, work_item):
-        # Analyze work item history
-        # Generate retrospective questions
-        # Track patterns
-
-    def suggest_improvements(self, retrospectives):
-        # Analyze multiple retrospectives
-        # Identify recurring issues
-        # Suggest improvements
-```
-
-**Technical debt tracker:**
-```python
-# src/sdd/improvement/debt_tracker.py
-class TechnicalDebtTracker:
-    def identify_debt(self, codebase):
-        # Detect code smells
-        # Find TODOs and FIXMEs
-        # Measure code complexity
-
-    def calculate_debt_ratio(self):
-        # Debt ratio = debt / total code
-        # Track over time
-```
-
-**DORA metrics:**
-```python
-# src/sdd/improvement/dora_metrics.py
-class DORAMetrics:
-    def deployment_frequency(self):
-        # Count deployments per day/week
-
-    def lead_time(self):
-        # Time from commit to production
-
-    def change_failure_rate(self):
-        # Failed deployments / total deployments
-
-    def mean_time_to_recovery(self):
-        # Average time to fix production issues
-```
-
-**Dashboard:**
-```markdown
-# /sdd:status --project
-
-## DORA Metrics
-- Deployment Frequency: 3.2/week (↑ from 2.5)
-- Lead Time: 2.3 days (↓ from 3.1 days)
-- Change Failure Rate: 8% (target: <15%)
-- MTTR: 1.2 hours (↓ from 2.5 hours)
-
-## Velocity
-- Current: 21 story points/week
-- Trend: ↑ 15% over last month
-- Average cycle time: 2.1 days
-
-## Technical Debt
-- Debt Ratio: 12% (target: <15%)
-- High-priority debt items: 3
-- Debt added this week: 2 items
-- Debt resolved this week: 4 items
-
-## Process Insights
-- Bottleneck: Integration testing (avg 45 min)
-- Suggestion: Parallelize integration tests
-- Improvement opportunity: Automate deployment rollback
-```
-
-**Retrospective format:**
-```markdown
-# Retrospective: feature_user_authentication
-
-**What Went Well:**
-- TDD approach caught edge cases early
-- Performance testing revealed bottleneck before production
-- Documentation was comprehensive
-
-**What Didn't Go Well:**
-- Integration tests took 45 minutes (too slow)
-- Had to refactor authentication logic twice
-- Missing error handling for edge case
-
-**Lessons Learned:**
-- Always consider rate limiting from the start
-- Test with realistic data volumes
-
-**Action Items:**
-- [ ] Speed up integration tests (parallelize)
-- [ ] Add rate limiting to API design checklist
-- [ ] Create authentication patterns library
-
-**Metrics:**
-- Cycle time: 3.2 days
-- Test coverage: 92%
-- Refactoring events: 2
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/improvement/retrospective.py` - Retrospective generation
-- `src/sdd/improvement/debt_tracker.py` - Technical debt tracking
-- `src/sdd/improvement/dora_metrics.py` - DORA metrics calculation
-- `src/sdd/improvement/velocity_tracker.py` - Velocity tracking
-- `src/sdd/improvement/bottleneck_analyzer.py` - Bottleneck detection
-- `.session/tracking/retrospectives/` - Retrospective storage
-- `.session/tracking/metrics.json` - Metrics history
-- Tests for improvement modules
-
-**Modified:**
-- `src/sdd/session/complete.py` - Generate retrospective on work item completion
-- `.claude/commands/status.md` - Add project-level status command
-- `.session/tracking/work_items.json` - Add cycle time tracking
-
-**Benefits:**
-
-1. **Continuous learning**: Learn from every work item
-2. **Debt management**: Technical debt tracked and managed
-3. **Velocity visibility**: Know if improving or slowing down
-4. **Data-driven decisions**: Optimize based on metrics
-5. **Process improvement**: Systematically improve workflow
-6. **Team-level insights**: Solo developer with team-level metrics
-
-**Priority:** Medium - Important for long-term productivity
-
----
-
-### Enhancement #25: Advanced Testing Types
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Basic unit and integration tests don't catch all issues:
-
-1. **Mutation testing**: Tests may pass even if they don't catch bugs
-2. **Contract testing**: API changes break clients unexpectedly
-3. **Accessibility testing**: WCAG compliance not validated
-4. **Visual regression**: UI changes undetected
-
-**Example:**
-```
-API change: Remove field "user.email"
-  → Unit tests pass ✓ (don't test this field)
-  → Integration tests pass ✓ (don't use this field)
-  → Deploy
-  → Mobile app breaks ❌ (depends on user.email)
-```
-
-**Proposed Solution:**
-
-Implement **advanced testing types** that catch issues traditional tests miss:
-
-1. **Mutation Testing**
-   - Inject bugs into code (mutants)
-   - Verify tests catch the bugs
-   - Mutation score = % mutants killed
-   - Tools: Stryker (JS/TS), mutmut (Python)
-
-2. **Contract Testing**
-   - Define API contracts
-   - Test provider adheres to contract
-   - Test consumer expectations met
-   - Detect breaking changes early
-   - Tools: Pact, Spring Cloud Contract
-
-3. **Accessibility Testing**
-   - Validate WCAG 2.1 AA compliance
-   - Test keyboard navigation
-   - Test screen reader compatibility
-   - Check color contrast
-   - Tools: axe-core, Pa11y, Lighthouse
-
-4. **Visual Regression Testing**
-   - Capture screenshots of UI
-   - Compare against baseline
-   - Detect unintended visual changes
-   - Tools: Percy, Chromatic, BackstopJS
-
-**Implementation:**
-
-**Mutation testing:**
-```python
-# src/sdd/testing/mutation_tester.py
-class MutationTester:
-    def run_mutation_tests(self, test_suite):
-        # Run Stryker or mutmut
-        # Generate mutants
-        # Check if tests kill mutants
-        # Calculate mutation score
-
-    def check_mutation_score(self, score, threshold):
-        # Fail if score < threshold (e.g., 75%)
-```
-
-**Contract testing:**
-```python
-# src/sdd/testing/contract_tester.py
-class ContractTester:
-    def define_contract(self, api_spec):
-        # Create Pact contract from OpenAPI spec
-
-    def test_provider(self, contract):
-        # Verify API adheres to contract
-
-    def test_consumer(self, contract):
-        # Verify client expectations met
-
-    def detect_breaking_changes(self, old_contract, new_contract):
-        # Compare contracts, find breaking changes
-```
-
-**Accessibility testing:**
-```python
-# src/sdd/testing/accessibility_tester.py
-class AccessibilityTester:
-    def run_axe_audit(self, url):
-        # Run axe-core accessibility audit
-        # Return violations
-
-    def check_wcag_compliance(self, violations):
-        # Verify WCAG 2.1 AA compliance
-        # Fail if critical violations
-```
-
-**Visual regression:**
-```python
-# src/sdd/testing/visual_tester.py
-class VisualTester:
-    def capture_screenshots(self, urls):
-        # Capture screenshots of pages
-
-    def compare_with_baseline(self, screenshots):
-        # Compare with baseline images
-        # Detect differences
-
-    def update_baseline(self, screenshots):
-        # Update baseline on approval
-```
-
-**Configuration:**
-```json
-// .session/config.json
-"advanced_testing": {
-  "mutation_testing": {
-    "enabled": true,
-    "threshold": 75,
-    "framework": "stryker"  // or "mutmut"
-  },
-  "contract_testing": {
-    "enabled": true,
-    "format": "pact",
-    "break_on_breaking_changes": true
-  },
-  "accessibility_testing": {
-    "enabled": true,
-    "standard": "WCAG21AA",
-    "fail_on_violations": true
-  },
-  "visual_regression": {
-    "enabled": true,
-    "threshold": 0.02  // 2% pixel difference
-  }
-}
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/testing/mutation_tester.py` - Mutation testing
-- `src/sdd/testing/contract_tester.py` - Contract testing
-- `src/sdd/testing/accessibility_tester.py` - Accessibility testing
-- `src/sdd/testing/visual_tester.py` - Visual regression testing
-- `tests/contracts/` - Contract definitions
-- `tests/visual/baselines/` - Visual baseline images
-- Tests for advanced testing modules
-
-**Modified:**
-- `src/sdd/quality/gates.py` - Add advanced testing gates
-- `.session/config.json` - Advanced testing configuration
-- CI/CD workflows - Add advanced testing jobs
-
-**Benefits:**
-
-1. **Better test quality**: Mutation testing ensures tests catch bugs
-2. **API stability**: Contract testing prevents breaking changes
-3. **Accessibility compliance**: Automated WCAG validation
-4. **UI stability**: Visual regression catches unintended changes
-5. **Comprehensive coverage**: All types of issues caught
-
-**Priority:** Medium - Improves test effectiveness
-
----
-
-### Enhancement #26: UAT & Stakeholder Workflow
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-No workflow for stakeholder feedback and user acceptance testing:
-
-1. **No stakeholder involvement**: Stakeholders see features only at launch
-2. **No UAT process**: No formal user acceptance testing
-3. **No demo environments**: Difficult to show work in progress
-4. **No approval workflow**: No sign-off before production
-
-**Example:**
-```
-Feature built → Tests pass ✓ → Deploy to production
-              → Stakeholder sees feature for first time
-              → "This isn't what I wanted" ❌
-              → Rework required
-```
-
-**Proposed Solution:**
-
-Implement **UAT and stakeholder workflow** for feedback and approvals:
-
-1. **Stakeholder Feedback Collection**
-   - Create shareable demo links
-   - Collect structured feedback
-   - Track feedback status (addressed/rejected/pending)
-   - Link feedback to work items
-
-2. **UAT Test Case Generation**
-   - Auto-generate UAT test cases from acceptance criteria
-   - Provide test case checklist for stakeholders
-   - Track UAT execution and results
-
-3. **Demo/Preview Environments**
-   - Auto-create preview environment per work item
-   - Shareable URL for stakeholder review
-   - Temporary environment (auto-deleted after merge)
-   - Tools: Vercel preview deployments, Netlify deploy previews, PR environments
-
-4. **Approval Workflow Before Production**
-   - Require stakeholder approval before production deploy
-   - Track approval status
-   - Block production deployment without approval
-   - Document approval decisions
-
-**Implementation:**
-
-**Demo environment:**
-```python
-# src/sdd/uat/demo_environment.py
-class DemoEnvironmentManager:
-    def create_preview(self, work_item_id, branch):
-        # Deploy branch to preview environment
-        # Return preview URL
-
-    def share_with_stakeholders(self, preview_url, stakeholders):
-        # Send preview link to stakeholders
-        # Include UAT test cases
-```
-
-**Feedback collection:**
-```python
-# src/sdd/uat/feedback_collector.py
-class FeedbackCollector:
-    def create_feedback_form(self, work_item):
-        # Generate feedback form
-        # Include UAT test cases
-
-    def collect_feedback(self, form_id):
-        # Retrieve stakeholder feedback
-        # Parse and structure feedback
-
-    def link_to_work_item(self, feedback, work_item_id):
-        # Associate feedback with work item
-        # Create follow-up tasks if needed
-```
-
-**UAT test case generator:**
-```python
-# src/sdd/uat/test_case_generator.py
-class UATTestCaseGenerator:
-    def generate_from_acceptance_criteria(self, work_item):
-        # Parse acceptance criteria
-        # Generate UAT test cases
-        # Format as checklist
-```
-
-**Example UAT test cases:**
-```markdown
-# UAT Test Cases: User Authentication
-
-## Test Case 1: Successful Login
-**Given:** User has valid credentials
-**When:** User enters email and password
-**Then:**
-- [ ] User is redirected to dashboard
-- [ ] Welcome message displays user's name
-- [ ] Session token is stored
-
-## Test Case 2: Failed Login
-**Given:** User enters invalid password
-**When:** User submits login form
-**Then:**
-- [ ] Error message "Invalid credentials" displays
-- [ ] User remains on login page
-- [ ] No session token stored
-
-## Test Case 3: Forgot Password
-**Given:** User clicks "Forgot Password"
-**When:** User enters email address
-**Then:**
-- [ ] Email with reset link sent
-- [ ] Confirmation message displays
-- [ ] Reset link expires in 1 hour
-```
-
-**Approval workflow:**
-```python
-# src/sdd/uat/approval_workflow.py
-class ApprovalWorkflow:
-    def request_approval(self, work_item_id, stakeholders):
-        # Send approval request
-        # Include demo link and UAT results
-
-    def check_approval_status(self, work_item_id):
-        # Check if approved
-        # Block deployment if not approved
-
-    def record_approval(self, work_item_id, approver, decision):
-        # Record approval decision
-        # Document reasoning
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/uat/demo_environment.py` - Demo environment management
-- `src/sdd/uat/feedback_collector.py` - Feedback collection
-- `src/sdd/uat/test_case_generator.py` - UAT test case generation
-- `src/sdd/uat/approval_workflow.py` - Approval management
-- `.session/tracking/feedback/` - Feedback storage
-- `.session/tracking/approvals/` - Approval records
-- Tests for UAT modules
-
-**Modified:**
-- `src/sdd/session/complete.py` - Request approval before production deployment
-- `src/sdd/deployment/safety_gates.py` - Block deployment without approval
-- `.session/config.json` - UAT and approval configuration
-
-**Benefits:**
-
-1. **Early feedback**: Stakeholders see features before production
-2. **Reduce rework**: Catch misalignments before deployment
-3. **Formal UAT**: Structured testing process
-4. **Approval tracking**: Know what's approved for production
-5. **Demo environments**: Easy to share work in progress
-6. **Stakeholder confidence**: Involved throughout development
-
-**Priority:** Medium - Important for stakeholder collaboration
-
----
-
-### Enhancement #27: Automated Code Review
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Code reviews are manual and time-consuming. Common issues missed:
-
-1. **No automated review**: Every line requires human review
-2. **Inconsistent feedback**: Review quality varies
-3. **Common patterns missed**: Same issues repeat
-4. **Security vulnerabilities**: May be overlooked in review
-
-**Proposed Solution:**
-
-Implement **AI-powered automated code review** that provides suggestions:
-
-1. **Code Analysis**
-   - Analyze code changes for common issues
-   - Detect anti-patterns and code smells
-   - Identify performance issues
-
-2. **Best Practice Recommendations**
-   - Suggest better patterns and approaches
-   - Recommend idiomatic code
-   - Link to documentation and examples
-
-3. **Security Vulnerability Detection**
-   - Identify security issues in code
-   - Suggest secure alternatives
-   - Link to security best practices
-
-4. **Improvement Suggestions**
-   - Suggest refactoring opportunities
-   - Identify complexity issues
-   - Recommend simplifications
-
-**Implementation:**
-
-**Code reviewer:**
-```python
-# src/sdd/review/code_reviewer.py
-class AutomatedCodeReviewer:
-    def review_changes(self, file_changes):
-        # Analyze code changes
-        # Generate review comments
-
-    def detect_issues(self, code):
-        # Find anti-patterns, code smells
-
-    def suggest_improvements(self, code):
-        # Recommend better approaches
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/review/code_reviewer.py` - Automated review
-- Tests for code review
-
-**Modified:**
-- `src/sdd/session/complete.py` - Run automated review
-
-**Benefits:**
-
-1. **Faster reviews**: Automated feedback
-2. **Consistent quality**: Every change reviewed
-3. **Learning opportunity**: Suggestions improve skills
-4. **Catch issues early**: Problems found before merge
-
-**Priority:** Low - Nice to have, not critical
-
----
-
-### Enhancement #28: Project Progress Dashboard
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-No high-level view of project progress:
-
-1. **No progress visibility**: Don't know how much is complete
-2. **No milestone tracking**: Can't see milestone progress
-3. **No velocity trends**: Don't know if on track
-
-**Proposed Solution:**
-
-Implement **project progress dashboard** showing overall status:
-
-1. **Progress Visualization**
-   - Work items by status (pie chart)
-   - Completion percentage by milestone
-   - Burndown charts
-
-2. **Velocity Tracking**
-   - Story points completed per week
-   - Velocity trends
-   - Projected completion dates
-
-3. **Blocker Identification**
-   - Blocked work items highlighted
-   - Risk indicators
-
-**Implementation:**
-
-**Dashboard command:**
-```bash
-/sdd:status --project
-```
-
-**Dashboard generator:**
-```python
-# src/sdd/reporting/dashboard.py
-class ProgressDashboard:
-    def generate_dashboard(self):
-        # Aggregate work item data
-        # Generate charts and metrics
-        # Format as markdown
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/reporting/dashboard.py` - Dashboard generation
-- Tests for dashboard
-
-**Modified:**
-- `.claude/commands/status.md` - Add project dashboard
-
-**Benefits:**
-
-1. **Progress visibility**: Know project status at glance
-2. **Milestone tracking**: See progress toward milestones
-3. **Trend analysis**: Know if on track
-4. **Risk awareness**: Blockers highlighted
-
-**Priority:** Low - Nice to have, not critical
-
----
-
-### Enhancement #29: Disaster Recovery & Backup Automation
+### Enhancement #22: Disaster Recovery & Backup Automation
 
 **Status:** 🔵 IDENTIFIED
 
@@ -2602,17 +1702,17 @@ backup_config:
 **Files Affected:**
 
 **New:**
-- `src/sdd/disaster_recovery/backup_manager.py` - Backup orchestration
-- `src/sdd/disaster_recovery/dr_planner.py` - DR plan generation
-- `src/sdd/disaster_recovery/recovery_executor.py` - Recovery execution
-- `src/sdd/disaster_recovery/backup_verifier.py` - Backup verification
-- `src/sdd/disaster_recovery/retention_manager.py` - Data lifecycle management
-- `.claude/commands/dr-init.md` - DR initialization command
-- `.claude/commands/dr-status.md` - DR status command
-- `.claude/commands/dr-test.md` - DR testing command
-- `.claude/commands/dr-restore.md` - Recovery command
-- `docs/disaster_recovery_plan.md` - Generated DR plan
-- `.sdd/backup_config.yml` - Backup configuration
+- `src/sdd/disaster_recovery/backup_manager.py` - Backup orchestration (will be created)
+- `src/sdd/disaster_recovery/dr_planner.py` - DR plan generation (will be created)
+- `src/sdd/disaster_recovery/recovery_executor.py` - Recovery execution (will be created)
+- `src/sdd/disaster_recovery/backup_verifier.py` - Backup verification (will be created)
+- `src/sdd/disaster_recovery/retention_manager.py` - Data lifecycle management (will be created)
+- `.claude/commands/dr-init.md` - DR initialization command (will be created)
+- `.claude/commands/dr-status.md` - DR status command (will be created)
+- `.claude/commands/dr-test.md` - DR testing command (will be created)
+- `.claude/commands/dr-restore.md` - Recovery command (will be created)
+- `docs/disaster_recovery_plan.md` - Generated DR plan (will be created)
+- `.sdd/backup_config.yml` - Backup configuration (will be created)
 - Tests for DR system
 
 **Modified:**
@@ -2642,2051 +1742,7 @@ backup_config:
 
 ---
 
-### Enhancement #30: Compliance & Regulatory Framework
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Projects handling sensitive data must comply with various regulations, but there's no automated compliance tracking:
-
-1. **No compliance validation**: GDPR, HIPAA, SOC2, PCI-DSS requirements not checked
-2. **Data privacy gaps**: Personal data handling not tracked or validated
-3. **Audit trail missing**: No comprehensive logging for compliance audits
-4. **Manual compliance checks**: Time-consuming and error-prone manual verification
-5. **Regulation changes**: No monitoring for updates to compliance requirements
-
-**Example of compliance failure:**
-
-```
-Collect user data → Store in database → Deploy
-                                      → GDPR audit ❌
-                                      → Missing: consent tracking, data export, deletion
-                                      → Fines and legal issues
-                                      → Damage to reputation
-```
-
-**Proposed Solution:**
-
-Implement **compliance and regulatory framework** for automated compliance tracking and validation:
-
-1. **GDPR Compliance**
-   - Data processing activity tracking
-   - User consent management and audit trail
-   - Right to access (data export) automation
-   - Right to erasure (data deletion) automation
-   - Data breach notification procedures
-   - Privacy impact assessments
-
-2. **HIPAA Compliance** (Healthcare)
-   - PHI (Protected Health Information) identification and tracking
-   - Access control and audit logging
-   - Encryption at rest and in transit validation
-   - Business Associate Agreement (BAA) tracking
-   - Breach notification procedures
-   - Security risk assessments
-
-3. **SOC 2 Compliance**
-   - Security controls validation
-   - Availability monitoring
-   - Processing integrity checks
-   - Confidentiality verification
-   - Privacy controls
-   - Continuous control monitoring
-
-4. **PCI-DSS Compliance** (Payment Card Industry)
-   - Payment data identification and protection
-   - Network security requirements
-   - Access control validation
-   - Regular security testing
-   - Security policy enforcement
-
-5. **Compliance Automation**
-   - Automated compliance checks in CI/CD
-   - Real-time compliance monitoring
-   - Compliance dashboard and reporting
-   - Evidence collection for audits
-   - Automated remediation suggestions
-
-**Implementation:**
-
-**Compliance checker:**
-```python
-# src/sdd/compliance/compliance_checker.py
-class ComplianceChecker:
-    def check_gdpr_compliance(self, codebase):
-        # Verify GDPR requirements
-        # - Consent tracking
-        # - Data export functionality
-        # - Data deletion functionality
-        # - Data retention policies
-        # - Privacy policy exists
-
-    def check_hipaa_compliance(self, codebase):
-        # Verify HIPAA requirements
-        # - PHI encryption
-        # - Access controls
-        # - Audit logging
-        # - BAA tracking
-
-    def check_soc2_compliance(self, system):
-        # Verify SOC 2 controls
-        # - Security controls
-        # - Availability metrics
-        # - Processing integrity
-        # - Confidentiality
-
-    def check_pci_dss_compliance(self, codebase):
-        # Verify PCI-DSS requirements
-        # - Card data encryption
-        # - Network segmentation
-        # - Access controls
-        # - Regular security testing
-```
-
-**GDPR automation:**
-```python
-# src/sdd/compliance/gdpr_automation.py
-class GDPRAutomation:
-    def track_consent(self, user_id, consent_type):
-        # Record user consent with timestamp
-        # Track consent version
-        # Provide consent audit trail
-
-    def export_user_data(self, user_id):
-        # Collect all user data across systems
-        # Generate machine-readable export (JSON)
-        # Include data processing activities log
-
-    def delete_user_data(self, user_id):
-        # Identify all user data locations
-        # Delete or anonymize data
-        # Maintain deletion audit trail
-        # Verify deletion completeness
-
-    def generate_privacy_impact_assessment(self, feature):
-        # Identify personal data collected
-        # Assess privacy risks
-        # Propose mitigation measures
-```
-
-**Compliance configuration:**
-```yaml
-# .session/config.json or .sdd/compliance_config.yml
-compliance:
-  regulations:
-    - gdpr
-    - soc2
-    # - hipaa  # Enable for healthcare
-    # - pci_dss  # Enable for payment processing
-
-  gdpr:
-    enabled: true
-    data_retention_days: 365
-    consent_tracking: true
-    require_privacy_policy: true
-    require_data_export: true
-    require_data_deletion: true
-
-  soc2:
-    enabled: true
-    trust_service_criteria:
-      - security
-      - availability
-      - processing_integrity
-      - confidentiality
-      - privacy
-    control_monitoring: true
-
-  hipaa:
-    enabled: false
-    phi_identification: true
-    encryption_required: true
-    audit_logging: true
-    minimum_necessary_access: true
-
-  pci_dss:
-    enabled: false
-    cardholder_data_environment: false
-    tokenization_required: true
-    security_testing_frequency: "quarterly"
-
-  audit:
-    evidence_collection: true
-    evidence_storage: ".compliance/evidence/"
-    audit_log_retention_days: 2555  # 7 years
-
-  alerts:
-    compliance_violations: ["email", "slack"]
-    regulation_updates: ["email"]
-```
-
-**Compliance dashboard:**
-```markdown
-# /sdd:compliance-status
-
-## Compliance Overview
-- GDPR: ✅ Compliant (98% - 1 minor issue)
-- SOC 2: ⚠️ Partially Compliant (85% - 3 controls need attention)
-- HIPAA: N/A (Not enabled)
-- PCI-DSS: N/A (Not enabled)
-
-## GDPR Compliance Details
-✅ Consent tracking: Implemented
-✅ Data export: Implemented (/api/user/export)
-✅ Data deletion: Implemented (/api/user/delete)
-✅ Privacy policy: Published and versioned
-⚠️ Data retention: Policy defined but not enforced in code
-
-## SOC 2 Compliance Details
-✅ Security: Multi-factor auth, encryption, access controls
-✅ Availability: 99.9% uptime, monitoring, alerting
-⚠️ Processing Integrity: Missing transaction logging for audit
-⚠️ Confidentiality: Some sensitive data not encrypted at rest
-✅ Privacy: GDPR controls cover privacy requirements
-
-## Action Items
-1. Implement automated data retention enforcement (GDPR)
-2. Add transaction audit logging (SOC 2 - Processing Integrity)
-3. Encrypt sensitive configuration data at rest (SOC 2 - Confidentiality)
-
-## Next Audit: 2025-12-01
-## Last Audit: 2025-06-15 (Passed with minor findings)
-```
-
-**Commands:**
-```bash
-# Check compliance status
-/sdd:compliance-status [--regulation gdpr|hipaa|soc2|pci-dss]
-
-# Generate compliance report
-/sdd:compliance-report --regulation gdpr --output pdf
-
-# Run compliance checks
-/sdd:compliance-check --fix
-
-# Generate privacy impact assessment
-/sdd:compliance-pia --feature "user-analytics"
-
-# Export evidence for audit
-/sdd:compliance-evidence-export --period "2025-01-01..2025-12-31"
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/compliance/compliance_checker.py` - Compliance validation
-- `src/sdd/compliance/gdpr_automation.py` - GDPR automation
-- `src/sdd/compliance/hipaa_checker.py` - HIPAA compliance
-- `src/sdd/compliance/soc2_monitor.py` - SOC 2 monitoring
-- `src/sdd/compliance/pci_dss_validator.py` - PCI-DSS validation
-- `src/sdd/compliance/audit_trail.py` - Audit logging
-- `src/sdd/compliance/evidence_collector.py` - Evidence management
-- `.claude/commands/compliance-status.md` - Compliance status command
-- `.claude/commands/compliance-report.md` - Report generation command
-- `.claude/commands/compliance-check.md` - Compliance validation command
-- `.compliance/evidence/` - Audit evidence storage
-- `.sdd/compliance_config.yml` - Compliance configuration
-- Tests for compliance modules
-
-**Modified:**
-- `src/sdd/project/init.py` - Add compliance setup to project initialization
-- `src/sdd/quality/gates.py` - Add compliance gates
-- `.session/config.json` - Add compliance configuration
-- CI/CD workflows - Add compliance check jobs
-
-**Benefits:**
-
-1. **Automated compliance**: Continuous compliance monitoring and validation
-2. **Audit readiness**: Evidence automatically collected for audits
-3. **Risk mitigation**: Catch compliance issues before they become problems
-4. **Regulation tracking**: Stay updated on compliance requirement changes
-5. **Cost savings**: Reduce manual compliance effort and potential fines
-6. **Customer trust**: Demonstrate commitment to data protection
-7. **Legal protection**: Documented compliance procedures and audit trails
-8. **Multi-regulation support**: Handle multiple compliance requirements simultaneously
-
-**Priority:** High - Critical for regulated industries (healthcare, finance, e-commerce)
-
-**Notes:**
-- Compliance requirements vary by jurisdiction and industry
-- Regular compliance audits recommended (quarterly or annually)
-- Legal review recommended for compliance implementation
-- Some regulations require third-party audits (e.g., SOC 2)
-- Compliance is ongoing, not a one-time effort
-
----
-
-### Enhancement #31: Cost & Resource Optimization
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Cloud costs can spiral out of control without monitoring and optimization:
-
-1. **No cost visibility**: Don't know where money is being spent
-2. **Resource waste**: Over-provisioned or unused resources
-3. **No budget alerts**: Costs exceed budget without warning
-4. **Inefficient architecture**: Expensive architectures when cheaper alternatives exist
-5. **No optimization recommendations**: Manual cost optimization is time-consuming
-
-**Example of cost waste:**
-
-```
-Deploy application → Runs for 6 months
-                   → Database over-provisioned (90% idle)
-                   → Load balancer for single instance
-                   → Storage full of old logs
-                   → Monthly cost: $1,200
-                   → Optimized cost could be: $300
-                   → Wasted: $900/month = $10,800/year
-```
-
-**Proposed Solution:**
-
-Implement **cost and resource optimization framework** for monitoring and reducing cloud costs:
-
-1. **Cost Monitoring & Visibility**
-   - Real-time cost tracking per service
-   - Cost allocation by project/environment/feature
-   - Cost trend analysis and forecasting
-   - Budget tracking and alerts
-   - Multi-cloud cost aggregation (AWS, GCP, Azure)
-
-2. **Resource Utilization Analysis**
-   - Identify under-utilized resources
-   - Track resource usage patterns
-   - Detect idle or unused resources
-   - Analyze peak vs average utilization
-   - Right-sizing recommendations
-
-3. **Automated Cost Optimization**
-   - Auto-scaling based on actual usage
-   - Spot instance recommendations
-   - Reserved instance analysis
-   - Storage tier optimization (hot/warm/cold)
-   - Automated cleanup of unused resources
-
-4. **Cost Optimization Recommendations**
-   - Alternative architecture suggestions
-   - Service tier optimization
-   - Region cost comparisons
-   - Commitment discount opportunities
-   - Open-source alternative suggestions
-
-5. **Budget Management**
-   - Set budget limits per environment
-   - Automated alerts on threshold breach
-   - Spending forecasts
-   - Cost anomaly detection
-   - Automated resource shutdown on budget exceeded
-
-**Implementation:**
-
-**Cost monitor:**
-```python
-# src/sdd/cost/cost_monitor.py
-class CostMonitor:
-    def track_current_costs(self):
-        # Query cloud provider billing APIs
-        # Aggregate costs by service, region, project
-        # Calculate daily/weekly/monthly costs
-
-    def analyze_cost_trends(self):
-        # Historical cost analysis
-        # Identify cost spikes
-        # Forecast future costs
-
-    def alert_on_budget_breach(self, threshold):
-        # Check if costs exceed budget
-        # Send alerts to configured channels
-        # Trigger automated actions if needed
-```
-
-**Resource optimizer:**
-```python
-# src/sdd/cost/resource_optimizer.py
-class ResourceOptimizer:
-    def identify_underutilized_resources(self):
-        # Analyze CPU, memory, disk usage
-        # Identify resources with <30% utilization
-        # Calculate potential savings
-
-    def recommend_rightsizing(self, resource):
-        # Analyze historical usage patterns
-        # Recommend appropriate instance types
-        # Calculate cost savings
-
-    def find_idle_resources(self):
-        # Identify stopped instances still incurring costs
-        # Find unused load balancers, IPs, volumes
-        # Estimate monthly waste
-
-    def optimize_storage_tiers(self):
-        # Analyze storage access patterns
-        # Recommend tier migrations (hot → cold)
-        # Calculate storage cost savings
-```
-
-**Cost optimization engine:**
-```python
-# src/sdd/cost/optimization_engine.py
-class CostOptimizationEngine:
-    def recommend_spot_instances(self):
-        # Identify workloads suitable for spot instances
-        # Calculate potential savings (60-90% off)
-        # Provide migration guide
-
-    def analyze_reserved_instances(self):
-        # Compare on-demand vs reserved pricing
-        # Recommend reservation commitments
-        # Calculate breakeven point
-
-    def suggest_architectural_changes(self):
-        # Identify expensive patterns
-        # Suggest cheaper alternatives
-        # Estimate implementation effort vs savings
-
-    def recommend_service_alternatives(self):
-        # Identify overpriced managed services
-        # Suggest open-source alternatives
-        # Calculate TCO comparison
-```
-
-**Cost configuration:**
-```yaml
-# .session/config.json or .sdd/cost_config.yml
-cost_optimization:
-  monitoring:
-    enabled: true
-    cloud_providers:
-      - aws
-      - gcp
-      # - azure
-    update_frequency: "hourly"
-
-  budgets:
-    development:
-      monthly_limit: 500
-      alert_thresholds: [50, 75, 90, 100]
-    staging:
-      monthly_limit: 200
-      alert_thresholds: [75, 90, 100]
-    production:
-      monthly_limit: 2000
-      alert_thresholds: [75, 90, 100]
-      auto_shutdown: false  # Don't auto-shutdown production
-
-  optimization:
-    auto_rightsizing: false  # Recommend only, don't auto-apply
-    auto_cleanup_idle: true  # Clean up stopped resources after 7 days
-    storage_tier_optimization: true
-    reserved_instance_analysis: true
-
-  alerts:
-    cost_alerts: ["email", "slack"]
-    optimization_opportunities: ["email"]
-    budget_breach: ["email", "pagerduty"]
-
-  reporting:
-    weekly_cost_report: true
-    monthly_optimization_report: true
-    savings_tracking: true
-```
-
-**Cost dashboard:**
-```markdown
-# /sdd:cost-status
-
-## Monthly Cost Summary
-- **Current Month**: $1,247 / $2,000 budget (62%)
-- **Last Month**: $1,189
-- **Forecast**: $1,650 (18% under budget)
-- **YoY Growth**: +12%
-
-## Cost Breakdown by Service
-- Compute (EC2/VMs): $687 (55%)
-- Database (RDS/Cloud SQL): $312 (25%)
-- Storage (S3/GCS): $127 (10%)
-- Networking: $89 (7%)
-- Other: $32 (3%)
-
-## Cost by Environment
-- Production: $987 (79%)
-- Staging: $172 (14%)
-- Development: $88 (7%)
-
-## Optimization Opportunities
-1. **Right-size database** - Current: db.m5.2xlarge ($562/mo), Recommended: db.m5.xlarge ($281/mo)
-   - Savings: $281/month ($3,372/year)
-   - Utilization: 28% average CPU
-
-2. **Move logs to cold storage** - 500GB in hot storage ($115/mo), 450GB not accessed in 90 days
-   - Savings: $90/month ($1,080/year)
-   - Move 450GB to Glacier
-
-3. **Use spot instances for batch jobs** - 5 instances running 24/7 ($365/mo)
-   - Savings: $255/month ($3,060/year)
-   - 70% cost reduction with spot
-
-4. **Remove unused load balancer** - 1 ALB with no traffic ($23/mo)
-   - Savings: $23/month ($276/year)
-
-## Total Potential Savings: $649/month ($7,788/year)
-## Current Optimization Score: 72/100
-```
-
-**Commands:**
-```bash
-# View cost status
-/sdd:cost-status [--environment prod|staging|dev]
-
-# Analyze optimization opportunities
-/sdd:cost-optimize --analyze
-
-# Generate cost report
-/sdd:cost-report --period "2025-01-01..2025-12-31" --output pdf
-
-# Set budget alert
-/sdd:cost-budget-set --environment prod --limit 2000 --currency USD
-
-# Forecast costs
-/sdd:cost-forecast --months 6
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/cost/cost_monitor.py` - Cost tracking and monitoring
-- `src/sdd/cost/resource_optimizer.py` - Resource utilization analysis
-- `src/sdd/cost/optimization_engine.py` - Cost optimization recommendations
-- `src/sdd/cost/budget_manager.py` - Budget tracking and alerts
-- `src/sdd/cost/cloud_provider_integrations/` - AWS, GCP, Azure integrations
-- `.claude/commands/cost-status.md` - Cost status command
-- `.claude/commands/cost-optimize.md` - Optimization command
-- `.claude/commands/cost-report.md` - Cost reporting command
-- `.claude/commands/cost-budget-set.md` - Budget management command
-- `.sdd/cost_config.yml` - Cost optimization configuration
-- Tests for cost monitoring modules
-
-**Modified:**
-- `src/sdd/project/init.py` - Add cost monitoring setup
-- `.session/config.json` - Add cost optimization configuration
-- CI/CD workflows - Add cost check jobs
-
-**Benefits:**
-
-1. **Cost visibility**: Always know where money is spent
-2. **Budget control**: Prevent cost overruns with alerts and limits
-3. **Resource efficiency**: Eliminate waste from idle or over-provisioned resources
-4. **Predictable costs**: Accurate forecasting for budget planning
-5. **Automated savings**: Continuous optimization without manual effort
-6. **Multi-cloud support**: Track costs across multiple cloud providers
-7. **ROI tracking**: Measure savings from optimization efforts
-8. **Financial accountability**: Cost allocation per project/team
-
-**Priority:** Medium-High - Important for budget-conscious solo developers and startups
-
-**Notes:**
-- Requires cloud provider API credentials with billing access
-- Cost data typically has 24-hour delay
-- Aggressive optimization can impact performance (monitor carefully)
-- Reserved instances require commitment (1-3 years)
-- Consider business criticality before automated resource shutdown
-
----
-
-### Enhancement #32: Custom Work Item Types
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-SDD currently supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). This creates limitations:
-
-1. **No project-specific types**: Different projects need different work item types (spike, research, documentation-task, data-migration, experiment, etc.)
-2. **No extensibility**: Users cannot define custom types for their workflow
-3. **Rigid structure**: Solo developers may want simpler or more specialized types
-4. **Missing common types**: Common software development activities like "spike" (time-boxed investigation) or "research" have no dedicated type
-
-**Example use cases:**
-
-```
-Solo developer working on data-intensive project:
-- Needs: data-migration, data-validation, schema-evolution work item types
-- Current: Must use "feature" or "refactor" which don't fit semantically
-
-Solo developer doing R&D:
-- Needs: spike, research, experiment, proof-of-concept types
-- Current: No appropriate type, forced to use "feature"
-
-Solo developer maintaining docs:
-- Needs: documentation-task, tutorial, guide types
-- Current: No dedicated documentation type
-```
-
-**Proposed Solution:**
-
-Implement **custom work item type system** allowing users to define their own work item types with:
-
-1. **User-Defined Type Schema**
-   - Define custom type name and metadata
-   - Specify required and optional spec sections
-   - Set default priority and milestone behavior
-   - Configure type-specific quality gates
-
-2. **Custom Spec Templates**
-   - Create custom spec templates for each type
-   - Define type-specific validation rules
-   - Include type-specific guidance and examples
-   - Template variables for dynamic content
-
-3. **Type-Specific Quality Gates**
-   - Different quality gate requirements per type
-   - Example: "spike" type may not require tests
-   - Example: "documentation-task" may only require linting and grammar checks
-   - Configurable gate strictness per type
-
-4. **Type Lifecycle Configuration**
-   - Define valid status transitions per type
-   - Set default session behavior (single-session vs multi-session)
-   - Configure completion criteria
-   - Set up type-specific git branch naming patterns
-
-**Implementation:**
-
-**Custom type definition:**
-```yaml
-# .session/config.json - custom_work_item_types section
-{
-  "custom_work_item_types": {
-    "spike": {
-      "display_name": "Spike",
-      "description": "Time-boxed investigation or research task",
-      "template_file": "spike_spec.md",
-      "required_sections": [
-        "Goal",
-        "Time Box",
-        "Questions to Answer",
-        "Findings",
-        "Recommendations"
-      ],
-      "optional_sections": [
-        "References",
-        "Experiments Conducted"
-      ],
-      "quality_gates": {
-        "tests": {"enabled": false, "required": false},
-        "linting": {"enabled": false, "required": false},
-        "documentation": {"enabled": true, "required": true}
-      },
-      "default_priority": "medium",
-      "typical_duration_days": 2,
-      "multi_session_allowed": false,
-      "branch_prefix": "spike"
-    },
-    "data_migration": {
-      "display_name": "Data Migration",
-      "description": "Database schema or data migration task",
-      "template_file": "data_migration_spec.md",
-      "required_sections": [
-        "Migration Goal",
-        "Current Schema",
-        "Target Schema",
-        "Data Transformation",
-        "Rollback Plan",
-        "Testing Strategy"
-      ],
-      "quality_gates": {
-        "tests": {"enabled": true, "required": true, "coverage_threshold": 95},
-        "integration_tests": {"enabled": true, "required": true},
-        "rollback_test": {"enabled": true, "required": true},
-        "backup_verification": {"enabled": true, "required": true}
-      },
-      "default_priority": "high",
-      "multi_session_allowed": true,
-      "branch_prefix": "migration"
-    },
-    "documentation_task": {
-      "display_name": "Documentation Task",
-      "description": "Documentation writing or updating",
-      "template_file": "documentation_task_spec.md",
-      "required_sections": [
-        "Documentation Goal",
-        "Target Audience",
-        "Content Outline",
-        "Examples Required"
-      ],
-      "quality_gates": {
-        "tests": {"enabled": false, "required": false},
-        "linting": {"enabled": true, "required": true},
-        "grammar_check": {"enabled": true, "required": true},
-        "link_validation": {"enabled": true, "required": true},
-        "documentation": {"enabled": false, "required": false}
-      },
-      "default_priority": "low",
-      "multi_session_allowed": false,
-      "branch_prefix": "docs"
-    },
-    "experiment": {
-      "display_name": "Experiment",
-      "description": "Experimental feature or proof of concept",
-      "template_file": "experiment_spec.md",
-      "required_sections": [
-        "Hypothesis",
-        "Success Criteria",
-        "Experiment Design",
-        "Results",
-        "Conclusion"
-      ],
-      "quality_gates": {
-        "tests": {"enabled": false, "required": false},
-        "documentation": {"enabled": true, "required": true}
-      },
-      "default_priority": "low",
-      "typical_duration_days": 3,
-      "multi_session_allowed": false,
-      "branch_prefix": "experiment"
-    }
-  }
-}
-```
-
-**Custom spec template example:**
-```markdown
-# src/sdd/templates/spike_spec.md
----
-type: spike
----
-
-# [Spike Title]
-
-**Type:** Spike
-**Time Box:** [e.g., 2 days, 8 hours]
-**Created:** [Auto-generated]
-
-## Goal
-
-What question are you trying to answer? What are you investigating?
-
-## Questions to Answer
-
-1. [Question 1]
-2. [Question 2]
-3. [Question 3]
-
-## Approach
-
-How will you conduct this investigation?
-
-- [ ] Research approach 1
-- [ ] Experiment 2
-- [ ] Prototype 3
-
-## Findings
-
-*(To be filled during/after spike)*
-
-### What We Learned
-
-- Finding 1
-- Finding 2
-
-### What We Don't Know Yet
-
-- Unknown 1
-- Unknown 2
-
-## Recommendations
-
-Based on findings, what should we do next?
-
-- [ ] Recommendation 1: [Create feature work item / Continue research / Abandon approach]
-- [ ] Recommendation 2
-
-## References
-
-- [External resources, articles, documentation]
-
-## Time Tracking
-
-- Time spent: [e.g., 6 hours out of 8 hour time box]
-- Time box respected: [Yes/No]
-```
-
-**Type manager:**
-```python
-# src/sdd/work_items/type_manager.py
-class WorkItemTypeManager:
-    def __init__(self, config_path=".session/config.json"):
-        self.config = self.load_config(config_path)
-        self.built_in_types = self.load_built_in_types()
-        self.custom_types = self.load_custom_types()
-
-    def get_all_types(self):
-        """Return all available work item types (built-in + custom)"""
-        return {**self.built_in_types, **self.custom_types}
-
-    def get_type_config(self, type_name):
-        """Get configuration for a specific work item type"""
-        all_types = self.get_all_types()
-        if type_name not in all_types:
-            raise ValueError(f"Unknown work item type: {type_name}")
-        return all_types[type_name]
-
-    def validate_type_definition(self, type_config):
-        """Validate custom type configuration"""
-        required_fields = ["display_name", "description", "template_file",
-                          "required_sections", "quality_gates"]
-        for field in required_fields:
-            if field not in type_config:
-                raise ValueError(f"Custom type missing required field: {field}")
-
-        # Validate template file exists
-        template_path = Path("src/sdd/templates") / type_config["template_file"]
-        if not template_path.exists():
-            raise FileNotFoundError(f"Template not found: {template_path}")
-
-        return True
-
-    def create_custom_type(self, type_name, type_config):
-        """Create a new custom work item type"""
-        self.validate_type_definition(type_config)
-
-        # Add to config
-        if "custom_work_item_types" not in self.config:
-            self.config["custom_work_item_types"] = {}
-
-        self.config["custom_work_item_types"][type_name] = type_config
-        self.save_config()
-
-        return type_name
-
-    def get_quality_gates_for_type(self, type_name):
-        """Get quality gate configuration for work item type"""
-        type_config = self.get_type_config(type_name)
-        return type_config.get("quality_gates", {})
-
-    def get_required_sections_for_type(self, type_name):
-        """Get required spec sections for work item type"""
-        type_config = self.get_type_config(type_name)
-        return type_config.get("required_sections", [])
-```
-
-**Enhanced work item creation:**
-```python
-# src/sdd/work_items/manager.py (modified)
-def create_work_item(self, work_item_id, work_item_type, **kwargs):
-    """Create work item with support for custom types"""
-    type_manager = WorkItemTypeManager()
-
-    # Validate type exists (built-in or custom)
-    if work_item_type not in type_manager.get_all_types():
-        available_types = ", ".join(type_manager.get_all_types().keys())
-        raise ValueError(f"Unknown type '{work_item_type}'. Available: {available_types}")
-
-    # Get type configuration
-    type_config = type_manager.get_type_config(work_item_type)
-
-    # Create work item with type-specific defaults
-    work_item = {
-        "id": work_item_id,
-        "type": work_item_type,
-        "priority": kwargs.get("priority", type_config.get("default_priority", "medium")),
-        "status": "not_started",
-        # ... rest of work item creation
-    }
-
-    # Generate spec from type-specific template
-    spec_content = self.generate_spec_from_template(
-        template=type_config["template_file"],
-        work_item=work_item
-    )
-
-    # Save spec file
-    spec_path = Path(f".session/specs/{work_item_id}.md")
-    spec_path.write_text(spec_content)
-
-    return work_item
-```
-
-**Quality gates integration:**
-```python
-# src/sdd/quality/gates.py (modified)
-def get_gates_for_work_item(self, work_item):
-    """Get quality gates based on work item type"""
-    type_manager = WorkItemTypeManager()
-    type_config = type_manager.get_type_config(work_item["type"])
-
-    # Get type-specific quality gate configuration
-    type_gates = type_config.get("quality_gates", {})
-
-    # Merge with default gates, type-specific takes precedence
-    gates = self.default_gates.copy()
-    gates.update(type_gates)
-
-    return gates
-```
-
-**Commands:**
-```bash
-# List all available work item types (built-in + custom)
-/sdd:work-types
-
-# Create custom work item type interactively
-/sdd:work-type-create
-
-# Create custom work item type from file
-/sdd:work-type-create --from-file .sdd/custom_types/spike.yml
-
-# Validate custom type definition
-/sdd:work-type-validate --type spike
-
-# Show details of a work item type
-/sdd:work-type-show spike
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/work_items/type_manager.py` - Custom type management
-- `src/sdd/templates/spike_spec.md` - Spike spec template
-- `src/sdd/templates/data_migration_spec.md` - Data migration template
-- `src/sdd/templates/documentation_task_spec.md` - Documentation task template
-- `src/sdd/templates/experiment_spec.md` - Experiment template
-- `.claude/commands/work-types.md` - List types command
-- `.claude/commands/work-type-create.md` - Create custom type command
-- `.claude/commands/work-type-show.md` - Show type details command
-- `tests/unit/test_type_manager.py` - Type manager tests
-- `tests/e2e/test_custom_work_item_types.py` - Custom type E2E tests
-
-**Modified:**
-- `src/sdd/work_items/manager.py` - Support custom types in creation
-- `src/sdd/work_items/spec_validator.py` - Validate against type-specific requirements
-- `src/sdd/quality/gates.py` - Type-specific quality gates
-- `.session/config.json` - Add custom_work_item_types section
-- `.claude/commands/work-new.md` - Document custom type support
-
-**Benefits:**
-
-1. **Project flexibility**: Adapt SDD to any project's workflow and terminology
-2. **Better semantics**: Use work item types that match the actual work being done
-3. **Workflow optimization**: Different quality gates for different work types
-4. **Common patterns**: Support common types like spike, research, experiment
-5. **Solo developer friendly**: Simpler types for simple projects, complex for complex
-6. **Extensibility**: Framework grows with user needs
-7. **Type safety**: Validation ensures custom types are well-formed
-8. **Documentation**: Custom templates guide users through unfamiliar work types
-
-**Priority:** High - Extensibility is foundational for framework adoption
-
-**Notes:**
-- Custom types stored in `.session/config.json` for project-specific customization
-- Built-in types cannot be modified (ensures backward compatibility)
-- Template variables allow dynamic content generation
-- Type-specific quality gates prevent inappropriate requirements (e.g., no tests for documentation)
-- Community could share custom type definitions
-
----
-
-### Enhancement #33: MCP Server Integration
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-Current SDD-Claude Code integration is via slash commands that execute CLI commands and return text output. This creates limitations:
-
-1. **Text-only output**: All SDD data must be formatted as text for stdout/stderr
-2. **No programmatic access**: Claude cannot query SDD state directly
-3. **Parsing overhead**: Claude must parse text output to understand SDD data
-4. **Limited interactivity**: Cannot have rich, interactive conversations about SDD state
-5. **No structured data**: JSON/structured data must be formatted as text then parsed
-6. **Foundation missing**: Cannot build advanced features like inline annotations without programmatic access
-
-**Example of current limitation:**
-
-```
-User: "What learnings are relevant to authentication?"
-
-Current flow:
-1. User must use /learn-search authentication
-2. CLI returns text output
-3. Claude reads and interprets text
-4. Claude formats response to user
-
-Desired flow with MCP:
-1. Claude directly queries: sdd://learnings/search?query=authentication&limit=10
-2. Receives structured JSON response
-3. Claude analyzes and presents insights
-4. Can follow up with related queries programmatically
-```
-
-**Proposed Solution:**
-
-Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD operations as structured tools:
-
-1. **MCP Server Implementation**
-   - Standalone MCP server process
-   - Exposes SDD operations as MCP tools
-   - Returns structured data (JSON) instead of text
-   - Handles concurrent requests
-   - Maintains session state
-
-2. **MCP Tools for SDD Operations**
-   - Work item operations (list, get, create, update, delete)
-   - Learning operations (search, get, create, curate)
-   - Session operations (status, start, end, validate)
-   - Quality gate operations (run, get results)
-   - Visualization operations (dependency graph)
-   - Project operations (status, metrics)
-
-3. **Rich Data Structures**
-   - Typed responses (not string parsing)
-   - Nested objects for complex data
-   - Metadata and context in responses
-   - Error handling with structured error objects
-
-4. **Real-Time State Access**
-   - Query SDD state anytime
-   - No need to run CLI commands
-   - Efficient data access
-   - Caching for performance
-
-**Implementation:**
-
-**MCP Server:**
-```python
-# src/sdd/mcp/server.py
-import asyncio
-from typing import Any, Dict, List
-from mcp import Server, Tool
-
-class SDDMCPServer:
-    def __init__(self):
-        self.server = Server("sdd")
-        self.register_tools()
-
-    def register_tools(self):
-        """Register all SDD tools with MCP server"""
-
-        # Work item tools
-        self.server.add_tool(Tool(
-            name="sdd_work_items_list",
-            description="List all work items with optional filters",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "status": {"type": "string", "enum": ["not_started", "in_progress", "blocked", "completed"]},
-                    "type": {"type": "string"},
-                    "milestone": {"type": "string"}
-                }
-            },
-            handler=self.list_work_items
-        ))
-
-        self.server.add_tool(Tool(
-            name="sdd_work_item_get",
-            description="Get detailed information about a specific work item",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "work_item_id": {"type": "string", "required": True}
-                },
-                "required": ["work_item_id"]
-            },
-            handler=self.get_work_item
-        ))
-
-        # Learning tools
-        self.server.add_tool(Tool(
-            name="sdd_learnings_search",
-            description="Search learnings by keyword or semantic query",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "required": True},
-                    "limit": {"type": "integer", "default": 10},
-                    "category": {"type": "string"},
-                    "semantic": {"type": "boolean", "default": False}
-                },
-                "required": ["query"]
-            },
-            handler=self.search_learnings
-        ))
-
-        self.server.add_tool(Tool(
-            name="sdd_learnings_relevant",
-            description="Get learnings relevant to a work item or topic",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "work_item_id": {"type": "string"},
-                    "topic": {"type": "string"},
-                    "limit": {"type": "integer", "default": 10}
-                }
-            },
-            handler=self.get_relevant_learnings
-        ))
-
-        # Session tools
-        self.server.add_tool(Tool(
-            name="sdd_session_status",
-            description="Get current session status and progress",
-            parameters={"type": "object", "properties": {}},
-            handler=self.get_session_status
-        ))
-
-        self.server.add_tool(Tool(
-            name="sdd_quality_gates_results",
-            description="Get quality gate results for current or past sessions",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "session_id": {"type": "string"},
-                    "work_item_id": {"type": "string"}
-                }
-            },
-            handler=self.get_quality_gate_results
-        ))
-
-        # Visualization tools
-        self.server.add_tool(Tool(
-            name="sdd_dependency_graph",
-            description="Get work item dependency graph data",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "format": {"type": "string", "enum": ["json", "ascii", "dot"], "default": "json"},
-                    "focus": {"type": "string"},
-                    "include_completed": {"type": "boolean", "default": False}
-                }
-            },
-            handler=self.get_dependency_graph
-        ))
-
-        # Project metrics tools
-        self.server.add_tool(Tool(
-            name="sdd_project_metrics",
-            description="Get project-level metrics and statistics",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "metric_type": {"type": "string", "enum": ["velocity", "quality", "learnings", "all"], "default": "all"}
-                }
-            },
-            handler=self.get_project_metrics
-        ))
-
-    async def list_work_items(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """List work items with filters"""
-        from sdd.work_items.manager import WorkItemManager
-
-        manager = WorkItemManager()
-        work_items = manager.list_work_items(
-            status=params.get("status"),
-            work_type=params.get("type"),
-            milestone=params.get("milestone")
-        )
-
-        return {
-            "work_items": work_items,
-            "total": len(work_items),
-            "filters_applied": {k: v for k, v in params.items() if v is not None}
-        }
-
-    async def get_work_item(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get detailed work item information"""
-        from sdd.work_items.manager import WorkItemManager
-
-        manager = WorkItemManager()
-        work_item_id = params["work_item_id"]
-
-        # Get work item metadata
-        work_item = manager.get_work_item(work_item_id)
-
-        # Get spec content
-        spec_path = Path(f".session/specs/{work_item_id}.md")
-        spec_content = spec_path.read_text() if spec_path.exists() else None
-
-        # Get session history
-        sessions = manager.get_work_item_sessions(work_item_id)
-
-        return {
-            "work_item": work_item,
-            "spec_content": spec_content,
-            "sessions": sessions,
-            "dependency_info": manager.get_dependency_info(work_item_id)
-        }
-
-    async def search_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Search learnings"""
-        from sdd.learning.curator import LearningCurator
-
-        curator = LearningCurator()
-        query = params["query"]
-        limit = params.get("limit", 10)
-        category = params.get("category")
-        semantic = params.get("semantic", False)
-
-        if semantic:
-            # Use AI-powered semantic search (Enhancement #37)
-            results = curator.semantic_search(query, limit=limit, category=category)
-        else:
-            # Use keyword search
-            results = curator.search(query, limit=limit, category=category)
-
-        return {
-            "learnings": results,
-            "total": len(results),
-            "query": query,
-            "search_type": "semantic" if semantic else "keyword"
-        }
-
-    async def get_relevant_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get learnings relevant to work item or topic"""
-        from sdd.session.briefing import get_relevant_learnings
-
-        work_item_id = params.get("work_item_id")
-        topic = params.get("topic")
-        limit = params.get("limit", 10)
-
-        if work_item_id:
-            # Get learnings for work item
-            learnings = get_relevant_learnings(work_item_id, limit=limit)
-            context = f"work item: {work_item_id}"
-        elif topic:
-            # Get learnings for topic
-            learnings = get_relevant_learnings(topic, limit=limit)
-            context = f"topic: {topic}"
-        else:
-            return {"error": "Must provide work_item_id or topic"}
-
-        return {
-            "learnings": learnings,
-            "total": len(learnings),
-            "context": context
-        }
-
-    async def get_session_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get current session status"""
-        from sdd.session.status import get_session_status
-
-        status = get_session_status()
-
-        return status
-
-    async def get_quality_gate_results(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get quality gate results"""
-        from sdd.quality.gates import QualityGateRunner
-
-        runner = QualityGateRunner()
-        session_id = params.get("session_id")
-        work_item_id = params.get("work_item_id")
-
-        results = runner.get_results(session_id=session_id, work_item_id=work_item_id)
-
-        return {
-            "quality_gate_results": results,
-            "session_id": session_id,
-            "work_item_id": work_item_id
-        }
-
-    async def get_dependency_graph(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get dependency graph"""
-        from sdd.visualization.dependency_graph import DependencyGraph
-
-        graph = DependencyGraph()
-        format_type = params.get("format", "json")
-        focus = params.get("focus")
-        include_completed = params.get("include_completed", False)
-
-        graph_data = graph.generate(
-            format=format_type,
-            focus=focus,
-            include_completed=include_completed
-        )
-
-        return {
-            "graph": graph_data,
-            "format": format_type,
-            "metadata": graph.get_metadata()
-        }
-
-    async def get_project_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get project metrics"""
-        from sdd.improvement.dora_metrics import DORAMetrics
-        from sdd.improvement.velocity_tracker import VelocityTracker
-
-        metric_type = params.get("metric_type", "all")
-
-        metrics = {}
-
-        if metric_type in ["velocity", "all"]:
-            velocity = VelocityTracker()
-            metrics["velocity"] = velocity.get_metrics()
-
-        if metric_type in ["quality", "all"]:
-            dora = DORAMetrics()
-            metrics["dora"] = dora.get_metrics()
-
-        if metric_type in ["learnings", "all"]:
-            from sdd.learning.curator import LearningCurator
-            curator = LearningCurator()
-            metrics["learnings"] = curator.get_statistics()
-
-        return {
-            "metrics": metrics,
-            "metric_type": metric_type
-        }
-
-    async def start(self):
-        """Start MCP server"""
-        await self.server.start()
-
-# Entry point
-async def main():
-    server = SDDMCPServer()
-    await server.start()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-**Claude Code MCP Configuration:**
-```json
-// ~/.claude/config.json or project-specific config
-{
-  "mcpServers": {
-    "sdd": {
-      "command": "sdd",
-      "args": ["mcp", "serve"],
-      "env": {}
-    }
-  }
-}
-```
-
-**CLI command to start MCP server:**
-```bash
-# Start MCP server
-sdd mcp serve
-
-# Or via Claude Code (auto-started)
-```
-
-**Example usage in Claude Code:**
-```
-User: "What learnings do we have about authentication?"
-
-Claude (internal):
-→ Calls sdd_learnings_search(query="authentication", limit=10, semantic=True)
-→ Receives structured JSON with learnings
-→ Analyzes and presents to user
-
-Claude (to user): "We have 7 learnings about authentication:
-
-1. Always use bcrypt for password hashing (Security - Session 5)
-2. Implement JWT token refresh mechanism (Best Practices - Session 8)
-..."
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/mcp/server.py` - MCP server implementation
-- `src/sdd/mcp/tools.py` - MCP tool definitions
-- `src/sdd/mcp/__init__.py` - MCP module initialization
-- `src/sdd/cli.py` - Add `mcp serve` command
-- `docs/mcp/README.md` - MCP integration documentation
-- `docs/mcp/tools.md` - MCP tools reference
-- `tests/unit/test_mcp_server.py` - MCP server tests
-- `tests/integration/test_mcp_integration.py` - Integration tests
-
-**Modified:**
-- `src/sdd/cli.py` - Add MCP server command
-- `README.md` - Document MCP integration
-- `.claude/config.json` - MCP server configuration example
-
-**Benefits:**
-
-1. **Programmatic access**: Claude can query SDD state directly
-2. **Structured data**: No text parsing, clean JSON responses
-3. **Rich interactions**: Contextual follow-up queries
-4. **Foundation for features**: Enables inline annotations, real-time updates
-5. **Better UX**: Faster, more accurate responses
-6. **Extensibility**: Easy to add new MCP tools
-7. **Standard protocol**: MCP is Claude Code's official integration method
-8. **Stateful**: Server maintains context across queries
-
-**Priority:** High - Foundation for better Claude Code integration (required for Enhancement #35)
-
-**Notes:**
-- Requires Claude Code with MCP support
-- MCP server runs as separate process
-- Server lifecycle managed by Claude Code
-- Backward compatible (slash commands still work)
-- Performance: MCP calls faster than CLI commands
-
----
-
-### Enhancement #34: Interactive UI Integration
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-SDD currently uses Python's `input()` function for interactive prompts in commands like `/work-new`, `/learn`, and `/end`. This creates UX limitations in Claude Code:
-
-1. **Terminal-style input**: Python's `input()` creates terminal prompts which don't integrate well with Claude Code's UI
-2. **No rich UI components**: Cannot use dropdowns, checkboxes, multi-select, etc.
-3. **Limited validation**: Text-based input with manual validation
-4. **Poor discoverability**: Users don't know what options are available
-5. **Inconsistent UX**: Feels disconnected from Claude Code's interface
-
-**Example of current limitation:**
-
-```python
-# Current interactive prompt (src/sdd/work_items/manager.py)
-work_item_type = input("Enter work item type (feature/bug/refactor): ")
-# User types text, prone to typos, no validation until after input
-```
-
-**Desired UX:**
-```
-Claude Code UI shows:
-┌─────────────────────────────────────┐
-│ Select work item type:              │
-│ ○ Feature                           │
-│ ○ Bug                               │
-│ ○ Refactor                          │
-│ ○ Security                          │
-│ ○ Integration Test                  │
-│ ○ Deployment                        │
-│ [Custom types if defined]           │
-└─────────────────────────────────────┘
-```
-
-**Proposed Solution:**
-
-Integrate with **Claude Code's interactive UI tools** (AskUserQuestion, forms, etc.) for rich interactive experiences:
-
-1. **Use AskUserQuestion Tool**
-   - Replace Python `input()` with Claude Code UI
-   - Radio buttons for single-select
-   - Checkboxes for multi-select
-   - Dropdowns for long lists
-   - Form fields with validation
-
-2. **Interactive Command Flow**
-   - Commands request UI interaction via Claude
-   - Claude renders UI components
-   - User interacts with UI
-   - Results passed back to command
-   - Command continues with validated input
-
-3. **Rich Input Types**
-   - Single-select (work item type, priority)
-   - Multi-select (dependencies, tags)
-   - Text input with validation (title, description)
-   - Number input with ranges (story points)
-   - Date/time pickers (milestones, deadlines)
-
-4. **Validation & Help**
-   - Input validation before submission
-   - Inline help text and examples
-   - Required vs optional fields marked
-   - Error messages in UI
-
-**Implementation:**
-
-**Interactive command adapter:**
-```python
-# src/sdd/ui/interactive.py
-from typing import List, Dict, Any, Optional
-import json
-
-class InteractiveUI:
-    """Adapter for Claude Code interactive UI"""
-
-    def __init__(self, mode="claude_code"):
-        """
-        mode: "claude_code" (use Claude UI) or "terminal" (fallback to input())
-        """
-        self.mode = mode
-
-    def ask_single_select(
-        self,
-        question: str,
-        options: List[Dict[str, str]],
-        header: str,
-        default: Optional[str] = None
-    ) -> str:
-        """Ask user to select one option"""
-        if self.mode == "claude_code":
-            return self._ask_claude_single_select(question, options, header, default)
-        else:
-            return self._ask_terminal_single_select(question, options, default)
-
-    def _ask_claude_single_select(self, question, options, header, default):
-        """Use Claude Code's AskUserQuestion tool"""
-        # Format for Claude Code UI
-        request = {
-            "questions": [{
-                "question": question,
-                "header": header,
-                "multiSelect": False,
-                "options": [
-                    {
-                        "label": opt["label"],
-                        "description": opt.get("description", "")
-                    }
-                    for opt in options
-                ]
-            }]
-        }
-
-        # Output special marker that Claude Code recognizes
-        print(f"__CLAUDE_UI_REQUEST__:{json.dumps(request)}")
-
-        # Read response (Claude Code will provide via stdin or env)
-        response = input()  # This will be intercepted by Claude Code
-        return json.loads(response)["answer"]
-
-    def _ask_terminal_single_select(self, question, options, default):
-        """Fallback to terminal input"""
-        print(f"\n{question}")
-        for i, opt in enumerate(options, 1):
-            label = opt["label"]
-            desc = f" - {opt['description']}" if opt.get("description") else ""
-            default_marker = " (default)" if default == opt["label"] else ""
-            print(f"{i}. {label}{desc}{default_marker}")
-
-        while True:
-            choice = input(f"Select (1-{len(options)}): ").strip()
-            if not choice and default:
-                return default
-            try:
-                idx = int(choice) - 1
-                if 0 <= idx < len(options):
-                    return options[idx]["label"]
-            except ValueError:
-                pass
-            print("Invalid choice. Try again.")
-
-    def ask_multi_select(
-        self,
-        question: str,
-        options: List[Dict[str, str]],
-        header: str
-    ) -> List[str]:
-        """Ask user to select multiple options"""
-        if self.mode == "claude_code":
-            return self._ask_claude_multi_select(question, options, header)
-        else:
-            return self._ask_terminal_multi_select(question, options)
-
-    def ask_text_input(
-        self,
-        question: str,
-        validation: Optional[callable] = None,
-        placeholder: str = "",
-        required: bool = True
-    ) -> str:
-        """Ask user for text input"""
-        if self.mode == "claude_code":
-            return self._ask_claude_text_input(question, validation, placeholder, required)
-        else:
-            return self._ask_terminal_text_input(question, validation, required)
-
-    def ask_number_input(
-        self,
-        question: str,
-        min_value: Optional[int] = None,
-        max_value: Optional[int] = None,
-        default: Optional[int] = None
-    ) -> int:
-        """Ask user for number input with range validation"""
-        # Implementation for number input with validation
-        pass
-
-    def ask_confirmation(
-        self,
-        question: str,
-        default: bool = False
-    ) -> bool:
-        """Ask yes/no confirmation"""
-        if self.mode == "claude_code":
-            return self._ask_claude_confirmation(question, default)
-        else:
-            return self._ask_terminal_confirmation(question, default)
-
-# Global instance
-ui = InteractiveUI()
-```
-
-**Updated work item creation:**
-```python
-# src/sdd/work_items/manager.py (modified)
-from sdd.ui.interactive import ui
-
-def create_work_item_interactive(self):
-    """Create work item with rich UI interactions"""
-
-    # Get work item type
-    type_manager = WorkItemTypeManager()
-    all_types = type_manager.get_all_types()
-
-    type_options = [
-        {
-            "label": type_config["display_name"],
-            "description": type_config["description"]
-        }
-        for type_name, type_config in all_types.items()
-    ]
-
-    work_item_type = ui.ask_single_select(
-        question="What type of work item do you want to create?",
-        options=type_options,
-        header="Work Item Type"
-    )
-
-    # Get title
-    title = ui.ask_text_input(
-        question="Enter work item title:",
-        validation=lambda t: len(t) >= 5,
-        placeholder="e.g., Add user authentication",
-        required=True
-    )
-
-    # Get priority
-    priority = ui.ask_single_select(
-        question="What is the priority of this work item?",
-        options=[
-            {"label": "Critical", "description": "Must be done immediately"},
-            {"label": "High", "description": "Important, should be done soon"},
-            {"label": "Medium", "description": "Normal priority"},
-            {"label": "Low", "description": "Nice to have, can wait"}
-        ],
-        header="Priority",
-        default="Medium"
-    )
-
-    # Get dependencies (multi-select)
-    existing_work_items = self.list_work_items(status=["not_started", "in_progress"])
-    if existing_work_items:
-        dependency_options = [
-            {
-                "label": wi["id"],
-                "description": f"{wi['title']} ({wi['type']})"
-            }
-            for wi in existing_work_items
-        ]
-
-        dependencies = ui.ask_multi_select(
-            question="Select dependencies (work items that must be completed first):",
-            options=dependency_options,
-            header="Dependencies"
-        )
-    else:
-        dependencies = []
-
-    # Get milestone (if any exist)
-    milestones = self.get_milestones()
-    if milestones:
-        milestone_options = [
-            {"label": "None", "description": "No milestone"}
-        ] + [
-            {"label": m["name"], "description": m.get("description", "")}
-            for m in milestones
-        ]
-
-        milestone = ui.ask_single_select(
-            question="Assign to milestone?",
-            options=milestone_options,
-            header="Milestone",
-            default="None"
-        )
-        milestone = None if milestone == "None" else milestone
-    else:
-        milestone = None
-
-    # Confirmation
-    summary = f"""
-Create work item with:
-- Type: {work_item_type}
-- Title: {title}
-- Priority: {priority}
-- Dependencies: {', '.join(dependencies) if dependencies else 'None'}
-- Milestone: {milestone or 'None'}
-    """
-    print(summary)
-
-    confirmed = ui.ask_confirmation(
-        question="Create this work item?",
-        default=True
-    )
-
-    if not confirmed:
-        print("Work item creation cancelled.")
-        return None
-
-    # Create work item
-    work_item_id = self.generate_work_item_id(title, work_item_type)
-    work_item = self.create_work_item(
-        work_item_id=work_item_id,
-        work_item_type=work_item_type,
-        title=title,
-        priority=priority,
-        dependencies=dependencies,
-        milestone=milestone
-    )
-
-    return work_item
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/ui/interactive.py` - Interactive UI adapter
-- `src/sdd/ui/__init__.py` - UI module initialization
-- `tests/unit/test_interactive_ui.py` - UI adapter tests
-
-**Modified:**
-- `src/sdd/work_items/manager.py` - Use InteractiveUI for `/work-new`
-- `src/sdd/learning/curator.py` - Use InteractiveUI for `/learn`
-- `src/sdd/session/complete.py` - Use InteractiveUI for `/end` confirmation
-- `src/sdd/project/init.py` - Use InteractiveUI for project setup
-- `.claude/commands/work-new.md` - Document improved UX
-- `.claude/commands/learn.md` - Document improved UX
-
-**Benefits:**
-
-1. **Better UX**: Native-feeling UI in Claude Code
-2. **Fewer errors**: Validation before submission
-3. **Discoverability**: See all options upfront
-4. **Faster workflows**: Less typing, more clicking/selecting
-5. **Accessibility**: Better keyboard navigation and screen reader support
-6. **Consistency**: Matches Claude Code's UI patterns
-7. **Graceful fallback**: Still works in terminal mode
-8. **Professional feel**: Polished, modern interface
-
-**Priority:** Medium - UX improvement, nice to have but not critical
-
-**Notes:**
-- Requires coordination with Claude Code team for UI integration points
-- Fallback to terminal `input()` ensures backward compatibility
-- Could be implemented incrementally (start with most-used commands)
-- May need custom protocol/API from Claude Code side
-
----
-
-### Enhancement #35: Inline Editor Annotations (via MCP)
-
-**Status:** 🔵 IDENTIFIED
-
-**Problem:**
-
-When working on a work item, developers have no real-time visibility of SDD state in their editor:
-
-1. **No work item status visibility**: Can't see if current file relates to an active work item
-2. **No learning hints**: Relevant learnings not shown in context
-3. **No quality gate indicators**: Must run `/validate` manually to see issues
-4. **Context switching**: Must switch to terminal to check SDD state
-5. **Lost context**: May forget which work item is active
-
-**Example scenario:**
-
-```
-Developer opens: src/auth/jwt.py
-
-Current experience:
-- No indication this relates to work_item_authentication
-- No reminder of relevant learnings about JWT
-- No warning about quality gate failures
-- Must run /status or /validate to see any SDD info
-
-Desired experience:
-Editor shows inline annotations:
-┌───────────────────────────────────────────────┐
-│ src/auth/jwt.py                               │
-│                                               │
-│ 📋 Work Item: feature_jwt_authentication      │
-│    Status: In Progress (Session 15)           │
-│    Priority: High                             │
-│                                               │
-│ 💡 Relevant Learnings (3):                    │
-│    • Always validate JWT signature            │
-│    • Use short token expiry (15min)           │
-│    • Implement token refresh mechanism        │
-│                                               │
-│ ⚠️ Quality Gates:                             │
-│    ✓ Tests passing (87% coverage)             │
-│    ✗ Linting: 2 issues (click to fix)         │
-│                                               │
-│ def generate_token(user_id):                  │
-│     """Generate JWT token"""                  │
-│     # ... code ...                            │
-└───────────────────────────────────────────────┘
-```
-
-**Proposed Solution:**
-
-Implement **inline editor annotations** that display SDD state contextually in the editor:
-
-1. **Work Item Status Annotations**
-   - Show active work item in files being edited
-   - Display work item status, priority, progress
-   - Link to full work item spec
-   - Indicate if file is part of work item scope
-
-2. **Learning Snippets on Hover**
-   - Detect relevant learnings based on file/function
-   - Show learning snippets on hover
-   - Link to full learning details
-   - "Learn more" expands learning context
-
-3. **Quality Gate Indicators**
-   - Show quality gate status inline
-   - Highlight failing tests in test files
-   - Show linting errors with quick fixes
-   - Display coverage gaps
-
-4. **Dependency Warnings**
-   - Warn if editing file that's part of blocked work item
-   - Show dependency chain
-   - Suggest unblocking actions
-
-5. **Session Context**
-   - Show current session info
-   - Display session time/progress
-   - Link to session briefing
-   - Quick access to `/end` or `/validate`
-
-**Implementation:**
-
-**Requires Enhancement #33 (MCP Server) as foundation**
-
-**MCP-based annotation provider:**
-```python
-# src/sdd/mcp/annotations.py
-from pathlib import Path
-from typing import List, Dict, Any
-
-class AnnotationProvider:
-    """Provide annotations for editor via MCP"""
-
-    def get_annotations_for_file(self, file_path: str) -> List[Dict[str, Any]]:
-        """Get all annotations for a file"""
-        annotations = []
-
-        # Work item annotations
-        work_item_annotations = self.get_work_item_annotations(file_path)
-        annotations.extend(work_item_annotations)
-
-        # Learning annotations
-        learning_annotations = self.get_learning_annotations(file_path)
-        annotations.extend(learning_annotations)
-
-        # Quality gate annotations
-        quality_annotations = self.get_quality_gate_annotations(file_path)
-        annotations.extend(quality_annotations)
-
-        return annotations
-
-    def get_work_item_annotations(self, file_path: str) -> List[Dict[str, Any]]:
-        """Get work item status annotations"""
-        from sdd.session.status import get_session_status
-        from sdd.work_items.manager import WorkItemManager
-
-        # Check if there's an active session
-        status = get_session_status()
-        if not status.get("active_work_item"):
-            return []
-
-        work_item_id = status["active_work_item"]
-        manager = WorkItemManager()
-        work_item = manager.get_work_item(work_item_id)
-
-        # Check if file is in work item's git branch commits
-        if not self.file_in_work_item_scope(file_path, work_item_id):
-            return []
-
-        return [{
-            "type": "info",
-            "position": {"line": 0, "character": 0},
-            "message": f"📋 Work Item: {work_item['title']}",
-            "details": {
-                "work_item_id": work_item_id,
-                "status": work_item["status"],
-                "priority": work_item["priority"],
-                "session": status.get("session_number")
-            },
-            "actions": [
-                {"label": "View Spec", "command": f"sdd:work-show {work_item_id}"},
-                {"label": "End Session", "command": "sdd:end"}
-            ]
-        }]
-
-    def get_learning_annotations(self, file_path: str) -> List[Dict[str, Any]]:
-        """Get relevant learning annotations"""
-        from sdd.session.briefing import get_relevant_learnings
-
-        # Analyze file to determine topic
-        topic = self.extract_topic_from_file(file_path)
-        if not topic:
-            return []
-
-        # Get relevant learnings
-        learnings = get_relevant_learnings(topic, limit=3)
-        if not learnings:
-            return []
-
-        # Create annotation
-        learning_texts = [
-            f"• {learning['content'][:80]}..."
-            for learning in learnings[:3]
-        ]
-
-        return [{
-            "type": "info",
-            "position": {"line": 0, "character": 0},
-            "message": f"💡 Relevant Learnings ({len(learnings)}):",
-            "details": {
-                "learnings": learnings,
-                "topic": topic
-            },
-            "hover_content": "\n".join(learning_texts),
-            "actions": [
-                {"label": "View All", "command": f"sdd:learn-search {topic}"}
-            ]
-        }]
-
-    def get_quality_gate_annotations(self, file_path: str) -> List[Dict[str, Any]]:
-        """Get quality gate status annotations"""
-        from sdd.quality.gates import QualityGateRunner
-
-        runner = QualityGateRunner()
-
-        # Get latest quality gate results
-        results = runner.get_latest_results()
-        if not results:
-            return []
-
-        annotations = []
-
-        # Check if file has linting issues
-        if "linting" in results and not results["linting"]["passed"]:
-            linting_issues = self.get_linting_issues_for_file(file_path, results["linting"])
-            for issue in linting_issues:
-                annotations.append({
-                    "type": "warning",
-                    "position": {"line": issue["line"], "character": issue["column"]},
-                    "message": f"⚠️ Lint: {issue['message']}",
-                    "details": issue,
-                    "actions": [
-                        {"label": "Fix", "command": f"sdd:validate --fix"}
-                    ] if issue.get("fixable") else []
-                })
-
-        # Check if file has test coverage gaps
-        if "tests" in results:
-            coverage_gaps = self.get_coverage_gaps_for_file(file_path, results["tests"])
-            if coverage_gaps:
-                annotations.append({
-                    "type": "info",
-                    "position": {"line": 0, "character": 0},
-                    "message": f"📊 Coverage: {coverage_gaps['percentage']}% (target: {coverage_gaps['target']}%)",
-                    "details": coverage_gaps,
-                    "hover_content": f"Uncovered lines: {coverage_gaps['uncovered_lines']}"
-                })
-
-        return annotations
-
-    def extract_topic_from_file(self, file_path: str) -> str:
-        """Extract main topic/keywords from file"""
-        path = Path(file_path)
-
-        # Use file name and path components as topic
-        parts = path.stem.split("_")
-        parent_parts = path.parent.name.split("_")
-
-        topic = " ".join(parts + parent_parts)
-        return topic
-
-    def file_in_work_item_scope(self, file_path: str, work_item_id: str) -> bool:
-        """Check if file was modified in work item's branch"""
-        # Implementation: check git log for work item's branch
-        pass
-
-# MCP tool for annotations
-async def get_file_annotations(params: Dict[str, Any]) -> Dict[str, Any]:
-    """MCP tool to get annotations for a file"""
-    file_path = params["file_path"]
-
-    provider = AnnotationProvider()
-    annotations = provider.get_annotations_for_file(file_path)
-
-    return {
-        "file_path": file_path,
-        "annotations": annotations,
-        "count": len(annotations)
-    }
-```
-
-**Claude Code MCP Tool Registration:**
-```python
-# Add to src/sdd/mcp/server.py
-self.server.add_tool(Tool(
-    name="sdd_file_annotations",
-    description="Get SDD annotations for a file (work item status, learnings, quality gates)",
-    parameters={
-        "type": "object",
-        "properties": {
-            "file_path": {"type": "string", "required": True}
-        },
-        "required": ["file_path"]
-    },
-    handler=get_file_annotations
-))
-```
-
-**Files Affected:**
-
-**New:**
-- `src/sdd/mcp/annotations.py` - Annotation provider
-- `tests/unit/test_annotations.py` - Annotation tests
-
-**Modified:**
-- `src/sdd/mcp/server.py` - Add annotation MCP tool
-- `docs/mcp/tools.md` - Document annotation tool
-
-**Benefits:**
-
-1. **Context awareness**: See SDD state without leaving editor
-2. **Learning reminders**: Relevant learnings shown in context
-3. **Proactive quality**: See issues as you code
-4. **Reduced context switching**: Less terminal usage
-5. **Better focus**: All info in one place
-6. **Discoverability**: Learn about SDD features through annotations
-7. **Productivity**: Faster access to relevant information
-
-**Priority:** Medium - Nice to have, enhances developer experience
-
-**Dependencies:**
-- **Requires Enhancement #33 (MCP Server)** - Foundation for annotations
-- Requires Claude Code support for displaying annotations (may need API/protocol discussion with Anthropic)
-
-**Notes:**
-- Implementation depends on Claude Code's annotation/diagnostic API
-- May need custom protocol if Claude Code doesn't have annotation support yet
-- Could start with simpler "status bar" annotations before full inline support
-- Performance: Annotations should be computed lazily and cached
-
----
-
-### Enhancement #36: JSON Schema Spec Validation
+### Enhancement #23: JSON Schema Spec Validation
 
 **Status:** 🔵 IDENTIFIED
 
@@ -5025,7 +2081,7 @@ class SpecParser:
         work_item_id: str
     ) -> tuple[bool, List[str]]:
         """Validate cross-references (dependencies exist, files exist, etc.)"""
-        from sdd.work_items.manager import WorkItemManager
+        from sdd.work_items.repository import WorkItemRepository
 
         structure = self.parse_spec_to_structure(spec_path)
         errors = []
@@ -5033,8 +2089,8 @@ class SpecParser:
         # Validate dependencies exist
         dependencies = structure.get("dependencies", [])
         if dependencies:
-            manager = WorkItemManager()
-            existing_work_items = {wi["id"] for wi in manager.list_work_items()}
+            repository = WorkItemRepository()
+            existing_work_items = {wi["id"] for wi in repository.list_work_items()}
 
             for dep in dependencies:
                 if dep not in existing_work_items:
@@ -5116,19 +2172,19 @@ class SpecValidator:
 **Files Affected:**
 
 **New:**
-- `src/sdd/templates/schemas/feature_spec_schema.json` - Feature spec schema
-- `src/sdd/templates/schemas/bug_spec_schema.json` - Bug spec schema
-- `src/sdd/templates/schemas/refactor_spec_schema.json` - Refactor spec schema
-- `src/sdd/templates/schemas/security_spec_schema.json` - Security spec schema
-- `src/sdd/templates/schemas/integration_test_spec_schema.json` - Integration test schema
-- `src/sdd/templates/schemas/deployment_spec_schema.json` - Deployment spec schema
-- `tests/unit/test_spec_parser_schema.py` - Schema validation tests
-- `tests/fixtures/specs/` - Test spec fixtures
+- `src/sdd/templates/schemas/feature_spec_schema.json` - Feature spec schema (will be created)
+- `src/sdd/templates/schemas/bug_spec_schema.json` - Bug spec schema (will be created)
+- `src/sdd/templates/schemas/refactor_spec_schema.json` - Refactor spec schema (will be created)
+- `src/sdd/templates/schemas/security_spec_schema.json` - Security spec schema (will be created)
+- `src/sdd/templates/schemas/integration_test_spec_schema.json` - Integration test schema (will be created)
+- `src/sdd/templates/schemas/deployment_spec_schema.json` - Deployment spec schema (will be created)
+- `tests/unit/test_spec_parser_schema.py` - Schema validation tests (will be created)
+- `tests/fixtures/specs/` - Test spec fixtures (will be created)
 
 **Modified:**
 - `src/sdd/work_items/spec_parser.py` - Enhanced with schema validation
 - `src/sdd/work_items/spec_validator.py` - Use schema validation
-- `src/sdd/work_items/manager.py` - Validate on work item creation
+- `src/sdd/work_items/creator.py` - Validate on work item creation
 - `pyproject.toml` - Add jsonschema dependency
 
 **Benefits:**
@@ -5152,513 +2208,840 @@ class SpecValidator:
 
 ---
 
-### Enhancement #37: AI-Enhanced Learning System
+### Enhancement #24: Custom Work Item Types
 
 **Status:** 🔵 IDENTIFIED
 
 **Problem:**
 
-Current learning system uses keyword-based algorithms with limitations:
+SDD currently supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). This creates limitations:
 
-1. **Learning Curation (Deduplication)**:
-   - Uses Jaccard similarity for duplicate detection
-   - Misses semantically similar learnings with different wording
-   - Example: "Use async/await for better performance" vs "Prefer promises over callbacks" are similar but Jaccard doesn't detect
+1. **No project-specific types**: Different projects need different work item types (spike, research, documentation-task, data-migration, experiment, etc.)
+2. **No extensibility**: Users cannot define custom types for their workflow
+3. **Rigid structure**: Solo developers may want simpler or more specialized types
+4. **Missing common types**: Common software development activities like "spike" (time-boxed investigation) or "research" have no dedicated type
 
-2. **Learning Relevance Scoring**:
-   - Uses keyword matching to find relevant learnings
-   - Misses semantically related learnings
-   - Example: Work item "Implement JWT authentication" → Learning "Always validate tokens on server side" scores low (no "JWT" keyword) but is highly relevant
+**Example use cases:**
 
-3. **Learning Categorization**:
-   - Keyword-based category assignment
-   - May miscategorize learnings with ambiguous keywords
-   - Example: "Cache invalidation is hard" → Could be "performance" or "architecture" or "gotchas"
+```
+Solo developer working on data-intensive project:
+- Needs: data-migration, data-validation, schema-evolution work item types
+- Current: Must use "feature" or "refactor" which don't fit semantically
+
+Solo developer doing R&D:
+- Needs: spike, research, experiment, proof-of-concept types
+- Current: No appropriate type, forced to use "feature"
+
+Solo developer maintaining docs:
+- Needs: documentation-task, tutorial, guide types
+- Current: No dedicated documentation type
+```
 
 **Proposed Solution:**
 
-Implement **AI-powered learning system** using Claude API for semantic understanding:
+Implement **custom work item type system** allowing users to define their own work item types with:
 
-1. **AI-Powered Deduplication**
-   - Use Claude API to detect semantically similar learnings
-   - Understand meaning, not just word overlap
-   - Smarter merging of similar learnings
-   - Preserve unique insights
+1. **User-Defined Type Schema**
+   - Define custom type name and metadata
+   - Specify required and optional spec sections
+   - Set default priority and milestone behavior
+   - Configure type-specific quality gates
 
-2. **Semantic Relevance Scoring**
-   - Use Claude API to score learning relevance to work items
-   - Understand context and semantic relationships
-   - Find relevant learnings even without keyword matches
-   - Context-aware recommendations
+2. **Custom Spec Templates**
+   - Create custom spec templates for each type
+   - Define type-specific validation rules
+   - Include type-specific guidance and examples
+   - Template variables for dynamic content
 
-3. **Intelligent Categorization**
-   - Use Claude API to categorize learnings
-   - Understand nuance and context
-   - Multi-category support (learning can fit multiple categories)
-   - Confidence scores for categories
+3. **Type-Specific Quality Gates**
+   - Different quality gate requirements per type
+   - Example: "spike" type may not require tests
+   - Example: "documentation-task" may only require linting and grammar checks
+   - Configurable gate strictness per type
 
-4. **Learning Summarization**
-   - Generate summaries of long learnings
-   - Extract key insights
-   - Create learning digests
-
-5. **Learning Relationships**
-   - Detect relationships between learnings
-   - Build knowledge graph
-   - Suggest related learnings
+4. **Type Lifecycle Configuration**
+   - Define valid status transitions per type
+   - Set default session behavior (single-session vs multi-session)
+   - Configure completion criteria
+   - Set up type-specific git branch naming patterns
 
 **Implementation:**
 
-**AI-powered learning curator:**
-```python
-# src/sdd/learning/ai_curator.py
-import anthropic
-from typing import List, Dict, Any, Tuple
-import json
-
-class AILearningCurator:
-    """AI-powered learning curation using Claude API"""
-
-    def __init__(self, api_key: str = None):
-        self.client = anthropic.Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
-        self.model = "claude-sonnet-4-5-20250929"
-
-    def detect_semantic_similarity(
-        self,
-        learning1: Dict[str, Any],
-        learning2: Dict[str, Any]
-    ) -> Tuple[bool, float, str]:
-        """
-        Detect if two learnings are semantically similar.
-
-        Returns:
-            (is_similar, similarity_score, reasoning)
-        """
-        prompt = f"""Analyze if these two learnings are semantically similar:
-
-Learning 1: {learning1['content']}
-Category 1: {learning1.get('category', 'unknown')}
-
-Learning 2: {learning2['content']}
-Category 2: {learning2.get('category', 'unknown')}
-
-Respond in JSON format:
-{{
-  "similar": true/false,
-  "similarity_score": 0.0-1.0,
-  "reasoning": "brief explanation",
-  "recommendation": "keep_both" | "merge" | "mark_as_related"
-}}
-
-Consider:
-- Do they convey the same core insight?
-- Are they about the same problem/solution?
-- Would a developer benefit from seeing both separately?
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        result = json.loads(response.content[0].text)
-        return result["similar"], result["similarity_score"], result["reasoning"]
-
-    def score_learning_relevance(
-        self,
-        learning: Dict[str, Any],
-        work_item_title: str,
-        work_item_spec: str,
-        work_item_type: str
-    ) -> Tuple[float, str]:
-        """
-        Score how relevant a learning is to a work item.
-
-        Returns:
-            (relevance_score, reasoning)
-        """
-        prompt = f"""Rate how relevant this learning is to the work item (0.0-1.0):
-
-Work Item:
-- Title: {work_item_title}
-- Type: {work_item_type}
-- Spec: {work_item_spec[:500]}...
-
-Learning: {learning['content']}
-Category: {learning.get('category', 'unknown')}
-
-Respond in JSON format:
-{{
-  "relevance_score": 0.0-1.0,
-  "reasoning": "brief explanation of why/why not relevant",
-  "key_connections": ["connection 1", "connection 2"]
-}}
-
-Consider:
-- Does it help solve the work item's problem?
-- Does it prevent common mistakes in this type of work?
-- Is it about related technologies/patterns?
-- Would a developer benefit from knowing this?
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        result = json.loads(response.content[0].text)
-        return result["relevance_score"], result["reasoning"]
-
-    def categorize_learning(
-        self,
-        learning_content: str
-    ) -> List[Tuple[str, float]]:
-        """
-        Categorize a learning using AI.
-
-        Returns:
-            List of (category, confidence) tuples
-        """
-        categories = [
-            "architecture", "gotchas", "best_practices",
-            "technical_debt", "performance", "security"
-        ]
-
-        prompt = f"""Categorize this learning. It may fit multiple categories.
-
-Learning: {learning_content}
-
-Available categories:
-- architecture: Architectural patterns and design decisions
-- gotchas: Pitfalls, traps, common mistakes
-- best_practices: Conventions, standards, recommendations
-- technical_debt: Refactoring needs, workarounds, TODOs
-- performance: Optimization insights, benchmarks
-- security: Security considerations and hardening
-
-Respond in JSON format:
-{{
-  "categories": [
-    {{"name": "category", "confidence": 0.0-1.0, "reasoning": "brief explanation"}},
-    ...
-  ],
-  "primary_category": "category"
-}}
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        result = json.loads(response.content[0].text)
-        return [
-            (cat["name"], cat["confidence"])
-            for cat in result["categories"]
-        ]
-
-    def summarize_learning(
-        self,
-        learning_content: str,
-        max_length: int = 80
-    ) -> str:
-        """Generate a concise summary of a learning"""
-        prompt = f"""Summarize this learning in {max_length} characters or less:
-
-Learning: {learning_content}
-
-Provide a concise summary that captures the key insight.
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=100,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        summary = response.content[0].text.strip()
-        return summary[:max_length]
-
-    def suggest_merge(
-        self,
-        learnings: List[Dict[str, Any]]
-    ) -> str:
-        """Suggest how to merge similar learnings"""
-        prompt = f"""These learnings are similar. Suggest how to merge them into one comprehensive learning:
-
-Learnings:
-{json.dumps([l['content'] for l in learnings], indent=2)}
-
-Provide a merged learning that:
-1. Captures all unique insights
-2. Is concise and clear
-3. Preserves important details
-4. Uses consistent terminology
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        return response.content[0].text.strip()
-
-    def find_related_learnings(
-        self,
-        learning: Dict[str, Any],
-        all_learnings: List[Dict[str, Any]],
-        limit: int = 5
-    ) -> List[Tuple[Dict, float, str]]:
-        """Find learnings related to this one"""
-        prompt = f"""Find learnings related to this one:
-
-Main Learning: {learning['content']}
-
-Other Learnings:
-{json.dumps([{"id": i, "content": l['content']} for i, l in enumerate(all_learnings[:20])], indent=2)}
-
-Respond in JSON format:
-{{
-  "related": [
-    {{
-      "id": learning_id,
-      "relatedness": 0.0-1.0,
-      "relationship": "brief description of how they relate"
-    }},
-    ...
-  ]
-}}
-"""
-
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        result = json.loads(response.content[0].text)
-        related = [
-            (all_learnings[r["id"]], r["relatedness"], r["relationship"])
-            for r in result["related"]
-        ]
-        return sorted(related, key=lambda x: x[1], reverse=True)[:limit]
-```
-
-**Enhanced learning curator:**
-```python
-# src/sdd/learning/curator.py (enhanced)
-class LearningCurator:
-    def __init__(self):
-        self.learnings_file = Path(".session/tracking/learnings.json")
-        self.ai_curator = AILearningCurator() if self.has_api_key() else None
-
-    def has_api_key(self) -> bool:
-        """Check if Anthropic API key is available"""
-        return bool(os.environ.get("ANTHROPIC_API_KEY"))
-
-    def curate_learnings(self, use_ai: bool = True):
-        """Curate learnings with optional AI enhancement"""
-        learnings = self.load_learnings()
-
-        if use_ai and self.ai_curator:
-            print("Using AI-powered curation...")
-            self.ai_curate_learnings(learnings)
-        else:
-            print("Using keyword-based curation...")
-            self.keyword_curate_learnings(learnings)
-
-    def ai_curate_learnings(self, learnings: List[Dict]):
-        """AI-powered curation"""
-
-        # 1. Categorize uncategorized learnings
-        for learning in learnings:
-            if not learning.get("category"):
-                categories = self.ai_curator.categorize_learning(learning["content"])
-                learning["category"] = categories[0][0]  # Primary category
-                learning["categories_all"] = categories  # All categories with confidence
-
-        # 2. Find and merge similar learnings
-        merged_count = 0
-        i = 0
-        while i < len(learnings):
-            j = i + 1
-            while j < len(learnings):
-                similar, score, reasoning = self.ai_curator.detect_semantic_similarity(
-                    learnings[i], learnings[j]
-                )
-
-                if similar and score > 0.8:
-                    # Merge learnings
-                    merged_content = self.ai_curator.suggest_merge([learnings[i], learnings[j]])
-                    learnings[i]["content"] = merged_content
-                    learnings[i]["merged_from"] = learnings[i].get("merged_from", []) + [learnings[j]["id"]]
-                    learnings.pop(j)
-                    merged_count += 1
-                    print(f"Merged similar learnings: {reasoning}")
-                else:
-                    j += 1
-            i += 1
-
-        print(f"Merged {merged_count} similar learnings")
-
-        # 3. Find learning relationships
-        for i, learning in enumerate(learnings):
-            related = self.ai_curator.find_related_learnings(
-                learning, learnings[:i] + learnings[i+1:], limit=3
-            )
-            learning["related_learnings"] = [
-                {"id": r[0]["id"], "relationship": r[2]}
-                for r in related
-            ]
-
-        self.save_learnings(learnings)
-
-    def semantic_search(
-        self,
-        query: str,
-        limit: int = 10,
-        category: str = None
-    ) -> List[Dict]:
-        """Semantic search using AI"""
-        learnings = self.load_learnings()
-
-        if category:
-            learnings = [l for l in learnings if l.get("category") == category]
-
-        # Use AI to score relevance
-        scored_learnings = []
-        for learning in learnings:
-            score, reasoning = self.ai_curator.score_learning_relevance(
-                learning,
-                work_item_title=query,
-                work_item_spec=query,
-                work_item_type="feature"
-            )
-            scored_learnings.append((learning, score, reasoning))
-
-        # Sort by relevance
-        scored_learnings.sort(key=lambda x: x[1], reverse=True)
-
-        return [
-            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
-            for l in scored_learnings[:limit]
-        ]
-```
-
-**Enhanced session briefing:**
-```python
-# src/sdd/session/briefing.py (enhanced)
-def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
-    """Get relevant learnings using AI-powered scoring"""
-    from sdd.work_items.manager import WorkItemManager
-    from sdd.learning.curator import LearningCurator
-
-    # Get work item
-    manager = WorkItemManager()
-    work_item = manager.get_work_item(work_item_id)
-
-    # Get spec
-    spec_path = Path(f".session/specs/{work_item_id}.md")
-    spec_content = spec_path.read_text() if spec_path.exists() else ""
-
-    # Get all learnings
-    curator = LearningCurator()
-    learnings = curator.load_learnings()
-
-    if curator.ai_curator:
-        # Use AI scoring
-        scored_learnings = []
-        for learning in learnings:
-            score, reasoning = curator.ai_curator.score_learning_relevance(
-                learning,
-                work_item_title=work_item["title"],
-                work_item_spec=spec_content,
-                work_item_type=work_item["type"]
-            )
-            scored_learnings.append((learning, score, reasoning))
-
-        # Sort by relevance
-        scored_learnings.sort(key=lambda x: x[1], reverse=True)
-
-        return [
-            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
-            for l in scored_learnings[:limit]
-        ]
-    else:
-        # Fallback to keyword-based scoring
-        return get_relevant_learnings(work_item_id, limit)
-```
-
-**Configuration:**
-```json
-// .session/config.json
+**Custom type definition:**
+```yaml
+# .session/config.json - custom_work_item_types section
 {
-  "learning_system": {
-    "use_ai_curation": true,
-    "use_ai_relevance": true,
-    "ai_curation_frequency": "weekly",  // or "every_n_sessions": 5
-    "semantic_search_enabled": true,
-    "min_similarity_threshold": 0.8,
-    "api_provider": "anthropic",
-    "model": "claude-sonnet-4-5-20250929"
+  "custom_work_item_types": {
+    "spike": {
+      "display_name": "Spike",
+      "description": "Time-boxed investigation or research task",
+      "template_file": "spike_spec.md",
+      "required_sections": [
+        "Goal",
+        "Time Box",
+        "Questions to Answer",
+        "Findings",
+        "Recommendations"
+      ],
+      "optional_sections": [
+        "References",
+        "Experiments Conducted"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "linting": {"enabled": false, "required": false},
+        "documentation": {"enabled": true, "required": true}
+      },
+      "default_priority": "medium",
+      "typical_duration_days": 2,
+      "multi_session_allowed": false,
+      "branch_prefix": "spike"
+    },
+    "data_migration": {
+      "display_name": "Data Migration",
+      "description": "Database schema or data migration task",
+      "template_file": "data_migration_spec.md",
+      "required_sections": [
+        "Migration Goal",
+        "Current Schema",
+        "Target Schema",
+        "Data Transformation",
+        "Rollback Plan",
+        "Testing Strategy"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": true, "required": true, "coverage_threshold": 95},
+        "integration_tests": {"enabled": true, "required": true},
+        "rollback_test": {"enabled": true, "required": true},
+        "backup_verification": {"enabled": true, "required": true}
+      },
+      "default_priority": "high",
+      "multi_session_allowed": true,
+      "branch_prefix": "migration"
+    },
+    "documentation_task": {
+      "display_name": "Documentation Task",
+      "description": "Documentation writing or updating",
+      "template_file": "documentation_task_spec.md",
+      "required_sections": [
+        "Documentation Goal",
+        "Target Audience",
+        "Content Outline",
+        "Examples Required"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "linting": {"enabled": true, "required": true},
+        "grammar_check": {"enabled": true, "required": true},
+        "link_validation": {"enabled": true, "required": true},
+        "documentation": {"enabled": false, "required": false}
+      },
+      "default_priority": "low",
+      "multi_session_allowed": false,
+      "branch_prefix": "docs"
+    },
+    "experiment": {
+      "display_name": "Experiment",
+      "description": "Experimental feature or proof of concept",
+      "template_file": "experiment_spec.md",
+      "required_sections": [
+        "Hypothesis",
+        "Success Criteria",
+        "Experiment Design",
+        "Results",
+        "Conclusion"
+      ],
+      "quality_gates": {
+        "tests": {"enabled": false, "required": false},
+        "documentation": {"enabled": true, "required": true}
+      },
+      "default_priority": "low",
+      "typical_duration_days": 3,
+      "multi_session_allowed": false,
+      "branch_prefix": "experiment"
+    }
   }
 }
 ```
 
+**Custom spec template example:**
+```markdown
+# src/sdd/templates/spike_spec.md
+---
+type: spike
+---
+
+# [Spike Title]
+
+**Type:** Spike
+**Time Box:** [e.g., 2 days, 8 hours]
+**Created:** [Auto-generated]
+
+## Goal
+
+What question are you trying to answer? What are you investigating?
+
+## Questions to Answer
+
+1. [Question 1]
+2. [Question 2]
+3. [Question 3]
+
+## Approach
+
+How will you conduct this investigation?
+
+- [ ] Research approach 1
+- [ ] Experiment 2
+- [ ] Prototype 3
+
+## Findings
+
+*(To be filled during/after spike)*
+
+### What We Learned
+
+- Finding 1
+- Finding 2
+
+### What We Don't Know Yet
+
+- Unknown 1
+- Unknown 2
+
+## Recommendations
+
+Based on findings, what should we do next?
+
+- [ ] Recommendation 1: [Create feature work item / Continue research / Abandon approach]
+- [ ] Recommendation 2
+
+## References
+
+- [External resources, articles, documentation]
+
+## Time Tracking
+
+- Time spent: [e.g., 6 hours out of 8 hour time box]
+- Time box respected: [Yes/No]
+```
+
+**Type manager:**
+```python
+# src/sdd/work_items/type_manager.py
+class WorkItemTypeManager:
+    def __init__(self, config_path=".session/config.json"):
+        self.config = self.load_config(config_path)
+        self.built_in_types = self.load_built_in_types()
+        self.custom_types = self.load_custom_types()
+
+    def get_all_types(self):
+        """Return all available work item types (built-in + custom)"""
+        return {**self.built_in_types, **self.custom_types}
+
+    def get_type_config(self, type_name):
+        """Get configuration for a specific work item type"""
+        all_types = self.get_all_types()
+        if type_name not in all_types:
+            raise ValueError(f"Unknown work item type: {type_name}")
+        return all_types[type_name]
+
+    def validate_type_definition(self, type_config):
+        """Validate custom type configuration"""
+        required_fields = ["display_name", "description", "template_file",
+                          "required_sections", "quality_gates"]
+        for field in required_fields:
+            if field not in type_config:
+                raise ValueError(f"Custom type missing required field: {field}")
+
+        # Validate template file exists
+        template_path = Path("src/sdd/templates") / type_config["template_file"]
+        if not template_path.exists():
+            raise FileNotFoundError(f"Template not found: {template_path}")
+
+        return True
+
+    def create_custom_type(self, type_name, type_config):
+        """Create a new custom work item type"""
+        self.validate_type_definition(type_config)
+
+        # Add to config
+        if "custom_work_item_types" not in self.config:
+            self.config["custom_work_item_types"] = {}
+
+        self.config["custom_work_item_types"][type_name] = type_config
+        self.save_config()
+
+        return type_name
+
+    def get_quality_gates_for_type(self, type_name):
+        """Get quality gate configuration for work item type"""
+        type_config = self.get_type_config(type_name)
+        return type_config.get("quality_gates", {})
+
+    def get_required_sections_for_type(self, type_name):
+        """Get required spec sections for work item type"""
+        type_config = self.get_type_config(type_name)
+        return type_config.get("required_sections", [])
+```
+
+**Enhanced work item creation:**
+```python
+# src/sdd/work_items/creator.py (modified)
+def create_work_item(self, work_item_id, work_item_type, **kwargs):
+    """Create work item with support for custom types"""
+    type_manager = WorkItemTypeManager()
+
+    # Validate type exists (built-in or custom)
+    if work_item_type not in type_manager.get_all_types():
+        available_types = ", ".join(type_manager.get_all_types().keys())
+        raise ValueError(f"Unknown type '{work_item_type}'. Available: {available_types}")
+
+    # Get type configuration
+    type_config = type_manager.get_type_config(work_item_type)
+
+    # Create work item with type-specific defaults
+    work_item = {
+        "id": work_item_id,
+        "type": work_item_type,
+        "priority": kwargs.get("priority", type_config.get("default_priority", "medium")),
+        "status": "not_started",
+        # ... rest of work item creation
+    }
+
+    # Generate spec from type-specific template
+    spec_content = self.generate_spec_from_template(
+        template=type_config["template_file"],
+        work_item=work_item
+    )
+
+    # Save spec file
+    spec_path = Path(f".session/specs/{work_item_id}.md")
+    spec_path.write_text(spec_content)
+
+    return work_item
+```
+
+**Quality gates integration:**
+```python
+# src/sdd/quality/gates.py (modified)
+def get_gates_for_work_item(self, work_item):
+    """Get quality gates based on work item type"""
+    type_manager = WorkItemTypeManager()
+    type_config = type_manager.get_type_config(work_item["type"])
+
+    # Get type-specific quality gate configuration
+    type_gates = type_config.get("quality_gates", {})
+
+    # Merge with default gates, type-specific takes precedence
+    gates = self.default_gates.copy()
+    gates.update(type_gates)
+
+    return gates
+```
+
 **Commands:**
 ```bash
-# Use AI curation
-/sdd:learn-curate --ai
+# List all available work item types (built-in + custom)
+/sdd:work-types
 
-# Semantic search
-/sdd:learn-search "authentication" --semantic
+# Create custom work item type interactively
+/sdd:work-type-create
 
-# Find related learnings
-/sdd:learn-related <learning_id>
+# Create custom work item type from file
+/sdd:work-type-create --from-file .sdd/custom_types/spike.yml
+
+# Validate custom type definition
+/sdd:work-type-validate --type spike
+
+# Show details of a work item type
+/sdd:work-type-show spike
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/learning/ai_curator.py` - AI-powered curation
-- `tests/unit/test_ai_curator.py` - AI curator tests
-- `tests/fixtures/sample_learnings.json` - Test learnings
+- `src/sdd/work_items/type_manager.py` - Custom type management (will be created)
+- `src/sdd/templates/spike_spec.md` - Spike spec template (will be created)
+- `src/sdd/templates/data_migration_spec.md` - Data migration template (will be created)
+- `src/sdd/templates/documentation_task_spec.md` - Documentation task template (will be created)
+- `src/sdd/templates/experiment_spec.md` - Experiment template (will be created)
+- `.claude/commands/work-types.md` - List types command (will be created)
+- `.claude/commands/work-type-create.md` - Create custom type command (will be created)
+- `.claude/commands/work-type-show.md` - Show type details command (will be created)
+- `tests/unit/test_type_manager.py` - Type manager tests (will be created)
+- `tests/e2e/test_custom_work_item_types.py` - Custom type E2E tests (will be created)
 
 **Modified:**
-- `src/sdd/learning/curator.py` - Integrate AI curation
-- `src/sdd/session/briefing.py` - Use AI relevance scoring
-- `.session/config.json` - Add AI learning configuration
-- `pyproject.toml` - Add anthropic SDK dependency
-- `.claude/commands/learn-curate.md` - Document AI curation
-- `.claude/commands/learn-search.md` - Document semantic search
+- `src/sdd/work_items/creator.py` - Support custom types in creation
+- `src/sdd/work_items/spec_validator.py` - Validate against type-specific requirements
+- `src/sdd/quality/gates.py` - Type-specific quality gates
+- `.session/config.json` - Add custom_work_item_types section
+- `.claude/commands/work-new.md` - Document custom type support
 
 **Benefits:**
 
-1. **Better deduplication**: Catches semantically similar learnings
-2. **Smarter relevance**: Finds relevant learnings without keyword matches
-3. **Improved categorization**: Understands nuance and context
-4. **Knowledge graph**: Relationships between learnings
-5. **Summarization**: Concise summaries for quick scanning
-6. **Higher quality**: Cleaner, more useful knowledge base
-7. **Better context loading**: More relevant learnings in session briefings
-8. **Learning evolution**: Merge and refine learnings over time
+1. **Project flexibility**: Adapt SDD to any project's workflow and terminology
+2. **Better semantics**: Use work item types that match the actual work being done
+3. **Workflow optimization**: Different quality gates for different work types
+4. **Common patterns**: Support common types like spike, research, experiment
+5. **Solo developer friendly**: Simpler types for simple projects, complex for complex
+6. **Extensibility**: Framework grows with user needs
+7. **Type safety**: Validation ensures custom types are well-formed
+8. **Documentation**: Custom templates guide users through unfamiliar work types
 
-**Priority:** High - Enhances core SDD feature (learning system)
+**Priority:** High - Extensibility is foundational for framework adoption
 
 **Notes:**
-- Requires Anthropic API key (set via ANTHROPIC_API_KEY env variable)
-- Graceful fallback to keyword-based methods if API key not available
-- API costs should be monitored (curation is infrequent, so cost is low)
-- Can be disabled per project if API access not desired
-- Considers privacy: learnings stay local, only sent to API during curation
+- Custom types stored in `.session/config.json` for project-specific customization
+- Built-in types cannot be modified (ensures backward compatibility)
+- Template variables allow dynamic content generation
+- Type-specific quality gates prevent inappropriate requirements (e.g., no tests for documentation)
+- Community could share custom type definitions
 
 ---
 
-### Enhancement #38: Context-Aware MCP Server Management
+### Enhancement #25: MCP Server Integration
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Current SDD-Claude Code integration is via slash commands that execute CLI commands and return text output. This creates limitations:
+
+1. **Text-only output**: All SDD data must be formatted as text for stdout/stderr
+2. **No programmatic access**: Claude cannot query SDD state directly
+3. **Parsing overhead**: Claude must parse text output to understand SDD data
+4. **Limited interactivity**: Cannot have rich, interactive conversations about SDD state
+5. **No structured data**: JSON/structured data must be formatted as text then parsed
+6. **Foundation missing**: Cannot build advanced features like inline annotations without programmatic access
+
+**Example of current limitation:**
+
+```
+User: "What learnings are relevant to authentication?"
+
+Current flow:
+1. User must use /learn-search authentication
+2. CLI returns text output
+3. Claude reads and interprets text
+4. Claude formats response to user
+
+Desired flow with MCP:
+1. Claude directly queries: sdd://learnings/search?query=authentication&limit=10
+2. Receives structured JSON response
+3. Claude analyzes and presents insights
+4. Can follow up with related queries programmatically
+```
+
+**Proposed Solution:**
+
+Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD operations as structured tools:
+
+1. **MCP Server Implementation**
+   - Standalone MCP server process
+   - Exposes SDD operations as MCP tools
+   - Returns structured data (JSON) instead of text
+   - Handles concurrent requests
+   - Maintains session state
+
+2. **MCP Tools for SDD Operations**
+   - Work item operations (list, get, create, update, delete)
+   - Learning operations (search, get, create, curate)
+   - Session operations (status, start, end, validate)
+   - Quality gate operations (run, get results)
+   - Visualization operations (dependency graph)
+   - Project operations (status, metrics)
+
+3. **Rich Data Structures**
+   - Typed responses (not string parsing)
+   - Nested objects for complex data
+   - Metadata and context in responses
+   - Error handling with structured error objects
+
+4. **Real-Time State Access**
+   - Query SDD state anytime
+   - No need to run CLI commands
+   - Efficient data access
+   - Caching for performance
+
+**Implementation:**
+
+**MCP Server:**
+```python
+# src/sdd/mcp/server.py
+import asyncio
+from typing import Any, Dict, List
+from mcp import Server, Tool
+
+class SDDMCPServer:
+    def __init__(self):
+        self.server = Server("sdd")
+        self.register_tools()
+
+    def register_tools(self):
+        """Register all SDD tools with MCP server"""
+
+        # Work item tools
+        self.server.add_tool(Tool(
+            name="sdd_work_items_list",
+            description="List all work items with optional filters",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "enum": ["not_started", "in_progress", "blocked", "completed"]},
+                    "type": {"type": "string"},
+                    "milestone": {"type": "string"}
+                }
+            },
+            handler=self.list_work_items
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_work_item_get",
+            description="Get detailed information about a specific work item",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "work_item_id": {"type": "string", "required": True}
+                },
+                "required": ["work_item_id"]
+            },
+            handler=self.get_work_item
+        ))
+
+        # Learning tools
+        self.server.add_tool(Tool(
+            name="sdd_learnings_search",
+            description="Search learnings by keyword or semantic query",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "required": True},
+                    "limit": {"type": "integer", "default": 10},
+                    "category": {"type": "string"},
+                    "semantic": {"type": "boolean", "default": False}
+                },
+                "required": ["query"]
+            },
+            handler=self.search_learnings
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_learnings_relevant",
+            description="Get learnings relevant to a work item or topic",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "work_item_id": {"type": "string"},
+                    "topic": {"type": "string"},
+                    "limit": {"type": "integer", "default": 10}
+                }
+            },
+            handler=self.get_relevant_learnings
+        ))
+
+        # Session tools
+        self.server.add_tool(Tool(
+            name="sdd_session_status",
+            description="Get current session status and progress",
+            parameters={"type": "object", "properties": {}},
+            handler=self.get_session_status
+        ))
+
+        self.server.add_tool(Tool(
+            name="sdd_quality_gates_results",
+            description="Get quality gate results for current or past sessions",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "string"},
+                    "work_item_id": {"type": "string"}
+                }
+            },
+            handler=self.get_quality_gate_results
+        ))
+
+        # Visualization tools
+        self.server.add_tool(Tool(
+            name="sdd_dependency_graph",
+            description="Get work item dependency graph data",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "format": {"type": "string", "enum": ["json", "ascii", "dot"], "default": "json"},
+                    "focus": {"type": "string"},
+                    "include_completed": {"type": "boolean", "default": False}
+                }
+            },
+            handler=self.get_dependency_graph
+        ))
+
+        # Project metrics tools
+        self.server.add_tool(Tool(
+            name="sdd_project_metrics",
+            description="Get project-level metrics and statistics",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "metric_type": {"type": "string", "enum": ["velocity", "quality", "learnings", "all"], "default": "all"}
+                }
+            },
+            handler=self.get_project_metrics
+        ))
+
+    async def list_work_items(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """List work items with filters"""
+        from sdd.work_items.repository import WorkItemRepository
+
+        repository = WorkItemRepository()
+        work_items = repository.list_work_items(
+            status=params.get("status"),
+            work_type=params.get("type"),
+            milestone=params.get("milestone")
+        )
+
+        return {
+            "work_items": work_items,
+            "total": len(work_items),
+            "filters_applied": {k: v for k, v in params.items() if v is not None}
+        }
+
+    async def get_work_item(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get detailed work item information"""
+        from sdd.work_items.repository import WorkItemRepository
+
+        repository = WorkItemRepository()
+        work_item_id = params["work_item_id"]
+
+        # Get work item metadata
+        work_item = repository.get_work_item(work_item_id)
+
+        # Get spec content
+        spec_path = Path(f".session/specs/{work_item_id}.md")
+        spec_content = spec_path.read_text() if spec_path.exists() else None
+
+        # Get session history
+        sessions = repository.get_work_item_sessions(work_item_id)
+
+        return {
+            "work_item": work_item,
+            "spec_content": spec_content,
+            "sessions": sessions,
+            "dependency_info": repository.get_dependency_info(work_item_id)
+        }
+
+    async def search_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Search learnings"""
+        from sdd.learning.repository import LearningRepository
+
+        repository = LearningRepository()
+        query = params["query"]
+        limit = params.get("limit", 10)
+        category = params.get("category")
+        semantic = params.get("semantic", False)
+
+        if semantic:
+            # Use AI-powered semantic search (Enhancement #37)
+            results = repository.semantic_search(query, limit=limit, category=category)
+        else:
+            # Use keyword search
+            results = repository.search(query, limit=limit, category=category)
+
+        return {
+            "learnings": results,
+            "total": len(results),
+            "query": query,
+            "search_type": "semantic" if semantic else "keyword"
+        }
+
+    async def get_relevant_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get learnings relevant to work item or topic"""
+        from sdd.session.briefing.learning_loader import get_relevant_learnings
+
+        work_item_id = params.get("work_item_id")
+        topic = params.get("topic")
+        limit = params.get("limit", 10)
+
+        if work_item_id:
+            # Get learnings for work item
+            learnings = get_relevant_learnings(work_item_id, limit=limit)
+            context = f"work item: {work_item_id}"
+        elif topic:
+            # Get learnings for topic
+            learnings = get_relevant_learnings(topic, limit=limit)
+            context = f"topic: {topic}"
+        else:
+            return {"error": "Must provide work_item_id or topic"}
+
+        return {
+            "learnings": learnings,
+            "total": len(learnings),
+            "context": context
+        }
+
+    async def get_session_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get current session status"""
+        from sdd.session.status import get_session_status
+
+        status = get_session_status()
+
+        return status
+
+    async def get_quality_gate_results(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get quality gate results"""
+        from sdd.quality.gates import QualityGateRunner
+
+        runner = QualityGateRunner()
+        session_id = params.get("session_id")
+        work_item_id = params.get("work_item_id")
+
+        results = runner.get_results(session_id=session_id, work_item_id=work_item_id)
+
+        return {
+            "quality_gate_results": results,
+            "session_id": session_id,
+            "work_item_id": work_item_id
+        }
+
+    async def get_dependency_graph(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get dependency graph"""
+        from sdd.visualization.dependency_graph import DependencyGraph
+
+        graph = DependencyGraph()
+        format_type = params.get("format", "json")
+        focus = params.get("focus")
+        include_completed = params.get("include_completed", False)
+
+        graph_data = graph.generate(
+            format=format_type,
+            focus=focus,
+            include_completed=include_completed
+        )
+
+        return {
+            "graph": graph_data,
+            "format": format_type,
+            "metadata": graph.get_metadata()
+        }
+
+    async def get_project_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Get project metrics"""
+        from sdd.improvement.dora_metrics import DORAMetrics
+        from sdd.improvement.velocity_tracker import VelocityTracker
+
+        metric_type = params.get("metric_type", "all")
+
+        metrics = {}
+
+        if metric_type in ["velocity", "all"]:
+            velocity = VelocityTracker()
+            metrics["velocity"] = velocity.get_metrics()
+
+        if metric_type in ["quality", "all"]:
+            dora = DORAMetrics()
+            metrics["dora"] = dora.get_metrics()
+
+        if metric_type in ["learnings", "all"]:
+            from sdd.learning.curator import LearningCurator
+            curator = LearningCurator()
+            metrics["learnings"] = curator.get_statistics()
+
+        return {
+            "metrics": metrics,
+            "metric_type": metric_type
+        }
+
+    async def start(self):
+        """Start MCP server"""
+        await self.server.start()
+
+# Entry point
+async def main():
+    server = SDDMCPServer()
+    await server.start()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Claude Code MCP Configuration:**
+```json
+// ~/.claude/config.json or project-specific config
+{
+  "mcpServers": {
+    "sdd": {
+      "command": "sdd",
+      "args": ["mcp", "serve"],
+      "env": {}
+    }
+  }
+}
+```
+
+**CLI command to start MCP server:**
+```bash
+# Start MCP server
+sdd mcp serve
+
+# Or via Claude Code (auto-started)
+```
+
+**Example usage in Claude Code:**
+```
+User: "What learnings do we have about authentication?"
+
+Claude (internal):
+→ Calls sdd_learnings_search(query="authentication", limit=10, semantic=True)
+→ Receives structured JSON with learnings
+→ Analyzes and presents to user
+
+Claude (to user): "We have 7 learnings about authentication:
+
+1. Always use bcrypt for password hashing (Security - Session 5)
+2. Implement JWT token refresh mechanism (Best Practices - Session 8)
+..."
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/mcp/server.py` (will be created) - MCP server implementation
+- `src/sdd/mcp/tools.py` (will be created) - MCP tool definitions
+- `src/sdd/mcp/__init__.py` (will be created) - MCP module initialization
+- `docs/mcp/README.md` (will be created) - MCP integration documentation
+- `docs/mcp/tools.md` (will be created) - MCP tools reference
+- `tests/unit/test_mcp_server.py` (will be created) - MCP server tests
+- `tests/integration/test_mcp_integration.py` (will be created) - Integration tests
+
+**Modified:**
+- `src/sdd/cli.py` - Add MCP server command
+- `README.md` - Document MCP integration
+- `.claude/config.json` - MCP server configuration example
+
+**Benefits:**
+
+1. **Programmatic access**: Claude can query SDD state directly
+2. **Structured data**: No text parsing, clean JSON responses
+3. **Rich interactions**: Contextual follow-up queries
+4. **Foundation for features**: Enables inline annotations, real-time updates
+5. **Better UX**: Faster, more accurate responses
+6. **Extensibility**: Easy to add new MCP tools
+7. **Standard protocol**: MCP is Claude Code's official integration method
+8. **Stateful**: Server maintains context across queries
+
+**Priority:** High - Foundation for better Claude Code integration (required for Enhancement #35)
+
+**Notes:**
+- Requires Claude Code with MCP support
+- MCP server runs as separate process
+- Server lifecycle managed by Claude Code
+- Backward compatible (slash commands still work)
+- Performance: MCP calls faster than CLI commands
+
+---
+
+### Enhancement #26: Context-Aware MCP Server Management
 
 **Status:** 🔵 IDENTIFIED
 
@@ -6025,16 +3408,16 @@ class MCPServerManager:
 
 **Integration with session start:**
 ```python
-# src/sdd/session/start.py (enhanced)
+# src/sdd/session/briefing/orchestrator.py (enhanced)
 def start_session(work_item_id: str, enable_servers: List[str] = None, disable_servers: List[str] = None):
     """Start development session with context-aware MCP server enablement"""
-    from sdd.work_items.manager import WorkItemManager
+    from sdd.work_items.repository import WorkItemRepository
     from sdd.mcp.server_manager import MCPServerManager
     from sdd.project.stack import detect_tech_stack
 
     # Get work item
-    manager = WorkItemManager()
-    work_item = manager.get_work_item(work_item_id)
+    repository = WorkItemRepository()
+    work_item = repository.get_work_item(work_item_id)
 
     # Get spec
     spec_path = Path(f".session/specs/{work_item_id}.md")
@@ -6164,19 +3547,19 @@ def initialize_project(template: str = None):
 **Files Affected:**
 
 **New:**
-- `src/sdd/mcp/` - New module
-- `src/sdd/mcp/__init__.py` - Module init
-- `src/sdd/mcp/server_manager.py` - MCP server management
-- `.session/mcp_servers.json` - Server registry (created per project)
-- `tests/unit/test_mcp_server_manager.py` - Unit tests
-- `tests/integration/test_mcp_integration.py` - Integration tests
-- `.claude/commands/mcp-list.md` - List servers command
-- `.claude/commands/mcp-add.md` - Add server command
-- `.claude/commands/mcp-test.md` - Test relevance command
+- `src/sdd/mcp/` (will be created) - New module
+- `src/sdd/mcp/__init__.py` (will be created) - Module init
+- `src/sdd/mcp/server_manager.py` (will be created) - MCP server management
+- `.session/mcp_servers.json` (will be created) - Server registry (created per project)
+- `tests/unit/test_mcp_server_manager.py` (will be created) - Unit tests
+- `tests/integration/test_mcp_integration.py` (will be created) - Integration tests
+- `.claude/commands/mcp-list.md` (will be created) - List servers command
+- `.claude/commands/mcp-add.md` (will be created) - Add server command
+- `.claude/commands/mcp-test.md` (will be created) - Test relevance command
 
 **Modified:**
-- `src/sdd/session/start.py` - Add MCP server selection
-- `src/sdd/session/briefing.py` - Include MCP server info in briefing
+- `src/sdd/session/briefing/orchestrator.py` - Add MCP server selection
+- `src/sdd/session/briefing/formatter.py` - Include MCP server info in briefing
 - `src/sdd/project/init.py` - Initialize MCP server registry
 - `src/sdd/templates/config.schema.json` - Add MCP config schema
 - `.claude/commands/start.md` - Document server flags
@@ -6216,7 +3599,478 @@ def initialize_project(template: str = None):
 
 ---
 
-### Enhancement #39: Frontend Quality & Design System Compliance
+### Enhancement #27: Inline Editor Annotations (via MCP)
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+When working on a work item, developers have no real-time visibility of SDD state in their editor:
+
+1. **No work item status visibility**: Can't see if current file relates to an active work item
+2. **No learning hints**: Relevant learnings not shown in context
+3. **No quality gate indicators**: Must run `/validate` manually to see issues
+4. **Context switching**: Must switch to terminal to check SDD state
+5. **Lost context**: May forget which work item is active
+
+**Example scenario:**
+
+```
+Developer opens: src/auth/jwt.py
+
+Current experience:
+- No indication this relates to work_item_authentication
+- No reminder of relevant learnings about JWT
+- No warning about quality gate failures
+- Must run /status or /validate to see any SDD info
+
+Desired experience:
+Editor shows inline annotations:
+┌───────────────────────────────────────────────┐
+│ src/auth/jwt.py                               │
+│                                               │
+│ 📋 Work Item: feature_jwt_authentication      │
+│    Status: In Progress (Session 15)           │
+│    Priority: High                             │
+│                                               │
+│ 💡 Relevant Learnings (3):                    │
+│    • Always validate JWT signature            │
+│    • Use short token expiry (15min)           │
+│    • Implement token refresh mechanism        │
+│                                               │
+│ ⚠️ Quality Gates:                             │
+│    ✓ Tests passing (87% coverage)             │
+│    ✗ Linting: 2 issues (click to fix)         │
+│                                               │
+│ def generate_token(user_id):                  │
+│     """Generate JWT token"""                  │
+│     # ... code ...                            │
+└───────────────────────────────────────────────┘
+```
+
+**Proposed Solution:**
+
+Implement **inline editor annotations** that display SDD state contextually in the editor:
+
+1. **Work Item Status Annotations**
+   - Show active work item in files being edited
+   - Display work item status, priority, progress
+   - Link to full work item spec
+   - Indicate if file is part of work item scope
+
+2. **Learning Snippets on Hover**
+   - Detect relevant learnings based on file/function
+   - Show learning snippets on hover
+   - Link to full learning details
+   - "Learn more" expands learning context
+
+3. **Quality Gate Indicators**
+   - Show quality gate status inline
+   - Highlight failing tests in test files
+   - Show linting errors with quick fixes
+   - Display coverage gaps
+
+4. **Dependency Warnings**
+   - Warn if editing file that's part of blocked work item
+   - Show dependency chain
+   - Suggest unblocking actions
+
+5. **Session Context**
+   - Show current session info
+   - Display session time/progress
+   - Link to session briefing
+   - Quick access to `/end` or `/validate`
+
+**Implementation:**
+
+**Requires Enhancement #33 (MCP Server) as foundation**
+
+**MCP-based annotation provider:**
+```python
+# src/sdd/mcp/annotations.py
+from pathlib import Path
+from typing import List, Dict, Any
+
+class AnnotationProvider:
+    """Provide annotations for editor via MCP"""
+
+    def get_annotations_for_file(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get all annotations for a file"""
+        annotations = []
+
+        # Work item annotations
+        work_item_annotations = self.get_work_item_annotations(file_path)
+        annotations.extend(work_item_annotations)
+
+        # Learning annotations
+        learning_annotations = self.get_learning_annotations(file_path)
+        annotations.extend(learning_annotations)
+
+        # Quality gate annotations
+        quality_annotations = self.get_quality_gate_annotations(file_path)
+        annotations.extend(quality_annotations)
+
+        return annotations
+
+    def get_work_item_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get work item status annotations"""
+        from sdd.session.status import get_session_status
+        from sdd.work_items.repository import WorkItemRepository
+
+        # Check if there's an active session
+        status = get_session_status()
+        if not status.get("active_work_item"):
+            return []
+
+        work_item_id = status["active_work_item"]
+        repository = WorkItemRepository()
+        work_item = repository.get_work_item(work_item_id)
+
+        # Check if file is in work item's git branch commits
+        if not self.file_in_work_item_scope(file_path, work_item_id):
+            return []
+
+        return [{
+            "type": "info",
+            "position": {"line": 0, "character": 0},
+            "message": f"📋 Work Item: {work_item['title']}",
+            "details": {
+                "work_item_id": work_item_id,
+                "status": work_item["status"],
+                "priority": work_item["priority"],
+                "session": status.get("session_number")
+            },
+            "actions": [
+                {"label": "View Spec", "command": f"sdd:work-show {work_item_id}"},
+                {"label": "End Session", "command": "sdd:end"}
+            ]
+        }]
+
+    def get_learning_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get relevant learning annotations"""
+        from sdd.session.briefing.learning_loader import get_relevant_learnings
+
+        # Analyze file to determine topic
+        topic = self.extract_topic_from_file(file_path)
+        if not topic:
+            return []
+
+        # Get relevant learnings
+        learnings = get_relevant_learnings(topic, limit=3)
+        if not learnings:
+            return []
+
+        # Create annotation
+        learning_texts = [
+            f"• {learning['content'][:80]}..."
+            for learning in learnings[:3]
+        ]
+
+        return [{
+            "type": "info",
+            "position": {"line": 0, "character": 0},
+            "message": f"💡 Relevant Learnings ({len(learnings)}):",
+            "details": {
+                "learnings": learnings,
+                "topic": topic
+            },
+            "hover_content": "\n".join(learning_texts),
+            "actions": [
+                {"label": "View All", "command": f"sdd:learn-search {topic}"}
+            ]
+        }]
+
+    def get_quality_gate_annotations(self, file_path: str) -> List[Dict[str, Any]]:
+        """Get quality gate status annotations"""
+        from sdd.quality.gates import QualityGateRunner
+
+        runner = QualityGateRunner()
+
+        # Get latest quality gate results
+        results = runner.get_latest_results()
+        if not results:
+            return []
+
+        annotations = []
+
+        # Check if file has linting issues
+        if "linting" in results and not results["linting"]["passed"]:
+            linting_issues = self.get_linting_issues_for_file(file_path, results["linting"])
+            for issue in linting_issues:
+                annotations.append({
+                    "type": "warning",
+                    "position": {"line": issue["line"], "character": issue["column"]},
+                    "message": f"⚠️ Lint: {issue['message']}",
+                    "details": issue,
+                    "actions": [
+                        {"label": "Fix", "command": f"sdd:validate --fix"}
+                    ] if issue.get("fixable") else []
+                })
+
+        # Check if file has test coverage gaps
+        if "tests" in results:
+            coverage_gaps = self.get_coverage_gaps_for_file(file_path, results["tests"])
+            if coverage_gaps:
+                annotations.append({
+                    "type": "info",
+                    "position": {"line": 0, "character": 0},
+                    "message": f"📊 Coverage: {coverage_gaps['percentage']}% (target: {coverage_gaps['target']}%)",
+                    "details": coverage_gaps,
+                    "hover_content": f"Uncovered lines: {coverage_gaps['uncovered_lines']}"
+                })
+
+        return annotations
+
+    def extract_topic_from_file(self, file_path: str) -> str:
+        """Extract main topic/keywords from file"""
+        path = Path(file_path)
+
+        # Use file name and path components as topic
+        parts = path.stem.split("_")
+        parent_parts = path.parent.name.split("_")
+
+        topic = " ".join(parts + parent_parts)
+        return topic
+
+    def file_in_work_item_scope(self, file_path: str, work_item_id: str) -> bool:
+        """Check if file was modified in work item's branch"""
+        # Implementation: check git log for work item's branch
+        pass
+
+# MCP tool for annotations
+async def get_file_annotations(params: Dict[str, Any]) -> Dict[str, Any]:
+    """MCP tool to get annotations for a file"""
+    file_path = params["file_path"]
+
+    provider = AnnotationProvider()
+    annotations = provider.get_annotations_for_file(file_path)
+
+    return {
+        "file_path": file_path,
+        "annotations": annotations,
+        "count": len(annotations)
+    }
+```
+
+**Claude Code MCP Tool Registration:**
+```python
+# Add to src/sdd/mcp/server.py
+self.server.add_tool(Tool(
+    name="sdd_file_annotations",
+    description="Get SDD annotations for a file (work item status, learnings, quality gates)",
+    parameters={
+        "type": "object",
+        "properties": {
+            "file_path": {"type": "string", "required": True}
+        },
+        "required": ["file_path"]
+    },
+    handler=get_file_annotations
+))
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/mcp/annotations.py` (will be created) - Annotation provider
+- `tests/unit/test_annotations.py` (will be created) - Annotation tests
+
+**Modified:**
+- `src/sdd/mcp/server.py` (will be created) - Add annotation MCP tool
+- `docs/mcp/tools.md` (will be created) - Document annotation tool
+
+**Benefits:**
+
+1. **Context awareness**: See SDD state without leaving editor
+2. **Learning reminders**: Relevant learnings shown in context
+3. **Proactive quality**: See issues as you code
+4. **Reduced context switching**: Less terminal usage
+5. **Better focus**: All info in one place
+6. **Discoverability**: Learn about SDD features through annotations
+7. **Productivity**: Faster access to relevant information
+
+**Priority:** Medium - Nice to have, enhances developer experience
+
+**Dependencies:**
+- **Requires Enhancement #33 (MCP Server)** - Foundation for annotations
+- Requires Claude Code support for displaying annotations (may need API/protocol discussion with Anthropic)
+
+**Notes:**
+- Implementation depends on Claude Code's annotation/diagnostic API
+- May need custom protocol if Claude Code doesn't have annotation support yet
+- Could start with simpler "status bar" annotations before full inline support
+- Performance: Annotations should be computed lazily and cached
+
+---
+
+### Enhancement #28: Advanced Testing Types
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Basic unit and integration tests don't catch all issues:
+
+1. **Mutation testing**: Tests may pass even if they don't catch bugs
+2. **Contract testing**: API changes break clients unexpectedly
+3. **Accessibility testing**: WCAG compliance not validated
+4. **Visual regression**: UI changes undetected
+
+**Example:**
+```
+API change: Remove field "user.email"
+  → Unit tests pass ✓ (don't test this field)
+  → Integration tests pass ✓ (don't use this field)
+  → Deploy
+  → Mobile app breaks ❌ (depends on user.email)
+```
+
+**Proposed Solution:**
+
+Implement **advanced testing types** that catch issues traditional tests miss:
+
+1. **Mutation Testing**
+   - Inject bugs into code (mutants)
+   - Verify tests catch the bugs
+   - Mutation score = % mutants killed
+   - Tools: Stryker (JS/TS), mutmut (Python)
+
+2. **Contract Testing**
+   - Define API contracts
+   - Test provider adheres to contract
+   - Test consumer expectations met
+   - Detect breaking changes early
+   - Tools: Pact, Spring Cloud Contract
+
+3. **Accessibility Testing**
+   - Validate WCAG 2.1 AA compliance
+   - Test keyboard navigation
+   - Test screen reader compatibility
+   - Check color contrast
+   - Tools: axe-core, Pa11y, Lighthouse
+
+4. **Visual Regression Testing**
+   - Capture screenshots of UI
+   - Compare against baseline
+   - Detect unintended visual changes
+   - Tools: Percy, Chromatic, BackstopJS
+
+**Implementation:**
+
+**Mutation testing:**
+```python
+# src/sdd/testing/mutation_tester.py
+class MutationTester:
+    def run_mutation_tests(self, test_suite):
+        # Run Stryker or mutmut
+        # Generate mutants
+        # Check if tests kill mutants
+        # Calculate mutation score
+
+    def check_mutation_score(self, score, threshold):
+        # Fail if score < threshold (e.g., 75%)
+```
+
+**Contract testing:**
+```python
+# src/sdd/testing/contract_tester.py
+class ContractTester:
+    def define_contract(self, api_spec):
+        # Create Pact contract from OpenAPI spec
+
+    def test_provider(self, contract):
+        # Verify API adheres to contract
+
+    def test_consumer(self, contract):
+        # Verify client expectations met
+
+    def detect_breaking_changes(self, old_contract, new_contract):
+        # Compare contracts, find breaking changes
+```
+
+**Accessibility testing:**
+```python
+# src/sdd/testing/accessibility_tester.py
+class AccessibilityTester:
+    def run_axe_audit(self, url):
+        # Run axe-core accessibility audit
+        # Return violations
+
+    def check_wcag_compliance(self, violations):
+        # Verify WCAG 2.1 AA compliance
+        # Fail if critical violations
+```
+
+**Visual regression:**
+```python
+# src/sdd/testing/visual_tester.py
+class VisualTester:
+    def capture_screenshots(self, urls):
+        # Capture screenshots of pages
+
+    def compare_with_baseline(self, screenshots):
+        # Compare with baseline images
+        # Detect differences
+
+    def update_baseline(self, screenshots):
+        # Update baseline on approval
+```
+
+**Configuration:**
+```json
+// .session/config.json
+"advanced_testing": {
+  "mutation_testing": {
+    "enabled": true,
+    "threshold": 75,
+    "framework": "stryker"  // or "mutmut"
+  },
+  "contract_testing": {
+    "enabled": true,
+    "format": "pact",
+    "break_on_breaking_changes": true
+  },
+  "accessibility_testing": {
+    "enabled": true,
+    "standard": "WCAG21AA",
+    "fail_on_violations": true
+  },
+  "visual_regression": {
+    "enabled": true,
+    "threshold": 0.02  // 2% pixel difference
+  }
+}
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/testing/mutation_tester.py` - Mutation testing (will be created)
+- `src/sdd/testing/contract_tester.py` - Contract testing (will be created)
+- `src/sdd/testing/accessibility_tester.py` - Accessibility testing (will be created)
+- `src/sdd/testing/visual_tester.py` - Visual regression testing (will be created)
+- `tests/contracts/` - Contract definitions (will be created)
+- `tests/visual/baselines/` - Visual baseline images (will be created)
+- Tests for advanced testing modules
+
+**Modified:**
+- `src/sdd/quality/gates.py` - Add advanced testing gates
+- `.session/config.json` - Advanced testing configuration
+- CI/CD workflows - Add advanced testing jobs
+
+**Benefits:**
+
+1. **Better test quality**: Mutation testing ensures tests catch bugs
+2. **API stability**: Contract testing prevents breaking changes
+3. **Accessibility compliance**: Automated WCAG validation
+4. **UI stability**: Visual regression catches unintended changes
+5. **Comprehensive coverage**: All types of issues caught
+
+**Priority:** Medium - Improves test effectiveness
+
+---
+
+### Enhancement #29: Frontend Quality & Design System Compliance
 
 **Status:** 🔵 IDENTIFIED
 
@@ -6844,19 +4698,19 @@ class FrontendQualityGate:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/frontend/` - New module
-- `src/sdd/quality/frontend/__init__.py` - Module init
-- `src/sdd/quality/frontend/design_tokens.py` - Design token validation
-- `src/sdd/quality/frontend/component_library.py` - Component library validation
-- `src/sdd/quality/frontend/bundle_size.py` - Bundle size monitoring
-- `src/sdd/quality/frontend/accessibility.py` - Accessibility validation
-- `src/sdd/quality/frontend/responsive.py` - Responsive design validation
-- `.session/bundle_size_history.json` - Bundle size tracking
-- `tests/unit/test_frontend_quality.py` - Unit tests
-- `tests/integration/test_frontend_gates.py` - Integration tests
-- `.claude/commands/frontend-check.md` - Frontend check command
-- `.claude/commands/bundle-analyze.md` - Bundle analysis command
-- `.claude/commands/design-tokens-check.md` - Design token check command
+- `src/sdd/quality/frontend/` - New module (will be created)
+- `src/sdd/quality/frontend/__init__.py` - Module init (will be created)
+- `src/sdd/quality/frontend/design_tokens.py` - Design token validation (will be created)
+- `src/sdd/quality/frontend/component_library.py` - Component library validation (will be created)
+- `src/sdd/quality/frontend/bundle_size.py` - Bundle size monitoring (will be created)
+- `src/sdd/quality/frontend/accessibility.py` - Accessibility validation (will be created)
+- `src/sdd/quality/frontend/responsive.py` - Responsive design validation (will be created)
+- `.session/bundle_size_history.json` - Bundle size tracking (will be created)
+- `tests/unit/test_frontend_quality.py` - Unit tests (will be created)
+- `tests/integration/test_frontend_gates.py` - Integration tests (will be created)
+- `.claude/commands/frontend-check.md` - Frontend check command (will be created)
+- `.claude/commands/bundle-analyze.md` - Bundle analysis command (will be created)
+- `.claude/commands/design-tokens-check.md` - Design token check command (will be created)
 
 **Modified:**
 - `src/sdd/quality/gates.py` - Add frontend quality gate
@@ -6897,5 +4751,2162 @@ class FrontendQualityGate:
 - Related to Enhancement #18 (Advanced Code Quality Gates) - extends code quality to frontend specifics
 - Can integrate with Enhancement #38 (MCP Server Management) - playwright MCP for visual validation
 - Template-based init (Enhancement #13) can include framework-specific frontend configurations
+
+---
+### Enhancement #30: Documentation-Driven Development
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+The AI-Augmented Solo Framework assumes developers start with Vision, PRD, and Architecture documents, but SDD currently has no workflow to:
+
+1. **Parse project documentation**: Vision, PRD, Architecture docs exist but aren't used
+2. **Generate work items from docs**: Manual work item creation from 100+ page docs is tedious
+3. **Maintain doc-code traceability**: No link between code and original requirements
+4. **Track architecture decisions**: ADRs not captured or tracked
+5. **Validate against architecture**: Work items may violate architecture constraints
+
+**Example workflow gap:**
+```
+Developer has:
+  - Vision.md (product vision)
+  - PRD.md (requirements, 50 pages)
+  - Architecture.md (system design)
+
+Current process:
+  → Manually read all docs
+  → Manually create work items
+  → Hope work items align with architecture
+  → No traceability between code and requirements
+```
+
+**Proposed Solution:**
+
+Implement **documentation-driven development workflow** that parses project docs and guides development:
+
+1. **Document Parsing and Analysis**
+   - Parse Vision, PRD, Architecture, ADR documents
+   - Extract requirements, user stories, architectural constraints
+   - Build knowledge graph of project structure
+
+2. **Smart Work Item Generation**
+   - Analyze documents and suggest work items
+   - Prioritize based on dependencies and business value
+   - Map work items to architecture components
+   - Estimate complexity from requirements
+
+3. **Architecture Decision Records (ADRs)**
+   - Template-based ADR creation
+   - Link ADRs to work items
+   - Track decision history and rationale
+   - Validate work items against ADRs
+
+4. **Document-to-Code Traceability**
+   - Link work items to requirements in docs
+   - Track which code implements which requirement
+   - Generate traceability matrix
+
+5. **Architecture Validation**
+   - Validate work items against architecture constraints
+   - Detect architecture violations
+   - Suggest architecture updates when needed
+
+6. **API-First Documentation System**
+   - Automated OpenAPI/Swagger generation from code annotations
+   - Interactive API documentation (Swagger UI, Redoc, API Explorer)
+   - API versioning and changelog automation
+   - SDK generation for multiple languages (Python, TypeScript, Go, etc.)
+   - API contract testing integration
+   - Breaking change detection between API versions
+   - API usage analytics and deprecation management
+
+**Implementation:**
+
+**Document parser:**
+```python
+# src/sdd/docs/parser.py
+class DocumentParser:
+    def parse_vision(self, vision_file):
+        # Extract business goals, target users
+
+    def parse_prd(self, prd_file):
+        # Extract requirements, user stories, acceptance criteria
+
+    def parse_architecture(self, arch_file):
+        # Extract components, constraints, patterns
+
+    def parse_adrs(self, adr_dir):
+        # Load all ADRs, build decision history
+```
+
+**Work item generator:**
+```python
+# src/sdd/work_items/generator.py
+class WorkItemGenerator:
+    def suggest_from_documents(self, docs):
+        # Analyze docs, extract requirements
+        # Generate work item suggestions
+        # Prioritize and estimate
+
+    def map_to_architecture(self, work_items, architecture):
+        # Map work items to arch components
+        # Validate against constraints
+```
+
+**API documentation generator:**
+```python
+# src/sdd/docs/api_doc_generator.py
+class APIDocumentationGenerator:
+    def generate_openapi_spec(self, codebase):
+        # Scan code for API endpoints and annotations
+        # Generate OpenAPI 3.0 specification
+        # Include schemas, parameters, responses
+
+    def generate_interactive_docs(self, openapi_spec):
+        # Generate Swagger UI / Redoc documentation
+        # Set up API explorer with try-it-out functionality
+        # Deploy to docs site
+
+    def generate_sdk(self, openapi_spec, languages):
+        # Generate client SDKs from OpenAPI spec
+        # Support Python, TypeScript, Go, Java, etc.
+        # Include usage examples and tests
+
+    def detect_breaking_changes(self, old_spec, new_spec):
+        # Compare API versions
+        # Identify breaking changes (removed endpoints, changed schemas)
+        # Generate migration guide
+
+    def track_api_versions(self):
+        # Maintain API version history
+        # Generate changelogs automatically
+        # Mark deprecated endpoints
+```
+
+**API documentation example:**
+```yaml
+# Generated OpenAPI specification
+openapi: 3.0.0
+info:
+  title: User Management API
+  version: 2.1.0
+  description: API for user authentication and profile management
+paths:
+  /api/v2/users:
+    get:
+      summary: List all users
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created successfully
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+```
+
+**Commands:**
+```bash
+# Parse docs and suggest work items
+/sdd:work-suggest --from-docs
+
+# Create ADR for architectural decision
+/sdd:adr-new --title "Use PostgreSQL for primary database"
+
+# Validate work item against architecture
+/sdd:work-validate <work-item-id> --architecture
+
+# Generate traceability matrix
+/sdd:trace --requirements docs/PRD.md
+
+# Generate API documentation
+/sdd:api-docs-generate [--output swagger|redoc|both]
+
+# Generate SDK from API spec
+/sdd:api-sdk-generate --language [python|typescript|go|java]
+
+# Check for breaking API changes
+/sdd:api-breaking-changes --compare v1.0.0..v2.0.0
+```
+
+**ADR template:**
+```markdown
+# ADR-NNN: [Decision Title]
+
+**Status:** Proposed | Accepted | Deprecated | Superseded
+
+**Context:**
+Why is this decision needed?
+
+**Decision:**
+What did we decide?
+
+**Alternatives Considered:**
+1. Option A - [pros/cons]
+2. Option B - [pros/cons]
+
+**Consequences:**
+- Positive: [benefits]
+- Negative: [trade-offs]
+
+**Related Work Items:**
+- feature_xxx
+- bug_yyy
+
+**References:**
+- [External resources]
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/docs/parser.py` (will be created) - Document parsing
+- `src/sdd/docs/vision_parser.py` (will be created) - Vision document parser
+- `src/sdd/docs/prd_parser.py` (will be created) - PRD parser
+- `src/sdd/docs/architecture_parser.py` (will be created) - Architecture parser
+- `src/sdd/docs/api_doc_generator.py` (will be created) - API documentation generator
+- `src/sdd/work_items/generator.py` (will be created) - Work item generator
+- `src/sdd/architecture/adr_manager.py` (will be created) - ADR management
+- `src/sdd/architecture/validator.py` (will be created) - Architecture validation
+- `src/sdd/traceability/tracker.py` (will be created) - Requirement traceability
+- `src/sdd/api/openapi_generator.py` (will be created) - OpenAPI specification generator
+- `src/sdd/api/sdk_generator.py` (will be created) - Multi-language SDK generator
+- `src/sdd/api/breaking_change_detector.py` (will be created) - API version comparator
+- `.claude/commands/work-suggest.md` (will be created) - Work suggestion command
+- `.claude/commands/adr-new.md` (will be created) - ADR creation command
+- `.claude/commands/api-docs-generate.md` (will be created) - API docs generation command
+- `.claude/commands/api-sdk-generate.md` (will be created) - SDK generation command
+- `.claude/commands/api-breaking-changes.md` (will be created) - Breaking change detection command
+- `docs/adr/` (will be created) - ADR directory
+- `docs/api/` (will be created) - Generated API documentation
+- Tests for document parsing and generation (will be created)
+
+**Modified:**
+- `src/sdd/work_items/creator.py` - Support generated work items
+- `src/sdd/work_items/spec_parser.py` - Parse architecture constraints
+- `.session/tracking/work_items.json` - Add traceability fields
+
+**Benefits:**
+
+1. **Faster planning**: Auto-generate work items from docs
+2. **Alignment**: Work items guaranteed to match requirements
+3. **Traceability**: Know which code implements which requirement
+4. **Architecture compliance**: Work validated against architecture
+5. **Decision history**: ADRs track why decisions were made
+6. **Knowledge capture**: Documentation drives development
+7. **API-first development**: Automated API documentation from code
+8. **Multi-language SDKs**: Auto-generated client libraries
+9. **API stability**: Breaking change detection prevents client disruption
+10. **Developer experience**: Interactive API documentation and examples
+
+**Priority:** High - Bridges gap between planning and implementation
+
+**Notes:**
+- Requires project documentation to exist (Vision, PRD, Architecture)
+- Parser supports Markdown and common doc formats
+- AI can assist with initial document creation if needed
+
+---
+
+### Enhancement #31: AI-Enhanced Learning System
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Current learning system uses keyword-based algorithms with limitations:
+
+1. **Learning Curation (Deduplication)**:
+   - Uses Jaccard similarity for duplicate detection
+   - Misses semantically similar learnings with different wording
+   - Example: "Use async/await for better performance" vs "Prefer promises over callbacks" are similar but Jaccard doesn't detect
+
+2. **Learning Relevance Scoring**:
+   - Uses keyword matching to find relevant learnings
+   - Misses semantically related learnings
+   - Example: Work item "Implement JWT authentication" → Learning "Always validate tokens on server side" scores low (no "JWT" keyword) but is highly relevant
+
+3. **Learning Categorization**:
+   - Keyword-based category assignment
+   - May miscategorize learnings with ambiguous keywords
+   - Example: "Cache invalidation is hard" → Could be "performance" or "architecture" or "gotchas"
+
+**Proposed Solution:**
+
+Implement **AI-powered learning system** using Claude API for semantic understanding:
+
+1. **AI-Powered Deduplication**
+   - Use Claude API to detect semantically similar learnings
+   - Understand meaning, not just word overlap
+   - Smarter merging of similar learnings
+   - Preserve unique insights
+
+2. **Semantic Relevance Scoring**
+   - Use Claude API to score learning relevance to work items
+   - Understand context and semantic relationships
+   - Find relevant learnings even without keyword matches
+   - Context-aware recommendations
+
+3. **Intelligent Categorization**
+   - Use Claude API to categorize learnings
+   - Understand nuance and context
+   - Multi-category support (learning can fit multiple categories)
+   - Confidence scores for categories
+
+4. **Learning Summarization**
+   - Generate summaries of long learnings
+   - Extract key insights
+   - Create learning digests
+
+5. **Learning Relationships**
+   - Detect relationships between learnings
+   - Build knowledge graph
+   - Suggest related learnings
+
+**Implementation:**
+
+**AI-powered learning curator:**
+```python
+# src/sdd/learning/ai_curator.py
+import anthropic
+from typing import List, Dict, Any, Tuple
+import json
+
+class AILearningCurator:
+    """AI-powered learning curation using Claude API"""
+
+    def __init__(self, api_key: str = None):
+        self.client = anthropic.Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
+        self.model = "claude-sonnet-4-5-20250929"
+
+    def detect_semantic_similarity(
+        self,
+        learning1: Dict[str, Any],
+        learning2: Dict[str, Any]
+    ) -> Tuple[bool, float, str]:
+        """
+        Detect if two learnings are semantically similar.
+
+        Returns:
+            (is_similar, similarity_score, reasoning)
+        """
+        prompt = f"""Analyze if these two learnings are semantically similar:
+
+Learning 1: {learning1['content']}
+Category 1: {learning1.get('category', 'unknown')}
+
+Learning 2: {learning2['content']}
+Category 2: {learning2.get('category', 'unknown')}
+
+Respond in JSON format:
+{{
+  "similar": true/false,
+  "similarity_score": 0.0-1.0,
+  "reasoning": "brief explanation",
+  "recommendation": "keep_both" | "merge" | "mark_as_related"
+}}
+
+Consider:
+- Do they convey the same core insight?
+- Are they about the same problem/solution?
+- Would a developer benefit from seeing both separately?
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return result["similar"], result["similarity_score"], result["reasoning"]
+
+    def score_learning_relevance(
+        self,
+        learning: Dict[str, Any],
+        work_item_title: str,
+        work_item_spec: str,
+        work_item_type: str
+    ) -> Tuple[float, str]:
+        """
+        Score how relevant a learning is to a work item.
+
+        Returns:
+            (relevance_score, reasoning)
+        """
+        prompt = f"""Rate how relevant this learning is to the work item (0.0-1.0):
+
+Work Item:
+- Title: {work_item_title}
+- Type: {work_item_type}
+- Spec: {work_item_spec[:500]}...
+
+Learning: {learning['content']}
+Category: {learning.get('category', 'unknown')}
+
+Respond in JSON format:
+{{
+  "relevance_score": 0.0-1.0,
+  "reasoning": "brief explanation of why/why not relevant",
+  "key_connections": ["connection 1", "connection 2"]
+}}
+
+Consider:
+- Does it help solve the work item's problem?
+- Does it prevent common mistakes in this type of work?
+- Is it about related technologies/patterns?
+- Would a developer benefit from knowing this?
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return result["relevance_score"], result["reasoning"]
+
+    def categorize_learning(
+        self,
+        learning_content: str
+    ) -> List[Tuple[str, float]]:
+        """
+        Categorize a learning using AI.
+
+        Returns:
+            List of (category, confidence) tuples
+        """
+        categories = [
+            "architecture", "gotchas", "best_practices",
+            "technical_debt", "performance", "security"
+        ]
+
+        prompt = f"""Categorize this learning. It may fit multiple categories.
+
+Learning: {learning_content}
+
+Available categories:
+- architecture: Architectural patterns and design decisions
+- gotchas: Pitfalls, traps, common mistakes
+- best_practices: Conventions, standards, recommendations
+- technical_debt: Refactoring needs, workarounds, TODOs
+- performance: Optimization insights, benchmarks
+- security: Security considerations and hardening
+
+Respond in JSON format:
+{{
+  "categories": [
+    {{"name": "category", "confidence": 0.0-1.0, "reasoning": "brief explanation"}},
+    ...
+  ],
+  "primary_category": "category"
+}}
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        return [
+            (cat["name"], cat["confidence"])
+            for cat in result["categories"]
+        ]
+
+    def summarize_learning(
+        self,
+        learning_content: str,
+        max_length: int = 80
+    ) -> str:
+        """Generate a concise summary of a learning"""
+        prompt = f"""Summarize this learning in {max_length} characters or less:
+
+Learning: {learning_content}
+
+Provide a concise summary that captures the key insight.
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        summary = response.content[0].text.strip()
+        return summary[:max_length]
+
+    def suggest_merge(
+        self,
+        learnings: List[Dict[str, Any]]
+    ) -> str:
+        """Suggest how to merge similar learnings"""
+        prompt = f"""These learnings are similar. Suggest how to merge them into one comprehensive learning:
+
+Learnings:
+{json.dumps([l['content'] for l in learnings], indent=2)}
+
+Provide a merged learning that:
+1. Captures all unique insights
+2. Is concise and clear
+3. Preserves important details
+4. Uses consistent terminology
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        return response.content[0].text.strip()
+
+    def find_related_learnings(
+        self,
+        learning: Dict[str, Any],
+        all_learnings: List[Dict[str, Any]],
+        limit: int = 5
+    ) -> List[Tuple[Dict, float, str]]:
+        """Find learnings related to this one"""
+        prompt = f"""Find learnings related to this one:
+
+Main Learning: {learning['content']}
+
+Other Learnings:
+{json.dumps([{"id": i, "content": l['content']} for i, l in enumerate(all_learnings[:20])], indent=2)}
+
+Respond in JSON format:
+{{
+  "related": [
+    {{
+      "id": learning_id,
+      "relatedness": 0.0-1.0,
+      "relationship": "brief description of how they relate"
+    }},
+    ...
+  ]
+}}
+"""
+
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = json.loads(response.content[0].text)
+        related = [
+            (all_learnings[r["id"]], r["relatedness"], r["relationship"])
+            for r in result["related"]
+        ]
+        return sorted(related, key=lambda x: x[1], reverse=True)[:limit]
+```
+
+**Enhanced learning curator:**
+```python
+# src/sdd/learning/curator.py (enhanced)
+class LearningCurator:
+    def __init__(self):
+        self.learnings_file = Path(".session/tracking/learnings.json")
+        self.ai_curator = AILearningCurator() if self.has_api_key() else None
+
+    def has_api_key(self) -> bool:
+        """Check if Anthropic API key is available"""
+        return bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+    def curate_learnings(self, use_ai: bool = True):
+        """Curate learnings with optional AI enhancement"""
+        learnings = self.load_learnings()
+
+        if use_ai and self.ai_curator:
+            print("Using AI-powered curation...")
+            self.ai_curate_learnings(learnings)
+        else:
+            print("Using keyword-based curation...")
+            self.keyword_curate_learnings(learnings)
+
+    def ai_curate_learnings(self, learnings: List[Dict]):
+        """AI-powered curation"""
+
+        # 1. Categorize uncategorized learnings
+        for learning in learnings:
+            if not learning.get("category"):
+                categories = self.ai_curator.categorize_learning(learning["content"])
+                learning["category"] = categories[0][0]  # Primary category
+                learning["categories_all"] = categories  # All categories with confidence
+
+        # 2. Find and merge similar learnings
+        merged_count = 0
+        i = 0
+        while i < len(learnings):
+            j = i + 1
+            while j < len(learnings):
+                similar, score, reasoning = self.ai_curator.detect_semantic_similarity(
+                    learnings[i], learnings[j]
+                )
+
+                if similar and score > 0.8:
+                    # Merge learnings
+                    merged_content = self.ai_curator.suggest_merge([learnings[i], learnings[j]])
+                    learnings[i]["content"] = merged_content
+                    learnings[i]["merged_from"] = learnings[i].get("merged_from", []) + [learnings[j]["id"]]
+                    learnings.pop(j)
+                    merged_count += 1
+                    print(f"Merged similar learnings: {reasoning}")
+                else:
+                    j += 1
+            i += 1
+
+        print(f"Merged {merged_count} similar learnings")
+
+        # 3. Find learning relationships
+        for i, learning in enumerate(learnings):
+            related = self.ai_curator.find_related_learnings(
+                learning, learnings[:i] + learnings[i+1:], limit=3
+            )
+            learning["related_learnings"] = [
+                {"id": r[0]["id"], "relationship": r[2]}
+                for r in related
+            ]
+
+        self.save_learnings(learnings)
+
+    def semantic_search(
+        self,
+        query: str,
+        limit: int = 10,
+        category: str = None
+    ) -> List[Dict]:
+        """Semantic search using AI"""
+        learnings = self.load_learnings()
+
+        if category:
+            learnings = [l for l in learnings if l.get("category") == category]
+
+        # Use AI to score relevance
+        scored_learnings = []
+        for learning in learnings:
+            score, reasoning = self.ai_curator.score_learning_relevance(
+                learning,
+                work_item_title=query,
+                work_item_spec=query,
+                work_item_type="feature"
+            )
+            scored_learnings.append((learning, score, reasoning))
+
+        # Sort by relevance
+        scored_learnings.sort(key=lambda x: x[1], reverse=True)
+
+        return [
+            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
+            for l in scored_learnings[:limit]
+        ]
+```
+
+**Enhanced session briefing:**
+```python
+# src/sdd/session/briefing/learning_loader.py (enhanced)
+def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
+    """Get relevant learnings using AI-powered scoring"""
+    from sdd.work_items.repository import WorkItemRepository
+    from sdd.learning.repository import LearningRepository
+
+    # Get work item
+    repository = WorkItemRepository()
+    work_item = repository.get_work_item(work_item_id)
+
+    # Get spec
+    spec_path = Path(f".session/specs/{work_item_id}.md")
+    spec_content = spec_path.read_text() if spec_path.exists() else ""
+
+    # Get all learnings
+    learning_repo = LearningRepository()
+    learnings = learning_repo.load_learnings()
+
+    if learning_repo.ai_curator:
+        # Use AI scoring
+        scored_learnings = []
+        for learning in learnings:
+            score, reasoning = learning_repo.ai_curator.score_learning_relevance(
+                learning,
+                work_item_title=work_item["title"],
+                work_item_spec=spec_content,
+                work_item_type=work_item["type"]
+            )
+            scored_learnings.append((learning, score, reasoning))
+
+        # Sort by relevance
+        scored_learnings.sort(key=lambda x: x[1], reverse=True)
+
+        return [
+            {**l[0], "relevance_score": l[1], "relevance_reasoning": l[2]}
+            for l in scored_learnings[:limit]
+        ]
+    else:
+        # Fallback to keyword-based scoring
+        return get_relevant_learnings(work_item_id, limit)
+```
+
+**Configuration:**
+```json
+// .session/config.json
+{
+  "learning_system": {
+    "use_ai_curation": true,
+    "use_ai_relevance": true,
+    "ai_curation_frequency": "weekly",  // or "every_n_sessions": 5
+    "semantic_search_enabled": true,
+    "min_similarity_threshold": 0.8,
+    "api_provider": "anthropic",
+    "model": "claude-sonnet-4-5-20250929"
+  }
+}
+```
+
+**Commands:**
+```bash
+# Use AI curation
+/sdd:learn-curate --ai
+
+# Semantic search
+/sdd:learn-search "authentication" --semantic
+
+# Find related learnings
+/sdd:learn-related <learning_id>
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/learning/ai_curator.py` (will be created) - AI-powered curation
+- `tests/unit/test_ai_curator.py` (will be created) - AI curator tests
+- `tests/fixtures/sample_learnings.json` (will be created) - Test learnings
+
+**Modified:**
+- `src/sdd/learning/curator.py` - Integrate AI curation
+- `src/sdd/learning/repository.py` - Integrate AI search
+- `src/sdd/session/briefing/learning_loader.py` - Use AI relevance scoring
+- `.session/config.json` - Add AI learning configuration
+- `pyproject.toml` - Add anthropic SDK dependency
+- `.claude/commands/learn-curate.md` - Document AI curation
+- `.claude/commands/learn-search.md` - Document semantic search
+
+**Benefits:**
+
+1. **Better deduplication**: Catches semantically similar learnings
+2. **Smarter relevance**: Finds relevant learnings without keyword matches
+3. **Improved categorization**: Understands nuance and context
+4. **Knowledge graph**: Relationships between learnings
+5. **Summarization**: Concise summaries for quick scanning
+6. **Higher quality**: Cleaner, more useful knowledge base
+7. **Better context loading**: More relevant learnings in session briefings
+8. **Learning evolution**: Merge and refine learnings over time
+
+**Priority:** High - Enhances core SDD feature (learning system)
+
+**Notes:**
+- Requires Anthropic API key (set via ANTHROPIC_API_KEY env variable)
+- Graceful fallback to keyword-based methods if API key not available
+- API costs should be monitored (curation is infrequent, so cost is low)
+- Can be disabled per project if API access not desired
+- Considers privacy: learnings stay local, only sent to API during curation
+
+---
+
+### Enhancement #32: Continuous Improvement System
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Development processes don't improve over time. No mechanism to:
+
+1. **Learn from work items**: Patterns and lessons lost
+2. **Track technical debt**: Debt accumulates unnoticed
+3. **Measure velocity**: Don't know if getting faster or slower
+4. **Identify bottlenecks**: Process inefficiencies unknown
+5. **Optimize workflows**: No data-driven improvements
+
+**Example:**
+```
+Work item completed → Next work item started
+                    → No reflection on what worked/didn't work
+                    → Same issues repeat
+                    → No improvement
+```
+
+**Proposed Solution:**
+
+Implement **continuous improvement system** that tracks metrics and suggests optimizations:
+
+1. **Automated Retrospectives**
+   - After each work item or milestone, generate retrospective
+   - Analyze what went well, what didn't
+   - Track lessons learned
+   - Suggest improvements
+
+2. **Technical Debt Tracking**
+   - Identify technical debt during development
+   - Track debt accumulation over time
+   - Prioritize debt paydown
+   - Measure debt ratio
+
+3. **DORA Metrics Dashboard**
+   - Deployment frequency: How often deploying
+   - Lead time: Time from commit to production
+   - Change failure rate: % of deployments that fail
+   - Mean time to recovery (MTTR): Time to fix production issues
+
+4. **Velocity and Cycle Time Tracking**
+   - Track work item completion time
+   - Measure velocity (story points/week)
+   - Identify slowdowns
+   - Trend analysis
+
+5. **Process Optimization Recommendations**
+   - Analyze bottlenecks in workflow
+   - Suggest process improvements
+   - A/B test process changes
+   - Measure impact of improvements
+
+**Implementation:**
+
+**Retrospective generator:**
+```python
+# src/sdd/improvement/retrospective.py
+class RetrospectiveGenerator:
+    def generate_retrospective(self, work_item):
+        # Analyze work item history
+        # Generate retrospective questions
+        # Track patterns
+
+    def suggest_improvements(self, retrospectives):
+        # Analyze multiple retrospectives
+        # Identify recurring issues
+        # Suggest improvements
+```
+
+**Technical debt tracker:**
+```python
+# src/sdd/improvement/debt_tracker.py
+class TechnicalDebtTracker:
+    def identify_debt(self, codebase):
+        # Detect code smells
+        # Find TODOs and FIXMEs
+        # Measure code complexity
+
+    def calculate_debt_ratio(self):
+        # Debt ratio = debt / total code
+        # Track over time
+```
+
+**DORA metrics:**
+```python
+# src/sdd/improvement/dora_metrics.py
+class DORAMetrics:
+    def deployment_frequency(self):
+        # Count deployments per day/week
+
+    def lead_time(self):
+        # Time from commit to production
+
+    def change_failure_rate(self):
+        # Failed deployments / total deployments
+
+    def mean_time_to_recovery(self):
+        # Average time to fix production issues
+```
+
+**Dashboard:**
+```markdown
+# /sdd:status --project
+
+## DORA Metrics
+- Deployment Frequency: 3.2/week (↑ from 2.5)
+- Lead Time: 2.3 days (↓ from 3.1 days)
+- Change Failure Rate: 8% (target: <15%)
+- MTTR: 1.2 hours (↓ from 2.5 hours)
+
+## Velocity
+- Current: 21 story points/week
+- Trend: ↑ 15% over last month
+- Average cycle time: 2.1 days
+
+## Technical Debt
+- Debt Ratio: 12% (target: <15%)
+- High-priority debt items: 3
+- Debt added this week: 2 items
+- Debt resolved this week: 4 items
+
+## Process Insights
+- Bottleneck: Integration testing (avg 45 min)
+- Suggestion: Parallelize integration tests
+- Improvement opportunity: Automate deployment rollback
+```
+
+**Retrospective format:**
+```markdown
+# Retrospective: feature_user_authentication
+
+**What Went Well:**
+- TDD approach caught edge cases early
+- Performance testing revealed bottleneck before production
+- Documentation was comprehensive
+
+**What Didn't Go Well:**
+- Integration tests took 45 minutes (too slow)
+- Had to refactor authentication logic twice
+- Missing error handling for edge case
+
+**Lessons Learned:**
+- Always consider rate limiting from the start
+- Test with realistic data volumes
+
+**Action Items:**
+- [ ] Speed up integration tests (parallelize)
+- [ ] Add rate limiting to API design checklist
+- [ ] Create authentication patterns library
+
+**Metrics:**
+- Cycle time: 3.2 days
+- Test coverage: 92%
+- Refactoring events: 2
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/improvement/retrospective.py` (will be created) - Retrospective generation
+- `src/sdd/improvement/debt_tracker.py` (will be created) - Technical debt tracking
+- `src/sdd/improvement/dora_metrics.py` (will be created) - DORA metrics calculation
+- `src/sdd/improvement/velocity_tracker.py` (will be created) - Velocity tracking
+- `src/sdd/improvement/bottleneck_analyzer.py` (will be created) - Bottleneck detection
+- `.session/tracking/retrospectives/` (will be created) - Retrospective storage
+- `.session/tracking/metrics.json` (will be created) - Metrics history
+- Tests for improvement modules (will be created)
+
+**Modified:**
+- `src/sdd/session/complete.py` - Generate retrospective on work item completion
+- `.claude/commands/status.md` - Add project-level status command
+- `.session/tracking/work_items.json` - Add cycle time tracking
+
+**Benefits:**
+
+1. **Continuous learning**: Learn from every work item
+2. **Debt management**: Technical debt tracked and managed
+3. **Velocity visibility**: Know if improving or slowing down
+4. **Data-driven decisions**: Optimize based on metrics
+5. **Process improvement**: Systematically improve workflow
+6. **Team-level insights**: Solo developer with team-level metrics
+
+**Priority:** Medium - Important for long-term productivity
+
+---
+
+### Enhancement #33: Performance Testing Framework
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Performance issues are discovered in production, not development:
+
+1. **No performance baselines**: Don't know expected performance
+2. **No load testing**: System untested under realistic load
+3. **No regression detection**: Performance degradations unnoticed
+4. **No bottleneck identification**: Slow endpoints unknown
+
+**Example:**
+```
+Feature added → All tests pass ✓ → Deploy
+                                 → Production: 5s response times ❌
+                                 → Users complain
+                                 → No baseline to compare
+```
+
+**Proposed Solution:**
+
+Implement **comprehensive performance testing framework**:
+
+1. **Performance Benchmarks in Specs**
+   - Define performance requirements in work items
+   - Example: "API must respond in <200ms at p95"
+   - Enforce benchmarks before merge
+
+2. **Automated Load Testing**
+   - Run load tests in CI/CD
+   - Tools: k6, wrk, Gatling, Locust
+   - Test realistic traffic patterns
+
+3. **Performance Regression Detection**
+   - Compare results against baseline
+   - Fail if performance degrades >10%
+   - Track performance over time
+
+4. **Bottleneck Identification**
+   - Profile slow endpoints
+   - Identify database query issues
+   - Find N+1 queries, missing indexes
+
+5. **Performance Baseline Tracking**
+   - Store baselines in `.session/tracking/performance_baselines.json`
+   - Update baselines when performance improves
+   - Historical performance charts
+
+**Implementation:**
+
+**Performance spec in work item:**
+```markdown
+## Performance Requirements
+
+**Response Time Targets:**
+- GET /api/users: <100ms (p50), <200ms (p95)
+- POST /api/orders: <500ms (p50), <1s (p95)
+- Database queries: <50ms average
+
+**Throughput Targets:**
+- 1000 requests/second sustained
+- 5000 concurrent users
+
+**Resource Limits:**
+- Memory: <512MB
+- CPU: <50% average
+```
+
+**Load testing:**
+```python
+# src/sdd/testing/load_tester.py (will be created)
+class LoadTester:
+    def run_load_test(self, work_item):
+        # Extract performance requirements
+        # Run k6/wrk load test
+        # Compare against baseline
+        # Return pass/fail + metrics
+
+    def detect_regression(self, current, baseline):
+        # Compare metrics
+        # Fail if >10% slower
+```
+
+**k6 test generation:**
+```javascript
+// tests/performance/api_test.js (auto-generated)
+import http from 'k6/http';
+import { check } from 'k6';
+
+export let options = {
+  stages: [
+    { duration: '2m', target: 100 },  // Ramp to 100 users
+    { duration: '5m', target: 100 },  // Stay at 100
+    { duration: '2m', target: 0 },    // Ramp down
+  ],
+  thresholds: {
+    'http_req_duration': ['p(95)<200'],  // 95% requests <200ms
+  },
+};
+
+export default function() {
+  let res = http.get('http://localhost:3000/api/users');
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time OK': (r) => r.timings.duration < 200,
+  });
+}
+```
+
+**Baseline tracking:**
+```json
+// .session/tracking/performance_baselines.json
+{
+  "endpoints": {
+    "/api/users": {
+      "p50": 85,
+      "p95": 180,
+      "last_updated": "2025-10-29",
+      "session": "session_015"
+    }
+  }
+}
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/testing/load_tester.py` (will be created) - Load testing orchestration
+- `src/sdd/testing/baseline_manager.py` (will be created) - Baseline tracking
+- `src/sdd/testing/regression_detector.py` (will be created) - Regression detection
+- `src/sdd/testing/profiler.py` (will be created) - Performance profiling
+- `tests/performance/` (will be created) - Generated load tests
+- `.session/tracking/performance_baselines.json` (will be created) - Baseline storage
+- Tests for performance framework (will be created)
+
+**Modified:**
+- `src/sdd/quality/gates.py` - Add performance gates
+- `src/sdd/work_items/spec_parser.py` - Parse performance requirements
+- `.session/config.json` - Performance testing configuration
+- CI/CD workflows - Add performance testing job
+
+**Benefits:**
+
+1. **Prevent regressions**: Catch slowdowns before production
+2. **Meet SLAs**: Enforce performance requirements
+3. **Capacity planning**: Know system limits
+4. **Bottleneck identification**: Find and fix slow code
+5. **Performance visibility**: Track performance over time
+
+**Priority:** High - Performance issues cause production incidents
+
+---
+
+### Enhancement #34: Operations & Observability
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+After deployment, there's no operational support infrastructure:
+
+1. **No health monitoring**: Can't tell if service is healthy
+2. **No incident detection**: Issues discovered by users, not monitoring
+3. **No performance dashboards**: Can't see system performance
+4. **No capacity planning**: Don't know when to scale
+5. **No alert management**: Alerts missing or too noisy
+
+**Example:**
+```
+Deploy to production ✓ → Service running
+                      → Database runs out of connections ❌
+                      → No alert
+                      → Users report errors
+                      → 2 hours to discover issue
+```
+
+**Proposed Solution:**
+
+Implement **comprehensive operations and observability infrastructure**:
+
+1. **Health Check Monitoring**
+   - Monitor `/health` endpoint continuously
+   - Alert on failures
+   - Track uptime metrics
+   - Integration with UptimeRobot, Pingdom, Datadog
+
+2. **Incident Detection and Response**
+   - Automatic incident creation on alerts
+   - Incident runbooks linked to alerts
+   - PagerDuty/Opsgenie integration
+   - Incident timeline and resolution tracking
+
+3. **Performance Metrics Dashboards**
+   - Real-time metrics visualization
+   - Request rates, latency, error rates
+   - Database performance metrics
+   - Infrastructure metrics (CPU, memory, disk)
+   - Tools: Grafana, Datadog, New Relic
+
+4. **Capacity Planning**
+   - Track resource usage trends
+   - Predict when scaling needed
+   - Cost optimization recommendations
+   - Alert on approaching limits
+
+5. **Intelligent Alerting**
+   - Reduce alert noise (no alert fatigue)
+   - Alert prioritization (critical vs warning)
+   - Alert aggregation and correlation
+   - Alert routing and escalation
+
+**Implementation:**
+
+**Health monitoring:**
+```python
+# src/sdd/operations/health_monitor.py
+class HealthMonitor:
+    def setup_monitoring(self, endpoints):
+        # Configure health check monitoring
+        # Set up alerts
+
+    def check_health(self):
+        # Poll health endpoints
+        # Detect failures
+        # Create incidents
+```
+
+**Incident management:**
+```python
+# src/sdd/operations/incident_manager.py
+class IncidentManager:
+    def create_incident(self, alert):
+        # Create incident from alert
+        # Link to runbook
+        # Notify on-call
+
+    def track_incident(self, incident_id):
+        # Track resolution steps
+        # Update timeline
+```
+
+**Dashboards:**
+```yaml
+# monitoring/dashboards/api_dashboard.yml
+dashboard:
+  title: "API Performance"
+  panels:
+    - title: "Request Rate"
+      metric: "http_requests_total"
+    - title: "Response Time (p95)"
+      metric: "http_request_duration_p95"
+    - title: "Error Rate"
+      metric: "http_errors_total / http_requests_total"
+    - title: "Database Connections"
+      metric: "db_connections_active"
+```
+
+**Alert configuration:**
+```yaml
+# monitoring/alerts/api_alerts.yml
+alerts:
+  - name: "High Error Rate"
+    condition: "error_rate > 5%"
+    severity: "critical"
+    notify: ["email", "pagerduty"]
+
+  - name: "Slow Response Time"
+    condition: "p95_latency > 1s"
+    severity: "warning"
+    notify: ["email"]
+
+  - name: "Database Connection Pool Exhausted"
+    condition: "db_connections > 90%"
+    severity: "critical"
+    runbook: "docs/runbooks/db_connections.md"
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/operations/health_monitor.py` (will be created) - Health monitoring
+- `src/sdd/operations/incident_manager.py` (will be created) - Incident management
+- `src/sdd/operations/metrics_collector.py` (will be created) - Metrics collection
+- `src/sdd/operations/capacity_planner.py` (will be created) - Capacity planning
+- `src/sdd/operations/alert_manager.py` (will be created) - Alert management
+- `monitoring/dashboards/` (will be created) - Dashboard configurations
+- `monitoring/alerts/` (will be created) - Alert configurations
+- `docs/runbooks/` (will be created) - Incident runbooks
+- Tests for operations modules (will be created)
+
+**Modified:**
+- `.session/config.json` - Monitoring configuration
+- `src/sdd/quality/gates.py` - Verify monitoring setup
+- CI/CD workflows (will be created) - Deploy monitoring configs
+
+**Benefits:**
+
+1. **Proactive issue detection**: Find problems before users
+2. **Faster incident response**: Automated incident creation
+3. **Performance visibility**: Know system health at all times
+4. **Capacity planning**: Scale before running out of resources
+5. **Reduced alert fatigue**: Intelligent alerting
+6. **Operational confidence**: Always know system status
+
+**Priority:** High - Essential for production operations
+
+---
+
+### Enhancement #35: Project Progress Dashboard
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+No high-level view of project progress:
+
+1. **No progress visibility**: Don't know how much is complete
+2. **No milestone tracking**: Can't see milestone progress
+3. **No velocity trends**: Don't know if on track
+
+**Proposed Solution:**
+
+Implement **project progress dashboard** showing overall status:
+
+1. **Progress Visualization**
+   - Work items by status (pie chart)
+   - Completion percentage by milestone
+   - Burndown charts
+
+2. **Velocity Tracking**
+   - Story points completed per week
+   - Velocity trends
+   - Projected completion dates
+
+3. **Blocker Identification**
+   - Blocked work items highlighted
+   - Risk indicators
+
+**Implementation:**
+
+**Dashboard command:**
+```bash
+/sdd:status --project
+```
+
+**Dashboard generator:**
+```python
+# src/sdd/visualization/dashboard.py (will be created)
+class ProgressDashboard:
+    def generate_dashboard(self):
+        # Aggregate work item data from repository
+        # Generate charts and metrics
+        # Format as markdown
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/visualization/dashboard.py` (will be created) - Dashboard generation
+- Tests for dashboard (will be created)
+
+**Modified:**
+- `.claude/commands/status.md` - Add project dashboard
+- `src/sdd/work_items/repository.py` - Query work items for dashboard data
+
+**Benefits:**
+
+1. **Progress visibility**: Know project status at glance
+2. **Milestone tracking**: See progress toward milestones
+3. **Trend analysis**: Know if on track
+4. **Risk awareness**: Blockers highlighted
+
+**Priority:** Low - Nice to have, not critical
+
+---
+
+### Enhancement #36: Compliance & Regulatory Framework
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Projects handling sensitive data must comply with various regulations, but there's no automated compliance tracking:
+
+1. **No compliance validation**: GDPR, HIPAA, SOC2, PCI-DSS requirements not checked
+2. **Data privacy gaps**: Personal data handling not tracked or validated
+3. **Audit trail missing**: No comprehensive logging for compliance audits
+4. **Manual compliance checks**: Time-consuming and error-prone manual verification
+5. **Regulation changes**: No monitoring for updates to compliance requirements
+
+**Example of compliance failure:**
+
+```
+Collect user data → Store in database → Deploy
+                                      → GDPR audit ❌
+                                      → Missing: consent tracking, data export, deletion
+                                      → Fines and legal issues
+                                      → Damage to reputation
+```
+
+**Proposed Solution:**
+
+Implement **compliance and regulatory framework** for automated compliance tracking and validation:
+
+1. **GDPR Compliance**
+   - Data processing activity tracking
+   - User consent management and audit trail
+   - Right to access (data export) automation
+   - Right to erasure (data deletion) automation
+   - Data breach notification procedures
+   - Privacy impact assessments
+
+2. **HIPAA Compliance** (Healthcare)
+   - PHI (Protected Health Information) identification and tracking
+   - Access control and audit logging
+   - Encryption at rest and in transit validation
+   - Business Associate Agreement (BAA) tracking
+   - Breach notification procedures
+   - Security risk assessments
+
+3. **SOC 2 Compliance**
+   - Security controls validation
+   - Availability monitoring
+   - Processing integrity checks
+   - Confidentiality verification
+   - Privacy controls
+   - Continuous control monitoring
+
+4. **PCI-DSS Compliance** (Payment Card Industry)
+   - Payment data identification and protection
+   - Network security requirements
+   - Access control validation
+   - Regular security testing
+   - Security policy enforcement
+
+5. **Compliance Automation**
+   - Automated compliance checks in CI/CD
+   - Real-time compliance monitoring
+   - Compliance dashboard and reporting
+   - Evidence collection for audits
+   - Automated remediation suggestions
+
+**Implementation:**
+
+**Compliance checker:**
+```python
+# src/sdd/compliance/compliance_checker.py (will be created)
+class ComplianceChecker:
+    def check_gdpr_compliance(self, codebase):
+        # Verify GDPR requirements
+        # - Consent tracking
+        # - Data export functionality
+        # - Data deletion functionality
+        # - Data retention policies
+        # - Privacy policy exists
+
+    def check_hipaa_compliance(self, codebase):
+        # Verify HIPAA requirements
+        # - PHI encryption
+        # - Access controls
+        # - Audit logging
+        # - BAA tracking
+
+    def check_soc2_compliance(self, system):
+        # Verify SOC 2 controls
+        # - Security controls
+        # - Availability metrics
+        # - Processing integrity
+        # - Confidentiality
+
+    def check_pci_dss_compliance(self, codebase):
+        # Verify PCI-DSS requirements
+        # - Card data encryption
+        # - Network segmentation
+        # - Access controls
+        # - Regular security testing
+```
+
+**GDPR automation:**
+```python
+# src/sdd/compliance/gdpr_automation.py (will be created)
+class GDPRAutomation:
+    def track_consent(self, user_id, consent_type):
+        # Record user consent with timestamp
+        # Track consent version
+        # Provide consent audit trail
+
+    def export_user_data(self, user_id):
+        # Collect all user data across systems
+        # Generate machine-readable export (JSON)
+        # Include data processing activities log
+
+    def delete_user_data(self, user_id):
+        # Identify all user data locations
+        # Delete or anonymize data
+        # Maintain deletion audit trail
+        # Verify deletion completeness
+
+    def generate_privacy_impact_assessment(self, feature):
+        # Identify personal data collected
+        # Assess privacy risks
+        # Propose mitigation measures
+```
+
+**Compliance configuration:**
+```yaml
+# .session/config.json (extended) or compliance_config.yml (will be created)
+compliance:
+  regulations:
+    - gdpr
+    - soc2
+    # - hipaa  # Enable for healthcare
+    # - pci_dss  # Enable for payment processing
+
+  gdpr:
+    enabled: true
+    data_retention_days: 365
+    consent_tracking: true
+    require_privacy_policy: true
+    require_data_export: true
+    require_data_deletion: true
+
+  soc2:
+    enabled: true
+    trust_service_criteria:
+      - security
+      - availability
+      - processing_integrity
+      - confidentiality
+      - privacy
+    control_monitoring: true
+
+  hipaa:
+    enabled: false
+    phi_identification: true
+    encryption_required: true
+    audit_logging: true
+    minimum_necessary_access: true
+
+  pci_dss:
+    enabled: false
+    cardholder_data_environment: false
+    tokenization_required: true
+    security_testing_frequency: "quarterly"
+
+  audit:
+    evidence_collection: true
+    evidence_storage: ".compliance/evidence/"
+    audit_log_retention_days: 2555  # 7 years
+
+  alerts:
+    compliance_violations: ["email", "slack"]
+    regulation_updates: ["email"]
+```
+
+**Compliance dashboard:**
+```markdown
+# /sdd:compliance-status
+
+## Compliance Overview
+- GDPR: ✅ Compliant (98% - 1 minor issue)
+- SOC 2: ⚠️ Partially Compliant (85% - 3 controls need attention)
+- HIPAA: N/A (Not enabled)
+- PCI-DSS: N/A (Not enabled)
+
+## GDPR Compliance Details
+✅ Consent tracking: Implemented
+✅ Data export: Implemented (/api/user/export)
+✅ Data deletion: Implemented (/api/user/delete)
+✅ Privacy policy: Published and versioned
+⚠️ Data retention: Policy defined but not enforced in code
+
+## SOC 2 Compliance Details
+✅ Security: Multi-factor auth, encryption, access controls
+✅ Availability: 99.9% uptime, monitoring, alerting
+⚠️ Processing Integrity: Missing transaction logging for audit
+⚠️ Confidentiality: Some sensitive data not encrypted at rest
+✅ Privacy: GDPR controls cover privacy requirements
+
+## Action Items
+1. Implement automated data retention enforcement (GDPR)
+2. Add transaction audit logging (SOC 2 - Processing Integrity)
+3. Encrypt sensitive configuration data at rest (SOC 2 - Confidentiality)
+
+## Next Audit: 2025-12-01
+## Last Audit: 2025-06-15 (Passed with minor findings)
+```
+
+**Commands:**
+```bash
+# Check compliance status
+/sdd:compliance-status [--regulation gdpr|hipaa|soc2|pci-dss]
+
+# Generate compliance report
+/sdd:compliance-report --regulation gdpr --output pdf
+
+# Run compliance checks
+/sdd:compliance-check --fix
+
+# Generate privacy impact assessment
+/sdd:compliance-pia --feature "user-analytics"
+
+# Export evidence for audit
+/sdd:compliance-evidence-export --period "2025-01-01..2025-12-31"
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/compliance/compliance_checker.py` (will be created) - Compliance validation
+- `src/sdd/compliance/gdpr_automation.py` (will be created) - GDPR automation
+- `src/sdd/compliance/hipaa_checker.py` (will be created) - HIPAA compliance
+- `src/sdd/compliance/soc2_monitor.py` (will be created) - SOC 2 monitoring
+- `src/sdd/compliance/pci_dss_validator.py` (will be created) - PCI-DSS validation
+- `src/sdd/compliance/audit_trail.py` (will be created) - Audit logging
+- `src/sdd/compliance/evidence_collector.py` (will be created) - Evidence management
+- `.claude/commands/compliance-status.md` (will be created) - Compliance status command
+- `.claude/commands/compliance-report.md` (will be created) - Report generation command
+- `.claude/commands/compliance-check.md` (will be created) - Compliance validation command
+- `.compliance/evidence/` (will be created) - Audit evidence storage
+- `compliance_config.yml` (will be created) - Compliance configuration
+- Tests for compliance modules (will be created)
+
+**Modified:**
+- `src/sdd/project/init.py` - Add compliance setup to project initialization
+- `src/sdd/quality/gates.py` - Add compliance gates
+- `.session/config.json` - Add compliance configuration
+- CI/CD workflows (will be created) - Add compliance check jobs
+
+**Benefits:**
+
+1. **Automated compliance**: Continuous compliance monitoring and validation
+2. **Audit readiness**: Evidence automatically collected for audits
+3. **Risk mitigation**: Catch compliance issues before they become problems
+4. **Regulation tracking**: Stay updated on compliance requirement changes
+5. **Cost savings**: Reduce manual compliance effort and potential fines
+6. **Customer trust**: Demonstrate commitment to data protection
+7. **Legal protection**: Documented compliance procedures and audit trails
+8. **Multi-regulation support**: Handle multiple compliance requirements simultaneously
+
+**Priority:** High - Critical for regulated industries (healthcare, finance, e-commerce)
+
+**Notes:**
+- Compliance requirements vary by jurisdiction and industry
+- Regular compliance audits recommended (quarterly or annually)
+- Legal review recommended for compliance implementation
+- Some regulations require third-party audits (e.g., SOC 2)
+- Compliance is ongoing, not a one-time effort
+
+---
+
+### Enhancement #37: UAT & Stakeholder Workflow
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+No workflow for stakeholder feedback and user acceptance testing:
+
+1. **No stakeholder involvement**: Stakeholders see features only at launch
+2. **No UAT process**: No formal user acceptance testing
+3. **No demo environments**: Difficult to show work in progress
+4. **No approval workflow**: No sign-off before production
+
+**Example:**
+```
+Feature built → Tests pass ✓ → Deploy to production
+              → Stakeholder sees feature for first time
+              → "This isn't what I wanted" ❌
+              → Rework required
+```
+
+**Proposed Solution:**
+
+Implement **UAT and stakeholder workflow** for feedback and approvals:
+
+1. **Stakeholder Feedback Collection**
+   - Create shareable demo links
+   - Collect structured feedback
+   - Track feedback status (addressed/rejected/pending)
+   - Link feedback to work items
+
+2. **UAT Test Case Generation**
+   - Auto-generate UAT test cases from acceptance criteria
+   - Provide test case checklist for stakeholders
+   - Track UAT execution and results
+
+3. **Demo/Preview Environments**
+   - Auto-create preview environment per work item
+   - Shareable URL for stakeholder review
+   - Temporary environment (auto-deleted after merge)
+   - Tools: Vercel preview deployments, Netlify deploy previews, PR environments
+
+4. **Approval Workflow Before Production**
+   - Require stakeholder approval before production deploy
+   - Track approval status
+   - Block production deployment without approval
+   - Document approval decisions
+
+**Implementation:**
+
+**Demo environment:**
+```python
+# src/sdd/uat/demo_environment.py (will be created)
+class DemoEnvironmentManager:
+    def create_preview(self, work_item_id, branch):
+        # Deploy branch to preview environment
+        # Return preview URL
+
+    def share_with_stakeholders(self, preview_url, stakeholders):
+        # Send preview link to stakeholders
+        # Include UAT test cases
+```
+
+**Feedback collection:**
+```python
+# src/sdd/uat/feedback_collector.py (will be created)
+class FeedbackCollector:
+    def create_feedback_form(self, work_item):
+        # Generate feedback form
+        # Include UAT test cases
+
+    def collect_feedback(self, form_id):
+        # Retrieve stakeholder feedback
+        # Parse and structure feedback
+
+    def link_to_work_item(self, feedback, work_item_id):
+        # Associate feedback with work item
+        # Create follow-up tasks if needed
+```
+
+**UAT test case generator:**
+```python
+# src/sdd/uat/test_case_generator.py (will be created)
+class UATTestCaseGenerator:
+    def generate_from_acceptance_criteria(self, work_item):
+        # Parse acceptance criteria
+        # Generate UAT test cases
+        # Format as checklist
+```
+
+**Example UAT test cases:**
+```markdown
+# UAT Test Cases: User Authentication
+
+## Test Case 1: Successful Login
+**Given:** User has valid credentials
+**When:** User enters email and password
+**Then:**
+- [ ] User is redirected to dashboard
+- [ ] Welcome message displays user's name
+- [ ] Session token is stored
+
+## Test Case 2: Failed Login
+**Given:** User enters invalid password
+**When:** User submits login form
+**Then:**
+- [ ] Error message "Invalid credentials" displays
+- [ ] User remains on login page
+- [ ] No session token stored
+
+## Test Case 3: Forgot Password
+**Given:** User clicks "Forgot Password"
+**When:** User enters email address
+**Then:**
+- [ ] Email with reset link sent
+- [ ] Confirmation message displays
+- [ ] Reset link expires in 1 hour
+```
+
+**Approval workflow:**
+```python
+# src/sdd/uat/approval_workflow.py (will be created)
+class ApprovalWorkflow:
+    def request_approval(self, work_item_id, stakeholders):
+        # Send approval request
+        # Include demo link and UAT results
+
+    def check_approval_status(self, work_item_id):
+        # Check if approved
+        # Block deployment if not approved
+
+    def record_approval(self, work_item_id, approver, decision):
+        # Record approval decision
+        # Document reasoning
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/uat/demo_environment.py` (will be created) - Demo environment management
+- `src/sdd/uat/feedback_collector.py` (will be created) - Feedback collection
+- `src/sdd/uat/test_case_generator.py` (will be created) - UAT test case generation
+- `src/sdd/uat/approval_workflow.py` (will be created) - Approval management
+- `.session/tracking/feedback/` (will be created) - Feedback storage
+- `.session/tracking/approvals/` (will be created) - Approval records
+- Tests for UAT modules (will be created)
+
+**Modified:**
+- `src/sdd/session/complete.py` - Request approval before production deployment
+- `src/sdd/quality/gates.py` - Block deployment without approval
+- `.session/config.json` - UAT and approval configuration
+
+**Benefits:**
+
+1. **Early feedback**: Stakeholders see features before production
+2. **Reduce rework**: Catch misalignments before deployment
+3. **Formal UAT**: Structured testing process
+4. **Approval tracking**: Know what's approved for production
+5. **Demo environments**: Easy to share work in progress
+6. **Stakeholder confidence**: Involved throughout development
+
+**Priority:** Medium - Important for stakeholder collaboration
+
+---
+
+### Enhancement #38: Cost & Resource Optimization
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Cloud costs can spiral out of control without monitoring and optimization:
+
+1. **No cost visibility**: Don't know where money is being spent
+2. **Resource waste**: Over-provisioned or unused resources
+3. **No budget alerts**: Costs exceed budget without warning
+4. **Inefficient architecture**: Expensive architectures when cheaper alternatives exist
+5. **No optimization recommendations**: Manual cost optimization is time-consuming
+
+**Example of cost waste:**
+
+```
+Deploy application → Runs for 6 months
+                   → Database over-provisioned (90% idle)
+                   → Load balancer for single instance
+                   → Storage full of old logs
+                   → Monthly cost: $1,200
+                   → Optimized cost could be: $300
+                   → Wasted: $900/month = $10,800/year
+```
+
+**Proposed Solution:**
+
+Implement **cost and resource optimization framework** for monitoring and reducing cloud costs:
+
+1. **Cost Monitoring & Visibility**
+   - Real-time cost tracking per service
+   - Cost allocation by project/environment/feature
+   - Cost trend analysis and forecasting
+   - Budget tracking and alerts
+   - Multi-cloud cost aggregation (AWS, GCP, Azure)
+
+2. **Resource Utilization Analysis**
+   - Identify under-utilized resources
+   - Track resource usage patterns
+   - Detect idle or unused resources
+   - Analyze peak vs average utilization
+   - Right-sizing recommendations
+
+3. **Automated Cost Optimization**
+   - Auto-scaling based on actual usage
+   - Spot instance recommendations
+   - Reserved instance analysis
+   - Storage tier optimization (hot/warm/cold)
+   - Automated cleanup of unused resources
+
+4. **Cost Optimization Recommendations**
+   - Alternative architecture suggestions
+   - Service tier optimization
+   - Region cost comparisons
+   - Commitment discount opportunities
+   - Open-source alternative suggestions
+
+5. **Budget Management**
+   - Set budget limits per environment
+   - Automated alerts on threshold breach
+   - Spending forecasts
+   - Cost anomaly detection
+   - Automated resource shutdown on budget exceeded
+
+**Implementation:**
+
+**Cost monitor:**
+```python
+# src/sdd/cost/cost_monitor.py (will be created)
+class CostMonitor:
+    def track_current_costs(self):
+        # Query cloud provider billing APIs
+        # Aggregate costs by service, region, project
+        # Calculate daily/weekly/monthly costs
+
+    def analyze_cost_trends(self):
+        # Historical cost analysis
+        # Identify cost spikes
+        # Forecast future costs
+
+    def alert_on_budget_breach(self, threshold):
+        # Check if costs exceed budget
+        # Send alerts to configured channels
+        # Trigger automated actions if needed
+```
+
+**Resource optimizer:**
+```python
+# src/sdd/cost/resource_optimizer.py (will be created)
+class ResourceOptimizer:
+    def identify_underutilized_resources(self):
+        # Analyze CPU, memory, disk usage
+        # Identify resources with <30% utilization
+        # Calculate potential savings
+
+    def recommend_rightsizing(self, resource):
+        # Analyze historical usage patterns
+        # Recommend appropriate instance types
+        # Calculate cost savings
+
+    def find_idle_resources(self):
+        # Identify stopped instances still incurring costs
+        # Find unused load balancers, IPs, volumes
+        # Estimate monthly waste
+
+    def optimize_storage_tiers(self):
+        # Analyze storage access patterns
+        # Recommend tier migrations (hot → cold)
+        # Calculate storage cost savings
+```
+
+**Cost optimization engine:**
+```python
+# src/sdd/cost/optimization_engine.py (will be created)
+class CostOptimizationEngine:
+    def recommend_spot_instances(self):
+        # Identify workloads suitable for spot instances
+        # Calculate potential savings (60-90% off)
+        # Provide migration guide
+
+    def analyze_reserved_instances(self):
+        # Compare on-demand vs reserved pricing
+        # Recommend reservation commitments
+        # Calculate breakeven point
+
+    def suggest_architectural_changes(self):
+        # Identify expensive patterns
+        # Suggest cheaper alternatives
+        # Estimate implementation effort vs savings
+
+    def recommend_service_alternatives(self):
+        # Identify overpriced managed services
+        # Suggest open-source alternatives
+        # Calculate TCO comparison
+```
+
+**Cost configuration:**
+```yaml
+# .session/config.json (extended) or cost_config.yml (will be created)
+cost_optimization:
+  monitoring:
+    enabled: true
+    cloud_providers:
+      - aws
+      - gcp
+      # - azure
+    update_frequency: "hourly"
+
+  budgets:
+    development:
+      monthly_limit: 500
+      alert_thresholds: [50, 75, 90, 100]
+    staging:
+      monthly_limit: 200
+      alert_thresholds: [75, 90, 100]
+    production:
+      monthly_limit: 2000
+      alert_thresholds: [75, 90, 100]
+      auto_shutdown: false  # Don't auto-shutdown production
+
+  optimization:
+    auto_rightsizing: false  # Recommend only, don't auto-apply
+    auto_cleanup_idle: true  # Clean up stopped resources after 7 days
+    storage_tier_optimization: true
+    reserved_instance_analysis: true
+
+  alerts:
+    cost_alerts: ["email", "slack"]
+    optimization_opportunities: ["email"]
+    budget_breach: ["email", "pagerduty"]
+
+  reporting:
+    weekly_cost_report: true
+    monthly_optimization_report: true
+    savings_tracking: true
+```
+
+**Cost dashboard:**
+```markdown
+# /sdd:cost-status
+
+## Monthly Cost Summary
+- **Current Month**: $1,247 / $2,000 budget (62%)
+- **Last Month**: $1,189
+- **Forecast**: $1,650 (18% under budget)
+- **YoY Growth**: +12%
+
+## Cost Breakdown by Service
+- Compute (EC2/VMs): $687 (55%)
+- Database (RDS/Cloud SQL): $312 (25%)
+- Storage (S3/GCS): $127 (10%)
+- Networking: $89 (7%)
+- Other: $32 (3%)
+
+## Cost by Environment
+- Production: $987 (79%)
+- Staging: $172 (14%)
+- Development: $88 (7%)
+
+## Optimization Opportunities
+1. **Right-size database** - Current: db.m5.2xlarge ($562/mo), Recommended: db.m5.xlarge ($281/mo)
+   - Savings: $281/month ($3,372/year)
+   - Utilization: 28% average CPU
+
+2. **Move logs to cold storage** - 500GB in hot storage ($115/mo), 450GB not accessed in 90 days
+   - Savings: $90/month ($1,080/year)
+   - Move 450GB to Glacier
+
+3. **Use spot instances for batch jobs** - 5 instances running 24/7 ($365/mo)
+   - Savings: $255/month ($3,060/year)
+   - 70% cost reduction with spot
+
+4. **Remove unused load balancer** - 1 ALB with no traffic ($23/mo)
+   - Savings: $23/month ($276/year)
+
+## Total Potential Savings: $649/month ($7,788/year)
+## Current Optimization Score: 72/100
+```
+
+**Commands:**
+```bash
+# View cost status
+/sdd:cost-status [--environment prod|staging|dev]
+
+# Analyze optimization opportunities
+/sdd:cost-optimize --analyze
+
+# Generate cost report
+/sdd:cost-report --period "2025-01-01..2025-12-31" --output pdf
+
+# Set budget alert
+/sdd:cost-budget-set --environment prod --limit 2000 --currency USD
+
+# Forecast costs
+/sdd:cost-forecast --months 6
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/cost/cost_monitor.py` (will be created) - Cost tracking and monitoring
+- `src/sdd/cost/resource_optimizer.py` (will be created) - Resource utilization analysis
+- `src/sdd/cost/optimization_engine.py` (will be created) - Cost optimization recommendations
+- `src/sdd/cost/budget_manager.py` (will be created) - Budget tracking and alerts
+- `src/sdd/cost/cloud_provider_integrations/` (will be created) - AWS, GCP, Azure integrations
+- `.claude/commands/cost-status.md` (will be created) - Cost status command
+- `.claude/commands/cost-optimize.md` (will be created) - Optimization command
+- `.claude/commands/cost-report.md` (will be created) - Cost reporting command
+- `.claude/commands/cost-budget-set.md` (will be created) - Budget management command
+- `cost_config.yml` (will be created) - Cost optimization configuration
+- Tests for cost monitoring modules (will be created)
+
+**Modified:**
+- `src/sdd/project/init.py` - Add cost monitoring setup
+- `.session/config.json` - Add cost optimization configuration
+- CI/CD workflows (will be created) - Add cost check jobs
+
+**Benefits:**
+
+1. **Cost visibility**: Always know where money is spent
+2. **Budget control**: Prevent cost overruns with alerts and limits
+3. **Resource efficiency**: Eliminate waste from idle or over-provisioned resources
+4. **Predictable costs**: Accurate forecasting for budget planning
+5. **Automated savings**: Continuous optimization without manual effort
+6. **Multi-cloud support**: Track costs across multiple cloud providers
+7. **ROI tracking**: Measure savings from optimization efforts
+8. **Financial accountability**: Cost allocation per project/team
+
+**Priority:** Medium-High - Important for budget-conscious solo developers and startups
+
+**Notes:**
+- Requires cloud provider API credentials with billing access
+- Cost data typically has 24-hour delay
+- Aggressive optimization can impact performance (monitor carefully)
+- Reserved instances require commitment (1-3 years)
+- Consider business criticality before automated resource shutdown
+
+---
+
+### Enhancement #39: Automated Code Review
+
+**Status:** 🔵 IDENTIFIED
+
+**Problem:**
+
+Code reviews are manual and time-consuming. Common issues missed:
+
+1. **No automated review**: Every line requires human review
+2. **Inconsistent feedback**: Review quality varies
+3. **Common patterns missed**: Same issues repeat
+4. **Security vulnerabilities**: May be overlooked in review
+
+**Proposed Solution:**
+
+Implement **AI-powered automated code review** that provides suggestions:
+
+1. **Code Analysis**
+   - Analyze code changes for common issues
+   - Detect anti-patterns and code smells
+   - Identify performance issues
+
+2. **Best Practice Recommendations**
+   - Suggest better patterns and approaches
+   - Recommend idiomatic code
+   - Link to documentation and examples
+
+3. **Security Vulnerability Detection**
+   - Identify security issues in code
+   - Suggest secure alternatives
+   - Link to security best practices
+
+4. **Improvement Suggestions**
+   - Suggest refactoring opportunities
+   - Identify complexity issues
+   - Recommend simplifications
+
+**Implementation:**
+
+**Code reviewer:**
+```python
+# src/sdd/review/code_reviewer.py (will be created)
+class AutomatedCodeReviewer:
+    def review_changes(self, file_changes):
+        # Analyze code changes
+        # Generate review comments
+
+    def detect_issues(self, code):
+        # Find anti-patterns, code smells
+
+    def suggest_improvements(self, code):
+        # Recommend better approaches
+```
+
+**Files Affected:**
+
+**New:**
+- `src/sdd/review/code_reviewer.py` (will be created) - Automated review
+- `src/sdd/review/pattern_detector.py` (will be created) - Anti-pattern detection
+- `src/sdd/review/security_analyzer.py` (will be created) - Security vulnerability detection
+- Tests for code review modules (will be created)
+
+**Modified:**
+- `src/sdd/session/complete.py` - Run automated review before completion
+- `src/sdd/quality/gates.py` - Add code review quality gate
+- `.session/config.json` - Add code review configuration
+
+**Benefits:**
+
+1. **Faster reviews**: Automated feedback
+2. **Consistent quality**: Every change reviewed
+3. **Learning opportunity**: Suggestions improve skills
+4. **Catch issues early**: Problems found before merge
+
+**Priority:** Low - Nice to have, not critical
 
 ---
