@@ -23,8 +23,10 @@ from sdd.core.types import WorkItemStatus, WorkItemType
 
 if TYPE_CHECKING:
     from .repository import WorkItemRepository
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class WorkItemCreator:
@@ -71,7 +73,7 @@ class WorkItemCreator:
                 ),
             )
 
-        print("Creating new work item...\n")
+        output.info("Creating new work item...\n")
 
         # 1. Select type
         try:
@@ -228,14 +230,14 @@ class WorkItemCreator:
         Returns:
             str: Selected work item type, or None if invalid
         """
-        print("Select work item type:")
-        print("1. feature - Standard feature development")
-        print("2. bug - Bug fix")
-        print("3. refactor - Code refactoring")
-        print("4. security - Security-focused work")
-        print("5. integration_test - Integration testing")
-        print("6. deployment - Deployment to environment")
-        print()
+        output.info("Select work item type:")
+        output.info("1. feature - Standard feature development")
+        output.info("2. bug - Bug fix")
+        output.info("3. refactor - Code refactoring")
+        output.info("4. security - Security-focused work")
+        output.info("5. integration_test - Integration testing")
+        output.info("6. deployment - Deployment to environment")
+        output.info("")
 
         choice = input("Your choice (1-6): ").strip()
 
@@ -279,7 +281,7 @@ class WorkItemCreator:
         if not priority:
             priority = "high"
         if priority not in self.PRIORITIES:
-            print("⚠️  Invalid priority, using 'high'")
+            output.warning("Invalid priority, using 'high'")
             priority = "high"
         return priority
 
@@ -304,7 +306,7 @@ class WorkItemCreator:
 
         if not deps_input:
             if required:
-                print("⚠️  Warning: This work item type requires dependencies")
+                output.warning("Warning: This work item type requires dependencies")
                 return self._prompt_dependencies(work_type)  # Retry
             return []
 
@@ -318,7 +320,7 @@ class WorkItemCreator:
             if self.repository.work_item_exists(dep):
                 valid_deps.append(dep)
             else:
-                print(f"⚠️  Warning: Dependency '{dep}' not found, skipping")
+                output.info(f"⚠️  Warning: Dependency '{dep}' not found, skipping")
 
         return valid_deps
 
@@ -403,20 +405,20 @@ class WorkItemCreator:
             dependencies: List of dependency IDs
             spec_file: Path to spec file
         """
-        print(f"\n{'=' * 50}")
-        print("Work item created successfully!")
-        print("=" * 50)
-        print(f"\nID: {work_id}")
-        print(f"Type: {work_type}")
-        print(f"Priority: {priority}")
-        print(f"Status: {WorkItemStatus.NOT_STARTED.value}")
+        output.info(f"\n{'=' * 50}")
+        output.info("Work item created successfully!")
+        output.info("=" * 50)
+        output.info(f"\nID: {work_id}")
+        output.info(f"Type: {work_type}")
+        output.info(f"Priority: {priority}")
+        output.info(f"Status: {WorkItemStatus.NOT_STARTED.value}")
         if dependencies:
-            print(f"Dependencies: {', '.join(dependencies)}")
+            output.info(f"Dependencies: {', '.join(dependencies)}")
 
         if spec_file:
-            print(f"\nSpecification saved to: {spec_file}")
+            output.info(f"\nSpecification saved to: {spec_file}")
 
-        print("\nNext steps:")
-        print(f"1. Edit specification: {spec_file}")
-        print("2. Start working: /start")
-        print()
+        output.info("\nNext steps:")
+        output.info(f"1. Edit specification: {spec_file}")
+        output.info("2. Start working: /start")
+        output.info("")

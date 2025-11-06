@@ -11,8 +11,10 @@ from sdd.core.config import get_config_manager
 from sdd.core.error_handlers import log_errors
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class LearningRepository:
@@ -164,12 +166,12 @@ class LearningRepository:
         # Save
         self.save_learnings(learnings)
 
-        print("\n✓ Learning captured!")
-        print(f"  ID: {learning_id}")
-        print(f"  Category: {category}")
+        output.info("\n✓ Learning captured!")
+        output.info(f"  ID: {learning_id}")
+        output.info(f"  Category: {category}")
         if tags:
-            print(f"  Tags: {', '.join(learning['tags'])}")
-        print("\nIt will be auto-categorized and curated.\n")
+            output.info(f"  Tags: {', '.join(learning['tags'])}")
+        output.info("\nIt will be auto-categorized and curated.\n")
 
         return learning_id
 

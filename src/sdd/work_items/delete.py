@@ -20,9 +20,11 @@ from sdd.core.exceptions import (
 )
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemStatus
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 def find_dependents(work_items: dict, work_item_id: str) -> list[str]:
@@ -99,22 +101,24 @@ def delete_work_item(
     dependents = find_dependents(work_items, work_item_id)
 
     # Show work item details
-    print(f"\n⚠️  Warning: This will permanently delete work item '{work_item_id}'")
-    print("\nWork item details:")
-    print(f"  Title: {item.get('title', 'N/A')}")
-    print(f"  Type: {item.get('type', 'N/A')}")
-    print(f"  Status: {item.get('status', 'N/A')}")
+    output.warning(f"\nThis will permanently delete work item '{work_item_id}'")
+    output.info("\nWork item details:")
+    output.info(f"  Title: {item.get('title', 'N/A')}")
+    output.info(f"  Type: {item.get('type', 'N/A')}")
+    output.info(f"  Status: {item.get('status', 'N/A')}")
 
     dependencies = item.get("dependencies", [])
     if dependencies:
-        print(f"  Dependencies: {', '.join(dependencies)}")
+        output.info(f"  Dependencies: {', '.join(dependencies)}")
     else:
-        print("  Dependencies: none")
+        output.info("  Dependencies: none")
 
     if dependents:
-        print(f"  Dependents: {', '.join(dependents)} ({len(dependents)} item(s) depend on this)")
+        output.info(
+            f"  Dependents: {', '.join(dependents)} ({len(dependents)} item(s) depend on this)"
+        )
     else:
-        print("  Dependents: none")
+        output.info("  Dependents: none")
 
     # Get deletion choice
     if delete_spec is None:
@@ -130,31 +134,31 @@ def delete_work_item(
                 ),
             )
 
-        print("\nOptions:")
-        print("  1. Delete work item only (keep spec file)")
-        print("  2. Delete work item and spec file")
-        print("  3. Cancel")
-        print()
+        output.info("\nOptions:")
+        output.info("  1. Delete work item only (keep spec file)")
+        output.info("  2. Delete work item and spec file")
+        output.info("  3. Cancel")
+        output.info("")
 
         try:
             choice = input("Choice [1]: ").strip() or "1"
         except (EOFError, KeyboardInterrupt):
             logger.warning("User cancelled deletion via EOF/interrupt")
-            print("\n\nDeletion cancelled.")
+            output.info("\n\nDeletion cancelled.")
             return False
 
         if choice == "3":
             logger.info("User cancelled deletion")
-            print("Deletion cancelled.")
+            output.info("Deletion cancelled.")
             return False
 
         delete_spec = choice == "2"
     else:
         # Non-interactive mode - show what will be done
         if delete_spec:
-            print("\n→ Will delete work item and spec file")
+            output.info("\n→ Will delete work item and spec file")
         else:
-            print("\n→ Will delete work item only (keeping spec file)")
+            output.info("\n→ Will delete work item only (keeping spec file)")
 
     # Perform deletion
     logger.info("Deleting work item '%s'", work_item_id)
@@ -180,7 +184,7 @@ def delete_work_item(
     try:
         save_json(work_items_file, work_items_data)
         logger.info("Successfully updated work_items.json")
-        print(f"✓ Deleted work item '{work_item_id}'")
+        output.info(f"✓ Deleted work item '{work_item_id}'")
     except OSError as e:
         logger.error("Failed to save work items: %s", e)
         raise FileOperationError(
@@ -196,22 +200,22 @@ def delete_work_item(
             try:
                 spec_path.unlink()
                 logger.info("Deleted spec file: %s", spec_file_path)
-                print(f"✓ Deleted spec file '{spec_file_path}'")
+                output.info(f"✓ Deleted spec file '{spec_file_path}'")
             except (OSError, PermissionError) as e:
                 logger.warning("Failed to delete spec file: %s", e)
-                print(f"⚠️  Warning: Could not delete spec file: {e}")
+                output.warning(f"Could not delete spec file: {e}")
         else:
             logger.debug("Spec file not found: %s", spec_file_path)
-            print(f"⚠️  Note: Spec file '{spec_file_path}' not found")
+            output.info(f"Note: Spec file '{spec_file_path}' not found")
 
     # Warn about dependents
     if dependents:
-        print("\n⚠️  Note: The following work items depend on this item:")
+        output.warning("\nThe following work items depend on this item:")
         for dep in dependents:
-            print(f"    - {dep}")
-        print("  Update their dependencies manually if needed.")
+            output.info(f"    - {dep}")
+        output.info("  Update their dependencies manually if needed.")
 
-    print("\nDeletion successful.")
+    output.info("\nDeletion successful.")
     logger.info("Work item deletion completed successfully")
     return True
 
@@ -252,9 +256,9 @@ def main() -> int:
         success = delete_work_item(args.work_item_id, delete_spec=delete_spec_value)
         return 0 if success else 1
     except WorkItemNotFoundError as e:
-        print(f"❌ Error: {e.message}")
+        output.info(f"❌ Error: {e.message}")
         if e.remediation:
-            print(f"\n{e.remediation}")
+            output.info(f"\n{e.remediation}")
         # Show available work items
         try:
             from pathlib import Path
@@ -264,18 +268,18 @@ def main() -> int:
                 work_items_data = load_json(work_items_file)
                 work_items = work_items_data.get("work_items", {})
                 if work_items:
-                    print("\nAvailable work items:")
+                    output.info("\nAvailable work items:")
                     for wid in list(work_items.keys())[:5]:
-                        print(f"  - {wid}")
+                        output.info(f"  - {wid}")
                     if len(work_items) > 5:
-                        print(f"  ... and {len(work_items) - 5} more")
+                        output.info(f"  ... and {len(work_items) - 5} more")
         except Exception:  # noqa: BLE001 - This is optional enhancement, don't fail on it
             pass
         return e.exit_code
     except (SDDFileNotFoundError, FileOperationError, ValidationError) as e:
-        print(f"❌ Error: {e.message}")
+        output.info(f"❌ Error: {e.message}")
         if e.remediation:
-            print(f"\n{e.remediation}")
+            output.info(f"\n{e.remediation}")
         return e.exit_code
 
 

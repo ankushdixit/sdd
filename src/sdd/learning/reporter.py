@@ -6,8 +6,10 @@ import re
 from typing import Any
 
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class LearningReporter:
@@ -24,13 +26,13 @@ class LearningReporter:
 
     def generate_report(self) -> None:
         """Generate learning summary report"""
-        print("\n=== Learning Summary Report ===\n")
+        output.section("Learning Summary Report")
 
         learnings = self.repository.load_learnings()
 
         # Create table
-        print("Learnings by Category:")
-        print("-" * 40)
+        output.info("Learnings by Category:")
+        output.info("-" * 40)
 
         categories = learnings.get("categories", {})
         total = 0
@@ -39,24 +41,24 @@ class LearningReporter:
             count = len(category_learnings)
             total += count
             formatted_name = category_name.replace("_", " ").title()
-            print(f"{formatted_name:<30} {count:>5}")
+            output.info(f"{formatted_name:<30} {count:>5}")
 
         # Add archived
         archived_count = len(learnings.get("archived", []))
         if archived_count > 0:
-            print(f"{'Archived':<30} {archived_count:>5}")
+            output.info(f"{'Archived':<30} {archived_count:>5}")
 
         # Add total
-        print("-" * 40)
-        print(f"{'Total':<30} {total:>5}")
-        print()
+        output.info("-" * 40)
+        output.info(f"{'Total':<30} {total:>5}")
+        output.info("")
 
         # Show last curated
         last_curated = learnings.get("last_curated")
         if last_curated:
-            print(f"Last curated: {last_curated}\n")
+            output.info(f"Last curated: {last_curated}\n")
         else:
-            print("Never curated\n")
+            output.info("Never curated\n")
 
     def search_learnings(self, query: str) -> None:
         """
@@ -88,22 +90,22 @@ class LearningReporter:
 
         # Display results
         if not matches:
-            print(f"\nNo learnings found matching '{query}'\n")
+            output.info(f"\nNo learnings found matching '{query}'\n")
             return
 
-        print(f"\n=== Search Results for '{query}' ===\n")
-        print(f"Found {len(matches)} matching learning(s):\n")
+        output.info(f"\n=== Search Results for '{query}' ===\n")
+        output.info(f"Found {len(matches)} matching learning(s):\n")
 
         for i, learning in enumerate(matches, 1):
-            print(f"{i}. [{learning['category'].replace('_', ' ').title()}]")
-            print(f"   {learning['content']}")
+            output.info(f"{i}. [{learning['category'].replace('_', ' ').title()}]")
+            output.info(f"   {learning['content']}")
 
             if "tags" in learning:
-                print(f"   Tags: {', '.join(learning['tags'])}")
+                output.info(f"   Tags: {', '.join(learning['tags'])}")
 
-            print(f"   Session: {learning.get('learned_in', 'unknown')}")
-            print(f"   ID: {learning.get('id', 'N/A')}")
-            print()
+            output.info(f"   Session: {learning.get('learned_in', 'unknown')}")
+            output.info(f"   ID: {learning.get('id', 'N/A')}")
+            output.info("")
 
     def show_learnings(
         self,
@@ -159,23 +161,23 @@ class LearningReporter:
 
         # Display results
         if not filtered:
-            print("\nNo learnings found matching the filters\n")
+            output.info("\nNo learnings found matching the filters\n")
             return
 
         if category:
             # Show specific category
-            print(f"\n{category.replace('_', ' ').title()}\n")
-            print("=" * 50)
+            output.info(f"\n{category.replace('_', ' ').title()}\n")
+            output.info("=" * 50)
 
             for i, learning in enumerate(filtered, 1):
-                print(f"\n{i}. {learning.get('content', 'N/A')}")
+                output.info(f"\n{i}. {learning.get('content', 'N/A')}")
                 if "tags" in learning:
-                    print(f"   Tags: {', '.join(learning['tags'])}")
+                    output.info(f"   Tags: {', '.join(learning['tags'])}")
                 if "learned_in" in learning:
-                    print(f"   Learned in: {learning['learned_in']}")
+                    output.info(f"   Learned in: {learning['learned_in']}")
                 if "timestamp" in learning:
-                    print(f"   Date: {learning['timestamp']}")
-                print(f"   ID: {learning.get('id', 'N/A')}")
+                    output.info(f"   Date: {learning['timestamp']}")
+                output.info(f"   ID: {learning.get('id', 'N/A')}")
         else:
             # Show all categories
             grouped: dict[str, list[Any]] = {}
@@ -186,19 +188,19 @@ class LearningReporter:
                 grouped[cat].append(learning)
 
             for category_name, category_learnings in grouped.items():
-                print(f"\n{category_name.replace('_', ' ').title()}")
-                print(f"Count: {len(category_learnings)}\n")
+                output.info(f"\n{category_name.replace('_', ' ').title()}")
+                output.info(f"Count: {len(category_learnings)}\n")
 
                 # Show first 3
                 for learning in category_learnings[:3]:
-                    print(f"  • {learning.get('content', 'N/A')}")
+                    output.info(f"  • {learning.get('content', 'N/A')}")
                     if "tags" in learning:
-                        print(f"    Tags: {', '.join(learning['tags'])}")
+                        output.info(f"    Tags: {', '.join(learning['tags'])}")
 
                 if len(category_learnings) > 3:
-                    print(f"  ... and {len(category_learnings) - 3} more")
+                    output.info(f"  ... and {len(category_learnings) - 3} more")
 
-                print()
+                output.info("")
 
     def generate_statistics(self) -> dict[str, Any]:
         """
@@ -251,34 +253,34 @@ class LearningReporter:
         """Display learning statistics"""
         stats = self.generate_statistics()
 
-        print("\n=== Learning Statistics ===\n")
+        output.section("Learning Statistics")
 
         # Total
-        print(f"Total learnings: {stats['total']}\n")
+        output.info(f"Total learnings: {stats['total']}\n")
 
         # By category
-        print("By Category:")
-        print("-" * 40)
+        output.info("By Category:")
+        output.info("-" * 40)
         for cat, count in stats["by_category"].items():
             cat_name = cat.replace("_", " ").title()
-            print(f"  {cat_name:<30} {count:>5}")
+            output.info(f"  {cat_name:<30} {count:>5}")
 
         # Top tags
         if stats["top_tags"]:
-            print("\nTop Tags:")
-            print("-" * 40)
+            output.info("\nTop Tags:")
+            output.info("-" * 40)
             for tag, count in stats["top_tags"]:
-                print(f"  {tag:<30} {count:>5}")
+                output.info(f"  {tag:<30} {count:>5}")
 
         # Sessions with most learnings
         if stats["by_session"]:
             top_sessions = sorted(stats["by_session"].items(), key=lambda x: x[1], reverse=True)[:5]
-            print("\nSessions with Most Learnings:")
-            print("-" * 40)
+            output.info("\nSessions with Most Learnings:")
+            output.info("-" * 40)
             for session_num, count in top_sessions:
-                print(f"  Session {session_num:<22} {count:>5}")
+                output.info(f"  Session {session_num:<22} {count:>5}")
 
-        print()
+        output.info("")
 
     def show_timeline(self, sessions: int = 10) -> None:
         """
@@ -302,19 +304,19 @@ class LearningReporter:
                     by_session[session].append(learning)
 
         if not by_session:
-            print("\nNo session timeline available\n")
+            output.info("\nNo session timeline available\n")
             return
 
         # Display recent sessions
         recent = sorted(by_session.keys(), reverse=True)[:sessions]
 
-        print(f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n")
+        output.info(f"\n=== Learning Timeline (Last {min(len(recent), sessions)} Sessions) ===\n")
 
         for session in recent:
             session_learnings = by_session[session]
             count = len(session_learnings)
 
-            print(f"Session {session:03d}: {count} learning(s)")
+            output.info(f"Session {session:03d}: {count} learning(s)")
 
             # Show first 3 learnings
             for learning in session_learnings[:3]:
@@ -322,12 +324,12 @@ class LearningReporter:
                 # Truncate long learnings
                 if len(content) > 60:
                     content = content[:57] + "..."
-                print(f"  - {content}")
+                output.info(f"  - {content}")
 
             if len(session_learnings) > 3:
-                print(f"  ... and {len(session_learnings) - 3} more")
+                output.info(f"  ... and {len(session_learnings) - 3} more")
 
-            print()
+            output.info("")
 
     def _extract_session_number(self, session_id: str) -> int:
         """

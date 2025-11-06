@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -23,11 +22,14 @@ from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
 )
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemStatus, WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items.spec_parser import parse_spec_file
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+output = get_output()
 
 
 @log_errors()
@@ -172,12 +174,12 @@ def run_quality_gates(work_item: dict | None = None) -> tuple[dict, bool, list]:
 
     # Generate and print report
     report = gates.generate_report(all_results)
-    print("\n" + report)
+    output.info("\n" + report)
 
     # Print remediation guidance if any gates failed
     if failed_gates:
         guidance = gates.get_remediation_guidance(failed_gates)
-        print(guidance)
+        output.info(guidance)
 
     return all_results, all_passed, failed_gates
 
@@ -216,21 +218,21 @@ def update_all_tracking(session_num: int) -> bool:
             ]
         )
         if result.success:
-            print("✓ Stack updated")
+            output.success("Stack updated")
             # Print output if there were changes
             if result.stdout.strip():
                 for line in result.stdout.strip().split("\n"):
                     if line.strip():
-                        print(f"  {line}")
+                        output.info(f"  {line}")
         else:
             logger.warning(f"Stack update failed (exit code {result.returncode})")
-            print(f"⚠️  Stack update failed (exit code {result.returncode})")
+            output.warning(f"Stack update failed (exit code {result.returncode})")
             if result.stderr:
                 logger.warning(f"Stack update error: {result.stderr}")
-                print(f"  Error: {result.stderr}")
+                output.info(f"  Error: {result.stderr}")
     except Exception as e:
         logger.warning(f"Stack update failed: {e}", exc_info=True)
-        print(f"⚠️  Stack update failed: {e}")
+        output.warning(f"Stack update failed: {e}")
 
     # Update tree
     try:
@@ -244,21 +246,21 @@ def update_all_tracking(session_num: int) -> bool:
             ]
         )
         if result.success:
-            print("✓ Tree updated")
+            output.success("Tree updated")
             # Print output if there were changes
             if result.stdout.strip():
                 for line in result.stdout.strip().split("\n"):
                     if line.strip():
-                        print(f"  {line}")
+                        output.info(f"  {line}")
         else:
             logger.warning(f"Tree update failed (exit code {result.returncode})")
-            print(f"⚠️  Tree update failed (exit code {result.returncode})")
+            output.warning(f"Tree update failed (exit code {result.returncode})")
             if result.stderr:
                 logger.warning(f"Tree update error: {result.stderr}")
-                print(f"  Error: {result.stderr}")
+                output.info(f"  Error: {result.stderr}")
     except Exception as e:
         logger.warning(f"Tree update failed: {e}", exc_info=True)
-        print(f"⚠️  Tree update failed: {e}")
+        output.warning(f"Tree update failed: {e}")
 
     return True
 
@@ -291,26 +293,26 @@ def trigger_curation_if_needed(session_num: int) -> None:
     # Run curation every N sessions
     if session_num % frequency == 0:
         logger.info(f"Triggering automatic curation for session {session_num}")
-        print(f"\n{'=' * 50}")
-        print(f"Running automatic learning curation (session {session_num})...")
-        print(f"{'=' * 50}\n")
+        output.info(f"\n{'=' * 50}")
+        output.info(f"Running automatic learning curation (session {session_num})...")
+        output.info(f"{'=' * 50}\n")
 
         try:
             runner = CommandRunner(default_timeout=60)
             result = runner.run(["python3", "scripts/learning_curator.py", "curate"])
 
             if result.success:
-                print(result.stdout)
-                print("✓ Learning curation completed\n")
+                output.info(result.stdout)
+                output.success("Learning curation completed\n")
                 logger.info("Learning curation completed successfully")
             else:
                 logger.warning(f"Learning curation encountered issues: {result.stderr}")
-                print("⚠️  Learning curation encountered issues")
+                output.warning("Learning curation encountered issues")
                 if result.stderr:
-                    print(result.stderr)
+                    output.error(result.stderr)
         except Exception as e:
             logger.warning(f"Learning curation failed: {e}", exc_info=True)
-            print(f"⚠️  Learning curation failed: {e}\n")
+            output.warning(f"Learning curation failed: {e}\n")
 
 
 @log_errors()
@@ -359,16 +361,16 @@ def auto_extract_learnings(session_num: int) -> int:
 
         if total_extracted > 0:
             logger.info(f"Auto-extracted {total_extracted} new learnings")
-            print(f"✓ Auto-extracted {total_extracted} new learning(s)\n")
+            output.info(f"✓ Auto-extracted {total_extracted} new learning(s)\n")
         else:
             logger.info("No new learnings extracted from session artifacts")
-            print("No new learnings extracted\n")
+            output.info("No new learnings extracted\n")
 
         return total_extracted
 
     except Exception as e:
         logger.warning(f"Auto-extraction failed: {e}", exc_info=True)
-        print(f"⚠️  Auto-extraction failed: {e}\n")
+        output.warning(f"Auto-extraction failed: {e}\n")
         return 0
 
 
@@ -393,27 +395,27 @@ def extract_learnings_from_session(learnings_file: Path | None = None) -> list[s
                 logger.info(f"Reading learnings from {learnings_file}")
                 with open(learnings_path) as f:
                     learnings = [line.strip() for line in f if line.strip()]
-                print(f"✓ Loaded {len(learnings)} learnings from file")
+                output.info(f"✓ Loaded {len(learnings)} learnings from file")
                 # Clean up temp file
                 learnings_path.unlink()
                 return learnings
             except OSError as e:
                 logger.warning(f"Failed to read learnings file: {e}")
-                print(f"⚠️  Failed to read learnings file: {e}")
+                output.warning(f"Failed to read learnings file: {e}")
                 return []
         else:
             logger.warning(f"Learnings file not found: {learnings_file}")
-            print(f"⚠️  Learnings file not found: {learnings_file}")
+            output.warning(f"Learnings file not found: {learnings_file}")
             return []
 
     # Skip manual input in non-interactive mode (e.g., when run by Claude Code)
     if not sys.stdin.isatty():
         logger.info("Skipping manual learning extraction (non-interactive mode)")
-        print("\nSkipping manual learning extraction (non-interactive mode)")
+        output.info("\nSkipping manual learning extraction (non-interactive mode)")
         return []
 
-    print("\nCapture additional learnings manually...")
-    print("(Type each learning, or 'done' to finish, or 'skip' to skip):")
+    output.info("\nCapture additional learnings manually...")
+    output.info("(Type each learning, or 'done' to finish, or 'skip' to skip):")
 
     learnings = []
     while True:
@@ -858,47 +860,47 @@ def check_uncommitted_changes() -> bool:
         logger.warning(f"Detected {len(user_changes)} uncommitted changes")
 
         # Display uncommitted changes
-        print("\n" + "=" * 60)
-        print("⚠️  UNCOMMITTED CHANGES DETECTED")
-        print("=" * 60)
-        print("\nYou have uncommitted changes:")
-        print()
+        output.info("\n" + "=" * 60)
+        output.warning("UNCOMMITTED CHANGES DETECTED")
+        output.info("=" * 60)
+        output.info("\nYou have uncommitted changes:")
+        output.info("")
 
         for line in user_changes[:15]:  # Show first 15
-            print(f"   {line}")
+            output.info(f"   {line}")
 
         if len(user_changes) > 15:
-            print(f"   ... and {len(user_changes) - 15} more")
+            output.info(f"   ... and {len(user_changes) - 15} more")
 
-        print("\n" + "=" * 60)
-        print("📋 REQUIRED STEPS BEFORE /sdd:end:")
-        print("=" * 60)
-        print()
-        print("1. Review your changes:")
-        print("   git status")
-        print()
-        print("2. Update CHANGELOG.md with session changes:")
-        print("   ## [Unreleased]")
-        print("   ### Added")
-        print("   - Your feature or change")
-        print()
-        print("3. Commit everything:")
-        print("   git add -A")
-        print("   git commit -m 'Implement feature X")
-        print()
-        print("   LEARNING: Key insight from implementation")
-        print()
-        print("   🤖 Generated with [Claude Code](https://claude.com/claude-code)")
-        print("   Co-Authored-By: Claude <noreply@anthropic.com>'")
-        print()
-        print("4. Then run:")
-        print("   sdd end")
-        print()
-        print("=" * 60)
+        output.info("\n" + "=" * 60)
+        output.info("📋 REQUIRED STEPS BEFORE /sdd:end:")
+        output.info("=" * 60)
+        output.info("")
+        output.info("1. Review your changes:")
+        output.info("   git status")
+        output.info("")
+        output.info("2. Update CHANGELOG.md with session changes:")
+        output.info("   ## [Unreleased]")
+        output.info("   ### Added")
+        output.info("   - Your feature or change")
+        output.info("")
+        output.info("3. Commit everything:")
+        output.info("   git add -A")
+        output.info("   git commit -m 'Implement feature X")
+        output.info("")
+        output.info("   LEARNING: Key insight from implementation")
+        output.info("")
+        output.info("   🤖 Generated with [Claude Code](https://claude.com/claude-code)")
+        output.info("   Co-Authored-By: Claude <noreply@anthropic.com>'")
+        output.info("")
+        output.info("4. Then run:")
+        output.info("   sdd end")
+        output.info("")
+        output.info("=" * 60)
 
         # In interactive mode, allow override
         if sys.stdin.isatty():
-            print()
+            output.info("")
             response = input("Continue anyway? (y/n): ")
             user_override = response.lower() == "y"
             logger.info(
@@ -907,13 +909,13 @@ def check_uncommitted_changes() -> bool:
             return user_override
         else:
             logger.info("Non-interactive mode: aborting on uncommitted changes")
-            print("\nNon-interactive mode: exiting")
-            print("Please commit your changes and run 'sdd end' again.")
+            output.info("\nNon-interactive mode: exiting")
+            output.info("Please commit your changes and run 'sdd end' again.")
             return False
 
     except Exception as e:
         logger.warning(f"Could not check git status: {e}", exc_info=True)
-        print(f"Warning: Could not check git status: {e}")
+        output.info(f"Warning: Could not check git status: {e}")
         return True  # Don't block on errors
 
 
@@ -934,12 +936,12 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
         # In non-interactive mode, default to incomplete for safety
         return False
 
-    print(f'\nWork item: "{work_item_title}"\n')
-    print("Is this work item complete?")
-    print("1. Yes - Mark as completed")
-    print("2. No - Keep as in-progress (will resume in next session)")
-    print("3. Cancel - Don't end session")
-    print()
+    output.info(f'\nWork item: "{work_item_title}"\n')
+    output.info("Is this work item complete?")
+    output.info("1. Yes - Mark as completed")
+    output.info("2. No - Keep as in-progress (will resume in next session)")
+    output.info("3. Cancel - Don't end session")
+    output.info("")
 
     while True:
         choice = input("Choice [1]: ").strip() or "1"
@@ -949,10 +951,10 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
         elif choice == "2":
             return False  # Keep in-progress
         elif choice == "3":
-            print("\nSession end cancelled")
+            output.info("\nSession end cancelled")
             return None  # Cancel operation
         else:
-            print("Invalid choice. Enter 1, 2, or 3.")
+            output.info("Invalid choice. Enter 1, 2, or 3.")
 
 
 @log_errors()
@@ -992,18 +994,18 @@ def main() -> int:
         status = load_status()
         if not status:
             logger.error("No active session found")
-            print("Error: No active session found")
+            output.info("Error: No active session found")
             return 1
     except FileOperationError as e:
         logger.error(f"Failed to load session status: {e}")
-        print(f"Error: Failed to load session status: {e}")
+        output.info(f"Error: Failed to load session status: {e}")
         return 1
 
     try:
         work_items_data = load_work_items()
     except FileOperationError as e:
         logger.error(f"Failed to load work items: {e}")
-        print(f"Error: Failed to load work items: {e}")
+        output.info(f"Error: Failed to load work items: {e}")
         return 1
 
     work_item_id = status["current_work_item"]
@@ -1011,7 +1013,7 @@ def main() -> int:
 
     if work_item_id not in work_items_data["work_items"]:
         logger.error(f"Work item not found: {work_item_id}")
-        print(f"Error: Work item not found: {work_item_id}")
+        output.info(f"Error: Work item not found: {work_item_id}")
         return 1
 
     work_item = work_items_data["work_items"][work_item_id]
@@ -1021,24 +1023,24 @@ def main() -> int:
     # Pre-flight check - ensure changes are committed
     if not check_uncommitted_changes():
         logger.warning("Session completion aborted due to uncommitted changes")
-        print("\n❌ Session completion aborted")
-        print("Commit your changes and try again.\n")
+        output.info("\n❌ Session completion aborted")
+        output.info("Commit your changes and try again.\n")
         return 1
 
-    print("Completing session...\n")
-    print("Running comprehensive quality gates...\n")
+    output.info("Completing session...\n")
+    output.info("Running comprehensive quality gates...\n")
 
     # Run quality gates with work item context
     gate_results, all_passed, failed_gates = run_quality_gates(work_item)
 
     if not all_passed:
         logger.error(f"Quality gates failed: {failed_gates}")
-        print("\n❌ Required quality gates failed. Fix issues before completing session.")
-        print(f"Failed gates: {', '.join(failed_gates)}")
+        output.info("\n❌ Required quality gates failed. Fix issues before completing session.")
+        output.info(f"Failed gates: {', '.join(failed_gates)}")
         return 1
 
     logger.info("All required quality gates passed")
-    print("\n✓ All required quality gates PASSED\n")
+    output.info("\n✓ All required quality gates PASSED\n")
 
     # Update all tracking (stack, tree)
     update_all_tracking(session_num)
@@ -1052,7 +1054,7 @@ def main() -> int:
     # Process learnings with learning_curator if available
     if learnings:
         logger.info(f"Processing {len(learnings)} learnings")
-        print(f"\nProcessing {len(learnings)} learnings...")
+        output.info(f"\nProcessing {len(learnings)} learnings...")
         try:
             from sdd.learning.curator import LearningsCurator
 
@@ -1075,28 +1077,28 @@ def main() -> int:
 
                 if curator.add_learning_if_new(learning_dict):
                     added_count += 1
-                    print(f"  ✓ Added: {learning}")
+                    output.info(f"  ✓ Added: {learning}")
                 else:
-                    print(f"  ⊘ Duplicate: {learning}")
+                    output.info(f"  ⊘ Duplicate: {learning}")
 
             if added_count > 0:
                 logger.info(f"Added {added_count} new learnings")
-                print(f"\n✓ Added {added_count} new learning(s) to learnings.json")
+                output.info(f"\n✓ Added {added_count} new learning(s) to learnings.json")
             else:
                 logger.info("No new learnings added (all duplicates)")
-                print("\n⊘ No new learnings added (all were duplicates)")
+                output.info("\n⊘ No new learnings added (all were duplicates)")
         except Exception as e:
             logger.warning(f"Failed to process learnings: {e}", exc_info=True)
-            print(f"⚠️  Failed to process learnings: {e}")
+            output.warning(f"Failed to process learnings: {e}")
 
     # Determine work item completion status
     work_item_title = work_items_data["work_items"][work_item_id]["title"]
 
     if args.complete:
-        print(f"\n✓ Marking work item '{work_item_title}' as complete (--complete flag)")
+        output.info(f"\n✓ Marking work item '{work_item_title}' as complete (--complete flag)")
         is_complete = True
     elif args.incomplete:
-        print(f"\n✓ Keeping work item '{work_item_title}' as in-progress (--incomplete flag)")
+        output.info(f"\n✓ Keeping work item '{work_item_title}' as in-progress (--incomplete flag)")
         is_complete = False
     else:
         # Determine if non-interactive
@@ -1107,17 +1109,17 @@ def main() -> int:
 
         if completion_result is None:
             # User cancelled - abort session end
-            print("\n❌ Session completion aborted by user")
+            output.info("\n❌ Session completion aborted by user")
             return 1
 
         is_complete = completion_result
 
         # Print completion decision message (for interactive mode)
         if is_complete:
-            print(f"\n✓ Marking work item '{work_item_title}' as complete")
+            output.info(f"\n✓ Marking work item '{work_item_title}' as complete")
         else:
-            print(
-                f"\n✓ Keeping work item '{work_item_title}' as in-progress (will resume in next session)"
+            output.success(
+                f"\nKeeping work item '{work_item_title}' as in-progress (will resume in next session)"
             )
 
     # Track changes for update_history
@@ -1177,13 +1179,13 @@ def main() -> int:
     commit_message = generate_commit_message(status, work_item)
 
     # Complete git workflow (commit, push, optionally merge or create PR)
-    print("\nCompleting git workflow...")
+    output.info("\nCompleting git workflow...")
     git_result = complete_git_workflow(work_item_id, commit_message, session_num)
 
     if git_result.get("success"):
-        print(f"✓ Git: {git_result.get('message', 'Success')}")
+        output.success(f"Git: {git_result.get('message', 'Success')}")
     else:
-        print(f"⚠️  Git: {git_result.get('message', 'Failed')}")
+        output.warning(f"Git: {git_result.get('message', 'Failed')}")
 
     # Record commits to work item tracking (Bug #15 fix)
     record_session_commits(work_item_id)
@@ -1204,16 +1206,16 @@ def main() -> int:
         logger.info(f"Saved session summary to {summary_file}")
     except OSError as e:
         logger.error(f"Failed to save session summary: {e}")
-        print(f"⚠️  Failed to save session summary: {e}")
+        output.warning(f"Failed to save session summary: {e}")
 
     # Auto-extract learnings from session artifacts (Bug #16 fix)
     # Now that commit and summary are created, we can extract from them
     auto_extract_learnings(session_num)
 
     # Print summary
-    print("\n" + "=" * 50)
-    print(summary)
-    print("=" * 50)
+    output.info("\n" + "=" * 50)
+    output.info(summary)
+    output.info("=" * 50)
 
     # Update status
     status["status"] = WorkItemStatus.COMPLETED.value
@@ -1224,10 +1226,10 @@ def main() -> int:
         logger.info("Updated session status to completed")
     except OSError as e:
         logger.error(f"Failed to update session status: {e}")
-        print(f"⚠️  Failed to update session status: {e}")
+        output.warning(f"Failed to update session status: {e}")
 
     logger.info(f"Session {session_num} completed successfully")
-    print("\n✓ Session completed successfully")
+    output.info("\n✓ Session completed successfully")
     return 0
 
 

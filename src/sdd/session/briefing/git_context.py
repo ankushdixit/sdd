@@ -12,9 +12,11 @@ from sdd.core.command_runner import CommandRunner
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import ErrorCode, GitError, SystemError
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import GitStatus, WorkItemStatus
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class GitContext:
@@ -246,11 +248,13 @@ class GitContext:
                 ) from e
 
             logger.info(
-                f"Updated git status for {previous_work_item_id}: in_progress → {final_status}"
+                "Updated git status for %s: in_progress → %s",
+                previous_work_item_id,
+                final_status,
             )
-            print(
-                f"✓ Finalized git status for previous work item: "
-                f"{previous_work_item_id} → {final_status}\n"
+            output.success(
+                f"Finalized git status for previous work item: "
+                f"{previous_work_item_id} → {final_status}"
             )
 
             return previous_work_item_id

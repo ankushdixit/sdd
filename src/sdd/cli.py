@@ -31,8 +31,12 @@ from sdd.core.exceptions import (
 )
 
 # Import logging configuration
-from sdd.core.logging_config import setup_logging
+from sdd.core.logging_config import get_logger, setup_logging
+from sdd.core.output import get_output
 from sdd.core.types import Priority
+
+logger = get_logger(__name__)
+output = get_output()
 
 # Command routing table
 # Format: 'command-name': (module_path, class_name, function_name, needs_argparse)
@@ -350,25 +354,21 @@ def main() -> int:
 
         # Check if command is provided
         if len(remaining) < 1:
-            print(
-                "Usage: sdd [--verbose] [--log-file FILE] <command> [args...]",
-                file=sys.stderr,
+            output.error("Usage: sdd [--verbose] [--log-file FILE] <command> [args...]")
+            output.error("\nGlobal flags:")
+            output.error("  --verbose, -v        Enable verbose (DEBUG) logging")
+            output.error("  --log-file FILE      Write logs to file")
+            output.error("\nAvailable commands:")
+            output.error("  Work Items:")
+            output.error(
+                "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph"
             )
-            print("\nGlobal flags:", file=sys.stderr)
-            print("  --verbose, -v        Enable verbose (DEBUG) logging", file=sys.stderr)
-            print("  --log-file FILE      Write logs to file", file=sys.stderr)
-            print("\nAvailable commands:", file=sys.stderr)
-            print("  Work Items:", file=sys.stderr)
-            print(
-                "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph",
-                file=sys.stderr,
-            )
-            print("  Sessions:", file=sys.stderr)
-            print("    start, end, status, validate", file=sys.stderr)
-            print("  Learnings:", file=sys.stderr)
-            print("    learn, learn-show, learn-search, learn-curate", file=sys.stderr)
-            print("  Initialization:", file=sys.stderr)
-            print("    init", file=sys.stderr)
+            output.error("  Sessions:")
+            output.error("    start, end, status, validate")
+            output.error("  Learnings:")
+            output.error("    learn, learn-show, learn-search, learn-curate")
+            output.error("  Initialization:")
+            output.error("    init")
             return 1
 
         command = remaining[0]
@@ -385,7 +385,7 @@ def main() -> int:
 
     except KeyboardInterrupt:
         # User cancelled operation
-        print("\n\nOperation cancelled by user", file=sys.stderr)
+        output.error("\n\nOperation cancelled by user")
         return 130
 
     except Exception as e:

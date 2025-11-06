@@ -22,6 +22,7 @@ from sdd.core.exceptions import (
     WorkItemNotFoundError,
 )
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemStatus
 
 # Import from refactored briefing package
@@ -51,6 +52,7 @@ from sdd.session.briefing import (
 )
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 @log_errors()
@@ -192,11 +194,11 @@ def main():
 
         if git_result["success"]:
             if git_result["action"] == "created":
-                print(f"✓ Created git branch: {git_result['branch']}\n")
+                output.success(f"Created git branch: {git_result['branch']}\n")
             else:
-                print(f"✓ Resumed git branch: {git_result['branch']}\n")
+                output.success(f"Resumed git branch: {git_result['branch']}\n")
         else:
-            print(f"⚠️  Git workflow warning: {git_result['message']}\n")
+            output.warning(f"Git workflow warning: {git_result['message']}\n")
     except GitError:
         # Re-raise GitError only if it's critical (not a git repo, command not found)
         # Other git errors are logged as warnings but don't block the briefing
@@ -205,7 +207,7 @@ def main():
         # Log unexpected errors but don't block briefing generation
         # Git workflow issues are non-fatal
         logger.warning("Could not start git workflow: %s", e)
-        print(f"⚠️  Could not start git workflow: {e}\n")
+        output.warning(f"Could not start git workflow: {e}\n")
 
     # Update work item status and session tracking
     work_items_file = session_dir / "tracking" / "work_items.json"
@@ -249,7 +251,7 @@ def main():
                 json.dump(work_items_data, f, indent=2)
 
             # Notify that status has been updated
-            print(f"✓ Work item status updated: {item_id} → in_progress\n")
+            output.success(f"Work item status updated: {item_id} → in_progress\n")
 
     briefing_file = briefings_dir / f"session_{session_num:03d}_briefing.md"
 
@@ -264,7 +266,7 @@ def main():
         logger.info("Created briefing file: %s", briefing_file)
 
     # Print briefing (always show it, whether new or existing)
-    print(briefing)
+    output.info(briefing)
 
     # Update status file
     status_file = session_dir / "tracking" / "status_update.json"
@@ -285,16 +287,16 @@ def _cli_main():
     try:
         return main()
     except SessionNotFoundError as e:
-        print(f"Error: {e.message}")
-        print(f"\n{e.remediation}")
+        output.info(f"Error: {e.message}")
+        output.info(f"\n{e.remediation}")
         return e.exit_code
     except WorkItemNotFoundError as e:
-        print(f"Error: {e.message}")
-        print(f"\n{e.remediation}")
+        output.info(f"Error: {e.message}")
+        output.info(f"\n{e.remediation}")
         # Also show available work items
         try:
             work_items_data = load_work_items()
-            print("\nAvailable work items:")
+            output.info("\nAvailable work items:")
             for wid, wi in work_items_data.get("work_items", {}).items():
                 status_emoji = {
                     WorkItemStatus.NOT_STARTED.value: "○",
@@ -302,48 +304,48 @@ def _cli_main():
                     WorkItemStatus.COMPLETED.value: "✓",
                     WorkItemStatus.BLOCKED.value: "✗",
                 }.get(wi["status"], "○")
-                print(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
+                output.info(f"  {status_emoji} {wid} - {wi['title']} ({wi['status']})")
         except Exception:
             pass  # If we can't load work items, just skip the list
         return e.exit_code
     except SessionAlreadyActiveError as e:
-        print(f"\nWarning: {e.message}")
-        print("\nOptions:")
-        print("1. Complete current work item first: /end")
-        print("2. Force start new work item: sdd start <work_item_id> --force")
-        print("3. Cancel: Ctrl+C\n")
+        output.info(f"\nWarning: {e.message}")
+        output.info("\nOptions:")
+        output.info("1. Complete current work item first: /end")
+        output.info("2. Force start new work item: sdd start <work_item_id> --force")
+        output.info("3. Cancel: Ctrl+C\n")
         return e.exit_code
     except UnmetDependencyError as e:
-        print(f"Error: {e.message}")
-        print(f"\n{e.remediation}")
+        output.info(f"Error: {e.message}")
+        output.info(f"\n{e.remediation}")
         # Show unmet dependency details
         try:
             work_items_data = load_work_items()
             dep_id = e.context.get("dependency_id")
             if dep_id:
                 dep = work_items_data.get("work_items", {}).get(dep_id, {})
-                print("\nDependency details:")
-                print(
+                output.info("\nDependency details:")
+                output.info(
                     f"  - {dep_id}: {dep.get('title', 'Unknown')} (status: {dep.get('status', 'unknown')})"
                 )
         except Exception:
             pass  # If we can't load work items, just skip the details
         return e.exit_code
     except ValidationError as e:
-        print(f"Error: {e.message}")
+        output.info(f"Error: {e.message}")
         if e.remediation:
-            print(f"\n{e.remediation}")
+            output.info(f"\n{e.remediation}")
         return e.exit_code
     except GitError as e:
-        print(f"Warning: {e.message}")
+        output.info(f"Warning: {e.message}")
         if e.remediation:
-            print(f"\n{e.remediation}")
+            output.info(f"\n{e.remediation}")
         # Git errors are warnings, not fatal - return success
         # This maintains backwards compatibility
         return 0
     except Exception as e:
         logger.exception("Unexpected error in briefing generation")
-        print(f"Unexpected error: {e}")
+        output.info(f"Unexpected error: {e}")
         return 1
 
 

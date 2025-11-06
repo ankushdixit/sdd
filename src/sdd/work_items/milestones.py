@@ -16,8 +16,10 @@ from sdd.core.types import WorkItemStatus
 
 if TYPE_CHECKING:
     from .repository import WorkItemRepository
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class MilestoneManager:
@@ -57,7 +59,7 @@ class MilestoneManager:
 
         self.repository.add_milestone(name, title, description, target_date)
         logger.info("Created milestone: %s", name)
-        print(f"✓ Created milestone: {name}")
+        output.info(f"✓ Created milestone: {name}")
 
     def get_progress(self, milestone_name: str) -> dict:
         """Calculate milestone progress
@@ -109,10 +111,10 @@ class MilestoneManager:
         milestones = self.repository.get_all_milestones()
 
         if not milestones:
-            print("No milestones found.")
+            output.info("No milestones found.")
             return
 
-        print("\nMilestones:\n")
+        output.info("\nMilestones:\n")
 
         for name, milestone in milestones.items():
             progress = self.get_progress(name)
@@ -123,13 +125,13 @@ class MilestoneManager:
             filled = int(bar_length * percent / 100)
             bar = "█" * filled + "░" * (bar_length - filled)
 
-            print(f"{milestone['title']}")
-            print(f"  [{bar}] {percent}%")
-            print(
+            output.info(f"{milestone['title']}")
+            output.info(f"  [{bar}] {percent}%")
+            output.info(
                 f"  {progress['completed']}/{progress['total']} complete, "
                 f"{progress['in_progress']} in progress"
             )
 
             if milestone.get("target_date"):
-                print(f"  Target: {milestone['target_date']}")
-            print()
+                output.info(f"  Target: {milestone['target_date']}")
+            output.info("")

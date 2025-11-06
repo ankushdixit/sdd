@@ -18,6 +18,8 @@ from sdd.core.exceptions import (
     FileOperationError,
     SpecValidationError,
 )
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemType
 from sdd.work_items.spec_parser import (
     extract_checklist,
@@ -25,6 +27,9 @@ from sdd.work_items.spec_parser import (
     parse_section,
     strip_html_comments,
 )
+
+logger = get_logger(__name__)
+output = get_output()
 
 
 def get_validation_rules(work_item_type: str) -> dict[str, Any]:
@@ -461,24 +466,28 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print("Usage: python3 spec_validator.py <work_item_id> <work_item_type>")
-        print("Example: python3 spec_validator.py feature_websocket_notifications feature")
+        output.info("Usage: python3 spec_validator.py <work_item_id> <work_item_type>")
+        output.info("Example: python3 spec_validator.py feature_websocket_notifications feature")
         sys.exit(1)
 
     work_item_id = sys.argv[1]
     work_item_type = sys.argv[2]
 
     try:
+        logger.info("Validating spec file for %s (%s)", work_item_id, work_item_type)
         validate_spec_file(work_item_id, work_item_type)
         report = format_validation_report(work_item_id, work_item_type)
-        print(report)
+        output.info(report)
+        logger.info("Spec validation successful")
         sys.exit(0)
     except SpecValidationError as e:
+        logger.warning("Spec validation failed: %s", e.message)
         report = format_validation_report(work_item_id, work_item_type, e)
-        print(report)
+        output.info(report)
         sys.exit(e.exit_code)
     except (FileNotFoundError, FileOperationError) as e:
-        print(f"Error: {e.message}")
+        logger.error("File operation error during validation", exc_info=True)
+        output.error(f"Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}")
+            output.info(f"Remediation: {e.remediation}")
         sys.exit(e.exit_code)

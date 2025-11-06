@@ -28,9 +28,14 @@ from sdd.core.exceptions import (
 from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemType
 from sdd.quality.gates import QualityGates
 from sdd.work_items import spec_parser
+
+logger = get_logger(__name__)
+output = get_output()
 
 
 class SessionValidator:
@@ -337,7 +342,8 @@ class SessionValidator:
             SDDError: Any SDD exception (GitError, ValidationError, FileOperationError, etc.)
                      that occurs during validation will be raised to the caller
         """
-        print("Running session validation...\n")
+        logger.info("Starting session validation (auto_fix=%s)", auto_fix)
+        output.info("Running session validation...\n")
 
         # Run all checks - exceptions will propagate to caller
         checks = {
@@ -347,40 +353,50 @@ class SessionValidator:
             "tracking_updates": self.check_tracking_updates(),
         }
 
+        logger.debug("Validation checks completed: %d checks run", len(checks))
+
         # Display results
         for check_name, result in checks.items():
             status = "✓" if result["passed"] else "✗"
-            print(f"{status} {check_name.replace('_', ' ').title()}: {result['message']}")
+            output.info(f"{status} {check_name.replace('_', ' ').title()}: {result['message']}")
+            logger.debug("Check %s: passed=%s", check_name, result["passed"])
 
             # Show details for failed checks
             if not result["passed"] and check_name == "quality_gates":
                 for gate_name, gate_result in result["gates"].items():
                     if not gate_result["passed"]:
-                        print(f"   ✗ {gate_name}: {gate_result['message']}")
+                        output.info(f"   ✗ {gate_name}: {gate_result['message']}")
+                        logger.warning(
+                            "Quality gate failed: %s - %s", gate_name, gate_result["message"]
+                        )
                         if "issues" in gate_result:
                             for issue in gate_result["issues"][:5]:
-                                print(f"      - {issue}")
+                                output.info(f"      - {issue}")
 
             # Show missing paths for work item criteria
             if not result["passed"] and check_name == "work_item_criteria":
                 if "missing_impl" in result and result["missing_impl"]:
-                    print("   Missing implementation paths:")
+                    output.info("   Missing implementation paths:")
                     for path in result["missing_impl"]:
-                        print(f"      - {path}")
+                        output.info(f"      - {path}")
+                    logger.warning("Missing implementation paths: %d", len(result["missing_impl"]))
                 if "missing_tests" in result and result["missing_tests"]:
-                    print("   Missing test paths:")
+                    output.info("   Missing test paths:")
                     for path in result["missing_tests"]:
-                        print(f"      - {path}")
+                        output.info(f"      - {path}")
+                    logger.warning("Missing test paths: %d", len(result["missing_tests"]))
 
         all_passed = all(c["passed"] for c in checks.values())
 
-        print()
+        output.info("")
         if all_passed:
-            print("✅ Session ready to complete!")
-            print("Run /end to complete the session.")
+            output.success("Session ready to complete!")
+            output.info("Run /end to complete the session.")
+            logger.info("Session validation passed - ready to complete")
         else:
-            print("⚠️  Session not ready to complete")
-            print("\nFix the issues above before running /end")
+            output.warning("Session not ready to complete")
+            output.info("\nFix the issues above before running /end")
+            logger.warning("Session validation failed - not ready to complete")
 
         return {"ready": all_passed, "checks": checks}
 
@@ -417,13 +433,15 @@ def main() -> int:
         GitError,
     ) as e:
         # Handle SDD exceptions gracefully
-        print(f"\nError: {e.message}")
+        output.error(f"Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}")
+            output.info(f"Remediation: {e.remediation}")
+        logger.error("Validation error: %s", e.message, exc_info=True)
         return e.exit_code
     except Exception as e:
         # Unexpected error
-        print(f"\nUnexpected error during validation: {e}")
+        output.error(f"Unexpected error during validation: {e}")
+        logger.error("Unexpected validation error", exc_info=True)
         return 1
 
 

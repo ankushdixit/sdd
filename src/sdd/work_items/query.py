@@ -17,8 +17,10 @@ from sdd.core.types import Priority, WorkItemStatus
 
 if TYPE_CHECKING:
     from .repository import WorkItemRepository
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class WorkItemQuery:
@@ -51,7 +53,7 @@ class WorkItemQuery:
         items = self.repository.get_all_work_items()
 
         if not items:
-            print("No work items found. Create one with /work-item create")
+            output.info("No work items found. Create one with /work-item create")
             return {"items": [], "count": 0}
 
         # Apply filters
@@ -118,66 +120,66 @@ class WorkItemQuery:
         item = items[work_id]
 
         # Display header
-        print("=" * 80)
-        print(f"Work Item: {work_id}")
-        print("=" * 80)
-        print()
+        output.info("=" * 80)
+        output.info(f"Work Item: {work_id}")
+        output.info("=" * 80)
+        output.info("")
 
         # Basic info
-        print(f"Type: {item['type']}")
-        print(f"Status: {item['status']}")
-        print(f"Priority: {item['priority']}")
-        print(f"Created: {item.get('created_at', 'Unknown')[:10]}")
-        print()
+        output.info(f"Type: {item['type']}")
+        output.info(f"Status: {item['status']}")
+        output.info(f"Priority: {item['priority']}")
+        output.info(f"Created: {item.get('created_at', 'Unknown')[:10]}")
+        output.info("")
 
         # Dependencies
         if item.get("dependencies"):
-            print("Dependencies:")
+            output.info("Dependencies:")
             for dep_id in item["dependencies"]:
                 if dep_id in items:
                     dep_status = items[dep_id]["status"]
                     icon = "✓" if dep_status == WorkItemStatus.COMPLETED.value else "✗"
-                    print(f"  {icon} {dep_id} ({dep_status})")
+                    output.info(f"  {icon} {dep_id} ({dep_status})")
                 else:
-                    print(f"  ? {dep_id} (not found)")
-            print()
+                    output.info(f"  ? {dep_id} (not found)")
+            output.info("")
 
         # Sessions
         sessions = item.get("sessions", [])
         if sessions:
-            print(f"Sessions: {len(sessions)}")
+            output.info(f"Sessions: {len(sessions)}")
             for i, session in enumerate(sessions[-5:], 1):  # Last 5 sessions
                 session_num = session.get("session_number", i)
                 date = session.get("date", "Unknown")
                 duration = session.get("duration", "Unknown")
                 notes = session.get("notes", "")
-                print(f"  {session_num}. {date} ({duration}) - {notes[:50]}")
-            print()
+                output.info(f"  {session_num}. {date} ({duration}) - {notes[:50]}")
+            output.info("")
 
         # Git info
         git_info = item.get("git", {})
         if git_info:
-            print(f"Git Branch: {git_info.get('branch', 'N/A')}")
+            output.info(f"Git Branch: {git_info.get('branch', 'N/A')}")
             commits = git_info.get("commits", [])
-            print(f"Commits: {len(commits)}")
-            print()
+            output.info(f"Commits: {len(commits)}")
+            output.info("")
 
         # Specification - use spec_file from work item config
         spec_file_path = item.get("spec_file", f".session/specs/{work_id}.md")
         spec_path = Path(spec_file_path)
         if spec_path.exists():
-            print("Specification:")
-            print("-" * 80)
+            output.info("Specification:")
+            output.info("-" * 80)
             spec_content = spec_path.read_text()
             # Show first 50 lines (increased to include Acceptance Criteria section)
             lines = spec_content.split("\n")[:50]
-            print("\n".join(lines))
+            output.info("\n".join(lines))
             if len(spec_content.split("\n")) > 50:
-                print(f"\n[... see full specification in {spec_file_path}]")
-            print()
+                output.info(f"\n[... see full specification in {spec_file_path}]")
+            output.info("")
 
         # Next steps
-        print("Next Steps:")
+        output.info("Next Steps:")
         if item["status"] == WorkItemStatus.NOT_STARTED.value:
             # Check dependencies
             blocked = any(
@@ -185,18 +187,18 @@ class WorkItemQuery:
                 for dep_id in item.get("dependencies", [])
             )
             if blocked:
-                print("- Waiting on dependencies to complete")
+                output.info("- Waiting on dependencies to complete")
             else:
-                print("- Start working: /start")
+                output.info("- Start working: /start")
         elif item["status"] == WorkItemStatus.IN_PROGRESS.value:
-            print("- Continue working: /start")
+            output.info("- Continue working: /start")
         elif item["status"] == WorkItemStatus.COMPLETED.value:
-            print("- Work item is complete")
+            output.info("- Work item is complete")
 
-        print(f"- Update fields: /work-update {work_id}")
+        output.info(f"- Update fields: /work-update {work_id}")
         if item.get("milestone"):
-            print(f"- View related items: /work-list --milestone {item['milestone']}")
-        print()
+            output.info(f"- View related items: /work-list --milestone {item['milestone']}")
+        output.info("")
 
         return item  # type: ignore[no-any-return]
 
@@ -266,7 +268,7 @@ class WorkItemQuery:
             items: List of items to display
         """
         if not items:
-            print("No work items found matching filters.")
+            output.info("No work items found matching filters.")
             return
 
         # Count by status
@@ -285,7 +287,7 @@ class WorkItemQuery:
 
         # Header
         total = len(items)
-        print(
+        output.info(
             f"\nWork Items ({total} total, "
             f"{status_counts[WorkItemStatus.IN_PROGRESS.value]} in progress, "
             f"{status_counts[WorkItemStatus.NOT_STARTED.value]} not started, "
@@ -322,7 +324,7 @@ class WorkItemQuery:
             if not group_items:
                 continue
 
-            print(f"{priority_emoji[priority]} {priority.upper()}")
+            output.info(f"{priority_emoji[priority]} {priority.upper()}")
 
             for item in group_items:
                 status_icon = self._get_status_icon(item)
@@ -344,18 +346,18 @@ class WorkItemQuery:
                 else:
                     status_str = ""
 
-                print(f"  {status_icon} {work_id} {status_str}")
+                output.info(f"  {status_icon} {work_id} {status_str}")
 
-            print()
+            output.info("")
 
         # Legend
-        print("Legend:")
-        print("  [  ] Not started")
-        print("  [>>] In progress")
-        print("  [✓] Completed")
-        print("  🚫 Blocked by dependencies")
-        print("  ✓ Ready to start")
-        print()
+        output.info("Legend:")
+        output.info("  [  ] Not started")
+        output.info("  [>>] In progress")
+        output.info("  [✓] Completed")
+        output.info("  🚫 Blocked by dependencies")
+        output.info("  ✓ Ready to start")
+        output.info("")
 
     def _get_status_icon(self, item: dict) -> str:
         """Get status icon for work item

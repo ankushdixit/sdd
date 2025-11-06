@@ -123,26 +123,27 @@ Transfer/sec:      170.50KB
         benchmark = PerformanceBenchmark(work_item)
 
         # Mock the time module - simulate 5 request cycles (each takes 0.1 seconds)
-        # time() is called 3 times per iteration: start_time check, req_start, req_end
-        # Plus 1 initial start_time and 1 final check
+        # time() is called: 1 initial start_time, 3 per iteration (while check, req_start, latency),
+        # 1 final while check, 1 total_duration, and extras for logging timestamps
         mock_times = [
             0.0,  # start_time
-            0.0,
-            0.0,
-            0.1,  # iteration 1: time check, req_start, req_end
-            0.1,
-            0.1,
-            0.2,  # iteration 2
-            0.2,
-            0.2,
-            0.3,  # iteration 3
-            0.3,
-            0.3,
-            0.4,  # iteration 4
-            0.4,
-            0.4,
-            0.5,  # iteration 5
-            0.5,  # final time check (loop exits because 0.5 >= 0.5)
+            0.0,  # logger timestamp (if structured logging is enabled)
+            0.0,  # iteration 0: while check
+            0.0,  # iteration 0: req_start
+            0.1,  # iteration 0: latency calculation
+            0.1,  # iteration 1: while check
+            0.1,  # iteration 1: req_start
+            0.2,  # iteration 1: latency calculation
+            0.2,  # iteration 2: while check
+            0.2,  # iteration 2: req_start
+            0.3,  # iteration 2: latency calculation
+            0.3,  # iteration 3: while check
+            0.3,  # iteration 3: req_start
+            0.4,  # iteration 3: latency calculation
+            0.4,  # iteration 4: while check
+            0.4,  # iteration 4: req_start
+            0.5,  # iteration 4: latency calculation
+            0.5,  # final while check (exits because 0.5 >= 0.5)
             0.5,  # total_duration calculation
         ]
 
