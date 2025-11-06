@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import QUALITY_CHECK_LONG_TIMEOUT
 from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
@@ -37,7 +38,11 @@ class Context7Checker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_LONG_TIMEOUT)
+        )
 
     def name(self) -> str:
         """Return checker name."""

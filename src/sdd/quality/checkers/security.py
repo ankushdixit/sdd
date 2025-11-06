@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import QUALITY_CHECK_LONG_TIMEOUT
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
 
@@ -41,7 +42,11 @@ class SecurityChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_LONG_TIMEOUT)
+        )
         self.language = language or self._detect_language()
 
     def name(self) -> str:
@@ -170,7 +175,7 @@ class SecurityChecker(QualityChecker):
                         "-o",
                         bandit_report_path,
                     ],
-                    timeout=60,
+                    timeout=QUALITY_CHECK_LONG_TIMEOUT,
                 )
 
                 if Path(bandit_report_path).exists():
@@ -204,7 +209,7 @@ class SecurityChecker(QualityChecker):
 
         result = self.runner.run(
             ["safety", "check", "--file", str(requirements_file), "--json"],
-            timeout=60,
+            timeout=QUALITY_CHECK_LONG_TIMEOUT,
         )
 
         if result.success and result.stdout:
@@ -224,7 +229,9 @@ class SecurityChecker(QualityChecker):
             logger.debug("No package.json found, skipping npm audit")
             return results
 
-        audit_result = self.runner.run(["npm", "audit", "--json"], timeout=60)
+        audit_result = self.runner.run(
+            ["npm", "audit", "--json"], timeout=QUALITY_CHECK_LONG_TIMEOUT
+        )
 
         if audit_result.success and audit_result.stdout:
             try:

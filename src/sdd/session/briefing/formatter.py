@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import SESSION_STATUS_TIMEOUT
 from sdd.core.exceptions import (
     FileOperationError,
 )
@@ -23,7 +24,7 @@ class BriefingFormatter:
 
     def __init__(self) -> None:
         """Initialize briefing formatter."""
-        self.runner = CommandRunner(default_timeout=5)
+        self.runner = CommandRunner(default_timeout=SESSION_STATUS_TIMEOUT)
 
     def shift_heading_levels(self, markdown_content: str, shift: int) -> str:
         r"""Shift all markdown heading levels by a specified amount.

@@ -17,6 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from sdd.core.constants import get_session_dir, get_specs_dir
 from sdd.core.types import Priority, WorkItemType
 
 from .creator import WorkItemCreator
@@ -41,7 +42,7 @@ class WorkItemManager:
             project_root: Optional project root path (defaults to current directory)
         """
         self.project_root = project_root or Path.cwd()
-        self.session_dir = self.project_root / ".session"
+        self.session_dir = get_session_dir(self.project_root)
 
         # Initialize components
         self.repository = WorkItemRepository(self.session_dir)
@@ -54,7 +55,7 @@ class WorkItemManager:
 
         # Legacy compatibility - maintain these paths for backward compatibility
         self.work_items_file = self.repository.work_items_file
-        self.specs_dir = self.session_dir / "specs"
+        self.specs_dir = get_specs_dir(self.project_root)
         self.templates_dir = Path(__file__).parent.parent / "templates"
 
     # Delegate creation methods

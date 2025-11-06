@@ -23,6 +23,13 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import (
+    CLEANUP_TIMEOUT,
+    DOCKER_COMMAND_TIMEOUT,
+    DOCKER_COMPOSE_TIMEOUT,
+    FIXTURE_SETUP_TIMEOUT,
+    INTEGRATION_TEST_TIMEOUT,
+)
 from sdd.core.exceptions import (
     EnvironmentSetupError,
     FileNotFoundError,
@@ -95,7 +102,7 @@ class IntegrationTestRunner:
         }
 
         # Initialize CommandRunner
-        self.runner = CommandRunner(default_timeout=600)
+        self.runner = CommandRunner(default_timeout=INTEGRATION_TEST_TIMEOUT)
 
     def _parse_environment_requirements(self, env_text: str) -> dict:
         """
@@ -165,7 +172,7 @@ class IntegrationTestRunner:
         # Start services
         result = self.runner.run(
             ["docker-compose", "-f", compose_file, "up", "-d"],
-            timeout=180,
+            timeout=DOCKER_COMPOSE_TIMEOUT,
         )
 
         if not result.success:
@@ -210,7 +217,9 @@ class IntegrationTestRunner:
         start_time = time.time()
 
         while time.time() - start_time < timeout:
-            result = self.runner.run(["docker-compose", "ps", "-q", service], timeout=5)
+            result = self.runner.run(
+                ["docker-compose", "ps", "-q", service], timeout=DOCKER_COMMAND_TIMEOUT
+            )
 
             if result.success and result.stdout.strip():
                 # Check health status
@@ -221,7 +230,7 @@ class IntegrationTestRunner:
                         "--format='{{.State.Health.Status}}'",
                         result.stdout.strip(),
                     ],
-                    timeout=5,
+                    timeout=DOCKER_COMMAND_TIMEOUT,
                 )
 
                 if health_result.success and "healthy" in health_result.stdout:
@@ -253,7 +262,9 @@ class IntegrationTestRunner:
                 continue
 
             # Execute fixture loading script
-            result = self.runner.run(["python", str(fixture_path)], timeout=30, check=True)
+            result = self.runner.run(
+                ["python", str(fixture_path)], timeout=FIXTURE_SETUP_TIMEOUT, check=True
+            )
             if result.success:
                 logger.info(f"✓ Loaded fixture: {fixture}")
             else:
@@ -325,7 +336,7 @@ class IntegrationTestRunner:
                 "--json-report",
                 "--json-report-file=integration-test-results.json",
             ],
-            timeout=600,  # 10 minute timeout
+            timeout=INTEGRATION_TEST_TIMEOUT,
         )
 
         # Parse results
@@ -376,7 +387,7 @@ class IntegrationTestRunner:
                 "--json",
                 "--outputFile=integration-test-results.json",
             ],
-            timeout=600,
+            timeout=INTEGRATION_TEST_TIMEOUT,
         )
 
         # Parse results
@@ -433,7 +444,7 @@ class IntegrationTestRunner:
         # Stop and remove services
         result = self.runner.run(
             ["docker-compose", "-f", compose_file, "down", "-v"],
-            timeout=60,
+            timeout=CLEANUP_TIMEOUT,
         )
 
         if not result.success:

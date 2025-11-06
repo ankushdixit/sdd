@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import QUALITY_CHECK_VERY_LONG_TIMEOUT
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
 
@@ -39,7 +40,11 @@ class LintingChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=120)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_VERY_LONG_TIMEOUT)
+        )
         self.language = language or self._detect_language()
         self.auto_fix = auto_fix if auto_fix is not None else self.config.get("auto_fix", False)
 
@@ -87,7 +92,7 @@ class LintingChecker(QualityChecker):
                 command += " --fix"
 
         # Run linter
-        result = self.runner.run(command.split(), timeout=120)
+        result = self.runner.run(command.split(), timeout=QUALITY_CHECK_VERY_LONG_TIMEOUT)
 
         execution_time = time.time() - start_time
 

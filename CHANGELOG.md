@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Refactor: Extract constants and remove magic values - Complete centralization**
+  - Created comprehensive `src/sdd/core/constants.py` module with 31 constants organized into 9 categories
+  - Replaced 50+ magic timeout values and hardcoded path strings across 27 files with named constants
+  - Added 8 helper functions for type-safe path construction (e.g., `get_session_dir()`, `get_work_items_file()`)
+  - Organized constants into logical categories:
+    - Git operation timeouts (3): Quick/Standard/Long (5s/10s/30s)
+    - Quality gate timeouts (5): From 5s checks to 20min test runs
+    - Integration testing timeouts (5): Docker, fixtures, cleanup operations
+    - Session workflow timeouts (4): Status, completion, learning extraction
+    - Project initialization timeouts (3): Stack detection, tree/graph generation
+    - Performance testing (4): Regression thresholds, test timeouts
+    - Learning system (5): Curator settings, similarity thresholds
+    - Directory and file paths (11): Session directory structure
+  - Updated files across all major modules:
+    - Core: git/integration.py (13 replacements), session/validate.py
+    - Quality: All 8 checker modules + gates.py (22 replacements)
+    - Session: complete.py, status.py, briefing modules (8 replacements)
+    - Testing: performance.py, integration_runner.py (9 replacements)
+    - Other: learning, visualization, project modules (4 replacements)
+  - All constants use `Final` type annotations for type safety
+  - Benefits: Single source of truth, self-documenting code, easier maintenance, improved readability
+  - All 2,180 tests passing, zero linting issues, clean formatting
+
+
 - **Refactor: Complete logging consistency refactor - 100% migration to structured logging**
   - Migrated all 502 print() statements across 30 files to new structured logging/output system
   - Separated user-facing output from diagnostic logging for better maintainability:

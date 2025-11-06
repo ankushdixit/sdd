@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import SESSION_STATUS_TIMEOUT
 from sdd.core.exceptions import (
     FileNotFoundError,
     FileOperationError,
@@ -142,7 +143,7 @@ def get_session_status() -> int:
     # Git changes
     try:
         logger.debug("Fetching git changes")
-        runner = CommandRunner(default_timeout=5)
+        runner = CommandRunner(default_timeout=SESSION_STATUS_TIMEOUT)
         result = runner.run(["git", "diff", "--name-status", "HEAD"])
 
         if result.success and result.stdout:

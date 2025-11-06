@@ -367,7 +367,9 @@ class TestRegressionDetection:
 
         # Verify regression context
         assert exc_info.value.context["regression_percent"] > 10.0
-        assert exc_info.value.context["threshold_percent"] == 10.0
+        assert (
+            abs(exc_info.value.context["threshold_percent"] - 10.0) < 0.01
+        )  # Allow for floating point precision
         assert exc_info.value.remediation is not None
 
     def test_check_for_regression_not_detected(self, tmp_path):
@@ -585,7 +587,13 @@ class TestFileStructure:
         content = file_path.read_text()
 
         # Act & Assert
-        assert "regression_threshold = 1.1" in content
+        # Check that the file uses the constant from constants.py
+        assert "PERFORMANCE_REGRESSION_THRESHOLD" in content
+
+        # Also verify the constant has the correct value
+        from sdd.core.constants import PERFORMANCE_REGRESSION_THRESHOLD
+
+        assert PERFORMANCE_REGRESSION_THRESHOLD == 1.1
 
 
 class TestBenchmarkConfiguration:

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import DOCKER_COMMAND_TIMEOUT, QUALITY_CHECK_STANDARD_TIMEOUT
 from sdd.core.exceptions import CommandExecutionError
 from sdd.core.logging_config import get_logger
 from sdd.core.types import WorkItemType
@@ -42,7 +43,11 @@ class IntegrationChecker(QualityChecker):
         """
         super().__init__(config)
         self.work_item = work_item
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=30)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_STANDARD_TIMEOUT)
+        )
         self.config_path = config_path if config_path is not None else Path(".session/config.json")
 
     def name(self) -> str:
@@ -193,14 +198,14 @@ class IntegrationChecker(QualityChecker):
         errors = []
 
         # Check Docker available
-        result = self.runner.run(["docker", "--version"], timeout=5)
+        result = self.runner.run(["docker", "--version"], timeout=DOCKER_COMMAND_TIMEOUT)
         results["docker_available"] = result.success
 
         if not result.success:
             errors.append({"message": "Docker not available"})
 
         # Check Docker Compose available
-        result = self.runner.run(["docker-compose", "--version"], timeout=5)
+        result = self.runner.run(["docker-compose", "--version"], timeout=DOCKER_COMMAND_TIMEOUT)
         results["docker_compose_available"] = result.success
 
         if not result.success:

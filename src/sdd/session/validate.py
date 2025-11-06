@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import GIT_QUICK_TIMEOUT, get_config_file, get_session_dir
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     ErrorCode,
@@ -44,9 +45,11 @@ class SessionValidator:
     def __init__(self, project_root: Path | None = None):
         """Initialize SessionValidator with project root path."""
         self.project_root = project_root or Path.cwd()
-        self.session_dir = self.project_root / ".session"
-        self.quality_gates = QualityGates(self.session_dir / "config.json")
-        self.runner = CommandRunner(default_timeout=5, working_dir=self.project_root)
+        self.session_dir = get_session_dir(self.project_root)
+        self.quality_gates = QualityGates(get_config_file(self.project_root))
+        self.runner = CommandRunner(
+            default_timeout=GIT_QUICK_TIMEOUT, working_dir=self.project_root
+        )
 
     @log_errors()
     def check_git_status(self) -> dict:

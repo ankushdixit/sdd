@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import GIT_QUICK_TIMEOUT, GIT_STANDARD_TIMEOUT
 from sdd.core.exceptions import (
     DirectoryNotEmptyError,
     ErrorCode,
@@ -51,7 +52,7 @@ def check_or_init_git(project_root: Path | None = None) -> bool:
         logger.info("Git repository already initialized")
         return True
 
-    runner = CommandRunner(default_timeout=5, working_dir=project_root)
+    runner = CommandRunner(default_timeout=GIT_QUICK_TIMEOUT, working_dir=project_root)
 
     # Initialize git
     result = runner.run(["git", "init"], check=True)
@@ -778,7 +779,7 @@ def run_initial_scans() -> None:
 
     # Get SDD installation directory
     script_dir = Path(__file__).parent
-    runner = CommandRunner(default_timeout=30)
+    runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT)
 
     # Run stack.py with absolute path
     try:
@@ -927,7 +928,7 @@ def create_initial_commit(project_root: Path | None = None) -> bool:
     if project_root is None:
         project_root = Path.cwd()
 
-    runner = CommandRunner(default_timeout=10, working_dir=project_root)
+    runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT, working_dir=project_root)
 
     try:
         # Check if there are already commits in the repository

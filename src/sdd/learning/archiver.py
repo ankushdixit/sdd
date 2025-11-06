@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from sdd.core.constants import MAX_LEARNING_AGE_SESSIONS
 from sdd.core.file_ops import load_json
 from sdd.core.logging_config import get_logger
 
@@ -16,7 +17,7 @@ logger = get_logger(__name__)
 class LearningArchiver:
     """Handles archiving of old, unreferenced learnings"""
 
-    def __init__(self, session_dir: Path, max_age_sessions: int = 50):
+    def __init__(self, session_dir: Path, max_age_sessions: int = MAX_LEARNING_AGE_SESSIONS):
         """
         Initialize archiver
 
