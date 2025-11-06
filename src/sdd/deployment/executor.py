@@ -26,6 +26,9 @@ from sdd.core.exceptions import (
     RollbackError,
     SmokeTestError,
 )
+from sdd.core.output import get_output
+
+output = get_output()
 
 
 class DeploymentExecutor:
@@ -388,17 +391,17 @@ def main() -> None:
         # Run smoke tests
         executor.run_smoke_tests()
 
-        print("Deployment successful!")
+        output.info("Deployment successful!")
 
     except (DeploymentStepError, SmokeTestError) as e:
         # Attempt rollback on deployment or smoke test failure
-        print(f"Error: {e.message}")
-        print("Initiating rollback...")
+        output.info(f"Error: {e.message}")
+        output.info("Initiating rollback...")
         try:
             executor.rollback()
-            print("Rollback completed successfully")
+            output.info("Rollback completed successfully")
         except RollbackError as rollback_err:
-            print(f"Rollback failed: {rollback_err.message}")
+            output.info(f"Rollback failed: {rollback_err.message}")
             raise
         # Re-raise original error after successful rollback
         raise

@@ -21,6 +21,7 @@ from pathlib import Path
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.learning.archiver import LearningArchiver
 from sdd.learning.categorizer import LearningCategorizer
 from sdd.learning.extractor import LearningExtractor
@@ -30,6 +31,7 @@ from sdd.learning.similarity import LearningSimilarityEngine
 from sdd.learning.validator import LearningValidator
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class LearningsCurator:
@@ -78,24 +80,24 @@ class LearningsCurator:
             ValidationError: If learning data is invalid
         """
         logger.info("Starting learning curation (dry_run=%s)", dry_run)
-        print("\n=== Learning Curation ===\n")
+        output.section("Learning Curation")
 
         # Load existing learnings
         learnings = self.repository.load_learnings()
         initial_count = self.repository.count_all_learnings(learnings)
-        print(f"Initial learnings: {initial_count}\n")
+        output.info(f"Initial learnings: {initial_count}\n")
 
         # Categorize uncategorized learnings
         categorized = self._categorize_learnings(learnings)
-        print(f"✓ Categorized {categorized} learnings")
+        output.info(f"✓ Categorized {categorized} learnings")
 
         # Merge similar learnings
         merged = self.similarity_engine.merge_similar_learnings(learnings)
-        print(f"✓ Merged {merged} duplicate learnings")
+        output.info(f"✓ Merged {merged} duplicate learnings")
 
         # Archive old learnings
         archived = self.archiver.archive_old_learnings(learnings)
-        print(f"✓ Archived {archived} old learnings")
+        output.info(f"✓ Archived {archived} old learnings")
 
         # Update metadata
         learnings["last_curated"] = datetime.now().isoformat()
@@ -103,13 +105,13 @@ class LearningsCurator:
         self.repository.update_total_learnings(learnings)
 
         final_count = self.repository.count_all_learnings(learnings)
-        print(f"\nFinal learnings: {final_count}\n")
+        output.info(f"\nFinal learnings: {final_count}\n")
 
         if not dry_run:
             self.repository.save_learnings(learnings)
-            print("✓ Learnings saved\n")
+            output.success("Learnings saved\n")
         else:
-            print("Dry run - no changes saved\n")
+            output.info("Dry run - no changes saved\n")
 
     def _categorize_learnings(self, learnings: dict) -> int:
         """
@@ -163,7 +165,7 @@ class LearningsCurator:
 
         if not last_curated:
             # Never curated, do it now
-            print("Auto-curating (first time)...\n")
+            output.info("Auto-curating (first time)...\n")
             self.curate(dry_run=False)
             return True
 
@@ -174,7 +176,7 @@ class LearningsCurator:
         frequency_days = config.frequency
 
         if days_since >= frequency_days:
-            print(f"Auto-curating (last curated {days_since} days ago)...\n")
+            output.info(f"Auto-curating (last curated {days_since} days ago)...\n")
             self.curate(dry_run=False)
             return True
 

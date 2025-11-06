@@ -19,7 +19,9 @@ from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import ErrorCode, ValidationError
+from sdd.core.output import get_output
 
+output = get_output()
 logger = logging.getLogger(__name__)
 
 
@@ -276,7 +278,7 @@ def main() -> None:
 
     if len(sys.argv) < 2:
         logger.error("Missing required argument: environment")
-        print("Usage: environment_validator.py <environment>", file=sys.stderr)
+        output.error("Usage: environment_validator.py <environment>")
         sys.exit(1)
 
     environment = sys.argv[1]
@@ -285,18 +287,18 @@ def main() -> None:
     try:
         passed, results = validator.validate_all()
 
-        print(f"\nEnvironment Validation: {'✓ PASSED' if passed else '✗ FAILED'}")
+        output.info(f"\nEnvironment Validation: {'✓ PASSED' if passed else '✗ FAILED'}")
         for validation in results["validations"]:
             status = "✓" if validation["passed"] else "✗"
-            print(f"  {status} {validation['name']}")
+            output.info(f"  {status} {validation['name']}")
 
         sys.exit(0 if passed else 1)
     except ValidationError as e:
         logger.error(f"Validation failed: {e.message}", extra=e.to_dict())
-        print("\nEnvironment Validation: ✗ FAILED", file=sys.stderr)
-        print(f"Error: {e.message}", file=sys.stderr)
+        output.error("\nEnvironment Validation: ✗ FAILED")
+        output.error(f"Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}", file=sys.stderr)
+            output.error(f"Remediation: {e.remediation}")
         sys.exit(e.exit_code)
 
 

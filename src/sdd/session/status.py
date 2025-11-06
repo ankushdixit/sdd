@@ -2,7 +2,6 @@
 """Display current session status."""
 
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -14,9 +13,12 @@ from sdd.core.exceptions import (
     ValidationError,
     WorkItemNotFoundError,
 )
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import Priority, WorkItemStatus
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+output = get_output()
 
 
 def get_session_status() -> int:
@@ -40,13 +42,16 @@ def get_session_status() -> int:
         ValidationError: If session data is invalid
         WorkItemNotFoundError: If work item doesn't exist
     """
+    logger.debug("Fetching session status")
     session_dir = Path(".session")
     status_file = session_dir / "tracking" / "status_update.json"
 
     if not status_file.exists():
+        logger.info("No active session file found")
         raise SessionNotFoundError()
 
     # Load status
+    logger.debug("Loading session status from: %s", status_file)
     try:
         status = json.loads(status_file.read_text())
     except json.JSONDecodeError as e:
@@ -67,14 +72,18 @@ def get_session_status() -> int:
     work_item_id = status.get("current_work_item")
 
     if not work_item_id:
+        logger.warning("No active work item in session")
         raise ValidationError(
             message="No active work item in this session",
             context={"status_file": str(status_file)},
             remediation="Start a work item with 'sdd start <work_item_id>'",
         )
 
+    logger.debug("Current work item: %s", work_item_id)
+
     # Load work item
     work_items_file = session_dir / "tracking" / "work_items.json"
+    logger.debug("Loading work items from: %s", work_items_file)
 
     if not work_items_file.exists():
         raise FileNotFoundError(
@@ -102,21 +111,22 @@ def get_session_status() -> int:
     item = data["work_items"].get(work_item_id)
 
     if not item:
+        logger.error("Work item not found: %s", work_item_id)
         raise WorkItemNotFoundError(work_item_id)
 
-    print("\nCurrent Session Status")
-    print("=" * 80)
-    print()
+    logger.info("Displaying session status for work item: %s", work_item_id)
+
+    output.section("Current Session Status")
 
     # Work item info
-    print(f"Work Item: {work_item_id}")
-    print(f"Type: {item['type']}")
-    print(f"Priority: {item['priority']}")
+    output.info(f"Work Item: {work_item_id}")
+    output.info(f"Type: {item['type']}")
+    output.info(f"Priority: {item['priority']}")
 
     sessions = len(item.get("sessions", []))
     estimated = item.get("estimated_effort", "Unknown")
-    print(f"Session: {sessions} (of estimated {estimated})")
-    print()
+    output.info(f"Session: {sessions} (of estimated {estimated})")
+    output.info("")
 
     # Time elapsed (if session start time recorded)
     session_start = status.get("session_start")
@@ -125,39 +135,44 @@ def get_session_status() -> int:
         elapsed = datetime.now() - start_time
         hours = int(elapsed.total_seconds() // 3600)
         minutes = int((elapsed.total_seconds() % 3600) // 60)
-        print(f"Time Elapsed: {hours}h {minutes}m")
-        print()
+        output.info(f"Time Elapsed: {hours}h {minutes}m")
+        output.info("")
+        logger.debug("Session elapsed time: %dh %dm", hours, minutes)
 
     # Git changes
     try:
+        logger.debug("Fetching git changes")
         runner = CommandRunner(default_timeout=5)
         result = runner.run(["git", "diff", "--name-status", "HEAD"])
 
         if result.success and result.stdout:
             lines = result.stdout.strip().split("\n")
-            print(f"Files Changed ({len(lines)}):")
+            output.info(f"Files Changed ({len(lines)}):")
             for line in lines[:10]:  # Show first 10
-                print(f"  {line}")
+                output.info(f"  {line}")
             if len(lines) > 10:
-                print(f"  ... and {len(lines) - 10} more")
-            print()
+                output.info(f"  ... and {len(lines) - 10} more")
+            output.info("")
+            logger.debug("Found %d changed files", len(lines))
     except Exception as e:
         # Git operations are optional for status display
         # Log but don't fail if git command fails
-        logger.debug(f"Failed to get git changes: {e}")
+        logger.debug("Failed to get git changes: %s", e)
 
     # Git branch
     git_info = item.get("git", {})
     if git_info:
         branch = git_info.get("branch", "N/A")
         commits = len(git_info.get("commits", []))
-        print(f"Git Branch: {branch}")
-        print(f"Commits: {commits}")
-        print()
+        output.info(f"Git Branch: {branch}")
+        output.info(f"Commits: {commits}")
+        output.info("")
+        logger.debug("Git info - branch: %s, commits: %d", branch, commits)
 
     # Milestone
     milestone_name = item.get("milestone")
     if milestone_name:
+        logger.debug("Processing milestone: %s", milestone_name)
         milestones = data.get("milestones", {})
         milestone = milestones.get(milestone_name)
         if milestone:
@@ -178,12 +193,19 @@ def get_session_status() -> int:
                 1 for i in milestone_items if i["status"] == WorkItemStatus.NOT_STARTED.value
             )
 
-            print(f"Milestone: {milestone_name} ({percent}% complete)")
-            print(f"  Related items: {in_prog} in progress, {not_started} not started")
-            print()
+            output.info(f"Milestone: {milestone_name} ({percent}% complete)")
+            output.info(f"  Related items: {in_prog} in progress, {not_started} not started")
+            output.info("")
+            logger.info(
+                "Milestone %s: %d%% complete (%d/%d items)",
+                milestone_name,
+                percent,
+                completed,
+                total,
+            )
 
     # Next items
-    print("Next up:")
+    output.info("Next up:")
     items = data["work_items"]
     next_items = [
         (wid, i) for wid, i in items.items() if i["status"] == WorkItemStatus.NOT_STARTED.value
@@ -196,6 +218,7 @@ def get_session_status() -> int:
         Priority.LOW.value: "🟢",
     }
 
+    logger.debug("Found %d next items to display", len(next_items))
     for wid, i in next_items:
         emoji = priority_emoji.get(i["priority"], "")
         # Check if blocked
@@ -204,16 +227,17 @@ def get_session_status() -> int:
             for dep_id in i.get("dependencies", [])
         )
         status_str = "(blocked)" if blocked else "(ready)"
-        print(f"  {emoji} {wid} {status_str}")
-    print()
+        output.info(f"  {emoji} {wid} {status_str}")
+    output.info("")
 
     # Quick actions
-    print("Quick actions:")
-    print("  - Validate session: /validate")
-    print("  - Complete session: /end")
-    print(f"  - View work item: /work-show {work_item_id}")
-    print()
+    output.info("Quick actions:")
+    output.info("  - Validate session: /validate")
+    output.info("  - Complete session: /end")
+    output.info(f"  - View work item: /work-show {work_item_id}")
+    output.info("")
 
+    logger.info("Session status displayed successfully")
     return 0
 
 

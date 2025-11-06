@@ -30,8 +30,10 @@ from sdd.core.exceptions import (
     TimeoutError,
     ValidationError,
 )
+from sdd.core.output import get_output
 from sdd.work_items import spec_parser
 
+output = get_output()
 logger = logging.getLogger(__name__)
 
 
@@ -511,7 +513,7 @@ def main() -> None:
         results = runner.run_tests()
 
         # Print report
-        print(runner.generate_report())
+        output.info(runner.generate_report())
 
         # Teardown
         runner.teardown_environment()

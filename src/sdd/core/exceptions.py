@@ -16,8 +16,8 @@ Usage:
     try:
         item = get_work_item("invalid")
     except WorkItemNotFoundError as e:
-        print(f"Error: {e}")
-        print(f"Remediation: {e.remediation}")
+        output.info(f"Error: {e}")
+        output.info(f"Remediation: {e.remediation}")
         sys.exit(e.exit_code)
 """
 
@@ -25,6 +25,12 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
+
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
+
+logger = get_logger(__name__)
+output = get_output()
 
 
 class ErrorCategory(Enum):

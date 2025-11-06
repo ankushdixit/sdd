@@ -14,8 +14,10 @@ from sdd.core.types import Priority, WorkItemStatus
 
 if TYPE_CHECKING:
     from .repository import WorkItemRepository
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class WorkItemScheduler:
@@ -38,7 +40,7 @@ class WorkItemScheduler:
         items = self.repository.get_all_work_items()
 
         if not items:
-            print("No work items found.")
+            output.info("No work items found.")
             return None
 
         # Filter to not_started items
@@ -49,8 +51,8 @@ class WorkItemScheduler:
         }
 
         if not not_started:
-            print("No work items available to start.")
-            print("All items are either in progress or completed.")
+            output.info("No work items available to start.")
+            output.info("All items are either in progress or completed.")
             return None
 
         # Check dependencies and categorize
@@ -71,10 +73,10 @@ class WorkItemScheduler:
                 ready_items.append((work_id, item))
 
         if not ready_items:
-            print("No work items ready to start. All have unmet dependencies.\n")
-            print("Blocked items:")
+            output.info("No work items ready to start. All have unmet dependencies.\n")
+            output.info("Blocked items:")
             for work_id, item, blocking in blocked_items:
-                print(f"  🔴 {work_id} - Blocked by: {', '.join(blocking)}")
+                output.info(f"  🔴 {work_id} - Blocked by: {', '.join(blocking)}")
             return None
 
         # Sort ready items by priority
@@ -133,9 +135,9 @@ class WorkItemScheduler:
             blocked_items: List of blocked items
             all_items: All work items
         """
-        print("\nNext Recommended Work Item:")
-        print("=" * 80)
-        print()
+        output.info("\nNext Recommended Work Item:")
+        output.info("=" * 80)
+        output.info("")
 
         priority_emoji = {
             Priority.CRITICAL.value: "🔴",
@@ -145,38 +147,38 @@ class WorkItemScheduler:
         }
 
         emoji = priority_emoji.get(next_item["priority"], "")
-        print(f"{emoji} {next_item['priority'].upper()}: {next_item['title']}")
-        print(f"ID: {next_id}")
-        print(f"Type: {next_item['type']}")
-        print(f"Priority: {next_item['priority']}")
-        print("Ready to start: Yes ✓")
-        print()
+        output.info(f"{emoji} {next_item['priority'].upper()}: {next_item['title']}")
+        output.info(f"ID: {next_id}")
+        output.info(f"Type: {next_item['type']}")
+        output.info(f"Priority: {next_item['priority']}")
+        output.info("Ready to start: Yes ✓")
+        output.info("")
 
         # Dependencies
         deps = next_item.get("dependencies", [])
         if deps:
-            print("Dependencies: All satisfied")
+            output.info("Dependencies: All satisfied")
             for dep_id in deps:
-                print(f"  ✓ {dep_id} (completed)")
+                output.info(f"  ✓ {dep_id} (completed)")
         else:
-            print("Dependencies: None")
-        print()
+            output.info("Dependencies: None")
+        output.info("")
 
         # Estimated effort
         estimated = next_item.get("estimated_effort", "Unknown")
-        print(f"Estimated effort: {estimated}")
-        print()
+        output.info(f"Estimated effort: {estimated}")
+        output.info("")
 
-        print("To start: /start")
-        print()
+        output.info("To start: /start")
+        output.info("")
 
         # Show other items
         if len(ready_items) > 1 or blocked_items:
-            print("Other items waiting:")
+            output.info("Other items waiting:")
             for work_id, item in ready_items[1:3]:  # Show next 2 ready items
                 emoji = priority_emoji.get(item["priority"], "")
-                print(f"  {emoji} {work_id} - Ready ({item['priority']} priority)")
+                output.info(f"  {emoji} {work_id} - Ready ({item['priority']} priority)")
 
             for work_id, item, blocking in blocked_items[:2]:  # Show 2 blocked items
-                print(f"  🔴 {work_id} - Blocked by: {', '.join(blocking[:2])}")
-            print()
+                output.info(f"  🔴 {work_id} - Blocked by: {', '.join(blocking[:2])}")
+            output.info("")

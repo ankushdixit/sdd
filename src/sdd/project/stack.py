@@ -21,6 +21,9 @@ from typing import Any
 
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import FileOperationError
+from sdd.core.output import get_output
+
+output = get_output()
 
 
 class StackGenerator:
@@ -338,18 +341,18 @@ class StackGenerator:
 
         # If changes detected, prompt for reasoning (unless non-interactive)
         if changes and session_num:
-            print(f"\n{'=' * 50}")
-            print("Stack Changes Detected")
-            print("=" * 50)
+            output.info(f"\n{'=' * 50}")
+            output.info("Stack Changes Detected")
+            output.info("=" * 50)
 
             for change in changes:
-                print(f"  {change['type'].upper()}: {change['content']}")
+                output.info(f"  {change['type'].upper()}: {change['content']}")
 
             if non_interactive:
                 reasoning = "Automated update during session completion"
-                print("\n(Non-interactive mode: recording changes without manual reasoning)")
+                output.info("\n(Non-interactive mode: recording changes without manual reasoning)")
             else:
-                print("\nPlease provide reasoning for these changes:")
+                output.info("\nPlease provide reasoning for these changes:")
                 reasoning = input("> ")
 
             # Update stack_updates.json
@@ -404,6 +407,10 @@ def main() -> None:
     """CLI entry point."""
     import argparse
 
+    from sdd.core.output import get_output
+
+    output = get_output()
+
     parser = argparse.ArgumentParser(description="Generate technology stack documentation")
     parser.add_argument("--session", type=int, help="Current session number")
     parser.add_argument(
@@ -417,11 +424,11 @@ def main() -> None:
     changes = generator.update_stack(session_num=args.session, non_interactive=args.non_interactive)
 
     if changes:
-        print(f"\n✓ Stack updated with {len(changes)} changes")
+        output.info(f"\n✓ Stack updated with {len(changes)} changes")
     else:
-        print("\n✓ Stack generated (no changes)")
+        output.info("\n✓ Stack generated (no changes)")
 
-    print(f"✓ Saved to: {generator.stack_file}")
+    output.info(f"✓ Saved to: {generator.stack_file}")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,12 @@ from sdd.core.exceptions import (
     FileOperationError,
     ValidationError,
 )
+from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemStatus
+
+logger = get_logger(__name__)
+output = get_output()
 
 
 class DependencyGraphVisualizer:
@@ -620,8 +625,6 @@ class DependencyGraphVisualizer:
 
 def main() -> int:
     """CLI entry point for graph generation."""
-    import sys
-
     parser = argparse.ArgumentParser(description="Generate work item dependency graphs")
 
     # Output format
@@ -674,7 +677,7 @@ def main() -> int:
     )
 
     if not work_items:
-        print("No work items found matching criteria.", file=sys.stderr)
+        output.error("No work items found matching criteria.")
         return 1
 
     # Apply special filters
@@ -682,12 +685,12 @@ def main() -> int:
         try:
             work_items = viz.get_neighborhood(work_items, args.focus)
             if not work_items:
-                print(f"Work item '{args.focus}' not found.", file=sys.stderr)
+                output.error(f"Work item '{args.focus}' not found.")
                 return 1
         except ValidationError as e:
-            print(f"Error: {e.message}", file=sys.stderr)
+            output.error(f"Error: {e.message}")
             if e.remediation:
-                print(f"Remediation: {e.remediation}", file=sys.stderr)
+                output.error(f"Remediation: {e.remediation}")
             return e.exit_code
 
     critical_path = viz._calculate_critical_path(work_items)
@@ -698,41 +701,43 @@ def main() -> int:
     # Handle special views
     if args.stats:
         stats = viz.generate_stats(work_items, critical_path)
-        print("Graph Statistics:")
-        print("=" * 50)
-        print(f"Total work items: {stats['total_items']}")
-        print(f"Completed: {stats['completed']} ({stats['completion_pct']}%)")
-        print(f"In progress: {stats['in_progress']}")
-        print(f"Not started: {stats['not_started']}")
-        print(f"Critical path length: {stats['critical_path_length']}")
+        output.info("Graph Statistics:")
+        output.info("=" * 50)
+        output.info(f"Total work items: {stats['total_items']}")
+        output.info(f"Completed: {stats['completed']} ({stats['completion_pct']}%)")
+        output.info(f"In progress: {stats['in_progress']}")
+        output.info(f"Not started: {stats['not_started']}")
+        output.info(f"Critical path length: {stats['critical_path_length']}")
         if stats["critical_items"]:
-            print(f"Critical items: {', '.join(stats['critical_items'])}")
+            output.info(f"Critical items: {', '.join(stats['critical_items'])}")
         return 0
 
     if args.bottlenecks:
         bottlenecks = viz.get_bottlenecks(work_items)
-        print("Bottleneck Analysis:")
-        print("=" * 50)
+        output.info("Bottleneck Analysis:")
+        output.info("=" * 50)
         if bottlenecks:
             for bn in bottlenecks:
                 item = bn["item"]
-                print(f"{bn['id']} - {item.get('title', 'N/A')} (blocks {bn['blocks']} items)")
+                output.info(
+                    f"{bn['id']} - {item.get('title', 'N/A')} (blocks {bn['blocks']} items)"
+                )
         else:
-            print("No bottlenecks found (no items block 2+ other items).")
+            output.info("No bottlenecks found (no items block 2+ other items).")
         return 0
 
     # Generate graph
     try:
         if args.format == "ascii":
-            output = viz.generate_ascii(work_items)
-            print(output)
+            graph_output = viz.generate_ascii(work_items)
+            output.info(graph_output)
 
         elif args.format == "dot":
-            output = viz.generate_dot(work_items)
+            graph_output = viz.generate_dot(work_items)
             if args.output:
                 try:
-                    Path(args.output).write_text(output)
-                    print(f"DOT graph saved to {args.output}")
+                    Path(args.output).write_text(graph_output)
+                    output.info(f"DOT graph saved to {args.output}")
                 except OSError as e:
                     from sdd.core.exceptions import FileOperationError
 
@@ -743,37 +748,36 @@ def main() -> int:
                         cause=e,
                     ) from e
             else:
-                print(output)
+                output.info(graph_output)
 
         elif args.format == "svg":
             dot_output = viz.generate_dot(work_items)
             output_file = Path(args.output) if args.output else Path("dependency_graph.svg")
             viz.generate_svg(dot_output, output_file)
-            print(f"SVG graph saved to {output_file}")
+            output.info(f"SVG graph saved to {output_file}")
 
     except ValidationError as e:
-        print(f"Validation Error: {e.message}", file=sys.stderr)
+        output.error(f"Validation Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}", file=sys.stderr)
+            output.error(f"Remediation: {e.remediation}")
         return e.exit_code
     except CommandExecutionError as e:
-        print(f"Command Error: {e.message}", file=sys.stderr)
+        output.error(f"Command Error: {e.message}")
         if e.context.get("stderr"):
-            print(f"Details: {e.context['stderr']}", file=sys.stderr)
-        print(
-            "Hint: Ensure Graphviz is installed (apt-get install graphviz / brew install graphviz)",
-            file=sys.stderr,
+            output.error(f"Details: {e.context['stderr']}")
+        output.error(
+            "Hint: Ensure Graphviz is installed (apt-get install graphviz / brew install graphviz)"
         )
         return e.exit_code
     except FileOperationError as e:
-        print(f"File Error: {e.message}", file=sys.stderr)
+        output.error(f"File Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}", file=sys.stderr)
+            output.error(f"Remediation: {e.remediation}")
         return e.exit_code
     except CircularDependencyError as e:
-        print(f"Dependency Error: {e.message}", file=sys.stderr)
+        output.error(f"Dependency Error: {e.message}")
         if e.remediation:
-            print(f"Remediation: {e.remediation}", file=sys.stderr)
+            output.error(f"Remediation: {e.remediation}")
         return e.exit_code
 
     return 0

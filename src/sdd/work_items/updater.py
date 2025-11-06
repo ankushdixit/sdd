@@ -24,8 +24,10 @@ from sdd.core.types import Priority, WorkItemStatus
 if TYPE_CHECKING:
     from .repository import WorkItemRepository
     from .validator import WorkItemValidator
+from sdd.core.output import get_output
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 class WorkItemUpdater:
@@ -140,10 +142,10 @@ class WorkItemUpdater:
         self.repository.update_work_item(work_id, item)
 
         # Success - user-facing output
-        print(f"\nUpdated {work_id}:")
+        output.info(f"\nUpdated {work_id}:")
         for change in changes:
-            print(change)
-        print()
+            output.info(change)
+        output.info("")
 
     @log_errors()
     def update_interactive(self, work_id: str) -> None:
@@ -185,21 +187,21 @@ class WorkItemUpdater:
 
         item = items[work_id]
 
-        print(f"\nUpdate Work Item: {work_id}\n")
-        print("Current values:")
-        print(f"  Status: {item['status']}")
-        print(f"  Priority: {item['priority']}")
-        print(f"  Milestone: {item.get('milestone', '(none)')}")
-        print()
+        output.info(f"\nUpdate Work Item: {work_id}\n")
+        output.info("Current values:")
+        output.info(f"  Status: {item['status']}")
+        output.info(f"  Priority: {item['priority']}")
+        output.info(f"  Milestone: {item.get('milestone', '(none)')}")
+        output.info("")
 
-        print("What would you like to update?")
-        print("1. Status")
-        print("2. Priority")
-        print("3. Milestone")
-        print("4. Add dependency")
-        print("5. Remove dependency")
-        print("6. Cancel")
-        print()
+        output.info("What would you like to update?")
+        output.info("1. Status")
+        output.info("2. Priority")
+        output.info("3. Milestone")
+        output.info("4. Add dependency")
+        output.info("5. Remove dependency")
+        output.info("6. Cancel")
+        output.info("")
 
         try:
             choice = input("Your choice: ").strip()

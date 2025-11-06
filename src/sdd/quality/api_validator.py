@@ -28,7 +28,9 @@ from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
 from sdd.core.file_ops import load_json
+from sdd.core.output import get_output
 
+output = get_output()
 logger = logging.getLogger(__name__)
 
 
@@ -411,7 +413,7 @@ def main() -> None:
     validator = APIContractValidator(work_item)
     try:
         passed, results = validator.validate_contracts()
-        print(validator.generate_report())
+        output.info(validator.generate_report())
         sys.exit(0 if passed else 1)
     except Exception as e:
         logger.error(f"Validation failed: {e}")

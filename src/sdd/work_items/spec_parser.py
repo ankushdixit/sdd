@@ -25,9 +25,11 @@ from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
 from sdd.core.logging_config import get_logger
+from sdd.core.output import get_output
 from sdd.core.types import WorkItemType
 
 logger = get_logger(__name__)
+output = get_output()
 
 
 def strip_html_comments(content: str) -> str:
@@ -820,15 +822,17 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: spec_parser.py <work_item_id>")
-        print("Example: spec_parser.py feature_001")
+        output.info("Usage: spec_parser.py <work_item_id>")
+        output.info("Example: spec_parser.py feature_001")
         sys.exit(1)
 
     work_item_id = sys.argv[1]
 
     try:
+        logger.info("Parsing spec file for work item: %s", work_item_id)
         result = parse_spec_file(work_item_id)
-        print(json.dumps(result, indent=2))
+        output.info(json.dumps(result, indent=2))
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logger.error("Failed to parse spec file", exc_info=True)
+        output.error(f"Error: {e}")
         sys.exit(1)

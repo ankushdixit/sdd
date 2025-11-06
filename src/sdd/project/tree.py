@@ -18,6 +18,9 @@ from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
 )
+from sdd.core.output import get_output
+
+output = get_output()
 
 
 class TreeGenerator:
@@ -227,21 +230,21 @@ class TreeGenerator:
 
         # If significant changes detected, prompt for reasoning (unless non-interactive)
         if significant_changes and session_num:
-            print(f"\n{'=' * 50}")
-            print("Structural Changes Detected")
-            print("=" * 50)
+            output.info(f"\n{'=' * 50}")
+            output.info("Structural Changes Detected")
+            output.info("=" * 50)
 
             for change in significant_changes[:10]:  # Show first 10
-                print(f"  {change['type'].upper()}: {change['path']}")
+                output.info(f"  {change['type'].upper()}: {change['path']}")
 
             if len(significant_changes) > 10:
-                print(f"  ... and {len(significant_changes) - 10} more changes")
+                output.info(f"  ... and {len(significant_changes) - 10} more changes")
 
             if non_interactive:
                 reasoning = "Automated update during session completion"
-                print("\n(Non-interactive mode: recording changes without manual reasoning)")
+                output.info("\n(Non-interactive mode: recording changes without manual reasoning)")
             else:
-                print("\nPlease provide reasoning for these structural changes:")
+                output.info("\nPlease provide reasoning for these structural changes:")
                 reasoning = input("> ")
 
             # Update tree_updates.json
@@ -302,6 +305,9 @@ def main() -> None:
     import argparse
 
     from sdd.core.exceptions import SDDError
+    from sdd.core.output import get_output
+
+    output = get_output()
 
     parser = argparse.ArgumentParser(description="Generate project tree documentation")
     parser.add_argument("--session", type=int, help="Current session number")
@@ -320,11 +326,11 @@ def main() -> None:
             if generator.updates_file.exists():
                 try:
                     updates = json.loads(generator.updates_file.read_text())
-                    print("Recent structural changes:")
+                    output.info("Recent structural changes:")
                     for update in updates["updates"][-5:]:
-                        print(f"\nSession {update['session']} ({update['timestamp']})")
-                        print(f"Reasoning: {update['reasoning']}")
-                        print(f"Changes: {len(update['changes'])}")
+                        output.info(f"\nSession {update['session']} ({update['timestamp']})")
+                        output.info(f"Reasoning: {update['reasoning']}")
+                        output.info(f"Changes: {len(update['changes'])}")
                 except (json.JSONDecodeError, KeyError) as e:
                     raise FileOperationError(
                         operation="read",
@@ -333,32 +339,32 @@ def main() -> None:
                         cause=e,
                     ) from e
             else:
-                print("No tree updates recorded yet")
+                output.info("No tree updates recorded yet")
         else:
             changes = generator.update_tree(
                 session_num=args.session, non_interactive=args.non_interactive
             )
 
             if changes:
-                print(f"\n✓ Tree updated with {len(changes)} changes")
+                output.info(f"\n✓ Tree updated with {len(changes)} changes")
             else:
-                print("\n✓ Tree generated (no changes)")
+                output.info("\n✓ Tree generated (no changes)")
 
-            print(f"✓ Saved to: {generator.tree_file}")
+            output.info(f"✓ Saved to: {generator.tree_file}")
 
     except SDDError as e:
         # Handle structured SDD errors with user-friendly output
-        print(f"\nError: {e.message}", file=sys.stderr)
+        output.error(f"\nError: {e.message}")
         if e.remediation:
-            print(f"Suggestion: {e.remediation}", file=sys.stderr)
+            output.error(f"Suggestion: {e.remediation}")
         sys.exit(e.exit_code)
     except KeyboardInterrupt:
-        print("\n\nOperation cancelled by user.", file=sys.stderr)
+        output.error("\n\nOperation cancelled by user.")
         sys.exit(130)
     except Exception as e:
         # Unexpected errors
-        print(f"\nUnexpected error: {e}", file=sys.stderr)
-        print("Please report this issue.", file=sys.stderr)
+        output.error(f"\nUnexpected error: {e}")
+        output.error("Please report this issue.")
         sys.exit(1)
 
 

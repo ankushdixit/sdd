@@ -155,13 +155,18 @@ def main() -> None:
     import sys
 
     from sdd.core.exceptions import SDDError
+    from sdd.core.output import get_output
+
+    output = get_output()
 
     if len(sys.argv) < 2:
-        print("Usage: config_validator.py <config_path> [schema_path]")
-        print("\nValidate SDD configuration against JSON schema.")
-        print("\nExample:")
-        print("  python3 config_validator.py .session/config.json")
-        print("  python3 config_validator.py .session/config.json .session/config.schema.json")
+        output.info("Usage: config_validator.py <config_path> [schema_path]")
+        output.info("\nValidate SDD configuration against JSON schema.")
+        output.info("\nExample:")
+        output.info("  python3 config_validator.py .session/config.json")
+        output.info(
+            "  python3 config_validator.py .session/config.json .session/config.schema.json"
+        )
         sys.exit(1)
 
     config_path = Path(sys.argv[1])
@@ -173,25 +178,25 @@ def main() -> None:
         # Assume schema is in same directory as config
         schema_path = config_path.parent / "config.schema.json"
 
-    print(f"Validating: {config_path}")
-    print(f"Against schema: {schema_path}\n")
+    output.info(f"Validating: {config_path}")
+    output.info(f"Against schema: {schema_path}\n")
 
     try:
         validate_config(config_path, schema_path)
-        print("✓ Configuration is valid!")
+        output.success("Configuration is valid!")
         sys.exit(0)
     except SDDError as e:
-        print("✗ Configuration validation failed!\n")
-        print(f"Error: {e.message}")
+        output.info("✗ Configuration validation failed!\n")
+        output.info(f"Error: {e.message}")
         if e.context:
-            print(f"Context: {e.context}")
+            output.info(f"Context: {e.context}")
         if e.remediation:
-            print(f"\nRemediation: {e.remediation}")
-        print("\nSee docs/configuration.md for configuration reference.")
+            output.info(f"\nRemediation: {e.remediation}")
+        output.info("\nSee docs/configuration.md for configuration reference.")
         sys.exit(e.exit_code)
     except Exception as e:
-        print("✗ Unexpected error during validation!\n")
-        print(f"Error: {e}")
+        output.info("✗ Unexpected error during validation!\n")
+        output.info(f"Error: {e}")
         sys.exit(1)
 
 

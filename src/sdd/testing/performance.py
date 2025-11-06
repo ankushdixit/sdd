@@ -27,8 +27,10 @@ from sdd.core.exceptions import (
     WorkItemNotFoundError,
 )
 from sdd.core.file_ops import load_json, save_json
+from sdd.core.output import get_output
 
 logger = logging.getLogger(__name__)
+output = get_output()
 
 
 class PerformanceBenchmark:
@@ -609,19 +611,19 @@ def main() -> None:
         benchmark = PerformanceBenchmark(work_item)
         passed, results = benchmark.run_benchmarks()
 
-        print(benchmark.generate_report())
+        output.info(benchmark.generate_report())
 
         sys.exit(0 if passed else 1)
 
     except (BenchmarkFailedError, PerformanceRegressionError, LoadTestFailedError) as e:
         logger.error(f"Performance test failed: {e.message}")
-        print(f"\nERROR: {e.message}")
+        output.info(f"\nERROR: {e.message}")
         if e.remediation:
-            print(f"REMEDIATION: {e.remediation}")
+            output.info(f"REMEDIATION: {e.remediation}")
         sys.exit(e.exit_code)
     except Exception as e:
         logger.exception("Unexpected error during performance benchmarking")
-        print(f"\nERROR: {e}")
+        output.info(f"\nERROR: {e}")
         sys.exit(1)
 
 
