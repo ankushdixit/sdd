@@ -305,54 +305,9 @@ class TestCreateWorkItemFromArgs:
         assert "nonexistent_dep" in data["work_items"][result]["dependencies"]
 
 
-class TestCreateWorkItemInteractive:
-    """Tests for interactive work item creation."""
-
-    def test_create_work_item_non_interactive_environment(self, work_item_manager):
-        """Test that interactive creation fails in non-interactive environment."""
-        # Arrange & Act & Assert
-        with patch("sys.stdin.isatty", return_value=False):
-            with pytest.raises(ValidationError) as exc_info:
-                work_item_manager.create_work_item()
-
-            assert "non-interactive" in str(exc_info.value).lower()
-            assert exc_info.value.code == ErrorCode.INVALID_COMMAND
-
-    @patch("sys.stdin.isatty", return_value=True)
-    @patch("builtins.input")
-    def test_create_work_item_interactive_eoferror_on_type(
-        self, mock_input, mock_isatty, work_item_manager
-    ):
-        """Test that EOFError during type selection is handled."""
-        # Arrange
-        mock_input.side_effect = EOFError()
-
-        # Act & Assert
-        with pytest.raises(ValidationError) as exc_info:
-            work_item_manager.create_work_item()
-
-        assert "Interactive input unavailable" in str(exc_info.value)
-        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
-
-    @patch("sys.stdin.isatty", return_value=True)
-    @patch("builtins.input")
-    def test_create_work_item_interactive_eoferror_on_title(
-        self, mock_input, mock_isatty, work_item_manager
-    ):
-        """Test that EOFError during title input is handled."""
-        # Arrange
-        mock_input.side_effect = ["1", EOFError()]  # Select feature, then EOFError on title
-
-        # Act & Assert
-        with pytest.raises(ValidationError) as exc_info:
-            work_item_manager.create_work_item()
-
-        assert "Interactive input unavailable" in str(exc_info.value)
-        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
-
-
-# TestPromptMethods moved to test_creator.py
-# Tests for prompt methods are now in test_creator.py since they're private methods of WorkItemCreator
+# Interactive work item creation tests removed - interactive mode has been removed
+# Work items are now created via Claude Code's AskUserQuestion tool in slash commands
+# See .claude/commands/work-new.md for the new interactive workflow
 
 
 class TestListWorkItems:
@@ -609,43 +564,9 @@ class TestUpdateWorkItem:
         assert len(data["work_items"]["feature_auth"]["update_history"]) > 0
 
 
-class TestUpdateWorkItemInteractive:
-    """Tests for interactive work item updates."""
-
-    def test_update_work_item_interactive_non_interactive_env(self, work_item_manager_with_data):
-        """Test that interactive update fails in non-interactive environment."""
-        # Arrange & Act & Assert
-        with patch("sys.stdin.isatty", return_value=False):
-            with pytest.raises(ValidationError) as exc_info:
-                work_item_manager_with_data.update_work_item_interactive("feature_foundation")
-
-            assert "non-interactive" in str(exc_info.value).lower()
-            assert exc_info.value.code == ErrorCode.INVALID_COMMAND
-
-    def test_update_work_item_interactive_no_file(self, work_item_manager):
-        """Test interactive update when no file exists."""
-        # Arrange & Act & Assert
-        with patch("sys.stdin.isatty", return_value=True):
-            with pytest.raises(FileOperationError) as exc_info:
-                work_item_manager.update_work_item_interactive("test")
-
-            assert "No work items found" in str(exc_info.value)
-
-    @patch("sys.stdin.isatty", return_value=True)
-    @patch("builtins.input")
-    def test_update_work_item_interactive_eoferror(
-        self, mock_input, mock_isatty, work_item_manager_with_data
-    ):
-        """Test that EOFError during interactive update is handled."""
-        # Arrange
-        mock_input.side_effect = EOFError()
-
-        # Act & Assert
-        with pytest.raises(ValidationError) as exc_info:
-            work_item_manager_with_data.update_work_item_interactive("feature_foundation")
-
-        assert "Interactive input unavailable" in str(exc_info.value)
-        assert exc_info.value.code == ErrorCode.INVALID_COMMAND
+# Interactive work item update tests removed - interactive mode has been removed
+# Work items are now updated via Claude Code's AskUserQuestion tool in slash commands
+# See .claude/commands/work-update.md for the new interactive workflow
 
 
 class TestGetNextWorkItem:

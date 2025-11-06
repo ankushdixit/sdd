@@ -918,44 +918,6 @@ def check_uncommitted_changes() -> bool:
         return True  # Don't block on errors
 
 
-def prompt_work_item_completion(work_item_title: str, non_interactive: bool = False) -> bool | None:
-    """
-    Prompt user to mark work item as complete or in-progress.
-
-    Args:
-        work_item_title: Title of the work item to display in prompt
-        non_interactive: If True, skip interactive prompt (defaults to completed)
-
-    Returns:
-        True if work item should be marked complete
-        False if work item should remain in-progress
-        None if user cancelled (should abort session end)
-    """
-    if non_interactive:
-        # In non-interactive mode, default to completed (most common case)
-        return True
-
-    output.info(f'\nWork item: "{work_item_title}"\n')
-    output.info("Is this work item complete?")
-    output.info("1. Yes - Mark as completed")
-    output.info("2. No - Keep as in-progress (will resume in next session)")
-    output.info("3. Cancel - Don't end session")
-    output.info("")
-
-    while True:
-        choice = input("Choice [1]: ").strip() or "1"
-
-        if choice == "1":
-            return True  # Mark complete
-        elif choice == "2":
-            return False  # Keep in-progress
-        elif choice == "3":
-            output.info("\nSession end cancelled")
-            return None  # Cancel operation
-        else:
-            output.info("Invalid choice. Enter 1, 2, or 3.")
-
-
 @log_errors()
 def main() -> int:
     """Enhanced main entry point with full tracking updates.
@@ -1100,26 +1062,16 @@ def main() -> int:
         output.info(f"\n✓ Keeping work item '{work_item_title}' as in-progress (--incomplete flag)")
         is_complete = False
     else:
-        # Determine if non-interactive
-        non_interactive = not sys.stdin.isatty()
-
-        # Use new prompt function
-        completion_result = prompt_work_item_completion(work_item_title, non_interactive)
-
-        if completion_result is None:
-            # User cancelled - abort session end
-            output.info("\n❌ Session completion aborted by user")
-            return 1
-
-        is_complete = completion_result
-
-        # Print completion decision message (for interactive mode)
-        if is_complete:
-            output.info(f"\n✓ Marking work item '{work_item_title}' as complete")
-        else:
-            output.success(
-                f"\nKeeping work item '{work_item_title}' as in-progress (will resume in next session)"
-            )
+        # Must specify either --complete or --incomplete flag (no interactive fallback)
+        logger.error("Must specify --complete or --incomplete flag")
+        output.info("Error: Must specify either --complete or --incomplete flag")
+        output.info("")
+        output.info("Usage:")
+        output.info("  sdd end --complete              # Mark work item as completed")
+        output.info("  sdd end --incomplete            # Keep work item as in-progress")
+        output.info("")
+        output.info("For Claude Code users: Use /end slash command for interactive UI")
+        return 1
 
     # Track changes for update_history
     changes = []

@@ -45,13 +45,38 @@ EOF
 - Performance or security considerations
 - Things to remember for future work
 
-## Step 2: Complete Session
+## Step 2: Ask About Work Item Completion
 
-Then run the session completion with learnings:
+Before completing the session, ask the user about the work item completion status using `AskUserQuestion`:
 
+**Question: Work Item Completion Status**
+- Question: "Is this work item complete?"
+- Header: "Completion"
+- Multi-select: false
+- Options:
+  - Label: "Yes - Mark as completed", Description: "Work item is done. Will not auto-resume in next session."
+  - Label: "No - Keep as in-progress", Description: "Work is ongoing. Will auto-resume when you run /start in the next session."
+  - Label: "Cancel", Description: "Don't end session. Continue working."
+
+**Important**: Display the work item title in the question text so the user knows which item they're completing.
+
+## Step 3: Complete Session
+
+Based on the user's selection:
+
+**If "Yes - Mark as completed" selected:**
 ```bash
-sdd end --learnings-file .session/temp_learnings.txt
+sdd end --complete --learnings-file .session/temp_learnings.txt
 ```
+
+**If "No - Keep as in-progress" selected:**
+```bash
+sdd end --incomplete --learnings-file .session/temp_learnings.txt
+```
+
+**If "Cancel" selected:**
+- Show message: "Session end cancelled. You can continue working."
+- Exit without calling command
 
 This script validates quality gates:
 - All tests pass
@@ -62,44 +87,14 @@ This script validates quality gates:
 
 The script automatically updates project context files (stack.py and tree.py) after validation passes.
 
-### Work Item Completion Control
-
-During session completion, you will be prompted to explicitly mark the work item as complete or in-progress:
-
-```
-Work item: "Learning Curator Bug Fix"
-
-Is this work item complete?
-1. Yes - Mark as completed
-2. No - Keep as in-progress (will resume in next session)
-3. Cancel - Don't end session
-
-Choice [1]: _
-```
-
-**Option 1 (Yes)**: Marks the work item as complete and ends the session. The work item will not auto-resume in the next session.
-
-**Option 2 (No)**: Keeps the work item as in-progress and ends the session. The work item will automatically resume when you run `/start` in the next session, making it easy to work on large items across multiple sessions.
-
-**Option 3 (Cancel)**: Aborts the `/end` operation entirely. The session remains active and you can continue working.
-
-**Non-interactive Mode**: You can also use command-line flags to control completion status:
-
-```bash
-# Mark work item as completed (default behavior)
-sdd end --learnings-file .session/temp_learnings.txt
-
-# Keep work item as in-progress for multi-session work
-sdd end --incomplete --learnings-file .session/temp_learnings.txt
-```
-
-**Note**: Without flags in non-interactive mode, the work item defaults to "completed" (most common case). Use `--incomplete` to keep the work item as in-progress for multi-session work.
+## Step 4: Show Results
 
 Show the user:
 - Session summary with work accomplished
 - **Commit details** (full messages + file change statistics) - Enhancement #11
 - Quality gate results (pass/fail for each check)
 - Learnings captured
+- Work item completion status (completed or in-progress)
 - Suggested next steps
 
 If any quality gates fail, display the specific errors and guide the user on what needs to be fixed before the session can be completed. Do not proceed with session completion until all quality gates pass.

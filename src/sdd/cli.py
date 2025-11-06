@@ -33,7 +33,6 @@ from sdd.core.exceptions import (
 # Import logging configuration
 from sdd.core.logging_config import get_logger, setup_logging
 from sdd.core.output import get_output
-from sdd.core.types import Priority
 
 logger = get_logger(__name__)
 output = get_output()
@@ -67,13 +66,13 @@ COMMANDS = {
     "work-update": (
         "sdd.work_items.manager",
         "WorkItemManager",
-        "update_work_item_interactive",
+        "update_work_item",
         False,
     ),
     "work-new": (
         "sdd.work_items.manager",
         "WorkItemManager",
-        "create_work_item",
+        "create_work_item_from_args",
         False,
     ),
     "work-delete": ("sdd.work_items.delete", None, "main", True),
@@ -116,14 +115,15 @@ def parse_work_new_args(args: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--type",
         "-t",
+        required=True,
         help="Work item type (feature, bug, refactor, security, integration_test, deployment)",
     )
-    parser.add_argument("--title", "-T", help="Work item title")
+    parser.add_argument("--title", "-T", required=True, help="Work item title")
     parser.add_argument(
         "--priority",
         "-p",
-        default=Priority.HIGH.value,
-        help="Priority (critical, high, medium, low). Default: high",
+        required=True,
+        help="Priority (critical, high, medium, low)",
     )
     parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")
     return parser.parse_args(args)
@@ -214,56 +214,32 @@ def route_command(command_name: str, args: list[str]) -> int:
             elif command_name == "work-next":
                 result = method()
             elif command_name == "work-new":
-                # Parse arguments
+                # Parse arguments (all required)
                 parsed = parse_work_new_args(args)
-
-                # Check if type and title are provided (non-interactive mode)
-                if parsed.type and parsed.title:
-                    # Non-interactive mode: use create_work_item_from_args
-                    non_interactive_method = getattr(instance, "create_work_item_from_args")
-                    result = non_interactive_method(
-                        work_type=parsed.type,
-                        title=parsed.title,
-                        priority=parsed.priority,
-                        dependencies=parsed.dependencies,
-                    )
-                else:
-                    # Interactive mode: use create_work_item
-                    result = method()
+                result = method(
+                    work_type=parsed.type,
+                    title=parsed.title,
+                    priority=parsed.priority,
+                    dependencies=parsed.dependencies,
+                )
             elif command_name == "work-update":
                 # Parse arguments
                 parsed = parse_work_update_args(args)
 
-                # Check if any flags are provided (non-interactive mode)
-                has_flags = any(
-                    [
-                        parsed.status,
-                        parsed.priority,
-                        parsed.milestone,
-                        parsed.add_dependency,
-                        parsed.remove_dependency,
-                    ]
-                )
+                # Build kwargs from provided flags
+                kwargs = {}
+                if parsed.status:
+                    kwargs["status"] = parsed.status
+                if parsed.priority:
+                    kwargs["priority"] = parsed.priority
+                if parsed.milestone:
+                    kwargs["milestone"] = parsed.milestone
+                if parsed.add_dependency:
+                    kwargs["add_dependency"] = parsed.add_dependency
+                if parsed.remove_dependency:
+                    kwargs["remove_dependency"] = parsed.remove_dependency
 
-                if has_flags:
-                    # Non-interactive mode: use update_work_item with kwargs
-                    non_interactive_method = getattr(instance, "update_work_item")
-                    kwargs = {}
-                    if parsed.status:
-                        kwargs["status"] = parsed.status
-                    if parsed.priority:
-                        kwargs["priority"] = parsed.priority
-                    if parsed.milestone:
-                        kwargs["milestone"] = parsed.milestone
-                    if parsed.add_dependency:
-                        kwargs["add_dependency"] = parsed.add_dependency
-                    if parsed.remove_dependency:
-                        kwargs["remove_dependency"] = parsed.remove_dependency
-
-                    result = non_interactive_method(parsed.work_id, **kwargs)
-                else:
-                    # Interactive mode: use update_work_item_interactive
-                    result = method(parsed.work_id)
+                result = method(parsed.work_id, **kwargs)
             else:
                 result = method()
 

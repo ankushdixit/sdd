@@ -5,7 +5,6 @@ ensuring safe deletion with dependency checking and metadata updates.
 """
 
 import json
-from unittest.mock import patch
 
 import pytest
 
@@ -13,7 +12,6 @@ from sdd.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
 from sdd.core.exceptions import (
-    ValidationError,
     WorkItemNotFoundError,
 )
 from sdd.work_items.delete import delete_work_item, find_dependents
@@ -274,74 +272,14 @@ class TestDeleteWorkItem:
         captured = capsys.readouterr()
         assert "not found" in captured.out
 
-    @patch("sys.stdin.isatty")
-    def test_delete_work_item_interactive_cancel(
-        self, mock_isatty, project_with_work_items, capsys
-    ):
-        """Test cancelling deletion in interactive mode."""
-        mock_isatty.return_value = True
-
-        with patch("builtins.input", return_value="3"):  # Choice 3 = Cancel
-            result = delete_work_item("feature_isolated", project_root=project_with_work_items)
-
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Deletion cancelled" in captured.out
-
-        # Verify work item still exists
-        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
-        data = json.loads(work_items_file.read_text())
-        assert "feature_isolated" in data["work_items"]
-
-    @patch("sys.stdin.isatty")
-    def test_delete_work_item_interactive_keep_spec(self, mock_isatty, project_with_work_items):
-        """Test choosing to keep spec in interactive mode."""
-        mock_isatty.return_value = True
-
-        with patch("builtins.input", return_value="1"):  # Choice 1 = Keep spec
-            result = delete_work_item("feature_isolated", project_root=project_with_work_items)
-
-        assert result is True
-
-        spec_file = project_with_work_items / ".session" / "specs" / "feature_isolated.md"
-        assert spec_file.exists()
-
-    @patch("sys.stdin.isatty")
-    def test_delete_work_item_interactive_delete_spec(self, mock_isatty, project_with_work_items):
-        """Test choosing to delete spec in interactive mode."""
-        mock_isatty.return_value = True
-
-        with patch("builtins.input", return_value="2"):  # Choice 2 = Delete spec
-            result = delete_work_item("feature_isolated", project_root=project_with_work_items)
-
-        assert result is True
-
-        spec_file = project_with_work_items / ".session" / "specs" / "feature_isolated.md"
-        assert not spec_file.exists()
-
-    @patch("sys.stdin.isatty")
-    def test_delete_work_item_interactive_eof(self, mock_isatty, project_with_work_items, capsys):
-        """Test handling EOF in interactive mode."""
-        mock_isatty.return_value = True
-
-        with patch("builtins.input", side_effect=EOFError):
-            result = delete_work_item("feature_isolated", project_root=project_with_work_items)
-
-        assert result is False
-        captured = capsys.readouterr()
-        assert "Deletion cancelled" in captured.out
-
-    @patch("sys.stdin.isatty")
-    def test_delete_work_item_non_interactive_no_flags(self, mock_isatty, project_with_work_items):
-        """Test non-interactive mode without flags raises error."""
-        mock_isatty.return_value = False
-
-        with pytest.raises(ValidationError) as exc_info:
-            delete_work_item("feature_isolated", project_root=project_with_work_items)
-
-        assert "non-interactive mode" in exc_info.value.message
-        assert "--keep-spec" in exc_info.value.remediation
-        assert "--delete-spec" in exc_info.value.remediation
+    # Interactive mode tests removed for Claude Code integration
+    # Interactive deletion is now handled by /work-delete slash command using AskUserQuestion
+    # Removed tests:
+    # - test_delete_work_item_interactive_cancel
+    # - test_delete_work_item_interactive_keep_spec
+    # - test_delete_work_item_interactive_delete_spec
+    # - test_delete_work_item_interactive_eof
+    # - test_delete_work_item_non_interactive_no_flags
 
     def test_delete_work_item_dependents_not_modified(self, project_with_work_items):
         """Test that dependent work items are not modified during deletion."""

@@ -5,7 +5,6 @@ Work Item Deletion - Safe deletion of work items.
 Handles deletion of work items with dependency checking and interactive confirmation.
 """
 
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -120,45 +119,23 @@ def delete_work_item(
     else:
         output.info("  Dependents: none")
 
-    # Get deletion choice
+    # Require explicit flag (no interactive mode)
     if delete_spec is None:
-        # Interactive mode
-        if not sys.stdin.isatty():
-            logger.error("Cannot run interactive mode in non-interactive environment")
-            raise ValidationError(
-                message="Cannot run interactive deletion in non-interactive mode",
-                remediation=(
-                    "Use command-line flags:\n"
-                    "  sdd work-delete <work_item_id> --keep-spec   (delete work item only)\n"
-                    "  sdd work-delete <work_item_id> --delete-spec (delete work item and spec)"
-                ),
-            )
+        logger.error("Must specify --keep-spec or --delete-spec flag")
+        raise ValidationError(
+            message="Must specify either --keep-spec or --delete-spec flag",
+            remediation=(
+                "Use command-line flags:\n"
+                "  sdd work-delete <work_item_id> --keep-spec   (delete work item only)\n"
+                "  sdd work-delete <work_item_id> --delete-spec (delete work item and spec)"
+            ),
+        )
 
-        output.info("\nOptions:")
-        output.info("  1. Delete work item only (keep spec file)")
-        output.info("  2. Delete work item and spec file")
-        output.info("  3. Cancel")
-        output.info("")
-
-        try:
-            choice = input("Choice [1]: ").strip() or "1"
-        except (EOFError, KeyboardInterrupt):
-            logger.warning("User cancelled deletion via EOF/interrupt")
-            output.info("\n\nDeletion cancelled.")
-            return False
-
-        if choice == "3":
-            logger.info("User cancelled deletion")
-            output.info("Deletion cancelled.")
-            return False
-
-        delete_spec = choice == "2"
+    # Show what will be done
+    if delete_spec:
+        output.info("\n→ Will delete work item and spec file")
     else:
-        # Non-interactive mode - show what will be done
-        if delete_spec:
-            output.info("\n→ Will delete work item and spec file")
-        else:
-            output.info("\n→ Will delete work item only (keeping spec file)")
+        output.info("\n→ Will delete work item only (keeping spec file)")
 
     # Perform deletion
     logger.info("Deleting work item '%s'", work_item_id)

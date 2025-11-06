@@ -7,7 +7,6 @@ Handles field updates with validation, both interactive and non-interactive.
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -107,22 +106,32 @@ class WorkItemUpdater:
                 changes.append(f"  milestone: {old_value} → {value}")
 
             elif field == "add_dependency":
+                # Support comma-separated list of dependencies
                 deps = item.get("dependencies", [])
-                if value not in deps:
-                    if self.repository.work_item_exists(value):
-                        deps.append(value)
-                        item["dependencies"] = deps
-                        changes.append(f"  added dependency: {value}")
-                    else:
-                        logger.warning("Dependency '%s' not found", value)
-                        raise WorkItemNotFoundError(value)
+                dep_ids = [d.strip() for d in value.split(",") if d.strip()]
+
+                for dep_id in dep_ids:
+                    if dep_id not in deps:
+                        if self.repository.work_item_exists(dep_id):
+                            deps.append(dep_id)
+                            changes.append(f"  added dependency: {dep_id}")
+                        else:
+                            logger.warning("Dependency '%s' not found", dep_id)
+                            raise WorkItemNotFoundError(dep_id)
+
+                item["dependencies"] = deps
 
             elif field == "remove_dependency":
+                # Support comma-separated list of dependencies
                 deps = item.get("dependencies", [])
-                if value in deps:
-                    deps.remove(value)
-                    item["dependencies"] = deps
-                    changes.append(f"  removed dependency: {value}")
+                dep_ids = [d.strip() for d in value.split(",") if d.strip()]
+
+                for dep_id in dep_ids:
+                    if dep_id in deps:
+                        deps.remove(dep_id)
+                        changes.append(f"  removed dependency: {dep_id}")
+
+                item["dependencies"] = deps
 
         if not changes:
             logger.info("No changes made to %s", work_id)
@@ -146,92 +155,3 @@ class WorkItemUpdater:
         for change in changes:
             output.info(change)
         output.info("")
-
-    @log_errors()
-    def update_interactive(self, work_id: str) -> None:
-        """Interactive work item update
-
-        Args:
-            work_id: ID of work item to update
-
-        Raises:
-            FileOperationError: If work_items.json doesn't exist
-            ValidationError: If running in non-interactive environment
-            WorkItemNotFoundError: If work item doesn't exist
-        """
-        items = self.repository.get_all_work_items()
-
-        if not items:
-            raise FileOperationError(
-                operation="read",
-                file_path=str(self.repository.work_items_file),
-                details="No work items found",
-            )
-
-        # Check if running in non-interactive environment
-        if not sys.stdin.isatty():
-            logger.error("Cannot run interactive update in non-interactive environment")
-            raise ValidationError(
-                message="Cannot run interactive work item update in non-interactive mode",
-                code=ErrorCode.INVALID_COMMAND,
-                remediation=(
-                    "Please use command-line arguments instead:\n"
-                    "  sdd work-update <work_id> --status <status>\n"
-                    "  sdd work-update <work_id> --priority <priority>\n"
-                    "  sdd work-update <work_id> --milestone <milestone>"
-                ),
-            )
-
-        if work_id not in items:
-            raise WorkItemNotFoundError(work_id)
-
-        item = items[work_id]
-
-        output.info(f"\nUpdate Work Item: {work_id}\n")
-        output.info("Current values:")
-        output.info(f"  Status: {item['status']}")
-        output.info(f"  Priority: {item['priority']}")
-        output.info(f"  Milestone: {item.get('milestone', '(none)')}")
-        output.info("")
-
-        output.info("What would you like to update?")
-        output.info("1. Status")
-        output.info("2. Priority")
-        output.info("3. Milestone")
-        output.info("4. Add dependency")
-        output.info("5. Remove dependency")
-        output.info("6. Cancel")
-        output.info("")
-
-        try:
-            choice = input("Your choice: ").strip()
-
-            if choice == "1":
-                status = input("New status (not_started/in_progress/blocked/completed): ").strip()
-                self.update(work_id, status=status)
-            elif choice == "2":
-                priority = input("New priority (critical/high/medium/low): ").strip()
-                self.update(work_id, priority=priority)
-            elif choice == "3":
-                milestone = input("Milestone name: ").strip()
-                self.update(work_id, milestone=milestone)
-            elif choice == "4":
-                dep = input("Dependency ID to add: ").strip()
-                self.update(work_id, add_dependency=dep)
-            elif choice == "5":
-                dep = input("Dependency ID to remove: ").strip()
-                self.update(work_id, remove_dependency=dep)
-            else:
-                logger.info("Interactive update cancelled")
-                raise ValidationError(
-                    message="Interactive update cancelled",
-                    code=ErrorCode.INVALID_COMMAND,
-                    remediation="Select a valid option (1-6)",
-                )
-        except EOFError:
-            logger.warning("EOFError during interactive update")
-            raise ValidationError(
-                message="Interactive input unavailable",
-                code=ErrorCode.INVALID_COMMAND,
-                remediation="Use command-line arguments instead",
-            )
