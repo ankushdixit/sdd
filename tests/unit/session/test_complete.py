@@ -33,7 +33,6 @@ from sdd.session.complete import (
     load_status,
     load_work_items,
     main,
-    prompt_work_item_completion,
     record_session_commits,
     run_quality_gates,
     trigger_curation_if_needed,
@@ -1535,76 +1534,16 @@ class TestCheckUncommittedChanges:
         assert result is True  # Don't block on errors
 
 
-class TestPromptWorkItemCompletion:
-    """Tests for prompt_work_item_completion function."""
-
-    @patch("builtins.input", return_value="1")
-    def test_prompt_choice_complete(self, mock_input):
-        """Test prompt returns True when user selects '1' (Yes)."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=False)
-
-        # Assert
-        assert result is True
-        mock_input.assert_called_once()
-
-    @patch("builtins.input", return_value="2")
-    def test_prompt_choice_incomplete(self, mock_input):
-        """Test prompt returns False when user selects '2' (No)."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=False)
-
-        # Assert
-        assert result is False
-        mock_input.assert_called_once()
-
-    @patch("builtins.input", return_value="3")
-    def test_prompt_choice_cancel(self, mock_input):
-        """Test prompt returns None when user selects '3' (Cancel)."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=False)
-
-        # Assert
-        assert result is None
-        mock_input.assert_called_once()
-
-    @patch("builtins.input", return_value="")
-    def test_prompt_default_choice(self, mock_input):
-        """Test prompt uses default choice '1' when user presses Enter."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=False)
-
-        # Assert
-        assert result is True
-        mock_input.assert_called_once()
-
-    @patch("builtins.input", side_effect=["invalid", "4", "1"])
-    def test_prompt_invalid_input_retry(self, mock_input):
-        """Test prompt re-prompts on invalid input."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=False)
-
-        # Assert
-        assert result is True
-        assert mock_input.call_count == 3
-
-    def test_prompt_non_interactive_defaults_true(self):
-        """Test non-interactive mode defaults to completed (True) as most common case."""
-        # Act
-        result = prompt_work_item_completion("Test Feature", non_interactive=True)
-
-        # Assert
-        assert result is True
-
-    @patch("builtins.input", return_value="1")
-    def test_prompt_displays_work_item_title(self, mock_input):
-        """Test prompt displays the work item title in the prompt."""
-        # This is more of an integration test, but we verify it doesn't crash
-        # Act
-        result = prompt_work_item_completion("My Important Feature", non_interactive=False)
-
-        # Assert
-        assert result is True
+# Interactive mode tests removed for Claude Code integration
+# Interactive completion prompt is now handled by /end slash command using AskUserQuestion
+# Removed tests:
+# - test_prompt_choice_complete
+# - test_prompt_choice_incomplete
+# - test_prompt_choice_cancel
+# - test_prompt_default_choice
+# - test_prompt_invalid_input_retry
+# - test_prompt_non_interactive_defaults_true
+# - test_prompt_displays_work_item_title
 
 
 class TestMain:
@@ -1688,7 +1627,7 @@ class TestMain:
         mock_auto_extract.return_value = 0
 
         # Act
-        with patch("sys.argv", ["session_complete.py"]):
+        with patch("sys.argv", ["session_complete.py", "--complete"]):
             result = main()
 
         # Assert
@@ -1816,7 +1755,10 @@ class TestMain:
         mock_learning_module.LearningsCurator = lambda: mock_curator
 
         # Act
-        with patch("sys.argv", ["session_complete.py", "--learnings-file", str(learnings_file)]):
+        with patch(
+            "sys.argv",
+            ["session_complete.py", "--learnings-file", str(learnings_file), "--complete"],
+        ):
             with patch.dict(system.modules, {"learning_curator": mock_learning_module}):
                 with patch("sys.stdin.isatty", return_value=False):
                     result = main()
@@ -1825,22 +1767,20 @@ class TestMain:
         assert result == 0
         mock_extract_learnings.assert_called_once_with(str(learnings_file))
 
-    @patch("sdd.session.complete.prompt_work_item_completion")
     @patch("sdd.session.complete.run_quality_gates")
     @patch("sdd.session.complete.check_uncommitted_changes")
     @patch("sdd.session.complete.load_work_items")
     @patch("sdd.session.complete.load_status")
-    def test_main_user_cancels_completion(
+    def test_main_missing_completion_flag(
         self,
         mock_load_status,
         mock_load_work_items,
         mock_check_changes,
         mock_run_gates,
-        mock_prompt,
         tmp_path,
         monkeypatch,
     ):
-        """Test main aborts when user cancels completion prompt."""
+        """Test main requires --complete or --incomplete flag."""
         # Arrange
         monkeypatch.chdir(tmp_path)
         session_dir = tmp_path / ".session"
@@ -1862,15 +1802,13 @@ class TestMain:
         mock_load_work_items.return_value = work_items_data
         mock_check_changes.return_value = True
         mock_run_gates.return_value = ({"tests": {"status": "passed"}}, True, [])
-        mock_prompt.return_value = None  # User cancelled
 
-        # Act
+        # Act - call without --complete or --incomplete flag
         with patch("sys.argv", ["session_complete.py"]):
             result = main()
 
-        # Assert
+        # Assert - should return error code 1
         assert result == 1
-        mock_prompt.assert_called_once()
 
     @patch("sdd.session.complete.auto_extract_learnings")
     @patch("sdd.session.complete.record_session_commits")

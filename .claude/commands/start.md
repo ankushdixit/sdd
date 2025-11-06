@@ -5,13 +5,60 @@ argument-hint: [work_item_id]
 
 # Session Start
 
-Generate a comprehensive session briefing by running:
+## Step 1: Determine Work Item to Start
+
+**If user provided a work item ID in `$ARGUMENTS`:**
+- Skip to Step 3 and start that specific work item
+
+**If no work item ID provided:**
+- Continue to Step 2 for interactive selection
+
+## Step 2: Get Recommendations and Ask User
+
+Get the top 4 recommended work items:
 
 ```bash
-sdd start "$@"
+python -m sdd.work_items.get_next_recommendations --limit 4
 ```
 
-If the user provided a work item ID in `$ARGUMENTS`, it will be passed through `"$@"`. If no ID is provided, the script will automatically find the next available work item.
+This will output ready-to-start work items in format:
+```
+work_item_id | type | title | priority
+```
+
+Parse the output and present options using `AskUserQuestion`:
+
+**Question: Which work item do you want to start?**
+- Question: "Select a work item to start working on:"
+- Header: "Work Item"
+- Multi-select: false
+- Options (up to 4):
+  - Label: "{work_item_id}: {title}", Description: "Type: {type} | Priority: {priority}"
+  - Label: "{work_item_id}: {title}", Description: "Type: {type} | Priority: {priority}"
+  - Label: "{work_item_id}: {title}", Description: "Type: {type} | Priority: {priority}"
+  - Label: "{work_item_id}: {title}", Description: "Type: {type} | Priority: {priority}"
+
+**Example option formatting:**
+- Label: "feature_auth: Add user authentication"
+- Description: "Type: feature | Priority: high"
+
+**If no ready work items found:**
+- The script will exit with error
+- Show message: "No work items ready to start. All items are blocked by dependencies or already in progress."
+- Display hint: "Use /work-list to see all work items and their status."
+- Exit without calling command
+
+## Step 3: Start Session
+
+Based on the selected work item ID (either from user argument or interactive selection):
+
+```bash
+sdd start {work_item_id}
+```
+
+Replace `{work_item_id}` with:
+- The value from `$ARGUMENTS` if user provided it
+- The selected work item ID from Step 2 if interactive selection was used
 
 The briefing includes:
 - Complete project context (technology stack, directory tree, documentation)

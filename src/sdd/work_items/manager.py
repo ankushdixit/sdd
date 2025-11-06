@@ -59,23 +59,10 @@ class WorkItemManager:
         self.templates_dir = Path(__file__).parent.parent / "templates"
 
     # Delegate creation methods
-    def create_work_item(self) -> str:
-        """Interactive work item creation
-
-        Returns:
-            str: The created work item ID
-
-        Raises:
-            ValidationError: If running in non-interactive environment or invalid input
-            WorkItemAlreadyExistsError: If work item with generated ID already exists
-            FileOperationError: If spec file creation or tracking update fails
-        """
-        return self.creator.create_interactive()
-
     def create_work_item_from_args(
         self, work_type: str, title: str, priority: str = "high", dependencies: str = ""
     ) -> str:
-        """Create work item from command-line arguments (non-interactive)
+        """Create work item from command-line arguments
 
         Args:
             work_type: Type of work item (feature, bug, refactor, etc.)
@@ -141,19 +128,6 @@ class WorkItemManager:
             ValidationError: If invalid status or priority provided
         """
         return self.updater.update(work_id, **updates)
-
-    def update_work_item_interactive(self, work_id: str) -> None:
-        """Interactive update of a work item
-
-        Args:
-            work_id: ID of work item to update
-
-        Raises:
-            FileOperationError: If work_items.json doesn't exist
-            ValidationError: If running in non-interactive environment
-            WorkItemNotFoundError: If work item doesn't exist
-        """
-        return self.updater.update_interactive(work_id)
 
     # Delegate scheduler methods
     def get_next_work_item(self) -> dict[str, Any] | None:
@@ -240,17 +214,16 @@ def main() -> int:
 
     manager = WorkItemManager()
 
-    # If arguments provided, use non-interactive mode
-    if args.type and args.title:
-        work_id = manager.create_work_item_from_args(
-            work_type=args.type,
-            title=args.title,
-            priority=args.priority,
-            dependencies=args.dependencies,
-        )
-    else:
-        # Otherwise, use interactive mode
-        work_id = manager.create_work_item()
+    # Require type and title arguments (no interactive mode)
+    if not args.type or not args.title:
+        parser.error("Both --type and --title are required")
+
+    work_id = manager.create_work_item_from_args(
+        work_type=args.type,
+        title=args.title,
+        priority=args.priority,
+        dependencies=args.dependencies,
+    )
 
     if work_id:
         return 0
