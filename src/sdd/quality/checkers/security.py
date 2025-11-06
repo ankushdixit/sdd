@@ -216,8 +216,12 @@ class SecurityChecker(QualityChecker):
             try:
                 # Safety may prefix JSON with deprecation warnings, so find the first JSON marker
                 json_start = min(
-                    (pos for pos in [result.stdout.find("{"), result.stdout.find("[")] if pos != -1),
-                    default=-1
+                    (
+                        pos
+                        for pos in [result.stdout.find("{"), result.stdout.find("[")]
+                        if pos != -1
+                    ),
+                    default=-1,
                 )
                 if json_start != -1:
                     return json.loads(result.stdout[json_start:])  # type: ignore[no-any-return]
