@@ -14,6 +14,8 @@ Usage:
     python -m sdd.work_items.get_next_recommendations [--limit N]
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path

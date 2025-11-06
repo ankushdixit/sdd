@@ -6,6 +6,8 @@ Lightweight utility to fetch just the metadata fields for a work item,
 avoiding the overhead of loading and displaying full specifications.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path

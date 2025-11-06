@@ -4,6 +4,8 @@ This module provides optimized dependency lookups without reading full spec file
 Used by /work-new and /work-delete commands to fetch available dependencies.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path

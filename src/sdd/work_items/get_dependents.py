@@ -4,6 +4,8 @@ This module provides optimized lookup of work items that depend on a given work 
 Used by /work-delete command to check if deleting a work item will affect others.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
