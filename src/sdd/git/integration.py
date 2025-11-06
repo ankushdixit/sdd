@@ -20,6 +20,13 @@ from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.constants import (
+    GIT_LONG_TIMEOUT,
+    GIT_QUICK_TIMEOUT,
+    GIT_STANDARD_TIMEOUT,
+    get_config_file,
+    get_work_items_file,
+)
 from sdd.core.error_handlers import convert_subprocess_errors
 from sdd.core.exceptions import (
     CommandExecutionError,
@@ -40,8 +47,8 @@ class GitWorkflow:
     def __init__(self, project_root: Path | None = None) -> None:
         """Initialize GitWorkflow with project root path."""
         self.project_root = project_root or Path.cwd()
-        self.work_items_file = self.project_root / ".session" / "tracking" / "work_items.json"
-        self.config_file = self.project_root / ".session" / "config.json"
+        self.work_items_file = get_work_items_file(self.project_root)
+        self.config_file = get_config_file(self.project_root)
 
         # Use ConfigManager for centralized config management
         config_manager = get_config_manager()
@@ -49,7 +56,7 @@ class GitWorkflow:
         self.config = config_manager.git_workflow
 
         # Initialize command runner
-        self.runner = CommandRunner(default_timeout=30, working_dir=self.project_root)
+        self.runner = CommandRunner(default_timeout=GIT_LONG_TIMEOUT, working_dir=self.project_root)
 
     @convert_subprocess_errors
     def check_git_status(self) -> None:
@@ -60,7 +67,7 @@ class GitWorkflow:
             WorkingDirNotCleanError: If working directory has uncommitted changes
             CommandExecutionError: If git command times out or fails
         """
-        result = self.runner.run(["git", "status", "--porcelain"], timeout=5)
+        result = self.runner.run(["git", "status", "--porcelain"], timeout=GIT_QUICK_TIMEOUT)
 
         if not result.success:
             if result.timed_out:
@@ -73,7 +80,7 @@ class GitWorkflow:
 
     def get_current_branch(self) -> str | None:
         """Get current git branch name."""
-        result = self.runner.run(["git", "branch", "--show-current"], timeout=5)
+        result = self.runner.run(["git", "branch", "--show-current"], timeout=GIT_QUICK_TIMEOUT)
         return result.stdout.strip() if result.success else None
 
     @convert_subprocess_errors
@@ -96,7 +103,7 @@ class GitWorkflow:
         branch_name = work_item_id
 
         # Create and checkout branch
-        result = self.runner.run(["git", "checkout", "-b", branch_name], timeout=5)
+        result = self.runner.run(["git", "checkout", "-b", branch_name], timeout=GIT_QUICK_TIMEOUT)
 
         if not result.success:
             raise GitError(
@@ -116,7 +123,7 @@ class GitWorkflow:
             GitError: If checkout fails
             CommandExecutionError: If git command fails
         """
-        result = self.runner.run(["git", "checkout", branch_name], timeout=5)
+        result = self.runner.run(["git", "checkout", branch_name], timeout=GIT_QUICK_TIMEOUT)
 
         if not result.success:
             raise GitError(
@@ -138,18 +145,18 @@ class GitWorkflow:
             CommandExecutionError: If git command fails
         """
         # Stage all changes
-        stage_result = self.runner.run(["git", "add", "."], timeout=10)
+        stage_result = self.runner.run(["git", "add", "."], timeout=GIT_STANDARD_TIMEOUT)
         if not stage_result.success:
             raise GitError(f"Staging failed: {stage_result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
 
         # Commit
-        result = self.runner.run(["git", "commit", "-m", message], timeout=10)
+        result = self.runner.run(["git", "commit", "-m", message], timeout=GIT_STANDARD_TIMEOUT)
 
         if not result.success:
             raise GitError(f"Commit failed: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
 
         # Get commit SHA
-        sha_result = self.runner.run(["git", "rev-parse", "HEAD"], timeout=5)
+        sha_result = self.runner.run(["git", "rev-parse", "HEAD"], timeout=GIT_QUICK_TIMEOUT)
         commit_sha = sha_result.stdout.strip()[:7] if sha_result.success else "unknown"
         return commit_sha
 
@@ -164,7 +171,9 @@ class GitWorkflow:
             GitError: If push fails (ignores no remote/upstream errors)
             CommandExecutionError: If git command fails
         """
-        result = self.runner.run(["git", "push", "-u", "origin", branch_name], timeout=30)
+        result = self.runner.run(
+            ["git", "push", "-u", "origin", branch_name], timeout=GIT_LONG_TIMEOUT
+        )
 
         if not result.success:
             # Check if it's just "no upstream" error - not a real error
@@ -184,7 +193,9 @@ class GitWorkflow:
             GitError: If deletion fails (ignores already deleted branches)
             CommandExecutionError: If git command fails
         """
-        result = self.runner.run(["git", "push", "origin", "--delete", branch_name], timeout=10)
+        result = self.runner.run(
+            ["git", "push", "origin", "--delete", branch_name], timeout=GIT_STANDARD_TIMEOUT
+        )
 
         if not result.success:
             # Not an error if branch doesn't exist on remote
@@ -206,7 +217,7 @@ class GitWorkflow:
             GitError: If push fails
             CommandExecutionError: If git command fails
         """
-        result = self.runner.run(["git", "push", "origin", branch_name], timeout=30)
+        result = self.runner.run(["git", "push", "origin", branch_name], timeout=GIT_LONG_TIMEOUT)
 
         if not result.success:
             raise GitError(
@@ -233,7 +244,7 @@ class GitWorkflow:
             CommandExecutionError: If gh command fails
         """
         # Check if gh CLI is available
-        check_gh = self.runner.run(["gh", "--version"], timeout=5)
+        check_gh = self.runner.run(["gh", "--version"], timeout=GIT_QUICK_TIMEOUT)
 
         if not check_gh.success:
             raise GitError(
@@ -247,7 +258,7 @@ class GitWorkflow:
 
         # Create PR using gh CLI
         result = self.runner.run(
-            ["gh", "pr", "create", "--title", title, "--body", body], timeout=30
+            ["gh", "pr", "create", "--title", title, "--body", body], timeout=GIT_LONG_TIMEOUT
         )
 
         if not result.success:
@@ -298,7 +309,9 @@ class GitWorkflow:
             CommandExecutionError: If git command fails
         """
         # Checkout parent branch (not hardcoded main)
-        checkout_result = self.runner.run(["git", "checkout", parent_branch], timeout=5)
+        checkout_result = self.runner.run(
+            ["git", "checkout", parent_branch], timeout=GIT_QUICK_TIMEOUT
+        )
         if not checkout_result.success:
             raise GitError(
                 f"Failed to checkout {parent_branch}: {checkout_result.stderr}",
@@ -306,13 +319,15 @@ class GitWorkflow:
             )
 
         # Merge
-        result = self.runner.run(["git", "merge", "--no-ff", branch_name], timeout=10)
+        result = self.runner.run(
+            ["git", "merge", "--no-ff", branch_name], timeout=GIT_STANDARD_TIMEOUT
+        )
 
         if not result.success:
             raise GitError(f"Merge failed: {result.stderr}", ErrorCode.GIT_COMMAND_FAILED)
 
         # Delete branch
-        self.runner.run(["git", "branch", "-d", branch_name], timeout=5)
+        self.runner.run(["git", "branch", "-d", branch_name], timeout=GIT_QUICK_TIMEOUT)
 
     def start_work_item(self, work_item_id: str, session_num: int) -> dict:
         """Start working on a work item (create or resume branch).
@@ -463,7 +478,7 @@ class GitWorkflow:
                         branch_name,
                         f"^{work_item['git'].get('parent_branch', 'main')}",
                     ],
-                    timeout=10,
+                    timeout=GIT_STANDARD_TIMEOUT,
                 )
 
                 if result.success and result.stdout.strip():

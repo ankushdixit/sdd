@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import GIT_QUICK_TIMEOUT
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import ErrorCode, GitError, SystemError
 from sdd.core.logging_config import get_logger
@@ -24,7 +25,7 @@ class GitContext:
 
     def __init__(self) -> None:
         """Initialize git context handler."""
-        self.runner = CommandRunner(default_timeout=5)
+        self.runner = CommandRunner(default_timeout=GIT_QUICK_TIMEOUT)
 
     @log_errors()
     def check_git_status(self) -> dict[str, Any]:

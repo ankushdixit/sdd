@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import TEST_RUNNER_TIMEOUT
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
 
@@ -38,7 +39,9 @@ class ExecutionChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=1200)
+        self.runner = (
+            runner if runner is not None else CommandRunner(default_timeout=TEST_RUNNER_TIMEOUT)
+        )
         self.language = language or self._detect_language()
 
     def name(self) -> str:
@@ -78,7 +81,7 @@ class ExecutionChecker(QualityChecker):
             return self._create_skipped_result(reason=f"no command for {self.language}")
 
         # Run tests
-        result = self.runner.run(command.split(), timeout=1200)
+        result = self.runner.run(command.split(), timeout=TEST_RUNNER_TIMEOUT)
 
         # pytest exit codes:
         # 0 = all tests passed

@@ -22,6 +22,7 @@ from typing import Any
 
 from sdd.core.command_runner import CommandRunner
 from sdd.core.config import get_config_manager
+from sdd.core.constants import QUALITY_CHECK_VERY_LONG_TIMEOUT
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
@@ -69,7 +70,7 @@ class QualityGates:
         self.config = config_manager.quality_gates  # QualityGatesConfig dataclass
 
         # Initialize command runner (for backward compatibility)
-        self.runner = CommandRunner(default_timeout=120)
+        self.runner = CommandRunner(default_timeout=QUALITY_CHECK_VERY_LONG_TIMEOUT)
 
         # Project root
         self.project_root = Path.cwd()

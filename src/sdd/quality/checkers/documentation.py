@@ -13,6 +13,10 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import (
+    GIT_STANDARD_TIMEOUT,
+    QUALITY_CHECK_STANDARD_TIMEOUT,
+)
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
 
@@ -38,7 +42,11 @@ class DocumentationChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=30)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_STANDARD_TIMEOUT)
+        )
         self.work_item = work_item or {}
 
     def name(self) -> str:
@@ -102,7 +110,9 @@ class DocumentationChecker(QualityChecker):
     def _check_changelog_updated(self) -> bool:
         """Check if CHANGELOG was updated in the current branch."""
         # Get the current branch name
-        result = self.runner.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=10)
+        result = self.runner.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=GIT_STANDARD_TIMEOUT
+        )
         if not result.success:
             logger.debug("Could not check CHANGELOG: git not available")
             return True  # Skip check if git not available
@@ -117,7 +127,7 @@ class DocumentationChecker(QualityChecker):
         # Check if CHANGELOG.md was modified in any commit on this branch
         result = self.runner.run(
             ["git", "log", "--name-only", "--pretty=format:", "main..HEAD"],
-            timeout=10,
+            timeout=GIT_STANDARD_TIMEOUT,
         )
 
         if result.success and "CHANGELOG.md" in result.stdout:
@@ -136,7 +146,9 @@ class DocumentationChecker(QualityChecker):
         ):
             return True
 
-        result = self.runner.run([sys.executable, "-m", "pydocstyle", "--count"], timeout=30)
+        result = self.runner.run(
+            [sys.executable, "-m", "pydocstyle", "--count"], timeout=QUALITY_CHECK_STANDARD_TIMEOUT
+        )
 
         # If pydocstyle not available or timeout, skip check
         if result.timed_out or result.returncode == -1:
@@ -148,7 +160,9 @@ class DocumentationChecker(QualityChecker):
 
     def _check_readme_current(self) -> bool:
         """Check if README was updated (optional check)."""
-        result = self.runner.run(["git", "diff", "--name-only", "HEAD~1..HEAD"], timeout=10)
+        result = self.runner.run(
+            ["git", "diff", "--name-only", "HEAD~1..HEAD"], timeout=GIT_STANDARD_TIMEOUT
+        )
 
         if not result.success:
             logger.debug("Could not check README: git not available")

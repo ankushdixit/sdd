@@ -80,6 +80,7 @@ class StackGenerator:
     def _detect_language_version(self, language: str) -> str:
         """Detect language version from environment."""
         from sdd.core.command_runner import CommandRunner
+        from sdd.core.constants import STACK_DETECTION_TIMEOUT
         from sdd.core.error_handlers import safe_execute
 
         version_commands = {
@@ -92,7 +93,7 @@ class StackGenerator:
         if language in version_commands:
 
             def detect_version() -> str:
-                runner = CommandRunner(default_timeout=2)
+                runner = CommandRunner(default_timeout=STACK_DETECTION_TIMEOUT)
                 result = runner.run(version_commands[language])
                 if result.success:
                     # Extract version number

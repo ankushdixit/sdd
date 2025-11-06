@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import TREE_GENERATION_TIMEOUT
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
@@ -31,7 +32,9 @@ class TreeGenerator:
         self.project_root = project_root or Path.cwd()
         self.tree_file = self.project_root / ".session" / "tracking" / "tree.txt"
         self.updates_file = self.project_root / ".session" / "tracking" / "tree_updates.json"
-        self.runner = CommandRunner(default_timeout=30, working_dir=self.project_root)
+        self.runner = CommandRunner(
+            default_timeout=TREE_GENERATION_TIMEOUT, working_dir=self.project_root
+        )
 
         # Items to ignore
         self.ignore_patterns = [

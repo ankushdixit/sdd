@@ -18,6 +18,12 @@ from typing import Any
 
 # Add scripts directory to path for imports
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import (
+    GIT_QUICK_TIMEOUT,
+    GIT_STANDARD_TIMEOUT,
+    LEARNING_EXTRACTION_TIMEOUT,
+    SESSION_COMPLETE_TIMEOUT,
+)
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import (
     FileOperationError,
@@ -204,7 +210,7 @@ def update_all_tracking(session_num: int) -> bool:
     script_dir = Path(__file__).parent
     project_dir = script_dir.parent / "project"
 
-    runner = CommandRunner(default_timeout=30)
+    runner = CommandRunner(default_timeout=SESSION_COMPLETE_TIMEOUT)
 
     # Update stack
     try:
@@ -298,7 +304,7 @@ def trigger_curation_if_needed(session_num: int) -> None:
         output.info(f"{'=' * 50}\n")
 
         try:
-            runner = CommandRunner(default_timeout=60)
+            runner = CommandRunner(default_timeout=LEARNING_EXTRACTION_TIMEOUT)
             result = runner.run(["python3", "scripts/learning_curator.py", "curate"])
 
             if result.success:
@@ -519,7 +525,7 @@ def record_session_commits(work_item_id: str) -> None:
             return
 
         # Get commits on session branch that aren't in parent branch
-        runner = CommandRunner(default_timeout=10)
+        runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT)
         result = runner.run(
             ["git", "log", "--pretty=format:%H|%s|%ai", f"{parent_branch}..{branch_name}"]
         )
@@ -648,7 +654,7 @@ def generate_summary(
 
             # Get file stats using git diff
             try:
-                runner = CommandRunner(default_timeout=10)
+                runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT)
                 result = runner.run(["git", "diff", "--stat", f"{commit['sha']}^..{commit['sha']}"])
                 if result.success and result.stdout.strip():
                     summary += "\nFiles changed:\n```\n"
@@ -841,7 +847,7 @@ def check_uncommitted_changes() -> bool:
         Git errors allow proceeding to avoid blocking workflows.
     """
     try:
-        runner = CommandRunner(default_timeout=5, working_dir=Path.cwd())
+        runner = CommandRunner(default_timeout=GIT_QUICK_TIMEOUT, working_dir=Path.cwd())
         result = runner.run(["git", "status", "--porcelain"])
 
         uncommitted = [line for line in result.stdout.split("\n") if line.strip()]

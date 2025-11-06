@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from sdd.core.constants import MAX_SPEC_KEYWORDS
 from sdd.core.exceptions import FileOperationError
 from sdd.core.logging_config import get_logger
 
@@ -101,7 +102,7 @@ class LearningLoader:
 
         # Extract keywords from work item
         title_keywords = self._extract_keywords(work_item.get("title", ""))
-        spec_keywords = self._extract_keywords(spec_content[:500])  # First 500 chars
+        spec_keywords = self._extract_keywords(spec_content[:MAX_SPEC_KEYWORDS])
         work_type = work_item.get("type", "")
         work_tags = set(work_item.get("tags", []))
 

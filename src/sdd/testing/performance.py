@@ -17,6 +17,12 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import (
+    GIT_QUICK_TIMEOUT,
+    HTTP_REQUEST_TIMEOUT,
+    PERFORMANCE_REGRESSION_THRESHOLD,
+    PERFORMANCE_TEST_TIMEOUT,
+)
 from sdd.core.error_handlers import convert_subprocess_errors, log_errors
 from sdd.core.exceptions import (
     BenchmarkFailedError,
@@ -57,7 +63,7 @@ class PerformanceBenchmark:
         self.benchmarks = work_item.get("performance_benchmarks", {})
         self.baselines_file = Path(".session/tracking/performance_baselines.json")
         self.results: dict[str, Any] = {}
-        self.runner = CommandRunner(default_timeout=300)
+        self.runner = CommandRunner(default_timeout=300)  # Long timeout for perf tests
 
     @log_errors()
     def run_benchmarks(self, test_endpoint: str | None = None) -> tuple[bool, dict[str, Any]]:
@@ -262,7 +268,7 @@ class PerformanceBenchmark:
             while time.time() - start_time < duration:
                 req_start = time.time()
                 try:
-                    requests.get(endpoint, timeout=5)
+                    requests.get(endpoint, timeout=HTTP_REQUEST_TIMEOUT)
                     latency = (time.time() - req_start) * 1000  # Convert to ms
                     latencies.append(latency)
                     request_count += 1
@@ -320,7 +326,9 @@ class PerformanceBenchmark:
         for service in services:
             try:
                 # Get container ID
-                result = self.runner.run(["docker-compose", "ps", "-q", service], timeout=5)
+                result = self.runner.run(
+                    ["docker-compose", "ps", "-q", service], timeout=GIT_QUICK_TIMEOUT
+                )
 
                 container_id = result.stdout.strip()
                 if not container_id:
@@ -337,7 +345,7 @@ class PerformanceBenchmark:
                         "--format",
                         "{{.CPUPerc}},{{.MemUsage}}",
                     ],
-                    timeout=10,
+                    timeout=PERFORMANCE_TEST_TIMEOUT,
                 )
 
                 if stats_result.success:
@@ -457,14 +465,12 @@ class PerformanceBenchmark:
         latency = load_test.get("latency", {})
         baseline_latency = baseline.get("latency", {})
 
-        regression_threshold = 1.1  # 10% regression threshold
-
         # Check for latency regression
         for percentile in ["p50", "p95", "p99"]:
             current = latency.get(percentile, 0)
             baseline_val = baseline_latency.get(percentile, 0)
 
-            if baseline_val > 0 and current > baseline_val * regression_threshold:
+            if baseline_val > 0 and current > baseline_val * PERFORMANCE_REGRESSION_THRESHOLD:
                 regression_percent = (current / baseline_val - 1) * 100
                 logger.warning(
                     f"Performance regression detected: {percentile} increased from "
@@ -474,7 +480,7 @@ class PerformanceBenchmark:
                     metric=percentile,
                     current=current,
                     baseline=baseline_val,
-                    threshold_percent=10.0,
+                    threshold_percent=(PERFORMANCE_REGRESSION_THRESHOLD - 1) * 100,
                 )
 
         return False

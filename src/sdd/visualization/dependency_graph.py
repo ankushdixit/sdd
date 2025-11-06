@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import DEPENDENCY_GRAPH_TIMEOUT
 from sdd.core.error_handlers import convert_file_errors, log_errors
 from sdd.core.exceptions import (
     CircularDependencyError,
@@ -42,7 +43,7 @@ class DependencyGraphVisualizer:
         if work_items_file is None:
             work_items_file = Path(".session/tracking/work_items.json")
         self.work_items_file = work_items_file
-        self.runner = CommandRunner(default_timeout=30)
+        self.runner = CommandRunner(default_timeout=DEPENDENCY_GRAPH_TIMEOUT)
 
     @convert_file_errors
     @log_errors()

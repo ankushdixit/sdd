@@ -360,7 +360,9 @@ class TestRegressionDetection:
         assert error.context["metric"] == "p50"
         assert error.context["current_value"] == 60
         assert error.context["baseline_value"] == 50
-        assert error.context["threshold_percent"] == 10.0
+        assert (
+            abs(error.context["threshold_percent"] - 10.0) < 0.01
+        )  # Allow for floating point precision
 
 
 class TestResourceMeasurement:

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import GIT_STANDARD_TIMEOUT
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import FileOperationError
 from sdd.core.file_ops import load_json
@@ -28,7 +29,9 @@ class LearningExtractor:
         """
         self.session_dir = session_dir
         self.project_root = project_root or Path.cwd()
-        self.runner = CommandRunner(default_timeout=10, working_dir=self.project_root)
+        self.runner = CommandRunner(
+            default_timeout=GIT_STANDARD_TIMEOUT, working_dir=self.project_root
+        )
 
     def extract_from_sessions(self) -> list[dict[str, Any]]:
         """

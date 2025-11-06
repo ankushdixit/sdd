@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from sdd.core.command_runner import CommandRunner
+from sdd.core.constants import QUALITY_CHECK_LONG_TIMEOUT, QUALITY_CHECK_STANDARD_TIMEOUT
 from sdd.core.logging_config import get_logger
 from sdd.quality.checkers.base import CheckResult, QualityChecker
 
@@ -37,7 +38,11 @@ class CustomValidationChecker(QualityChecker):
             runner: Optional CommandRunner instance (for testing)
         """
         super().__init__(config, project_root)
-        self.runner = runner if runner is not None else CommandRunner(default_timeout=60)
+        self.runner = (
+            runner
+            if runner is not None
+            else CommandRunner(default_timeout=QUALITY_CHECK_LONG_TIMEOUT)
+        )
         self.work_item = work_item or {}
 
     def name(self) -> str:
@@ -125,7 +130,7 @@ class CustomValidationChecker(QualityChecker):
             return True
 
         logger.debug(f"Running command validation: {command}")
-        result = self.runner.run(command.split(), timeout=60)
+        result = self.runner.run(command.split(), timeout=QUALITY_CHECK_LONG_TIMEOUT)
         return result.success
 
     def _check_file_exists(self, rule: dict[str, Any]) -> bool:
@@ -150,6 +155,8 @@ class CustomValidationChecker(QualityChecker):
             return True
 
         logger.debug(f"Running grep validation: pattern={pattern}, files={files}")
-        result = self.runner.run(["grep", "-r", pattern, files], timeout=30)
+        result = self.runner.run(
+            ["grep", "-r", pattern, files], timeout=QUALITY_CHECK_STANDARD_TIMEOUT
+        )
         # grep returns 0 if pattern found
         return result.success

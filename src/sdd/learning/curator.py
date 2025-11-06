@@ -18,6 +18,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
+from sdd.core.constants import MAX_LEARNING_AGE_SESSIONS
 from sdd.core.error_handlers import log_errors
 from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
 from sdd.core.logging_config import get_logger
@@ -311,7 +312,9 @@ class LearningsCurator:
         """Merge similar learnings (compatibility wrapper for tests)"""
         return self.similarity_engine.merge_similar_learnings(learnings)
 
-    def _archive_old_learnings(self, learnings: dict, max_age_sessions: int = 50) -> int:
+    def _archive_old_learnings(
+        self, learnings: dict, max_age_sessions: int = MAX_LEARNING_AGE_SESSIONS
+    ) -> int:
         """Archive old learnings (compatibility wrapper for tests)"""
         return self.archiver.archive_old_learnings(learnings, max_age_sessions)
 
