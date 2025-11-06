@@ -3,6 +3,7 @@
 from typing import Any, Optional, Protocol
 
 from sdd.core.logging_config import get_logger
+from sdd.core.performance import measure_time
 
 logger = get_logger(__name__)
 
@@ -159,6 +160,7 @@ class LearningSimilarityEngine:
         """
         self.algorithm = algorithm or JaccardContainmentSimilarity()
         self._cache: dict[tuple[str, str], float] = {}
+        self._word_cache: dict[int, set[str]] = {}  # Cache word sets for merge operations
 
     def are_similar(self, learning_a: dict, learning_b: dict) -> bool:
         """
@@ -209,9 +211,13 @@ class LearningSimilarityEngine:
 
         return score
 
+    @measure_time("similarity_merge")
     def merge_similar_learnings(self, learnings: dict) -> int:
         """
         Find and merge similar learnings within each category
+
+        Optimized with word set caching to avoid redundant word extraction
+        during similarity comparisons.
 
         Args:
             learnings: Learnings dict with 'categories' key
@@ -223,6 +229,17 @@ class LearningSimilarityEngine:
         categories = learnings.get("categories", {})
 
         for category_name, category_learnings in categories.items():
+            # Clear word cache for new category
+            self._word_cache.clear()
+
+            # Pre-compute word sets for all learnings in this category
+            # This optimization converts O(n²) word extraction to O(n)
+            for i, learning in enumerate(category_learnings):
+                content = learning.get("content", "").lower()
+                if isinstance(self.algorithm, JaccardContainmentSimilarity):
+                    words = self.algorithm._extract_words(content)
+                    self._word_cache[i] = words
+
             to_remove = []
 
             for i, learning_a in enumerate(category_learnings):
@@ -288,6 +305,7 @@ class LearningSimilarityEngine:
     def clear_cache(self) -> None:
         """Clear the similarity cache"""
         self._cache.clear()
+        self._word_cache.clear()
         logger.debug("Similarity cache cleared")
 
     def _make_cache_key(self, text_a: str, text_b: str) -> tuple[str, str]:

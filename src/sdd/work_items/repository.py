@@ -9,17 +9,19 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
+from sdd.core.cache import FileCache
 from sdd.core.file_ops import load_json, save_json
 from sdd.core.logging_config import get_logger
+from sdd.core.performance import measure_time
 from sdd.core.types import WorkItemStatus
 
 logger = get_logger(__name__)
 
 
 class WorkItemRepository:
-    """Repository for work item data access and persistence"""
+    """Repository for work item data access and persistence with caching"""
 
     def __init__(self, session_dir: Path):
         """Initialize repository with session directory
@@ -29,9 +31,11 @@ class WorkItemRepository:
         """
         self.session_dir = session_dir
         self.work_items_file = session_dir / "tracking" / "work_items.json"
+        self._file_cache = FileCache()
 
+    @measure_time("load_work_items")
     def load_all(self) -> dict[str, Any]:
-        """Load all work items and milestones from work_items.json
+        """Load all work items and milestones from work_items.json with caching
 
         Returns:
             dict: Complete work items data including work_items and milestones
@@ -39,7 +43,7 @@ class WorkItemRepository:
         if not self.work_items_file.exists():
             return {"work_items": {}, "milestones": {}}
 
-        return load_json(self.work_items_file)
+        return cast(dict[str, Any], self._file_cache.load_json(self.work_items_file, load_json))
 
     def save_all(self, data: dict[str, Any]) -> None:
         """Save all work items and milestones to work_items.json
@@ -50,6 +54,8 @@ class WorkItemRepository:
         # Update metadata counters before saving
         self._update_metadata(data)
         save_json(self.work_items_file, data)
+        # Invalidate cache after write
+        self._file_cache.invalidate(self.work_items_file)
 
     def get_work_item(self, work_id: str) -> dict[str, Any] | None:
         """Get a single work item by ID
