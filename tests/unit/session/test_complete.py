@@ -493,9 +493,9 @@ class TestTriggerCurationIfNeeded:
         # Assert - should return early, no subprocess call
         mock_config_manager.load_config.assert_called_once()
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("sdd.learning.curator.LearningsCurator")
     @patch("sdd.core.config.get_config_manager")
-    def test_trigger_curation_triggered(self, mock_get_config_manager, mock_run):
+    def test_trigger_curation_triggered(self, mock_get_config_manager, mock_curator_class):
         """Test trigger_curation_if_needed triggers curation."""
         # Arrange
         from sdd.core.config import CurationConfig
@@ -504,25 +504,15 @@ class TestTriggerCurationIfNeeded:
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
         mock_get_config_manager.return_value = mock_config_manager
 
-        mock_result = CommandResult(
-            returncode=0,
-            stdout="Curation completed",
-            stderr="",
-            command=["python"],
-            duration_seconds=0.1,
-        )
-        mock_runner = Mock()
-
-        mock_runner.run.return_value = mock_result
-
-        mock_run.return_value = mock_runner
+        mock_curator = Mock()
+        mock_curator_class.return_value = mock_curator
 
         # Act
         trigger_curation_if_needed(5)  # 5 % 5 == 0
 
         # Assert
-        mock_runner.run.assert_called_once()
-        assert "learning_curator.py" in str(mock_runner.run.call_args)
+        mock_curator_class.assert_called_once()
+        mock_curator.curate.assert_called_once_with(dry_run=False)
 
     @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
@@ -544,10 +534,10 @@ class TestTriggerCurationIfNeeded:
         # Assert
         mock_runner.run.assert_not_called()
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("sdd.learning.curator.LearningsCurator")
     @patch("sdd.core.config.get_config_manager")
-    def test_trigger_curation_failure(self, mock_get_config_manager, mock_run):
-        """Test trigger_curation_if_needed handles subprocess failure."""
+    def test_trigger_curation_failure(self, mock_get_config_manager, mock_curator_class):
+        """Test trigger_curation_if_needed handles curation failure."""
         # Arrange
         from sdd.core.config import CurationConfig
 
@@ -555,20 +545,16 @@ class TestTriggerCurationIfNeeded:
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
         mock_get_config_manager.return_value = mock_config_manager
 
-        mock_result = MagicMock()
-        mock_result.returncode = 1
-        mock_result.stderr = "Curation error"
-        mock_runner = Mock()
-
-        mock_runner.run.return_value = mock_result
-
-        mock_run.return_value = mock_runner
+        mock_curator = Mock()
+        mock_curator.curate.side_effect = Exception("Curation error")
+        mock_curator_class.return_value = mock_curator
 
         # Act
         trigger_curation_if_needed(5)
 
         # Assert - should not raise exception
-        mock_runner.run.assert_called_once()
+        mock_curator_class.assert_called_once()
+        mock_curator.curate.assert_called_once_with(dry_run=False)
 
     @patch("sdd.session.complete.CommandRunner")
     @patch("sdd.core.config.get_config_manager")
@@ -1602,13 +1588,13 @@ class TestPromptWorkItemCompletion:
         assert result is True
         assert mock_input.call_count == 3
 
-    def test_prompt_non_interactive_defaults_false(self):
-        """Test non-interactive mode defaults to incomplete (False) for safety."""
+    def test_prompt_non_interactive_defaults_true(self):
+        """Test non-interactive mode defaults to completed (True) as most common case."""
         # Act
         result = prompt_work_item_completion("Test Feature", non_interactive=True)
 
         # Assert
-        assert result is False
+        assert result is True
 
     @patch("builtins.input", return_value="1")
     def test_prompt_displays_work_item_title(self, mock_input):

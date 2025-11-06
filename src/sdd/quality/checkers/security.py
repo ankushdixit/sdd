@@ -214,9 +214,21 @@ class SecurityChecker(QualityChecker):
 
         if result.success and result.stdout:
             try:
+                # Safety may prefix JSON with deprecation warnings, so find the first JSON marker
+                json_start = min(
+                    (
+                        pos
+                        for pos in [result.stdout.find("{"), result.stdout.find("[")]
+                        if pos != -1
+                    ),
+                    default=-1,
+                )
+                if json_start != -1:
+                    return json.loads(result.stdout[json_start:])  # type: ignore[no-any-return]
                 return json.loads(result.stdout)  # type: ignore[no-any-return]
-            except json.JSONDecodeError:
-                logger.warning("Failed to parse safety output")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse safety output: {e}")
+                logger.debug(f"Safety output: {result.stdout[:200]}")
 
         return []
 

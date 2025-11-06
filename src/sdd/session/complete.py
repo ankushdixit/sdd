@@ -21,7 +21,6 @@ from sdd.core.command_runner import CommandRunner
 from sdd.core.constants import (
     GIT_QUICK_TIMEOUT,
     GIT_STANDARD_TIMEOUT,
-    LEARNING_EXTRACTION_TIMEOUT,
     SESSION_COMPLETE_TIMEOUT,
 )
 from sdd.core.error_handlers import log_errors
@@ -304,18 +303,12 @@ def trigger_curation_if_needed(session_num: int) -> None:
         output.info(f"{'=' * 50}\n")
 
         try:
-            runner = CommandRunner(default_timeout=LEARNING_EXTRACTION_TIMEOUT)
-            result = runner.run(["python3", "scripts/learning_curator.py", "curate"])
+            from sdd.learning.curator import LearningsCurator
 
-            if result.success:
-                output.info(result.stdout)
-                output.success("Learning curation completed\n")
-                logger.info("Learning curation completed successfully")
-            else:
-                logger.warning(f"Learning curation encountered issues: {result.stderr}")
-                output.warning("Learning curation encountered issues")
-                if result.stderr:
-                    output.error(result.stderr)
+            curator = LearningsCurator()
+            curator.curate(dry_run=False)
+            output.success("Learning curation completed\n")
+            logger.info("Learning curation completed successfully")
         except Exception as e:
             logger.warning(f"Learning curation failed: {e}", exc_info=True)
             output.warning(f"Learning curation failed: {e}\n")
@@ -931,7 +924,7 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
 
     Args:
         work_item_title: Title of the work item to display in prompt
-        non_interactive: If True, skip interactive prompt (defaults to incomplete for safety)
+        non_interactive: If True, skip interactive prompt (defaults to completed)
 
     Returns:
         True if work item should be marked complete
@@ -939,8 +932,8 @@ def prompt_work_item_completion(work_item_title: str, non_interactive: bool = Fa
         None if user cancelled (should abort session end)
     """
     if non_interactive:
-        # In non-interactive mode, default to incomplete for safety
-        return False
+        # In non-interactive mode, default to completed (most common case)
+        return True
 
     output.info(f'\nWork item: "{work_item_title}"\n')
     output.info("Is this work item complete?")

@@ -550,7 +550,12 @@ class QualityGates:
         # Custom validations results
         if "custom" in all_results:
             custom_results = all_results["custom"]
-            status = "✓ PASSED" if custom_results.get("status") == "passed" else "✗ FAILED"
+            if custom_results.get("status") == "passed":
+                status = "✓ PASSED"
+            elif custom_results.get("status") == "skipped":
+                status = "⊘ SKIPPED"
+            else:
+                status = "✗ FAILED"
             report.append(f"\nCustom Validations: {status}")
             for validation in custom_results.get("validations", []):
                 val_status = "✓" if validation["passed"] else "✗"

@@ -86,14 +86,14 @@ Choice [1]: _
 **Non-interactive Mode**: You can also use command-line flags to control completion status:
 
 ```bash
-# Mark work item as completed
-sdd end --complete --learnings-file .session/temp_learnings.txt
+# Mark work item as completed (default behavior)
+sdd end --learnings-file .session/temp_learnings.txt
 
-# Keep work item as in-progress
+# Keep work item as in-progress for multi-session work
 sdd end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
-**Note**: Without flags in non-interactive mode, the work item defaults to "in-progress" for safety.
+**Note**: Without flags in non-interactive mode, the work item defaults to "completed" (most common case). Use `--incomplete` to keep the work item as in-progress for multi-session work.
 
 Show the user:
 - Session summary with work accomplished
