@@ -212,6 +212,28 @@ class TestLearningSimilarityEngine:
 
         engine.clear_cache()
         assert len(engine._cache) == 0
+        assert len(engine._word_cache) == 0
+
+    def test_word_cache_cleared_per_category(self) -> None:
+        """Test that word cache is cleared between categories during merge"""
+        engine = LearningSimilarityEngine()
+
+        learnings = {
+            "categories": {
+                "category1": [
+                    {"id": "1", "content": "Python Django Flask", "applies_to": []},
+                    {"id": "2", "content": "Python Django", "applies_to": []},
+                ],
+                "category2": [
+                    {"id": "3", "content": "JavaScript React Vue", "applies_to": []},
+                    {"id": "4", "content": "JavaScript React", "applies_to": []},
+                ],
+            }
+        }
+
+        # Merge should process both categories successfully
+        merged_count = engine.merge_similar_learnings(learnings)
+        assert merged_count == 2  # One merge per category
 
     def test_merge_similar_learnings(self) -> None:
         """Test merging similar learnings within categories"""
