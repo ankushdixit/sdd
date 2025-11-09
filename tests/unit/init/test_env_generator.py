@@ -8,9 +8,6 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
-from unittest.mock import patch
 
 from sdd.init.env_generator import (
     generate_editorconfig,
@@ -18,7 +15,6 @@ from sdd.init.env_generator import (
     generate_env_example_python,
     generate_env_files,
 )
-from sdd.core.exceptions import FileOperationError
 
 
 class TestGenerateEditorconfig:

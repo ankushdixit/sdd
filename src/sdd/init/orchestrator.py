@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Literal, cast
 
 from sdd.init.dependency_installer import install_dependencies
 from sdd.init.docs_structure import create_docs_structure
@@ -86,13 +86,19 @@ def run_template_based_init(
 
     python_binary = None
     if stack_type:
-        env_result = validate_environment(stack_type, auto_update=True)
+        env_result = validate_environment(
+            cast(
+                Literal["saas_t3", "ml_ai_fastapi", "dashboard_refine", "fullstack_nextjs"],
+                stack_type,
+            ),
+            auto_update=True,
+        )
         logger.info(f"✓ Environment validated for {template_id}")
         if env_result.get("node_version"):
             logger.info(f"  Node.js: {env_result['node_version']}")
         if env_result.get("python_version"):
             logger.info(f"  Python: {env_result['python_version']}")
-            python_binary = env_result.get("python_binary")
+            python_binary = cast(str | None, env_result.get("python_binary"))
     logger.info("")
 
     # Get template information
@@ -120,7 +126,20 @@ def run_template_based_init(
     logger.info("⏳ This may take several minutes...\n")
 
     try:
-        install_dependencies(template_id, tier, python_binary, project_root)
+        install_dependencies(
+            template_id,
+            cast(
+                Literal[
+                    "tier-1-essential",
+                    "tier-2-standard",
+                    "tier-3-comprehensive",
+                    "tier-4-production",
+                ],
+                tier,
+            ),
+            python_binary,
+            project_root,
+        )
         logger.info("✓ Dependencies installed successfully\n")
     except Exception as e:
         logger.warning(f"Dependency installation encountered an issue: {e}")

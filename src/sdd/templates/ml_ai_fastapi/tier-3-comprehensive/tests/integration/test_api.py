@@ -34,9 +34,7 @@ class TestItemAPIIntegration:
         assert retrieved_item["id"] == item_id
         assert retrieved_item["name"] == "Integration Test Item"
 
-    async def test_create_update_delete_workflow(
-        self, integration_client: AsyncClient
-    ):
+    async def test_create_update_delete_workflow(self, integration_client: AsyncClient):
         """Test complete CRUD workflow."""
         # Create
         create_response = await integration_client.post(
@@ -66,9 +64,7 @@ class TestItemAPIIntegration:
         assert delete_response.status_code == 204
 
         # Verify deletion
-        get_deleted_response = await integration_client.get(
-            f"/api/v1/items/{item_id}"
-        )
+        get_deleted_response = await integration_client.get(f"/api/v1/items/{item_id}")
         assert get_deleted_response.status_code == 404
 
     async def test_list_items_pagination(self, integration_client: AsyncClient):
@@ -118,9 +114,7 @@ class TestItemAPIIntegration:
 class TestHealthEndpoints:
     """Integration tests for health check endpoints."""
 
-    async def test_health_endpoints_integration(
-        self, integration_client: AsyncClient
-    ):
+    async def test_health_endpoints_integration(self, integration_client: AsyncClient):
         """Test all health check endpoints."""
         # Health check
         response = await integration_client.get("/health")

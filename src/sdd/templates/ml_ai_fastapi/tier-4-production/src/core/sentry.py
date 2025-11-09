@@ -5,7 +5,6 @@ Sentry error tracking integration
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-
 from src.core.config import settings
 
 

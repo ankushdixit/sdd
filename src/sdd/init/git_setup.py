@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 
 from sdd.core.command_runner import CommandRunner
-from sdd.core.constants import GIT_QUICK_TIMEOUT, GIT_STANDARD_TIMEOUT
+from sdd.core.constants import GIT_QUICK_TIMEOUT
 from sdd.core.exceptions import ErrorCode, GitError, ValidationError
 
 logger = logging.getLogger(__name__)

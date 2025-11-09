@@ -8,16 +8,18 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import json
-import pytest
-from pathlib import Path
-from unittest.mock import patch, Mock
 
+import json
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+
+from sdd.core.exceptions import FileOperationError
 from sdd.init.session_structure import (
     create_session_directories,
     initialize_tracking_files,
 )
-from sdd.core.exceptions import FileOperationError
 
 
 class TestCreateSessionDirectories:
@@ -83,6 +85,7 @@ class TestInitializeTrackingFiles:
         fake_templates.mkdir()
 
         import shutil
+
         for item in tracking_template_files.iterdir():
             if item.is_file():
                 shutil.copy(item, fake_templates / item.name)
@@ -100,8 +103,9 @@ class TestInitializeTrackingFiles:
         """Test that config.json includes tier-specific settings."""
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
-        import sdd.init.session_structure as session_structure_module
         import shutil
+
+        import sdd.init.session_structure as session_structure_module
 
         # Create a fake module structure: fake_sdd/init/session_structure.py
         fake_sdd_dir = tmp_path / "fake_sdd"
@@ -119,7 +123,7 @@ class TestInitializeTrackingFiles:
         fake_file = str(fake_init_dir / "session_structure.py")
 
         with patch.object(session_structure_module, "__file__", fake_file):
-            files = initialize_tracking_files("tier-3-comprehensive", 90, tmp_path)
+            initialize_tracking_files("tier-3-comprehensive", 90, tmp_path)
 
             config = json.loads((tmp_path / ".session" / "config.json").read_text())
             assert config["quality_gates"]["tier"] == "tier-3-comprehensive"
@@ -129,8 +133,9 @@ class TestInitializeTrackingFiles:
         """Test creating empty update tracking files."""
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
-        import sdd.init.session_structure as session_structure_module
         import shutil
+
+        import sdd.init.session_structure as session_structure_module
 
         # Create a fake module structure: fake_sdd/init/session_structure.py
         fake_sdd_dir = tmp_path / "fake_sdd"
@@ -155,11 +160,13 @@ class TestInitializeTrackingFiles:
 
     def test_default_project_root(self, tracking_template_files):
         """Test using default project root (Path.cwd())."""
-        import sdd.init.session_structure as session_structure_module
         import shutil
 
         # Use a real tmp directory for the test
         import tempfile
+
+        import sdd.init.session_structure as session_structure_module
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
 
@@ -190,8 +197,9 @@ class TestInitializeTrackingFiles:
 
     def test_copy_error_handling(self, tmp_path, tracking_template_files):
         """Test error handling when file copy fails."""
-        import sdd.init.session_structure as session_structure_module
         import shutil
+
+        import sdd.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
@@ -219,8 +227,9 @@ class TestInitializeTrackingFiles:
 
     def test_update_tracking_creation_error(self, tmp_path, tracking_template_files):
         """Test error handling when creating update tracking files fails."""
-        import sdd.init.session_structure as session_structure_module
         import shutil
+
+        import sdd.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
@@ -248,8 +257,9 @@ class TestInitializeTrackingFiles:
 
     def test_config_schema_copy_error(self, tmp_path, tracking_template_files):
         """Test error handling when copying config schema fails."""
-        import sdd.init.session_structure as session_structure_module
         import shutil
+
+        import sdd.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 

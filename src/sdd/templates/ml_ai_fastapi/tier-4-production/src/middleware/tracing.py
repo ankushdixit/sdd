@@ -7,9 +7,8 @@ from typing import Callable
 from fastapi import Request, Response
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from src.core.config import settings
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class TracingMiddleware(BaseHTTPMiddleware):
@@ -17,9 +16,7 @@ class TracingMiddleware(BaseHTTPMiddleware):
     Middleware to add distributed tracing with OpenTelemetry.
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         Add tracing context to request.
 

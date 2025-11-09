@@ -8,12 +8,10 @@ from __future__ import annotations
 
 import logging
 import shutil
-import sys
 from pathlib import Path
 from typing import Literal
 
 from sdd.core.command_runner import CommandRunner
-from sdd.core.constants import GIT_STANDARD_TIMEOUT
 from sdd.core.exceptions import ErrorCode, ValidationError
 
 logger = logging.getLogger(__name__)
@@ -213,7 +211,7 @@ def attempt_python_install_with_pyenv(version: str = "3.11") -> tuple[bool, str]
 def validate_environment(
     stack_type: Literal["saas_t3", "ml_ai_fastapi", "dashboard_refine", "fullstack_nextjs"],
     auto_update: bool = True,
-) -> dict[str, bool | str]:
+) -> dict[str, bool | str | None | list[str]]:
     """
     Validate environment for a specific stack and optionally auto-update.
 
@@ -239,7 +237,7 @@ def validate_environment(
     errors: list[str] = []
     warnings: list[str] = []
 
-    result = {
+    result: dict[str, bool | str | None | list[str]] = {
         "node_ok": True,
         "node_version": None,
         "python_ok": True,

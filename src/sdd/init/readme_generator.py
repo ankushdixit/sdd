@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from sdd.core.exceptions import FileOperationError
 from sdd.init.template_installer import get_template_info, load_template_registry
@@ -53,7 +52,7 @@ def generate_readme(
     # Build README content
     readme_content = f"""# {project_name}
 
-A {template_info['display_name']} project built with Session-Driven Development.
+A {template_info["display_name"]} project built with Session-Driven Development.
 
 ## Tech Stack
 
@@ -110,7 +109,7 @@ Visit http://localhost:8000
     readme_content += "## Testing\n\n"
 
     if template_info["package_manager"] == "npm":
-        readme_content += f"""```bash
+        readme_content += """```bash
 # Run tests
 npm test
 
@@ -125,7 +124,7 @@ npm run type-check
 ```
 """
     else:  # Python
-        readme_content += f"""```bash
+        readme_content += """```bash
 # Run tests
 pytest
 
@@ -150,12 +149,16 @@ pyright
     # Add known issues if any
     if template_info.get("known_issues"):
         critical_issues = [
-            issue for issue in template_info["known_issues"] if issue["severity"] in ["CRITICAL", "HIGH"]
+            issue
+            for issue in template_info["known_issues"]
+            if issue["severity"] in ["CRITICAL", "HIGH"]
         ]
         if critical_issues:
             readme_content += "\n## Known Issues\n\n"
             for issue in critical_issues:
-                readme_content += f"**{issue['package']}** ({issue['severity']}): {issue['description']}\n\n"
+                readme_content += (
+                    f"**{issue['package']}** ({issue['severity']}): {issue['description']}\n\n"
+                )
 
     # Add Session-Driven Development section
     readme_content += """## Session-Driven Development

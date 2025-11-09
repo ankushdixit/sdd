@@ -11,12 +11,14 @@ Run with coverage:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch
 
-from sdd.init.readme_generator import generate_readme
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
 from sdd.core.exceptions import FileOperationError
+from sdd.init.readme_generator import generate_readme
 
 
 class TestGenerateReadme:
@@ -27,10 +29,11 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
-                readme_path = generate_readme(
-                    "saas_t3", "tier-2-standard", 80, ["ci_cd"], tmp_path
-                )
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
+                readme_path = generate_readme("saas_t3", "tier-2-standard", 80, ["ci_cd"], tmp_path)
 
                 assert readme_path.exists()
                 content = readme_path.read_text()
@@ -43,7 +46,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
 
                 content = readme_path.read_text()
@@ -56,7 +62,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
 
                 content = readme_path.read_text()
@@ -69,7 +78,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["ml_ai_fastapi"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme("ml_ai_fastapi", "tier-1-essential", 60, [], tmp_path)
 
                 content = readme_path.read_text()
@@ -82,7 +94,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme(
                     "saas_t3", "tier-1-essential", 60, ["ci_cd", "docker"], tmp_path
                 )
@@ -100,7 +115,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], project)
 
                 content = readme_path.read_text()
@@ -111,7 +129,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
 
                 content = readme_path.read_text()
@@ -124,7 +145,10 @@ class TestGenerateReadme:
         with patch("sdd.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
-            with patch("sdd.init.readme_generator.load_template_registry", return_value=mock_template_registry):
+            with patch(
+                "sdd.init.readme_generator.load_template_registry",
+                return_value=mock_template_registry,
+            ):
                 with patch.object(Path, "write_text", side_effect=PermissionError("Access denied")):
                     with pytest.raises(FileOperationError) as exc:
                         generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)

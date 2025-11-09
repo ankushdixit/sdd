@@ -3,7 +3,7 @@ Item service - handles business logic for items
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -53,7 +53,7 @@ class ItemService:
         result = await self.db.exec(statement)
         return result.one_or_none()
 
-    async def get_items(self, skip: int = 0, limit: int = 100) -> List[Item]:
+    async def get_items(self, skip: int = 0, limit: int = 100) -> list[Item]:
         """
         Get all items with pagination.
 
@@ -62,15 +62,13 @@ class ItemService:
             limit: Maximum number of items to return
 
         Returns:
-            List[Item]: List of items
+            list[Item]: List of items
         """
         statement = select(Item).offset(skip).limit(limit)
         result = await self.db.exec(statement)
         return list(result.all())
 
-    async def update_item(
-        self, item_id: int, item_update: ItemUpdate
-    ) -> Optional[Item]:
+    async def update_item(self, item_id: int, item_update: ItemUpdate) -> Optional[Item]:
         """
         Update an item.
 

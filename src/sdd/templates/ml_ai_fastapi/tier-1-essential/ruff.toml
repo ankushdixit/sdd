@@ -7,6 +7,21 @@ target-version = "py311"
 # Enable auto-fixing by default
 fix = true
 
+# Exclude common directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "alembic/versions",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+]
+
+[lint]
 select = [
     "E",     # pycodestyle errors
     "W",     # pycodestyle warnings
@@ -45,36 +60,22 @@ ignore = [
     "TRY003",  # avoid specifying long messages outside exception class
 ]
 
-# Exclude common directories
-exclude = [
-    ".git",
-    ".venv",
-    "venv",
-    "__pycache__",
-    "alembic/versions",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "build",
-    "dist",
-]
+[lint.isort]
+known-first-party = ["src"]
+force-single-line = false
+force-sort-within-sections = false
+lines-after-imports = 2
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/*" = ["S101", "PLR2004", "ARG001"]
+"alembic/env.py" = ["F401"]
 
 [format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
-
-[isort]
-known-first-party = ["src"]
-force-single-line = false
-force-sort-within-sections = false
-lines-after-imports = 2
-
-[mccabe]
-max-complexity = 10
-
-[per-file-ignores]
-"__init__.py" = ["F401", "F403"]
-"tests/*" = ["S101", "PLR2004", "ARG001"]
-"alembic/env.py" = ["F401"]

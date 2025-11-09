@@ -2,17 +2,16 @@
 Integration test fixtures
 """
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.orm import sessionmaker
-
-from src.main import app
 from src.api.dependencies import get_db
+from src.main import app
 
 # Use a separate test database for integration tests
 INTEGRATION_DATABASE_URL = "sqlite+aiosqlite:///./test_integration.db"

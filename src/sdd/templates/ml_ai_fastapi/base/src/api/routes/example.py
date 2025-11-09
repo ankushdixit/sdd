@@ -2,8 +2,6 @@
 Example CRUD endpoints demonstrating SQLModel usage
 """
 
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -33,12 +31,12 @@ async def create_item(
     return await service.create_item(item)
 
 
-@router.get("/items", response_model=List[ItemRead])
+@router.get("/items", response_model=list[ItemRead])
 async def list_items(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
-) -> List[Item]:
+) -> list[Item]:
     """
     List all items with pagination.
 

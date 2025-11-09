@@ -624,7 +624,7 @@ class CommandExecutionError(SystemError):
     def __init__(
         self,
         command: str,
-        returncode: int = None,
+        returncode: int | None = None,
         stderr: str | None = None,
         stdout: str | None = None,
         exit_code: int | None = None,
@@ -635,12 +635,14 @@ class CommandExecutionError(SystemError):
 
         # Merge provided context with command details
         ctx = context or {}
-        ctx.update({
-            "command": command,
-            "returncode": actual_code,
-            "stderr": stderr,
-            "stdout": stdout,
-        })
+        ctx.update(
+            {
+                "command": command,
+                "returncode": actual_code,
+                "stderr": stderr,
+                "stdout": stdout,
+            }
+        )
 
         super().__init__(
             message=f"Command execution failed: {command}",

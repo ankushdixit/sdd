@@ -8,11 +8,10 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
+
 from unittest.mock import Mock, patch
 
-from sdd.init.initial_scans import run_stack_scan, run_tree_scan, run_initial_scans
+from sdd.init.initial_scans import run_initial_scans, run_stack_scan, run_tree_scan
 
 
 class TestRunStackScan:

@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from sdd.core.exceptions import ErrorCode, FileOperationError, TemplateNotFoundError
+from sdd.core.exceptions import FileOperationError, TemplateNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ def load_template_registry() -> dict[str, Any]:
 
     try:
         with open(registry_path) as f:
-            return json.load(f)
+            return cast(dict[str, Any], json.load(f))
     except json.JSONDecodeError as e:
         raise FileOperationError(
             operation="parse",
@@ -70,7 +71,7 @@ def get_template_info(template_id: str) -> dict[str, Any]:
             template_path=f"Available templates: {available}",
         )
 
-    return registry["templates"][template_id]
+    return cast(dict[str, Any], registry["templates"][template_id])
 
 
 def get_template_directory(template_id: str) -> Path:
@@ -90,9 +91,7 @@ def get_template_directory(template_id: str) -> Path:
     template_dir = templates_root / template_id
 
     if not template_dir.exists():
-        raise TemplateNotFoundError(
-            template_name=template_id, template_path=str(templates_root)
-        )
+        raise TemplateNotFoundError(template_name=template_id, template_path=str(templates_root))
 
     return template_dir
 
@@ -259,7 +258,15 @@ def install_tier_files(
     # Process template files
     for template_file in tier_dir.rglob("*.template"):
         relative_path = template_file.relative_to(tier_dir)
-        output_path = project_root / relative_path.parent / relative_path.stem
+
+        # Strip tier suffix from filename if present (e.g., package.json.tier4.template -> package.json)
+        # This allows tier files to overwrite the base file instead of creating separate tier files
+        filename_without_template = relative_path.stem  # Removes .template
+
+        # Remove tier suffixes: .tier1, .tier2, .tier3, .tier4
+        filename_without_tier = re.sub(r"\.tier[1-4]$", "", filename_without_template)
+
+        output_path = project_root / relative_path.parent / filename_without_tier
 
         try:
             content = template_file.read_text()
@@ -379,7 +386,12 @@ def install_template(
     total_files += install_base_template(template_id, project_root, replacements)
 
     # Install tier files (cumulative - install all tiers up to selected)
-    tier_order = ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"]
+    tier_order = [
+        "tier-1-essential",
+        "tier-2-standard",
+        "tier-3-comprehensive",
+        "tier-4-production",
+    ]
     selected_tier_index = tier_order.index(tier)
 
     for i in range(selected_tier_index + 1):
@@ -396,7 +408,9 @@ def install_template(
             "env_templates": "env-templates",
         }
         option_dir = option_dir_map.get(option, option)
-        total_files += install_additional_option(template_id, option_dir, project_root, replacements)
+        total_files += install_additional_option(
+            template_id, option_dir, project_root, replacements
+        )
 
     logger.info(f"Template installation complete: {total_files} files installed")
 

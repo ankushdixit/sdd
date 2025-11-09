@@ -17,6 +17,14 @@ High-level system design and architectural decisions:
 - [Implementation Insights](architecture/implementation-insights.md) - Technical implementation details
 - [Architecture Overview](ARCHITECTURE.md) - System architecture and components
 
+## Templates
+
+Project templates with tier-based quality gates:
+
+- [Templates Guide](templates/TEMPLATES_GUIDE.md) - Choose the right template for your project
+- [Creating Templates](templates/CREATING_TEMPLATES.md) - Build custom templates
+- [Template Design](templates/DESIGN.md) - System design and architecture
+
 ## Guides
 
 Step-by-step guides for using SDD:

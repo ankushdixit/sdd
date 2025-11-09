@@ -50,7 +50,9 @@ def create_docs_structure(project_root: Path | None = None) -> list[Path]:
         (docs_dir / "architecture" / "README.md").write_text(
             "# Architecture\n\nArchitecture documentation and decisions.\n"
         )
-        (docs_dir / "api" / "README.md").write_text("# API Documentation\n\nAPI documentation goes here.\n")
+        (docs_dir / "api" / "README.md").write_text(
+            "# API Documentation\n\nAPI documentation goes here.\n"
+        )
         (docs_dir / "guides" / "development.md").write_text(
             "# Development Guide\n\nDevelopment setup and workflow.\n"
         )

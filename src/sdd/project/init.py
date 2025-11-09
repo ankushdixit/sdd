@@ -1099,9 +1099,7 @@ def main() -> int:
     """
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Initialize Session-Driven Development project"
-    )
+    parser = argparse.ArgumentParser(description="Initialize Session-Driven Development project")
     parser.add_argument(
         "--template",
         choices=["saas_t3", "ml_ai_fastapi", "dashboard_refine", "fullstack_nextjs"],

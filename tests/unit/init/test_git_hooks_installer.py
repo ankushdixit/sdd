@@ -8,13 +8,14 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
+
 import stat
-from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
+from sdd.core.exceptions import NotAGitRepoError, TemplateNotFoundError
 from sdd.init.git_hooks_installer import install_git_hooks
-from sdd.core.exceptions import NotAGitRepoError, TemplateNotFoundError, FileOperationError
 
 
 class TestInstallGitHooks:

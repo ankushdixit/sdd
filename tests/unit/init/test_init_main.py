@@ -8,9 +8,11 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
+
 import sys
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+import pytest
 
 from sdd.project.init import main
 

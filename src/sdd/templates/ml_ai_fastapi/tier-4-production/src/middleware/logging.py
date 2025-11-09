@@ -6,9 +6,8 @@ import time
 from typing import Callable
 
 from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from src.core.logging import logger
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -16,9 +15,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     Middleware to log all HTTP requests and responses.
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         Process request and log details.
 

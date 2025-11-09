@@ -129,14 +129,14 @@ def update_gitignore(template_id: str, project_root: Path | None = None) -> Path
 
     # Check which OS patterns need to be added
     # First, extract existing patterns (lines without comments)
-    existing_lines = [line.strip() for line in existing_content.split('\n')]
+    existing_lines = [line.strip() for line in existing_content.split("\n")]
     existing_patterns = set()
     for line in existing_lines:
         # Extract pattern (part before comment if any)
-        pattern = line.split('#')[0].strip()
+        pattern = line.split("#")[0].strip()
         if pattern:
             # Normalize pattern - remove trailing ? for comparison
-            normalized = pattern.rstrip('?')
+            normalized = pattern.rstrip("?")
             existing_patterns.add(normalized)
 
     os_patterns_needed = []
@@ -147,7 +147,7 @@ def update_gitignore(template_id: str, project_root: Path | None = None) -> Path
         pattern = entry.split("#")[0].strip()
         if pattern:
             # Normalize pattern for comparison
-            normalized = pattern.rstrip('?')
+            normalized = pattern.rstrip("?")
             if normalized not in existing_patterns:
                 os_patterns_needed.append(entry)
 

@@ -11,16 +11,18 @@ Run with coverage:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+
+from sdd.core.exceptions import ErrorCode, GitError, ValidationError
 from sdd.init.git_setup import (
-    is_blank_project,
     check_blank_project_or_exit,
     check_or_init_git,
+    is_blank_project,
 )
-from sdd.core.exceptions import ValidationError, GitError, ErrorCode
 
 
 class TestIsBlankProject:
@@ -116,7 +118,7 @@ class TestIsBlankProject:
     def test_non_blank_multiple_blocking_files(self, temp_project):
         """Test non-blank project with multiple blocking files."""
         (temp_project / "package.json").write_text('{"name": "test"}')
-        (temp_project / "tsconfig.json").write_text('{}')
+        (temp_project / "tsconfig.json").write_text("{}")
         src = temp_project / "src"
         src.mkdir()
         (src / "index.ts").write_text("export {};")
@@ -188,7 +190,7 @@ class TestCheckBlankProjectOrExit:
     def test_error_message_contains_blocking_files(self, temp_project):
         """Test that error message lists all blocking files."""
         (temp_project / "package.json").write_text('{"name": "test"}')
-        (temp_project / "tsconfig.json").write_text('{}')
+        (temp_project / "tsconfig.json").write_text("{}")
 
         with pytest.raises(ValidationError) as exc:
             check_blank_project_or_exit(temp_project)

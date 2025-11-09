@@ -11,23 +11,25 @@ Run with coverage:
 
 Target: 90%+ coverage
 """
-import json
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
 
+import json
+from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
+
+from sdd.core.exceptions import FileOperationError, TemplateNotFoundError
 from sdd.init.template_installer import (
-    load_template_registry,
-    get_template_info,
-    get_template_directory,
     copy_directory_tree,
-    replace_placeholders,
-    install_base_template,
-    install_tier_files,
+    get_template_directory,
+    get_template_info,
     install_additional_option,
+    install_base_template,
     install_template,
+    install_tier_files,
+    load_template_registry,
+    replace_placeholders,
 )
-from sdd.core.exceptions import TemplateNotFoundError, FileOperationError
 
 
 class TestLoadTemplateRegistry:
@@ -79,7 +81,10 @@ class TestGetTemplateInfo:
 
     def test_get_valid_template(self, mock_template_registry):
         """Test getting info for valid template."""
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
             info = get_template_info("saas_t3")
 
             assert info["id"] == "saas_t3"
@@ -87,7 +92,10 @@ class TestGetTemplateInfo:
 
     def test_get_invalid_template(self, mock_template_registry):
         """Test error for invalid template ID."""
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
             with pytest.raises(TemplateNotFoundError) as exc:
                 get_template_info("invalid_template")
 
@@ -107,13 +115,15 @@ class TestGetTemplateDirectory:
         saas_dir.mkdir()
 
         with patch("sdd.init.template_installer.Path") as mock_path:
-            mock_path.return_value.__truediv__.return_value.__truediv__.return_value = templates_root
+            mock_path.return_value.__truediv__.return_value.__truediv__.return_value = (
+                templates_root
+            )
             mock_path.return_value = saas_dir.parent.parent / "init" / "template_installer.py"
 
             # Override exists check
             with patch.object(Path, "exists", return_value=True):
                 with patch.object(Path, "__truediv__", return_value=saas_dir):
-                    result = get_template_directory("saas_t3")
+                    get_template_directory("saas_t3")
                     # Just verify it doesn't raise
 
     def test_template_directory_not_found(self):
@@ -254,7 +264,10 @@ class TestInstallBaseTemplate:
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        with patch("sdd.init.template_installer.get_template_directory", return_value=template_base_dir.parent):
+        with patch(
+            "sdd.init.template_installer.get_template_directory",
+            return_value=template_base_dir.parent,
+        ):
             count = install_base_template(
                 "saas_t3", project_root, {"project_name": "my-app", "project_description": "Test"}
             )
@@ -279,7 +292,7 @@ class TestInstallBaseTemplate:
         project_root.mkdir()
 
         with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
-            count = install_base_template("saas_t3", project_root, {"project_name": "my-app"})
+            install_base_template("saas_t3", project_root, {"project_name": "my-app"})
 
             assert (project_root / "config.json").exists()
             content = (project_root / "config.json").read_text()
@@ -294,7 +307,10 @@ class TestInstallTierFiles:
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        with patch("sdd.init.template_installer.get_template_directory", return_value=template_tier_dir.parent):
+        with patch(
+            "sdd.init.template_installer.get_template_directory",
+            return_value=template_tier_dir.parent,
+        ):
             count = install_tier_files(
                 "saas_t3", "tier-1-essential", project_root, {"project_name": "my-app"}
             )
@@ -353,8 +369,13 @@ class TestInstallTemplate:
         tier1.mkdir()
         (tier1 / "test.ts").write_text("test")
 
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
-            with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
+            with patch(
+                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+            ):
                 result = install_template("saas_t3", "tier-1-essential", [], project_root)
 
                 assert result["template_id"] == "saas_t3"
@@ -379,9 +400,14 @@ class TestInstallTemplate:
         tier2.mkdir()
         (tier2 / "tier2.txt").write_text("tier2")
 
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
-            with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
-                result = install_template("saas_t3", "tier-2-standard", [], project_root)
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
+            with patch(
+                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+            ):
+                install_template("saas_t3", "tier-2-standard", [], project_root)
 
                 # Should have files from base, tier-1, and tier-2
                 assert (project_root / "README.md").exists()
@@ -402,8 +428,13 @@ class TestInstallTemplate:
         ci_cd.mkdir()
         (ci_cd / "workflow.yml").write_text("ci")
 
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
-            with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
+            with patch(
+                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+            ):
                 result = install_template("saas_t3", "tier-1-essential", ["ci_cd"], project_root)
 
                 assert "ci_cd" in result["additional_options"]
@@ -420,9 +451,14 @@ class TestInstallTemplate:
         # Create a .template file so it gets processed with placeholder replacement
         (base / "README.md.template").write_text("# {project_name}")
 
-        with patch("sdd.init.template_installer.load_template_registry", return_value=mock_template_registry):
-            with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
-                result = install_template("saas_t3", "tier-1-essential", [], project_root)
+        with patch(
+            "sdd.init.template_installer.load_template_registry",
+            return_value=mock_template_registry,
+        ):
+            with patch(
+                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+            ):
+                install_template("saas_t3", "tier-1-essential", [], project_root)
 
                 readme = (project_root / "README.md").read_text()
                 assert "my-awesome-app" in readme

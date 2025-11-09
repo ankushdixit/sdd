@@ -8,7 +8,7 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
+
 from unittest.mock import Mock, patch
 
 from sdd.init.initial_commit import create_commit_message, create_initial_commit

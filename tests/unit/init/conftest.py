@@ -4,8 +4,7 @@ Shared fixtures for init module tests.
 This module provides common fixtures for testing the SDD initialization system.
 All tests in tests/unit/init/ can use these fixtures.
 """
-import json
-from pathlib import Path
+
 from unittest.mock import Mock
 
 import pytest
@@ -126,8 +125,12 @@ def mock_stack_versions():
             "ml_ai_fastapi": {
                 "installation": {
                     "commands": {
-                        "all_tiers": "pip install fastapi==0.115.6 uvicorn==0.34.0",
-                        "tier4": "pip install sentry-sdk==2.19.2",
+                        "base": "pip install fastapi==0.115.6 uvicorn==0.34.0",
+                        "tier1": "pip install pytest==8.3.4 pytest-cov==6.0.0",
+                        "tier2": "pip install detect-secrets==1.5.0 pip-audit==2.7.3",
+                        "tier3": "pip install radon==6.0.1 vulture==2.14",
+                        "tier4_dev": "pip install prometheus-client==0.23.1 statsd==4.0.1",
+                        "tier4_prod": "pip install fastapi-health==0.4.0 pydantic-settings==2.11.0",
                     }
                 }
             },
@@ -139,20 +142,20 @@ def mock_stack_versions():
 def mock_command_runner():
     """Mock CommandRunner for subprocess calls."""
     mock = Mock()
-    mock.run.return_value = Mock(success=True, stdout="", stderr="", returncode=0, exit_code=0)
+    mock.run.return_value = Mock(success=True, stdout="", stderr="", returncode=0)
     return mock
 
 
 @pytest.fixture
 def mock_successful_command():
     """Mock a successful command execution."""
-    return Mock(success=True, stdout="Success", stderr="", returncode=0, exit_code=0)
+    return Mock(success=True, stdout="Success", stderr="", returncode=0)
 
 
 @pytest.fixture
 def mock_failed_command():
     """Mock a failed command execution."""
-    return Mock(success=False, stdout="", stderr="Error occurred", returncode=1, exit_code=1)
+    return Mock(success=False, stdout="", stderr="Error occurred", returncode=1)
 
 
 @pytest.fixture

@@ -9,12 +9,12 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import yaml
 
 from sdd.core.command_runner import CommandRunner
-from sdd.core.exceptions import CommandExecutionError, ErrorCode, FileOperationError
+from sdd.core.exceptions import CommandExecutionError, FileOperationError
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def load_stack_versions() -> dict[str, Any]:
 
     try:
         with open(versions_file) as f:
-            return yaml.safe_load(f)
+            return cast(dict[str, Any], yaml.safe_load(f))
     except yaml.YAMLError as e:
         raise FileOperationError(
             operation="parse",
@@ -85,12 +85,14 @@ def get_installation_commands(
             details=f"No installation commands found for stack '{stack_id}'",
         )
 
-    return stack["installation"]
+    return cast(dict[str, Any], stack["installation"])
 
 
 def install_npm_dependencies(
     template_id: str,
-    tier: Literal["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+    tier: Literal[
+        "tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"
+    ],
     project_root: Path | None = None,
 ) -> bool:
     """
@@ -168,7 +170,9 @@ def install_npm_dependencies(
 
 
 def install_python_dependencies(
-    tier: Literal["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+    tier: Literal[
+        "tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"
+    ],
     python_binary: str | None = None,
     project_root: Path | None = None,
 ) -> bool:
@@ -281,7 +285,9 @@ def install_python_dependencies(
 
 def install_dependencies(
     template_id: str,
-    tier: Literal["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+    tier: Literal[
+        "tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"
+    ],
     python_binary: str | None = None,
     project_root: Path | None = None,
 ) -> bool:

@@ -11,22 +11,20 @@ Run with coverage:
 
 Target: 90%+ coverage
 """
-import pytest
-import shutil
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 
+from unittest.mock import Mock, patch
+
+import pytest
+
+from sdd.core.exceptions import ErrorCode, ValidationError
 from sdd.init.environment_validator import (
-    parse_version,
-    check_node_version,
-    check_python_version,
     attempt_node_install_with_nvm,
     attempt_python_install_with_pyenv,
+    check_node_version,
+    check_python_version,
+    parse_version,
     validate_environment,
-    MIN_NODE_VERSION,
-    MIN_PYTHON_VERSION,
 )
-from sdd.core.exceptions import ValidationError, ErrorCode
 
 
 class TestParseVersion:
@@ -172,7 +170,9 @@ class TestCheckPythonVersion:
 
     def test_python_specific_binary(self):
         """Test checking specific Python binary."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python3.11"):
+        with patch(
+            "sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python3.11"
+        ):
             with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
@@ -302,7 +302,9 @@ class TestValidateEnvironment:
 
     def test_saas_t3_node_ok(self):
         """Test validation for saas_t3 stack with valid Node.js."""
-        with patch("sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")):
+        with patch(
+            "sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
+        ):
             result = validate_environment("saas_t3", auto_update=False)
 
             assert result["node_ok"] is True
@@ -347,9 +349,14 @@ class TestValidateEnvironment:
 
     def test_ml_ai_fastapi_python_missing_no_auto_update(self):
         """Test validation for ml_ai_fastapi with missing Python, no auto-update."""
-        with patch("sdd.init.environment_validator.check_python_version", return_value=(False, None, None)):
+        with patch(
+            "sdd.init.environment_validator.check_python_version", return_value=(False, None, None)
+        ):
             # Check for python3.11 specifically also fails
-            with patch("sdd.init.environment_validator.check_python_version", return_value=(False, None, None)):
+            with patch(
+                "sdd.init.environment_validator.check_python_version",
+                return_value=(False, None, None),
+            ):
                 with pytest.raises(ValidationError) as exc:
                     validate_environment("ml_ai_fastapi", auto_update=False)
 
@@ -372,14 +379,18 @@ class TestValidateEnvironment:
 
     def test_dashboard_refine_requires_node(self):
         """Test validation for dashboard_refine stack."""
-        with patch("sdd.init.environment_validator.check_node_version", return_value=(True, "v18.0.0")):
+        with patch(
+            "sdd.init.environment_validator.check_node_version", return_value=(True, "v18.0.0")
+        ):
             result = validate_environment("dashboard_refine", auto_update=False)
 
             assert result["node_ok"] is True
 
     def test_fullstack_nextjs_requires_node(self):
         """Test validation for fullstack_nextjs stack."""
-        with patch("sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")):
+        with patch(
+            "sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
+        ):
             result = validate_environment("fullstack_nextjs", auto_update=False)
 
             assert result["node_ok"] is True

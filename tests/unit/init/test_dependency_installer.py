@@ -11,22 +11,20 @@ Run with coverage:
 
 Target: 90%+ coverage
 """
-import json
-import pytest
-import sys
-from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
 
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 import yaml
 
+from sdd.core.exceptions import CommandExecutionError, FileOperationError
 from sdd.init.dependency_installer import (
-    load_stack_versions,
     get_installation_commands,
+    install_dependencies,
     install_npm_dependencies,
     install_python_dependencies,
-    install_dependencies,
+    load_stack_versions,
 )
-from sdd.core.exceptions import FileOperationError, CommandExecutionError
 
 
 class TestLoadStackVersions:
@@ -39,9 +37,7 @@ class TestLoadStackVersions:
         with patch("sdd.init.dependency_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
-            mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = (
-                mock_file
-            )
+            mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
 
             with patch("builtins.open", mock_open(read_data=versions_yaml)):
                 result = load_stack_versions()
@@ -68,9 +64,7 @@ class TestLoadStackVersions:
         with patch("sdd.init.dependency_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
-            mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = (
-                mock_file
-            )
+            mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
 
             with patch("builtins.open", mock_open(read_data="invalid: yaml: {")):
                 with pytest.raises(FileOperationError) as exc:
@@ -85,7 +79,9 @@ class TestGetInstallationCommands:
 
     def test_get_commands_for_valid_stack(self, mock_stack_versions):
         """Test getting installation commands for valid stack."""
-        with patch("sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions):
+        with patch(
+            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+        ):
             commands = get_installation_commands("saas_t3", "tier-1")
 
             assert "commands" in commands
@@ -93,7 +89,9 @@ class TestGetInstallationCommands:
 
     def test_stack_not_found(self, mock_stack_versions):
         """Test error when stack not found."""
-        with patch("sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions):
+        with patch(
+            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+        ):
             with pytest.raises(FileOperationError) as exc:
                 get_installation_commands("invalid_stack", "tier-1")
 
@@ -103,7 +101,9 @@ class TestGetInstallationCommands:
         """Test error when stack has no installation section."""
         mock_stack_versions["stacks"]["saas_t3"].pop("installation")
 
-        with patch("sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions):
+        with patch(
+            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+        ):
             with pytest.raises(FileOperationError) as exc:
                 get_installation_commands("saas_t3", "tier-1")
 
@@ -122,7 +122,7 @@ class TestInstallNpmDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=True, stdout="", stderr="", exit_code=0
+                    success=True, stdout="", stderr="", returncode=0
                 )
 
                 result = install_npm_dependencies("saas_t3", "tier-1-essential", tmp_path)
@@ -140,7 +140,7 @@ class TestInstallNpmDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=True, stdout="", stderr="", exit_code=0
+                    success=True, stdout="", stderr="", returncode=0
                 )
 
                 result = install_npm_dependencies("saas_t3", "tier-4-production", tmp_path)
@@ -158,7 +158,7 @@ class TestInstallNpmDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=False, stdout="", stderr="Install failed", exit_code=1
+                    success=False, stdout="", stderr="Install failed", returncode=1
                 )
 
                 with pytest.raises(CommandExecutionError) as exc:
@@ -186,7 +186,7 @@ class TestInstallPythonDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=True, stdout="", stderr="", exit_code=0
+                    success=True, stdout="", stderr="", returncode=0
                 )
 
                 result = install_python_dependencies("tier-1-essential", None, tmp_path)
@@ -210,7 +210,7 @@ class TestInstallPythonDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=True, stdout="", stderr="", exit_code=0
+                    success=True, stdout="", stderr="", returncode=0
                 )
 
                 result = install_python_dependencies("tier-1-essential", None, tmp_path)
@@ -231,7 +231,7 @@ class TestInstallPythonDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=True, stdout="", stderr="", exit_code=0
+                    success=True, stdout="", stderr="", returncode=0
                 )
 
                 result = install_python_dependencies("tier-4-production", None, tmp_path)
@@ -249,7 +249,7 @@ class TestInstallPythonDependencies:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
-                    success=False, stdout="", stderr="Venv failed", exit_code=1
+                    success=False, stdout="", stderr="Venv failed", returncode=1
                 )
 
                 with pytest.raises(CommandExecutionError):
@@ -284,6 +284,8 @@ class TestInstallDependencies:
         with patch("sdd.init.dependency_installer.install_python_dependencies") as mock_pip:
             mock_pip.return_value = True
 
-            install_dependencies("ml_ai_fastapi", "tier-1-essential", "/usr/bin/python3.11", tmp_path)
+            install_dependencies(
+                "ml_ai_fastapi", "tier-1-essential", "/usr/bin/python3.11", tmp_path
+            )
 
             mock_pip.assert_called_once_with("tier-1-essential", "/usr/bin/python3.11", tmp_path)

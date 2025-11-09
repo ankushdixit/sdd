@@ -8,12 +8,10 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
 
 from sdd.init.gitignore_updater import (
-    get_stack_specific_gitignore_entries,
     get_os_specific_gitignore_entries,
+    get_stack_specific_gitignore_entries,
     update_gitignore,
 )
 

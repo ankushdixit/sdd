@@ -8,9 +8,8 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, call
+
+from unittest.mock import patch
 
 from sdd.init.orchestrator import run_template_based_init
 
@@ -64,9 +63,7 @@ class TestRunTemplateBasedInit:
                                                                 with patch(
                                                                     "sdd.init.orchestrator.create_initial_commit"
                                                                 ) as mock_commit:
-                                                                    mock_commit.return_value = (
-                                                                        True
-                                                                    )
+                                                                    mock_commit.return_value = True
 
                                                                     result = (
                                                                         run_template_based_init(
@@ -91,7 +88,9 @@ class TestRunTemplateBasedInit:
                             with patch("sdd.init.orchestrator.generate_readme"):
                                 with patch("sdd.init.orchestrator.install_dependencies"):
                                     with patch("sdd.init.orchestrator.create_docs_structure"):
-                                        with patch("sdd.init.orchestrator.create_session_directories"):
+                                        with patch(
+                                            "sdd.init.orchestrator.create_session_directories"
+                                        ):
                                             with patch(
                                                 "sdd.init.orchestrator.initialize_tracking_files"
                                             ):
@@ -135,7 +134,9 @@ class TestRunTemplateBasedInit:
                             with patch("sdd.init.orchestrator.generate_readme"):
                                 with patch("sdd.init.orchestrator.install_dependencies"):
                                     with patch("sdd.init.orchestrator.create_docs_structure"):
-                                        with patch("sdd.init.orchestrator.create_session_directories"):
+                                        with patch(
+                                            "sdd.init.orchestrator.create_session_directories"
+                                        ):
                                             with patch(
                                                 "sdd.init.orchestrator.initialize_tracking_files"
                                             ):
@@ -164,9 +165,7 @@ class TestRunTemplateBasedInit:
                                                                 )
 
                                                                 # Verify empty list was passed
-                                                                call_args = (
-                                                                    mock_install.call_args
-                                                                )
+                                                                call_args = mock_install.call_args
                                                                 assert call_args[0][2] == []
 
     def test_dependency_installation_continues_on_warning(self, tmp_path):
@@ -184,7 +183,9 @@ class TestRunTemplateBasedInit:
                                     side_effect=Exception("Dep failed"),
                                 ):
                                     with patch("sdd.init.orchestrator.create_docs_structure"):
-                                        with patch("sdd.init.orchestrator.create_session_directories"):
+                                        with patch(
+                                            "sdd.init.orchestrator.create_session_directories"
+                                        ):
                                             with patch(
                                                 "sdd.init.orchestrator.initialize_tracking_files"
                                             ):
@@ -205,14 +206,12 @@ class TestRunTemplateBasedInit:
                                                                 "sdd.init.orchestrator.create_initial_commit"
                                                             ):
                                                                 # Should not raise, returns 0
-                                                                result = (
-                                                                    run_template_based_init(
-                                                                        "saas_t3",
-                                                                        "tier-1-essential",
-                                                                        60,
-                                                                        [],
-                                                                        tmp_path,
-                                                                    )
+                                                                result = run_template_based_init(
+                                                                    "saas_t3",
+                                                                    "tier-1-essential",
+                                                                    60,
+                                                                    [],
+                                                                    tmp_path,
                                                                 )
 
                                                                 assert result == 0

@@ -11,7 +11,7 @@ import logging
 import shutil
 from pathlib import Path
 
-from sdd.core.exceptions import FileOperationError, TemplateNotFoundError
+from sdd.core.exceptions import FileOperationError
 
 logger = logging.getLogger(__name__)
 

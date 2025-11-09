@@ -8,12 +8,14 @@ Run tests:
 
 Target: 90%+ coverage
 """
-import pytest
+
 from pathlib import Path
 from unittest.mock import patch
 
-from sdd.init.docs_structure import create_docs_structure
+import pytest
+
 from sdd.core.exceptions import FileOperationError
+from sdd.init.docs_structure import create_docs_structure
 
 
 class TestCreateDocsStructure:
