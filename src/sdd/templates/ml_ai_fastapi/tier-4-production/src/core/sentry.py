@@ -6,7 +6,9 @@ from typing import Any
 
 import sentry_sdk  # type: ignore[import-not-found]
 from sentry_sdk.integrations.fastapi import FastApiIntegration  # type: ignore[import-not-found]
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration  # type: ignore[import-not-found]
+from sentry_sdk.integrations.sqlalchemy import (
+    SqlalchemyIntegration,  # type: ignore[import-not-found]
+)
 from src.core.config import settings  # type: ignore[import-not-found]
 
 

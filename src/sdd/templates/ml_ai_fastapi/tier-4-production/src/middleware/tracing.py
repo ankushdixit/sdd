@@ -6,7 +6,9 @@ from typing import Any, Callable
 
 from fastapi import Request, Response  # type: ignore[import-not-found]
 from opentelemetry import trace  # type: ignore[import-not-found]
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor  # type: ignore[import-not-found]
+from opentelemetry.instrumentation.fastapi import (
+    FastAPIInstrumentor,  # type: ignore[import-not-found]
+)
 from src.core.config import settings  # type: ignore[import-not-found]
 from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore[import-not-found]
 
