@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal, Optional, cast
 
 from sdd.init.dependency_installer import install_dependencies
 from sdd.init.docs_structure import create_docs_structure
@@ -98,7 +98,7 @@ def run_template_based_init(
             logger.info(f"  Node.js: {env_result['node_version']}")
         if env_result.get("python_version"):
             logger.info(f"  Python: {env_result['python_version']}")
-            python_binary = cast(str | None, env_result.get("python_binary"))
+            python_binary = cast(Optional[str], env_result.get("python_binary"))
     logger.info("")
 
     # Get template information
