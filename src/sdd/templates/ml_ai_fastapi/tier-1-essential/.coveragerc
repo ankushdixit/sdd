@@ -1,0 +1,26 @@
+[run]
+source = src
+omit =
+    tests/*
+    alembic/*
+    */__init__.py
+    # Tier 4 Production modules (optional features)
+    src/api/routes/metrics.py
+    src/core/logging.py
+    src/core/monitoring.py
+    src/core/sentry.py
+    src/middleware/logging.py
+    src/middleware/tracing.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod

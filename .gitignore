@@ -51,6 +51,7 @@ htmlcov/
 # Personal notes
 notes/
 scratch/
+demo-projects/
 
 # Implementation planning documents
 PLUGIN_IMPLEMENTATION_PLAN_*.md

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Next.js application (development)
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder
+    container_name: dashboard-refine-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.fake-rest.refine.dev}
+    ports:
+      - '3000:3000'
+    volumes:
+      - ..:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev

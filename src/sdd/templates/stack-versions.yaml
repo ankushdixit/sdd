@@ -1,0 +1,619 @@
+# SDD Template Stack Versions
+# This file contains exact validated versions for all template stacks
+# Last updated: 2025-11-07
+# Last validated: 2025-11-07
+# Source: Fresh build testing of all 4 stacks with Tier 1-4 tooling
+
+metadata:
+  validation_date: "2025-11-07"
+  python_min_version: "3.11"
+  node_min_version: "18.0.0"
+  npm_min_version: "9.0.0"
+  success_rate: "100%"  # All 4 stacks built successfully
+  total_validation_time: "90 minutes"
+
+# =============================================================================
+# Stack 1: SaaS T3 Stack (Next.js + tRPC + Prisma)
+# =============================================================================
+stacks:
+  saas_t3:
+    name: "Next.js T3 Stack"
+    description: "Full-stack TypeScript with Next.js, Prisma, tRPC"
+    package_manager: "npm"
+    total_packages: 1369
+    build_time_seconds: 1.2
+    install_time_minutes: 25
+
+    base_framework:
+      next: "16.0.1"
+      react: "19.2.0"
+      react-dom: "19.2.0"
+      typescript: "5.7.3"
+      "@types/node": "22.10.7"
+      "@types/react": "19.0.9"
+      "@types/react-dom": "19.0.3"
+
+    styling:
+      tailwindcss: "4.1.17"
+      "@tailwindcss/postcss": "4.1.17"
+      postcss: "8.4.49"
+      autoprefixer: "10.4.20"
+
+    t3_core:
+      "@trpc/server": "11.7.1"
+      "@trpc/client": "11.7.1"
+      "@trpc/react-query": "11.7.1"
+      "@trpc/next": "11.7.1"
+      "@tanstack/react-query": "5.90.7"
+      prisma: "6.19.0"
+      "@prisma/client": "6.19.0"
+      zod: "4.1.12"
+
+    tier1_essential:
+      eslint: "9.39.1"
+      eslint-config-next: "16.0.1"
+      "@typescript-eslint/parser": "8.46.3"
+      "@typescript-eslint/eslint-plugin": "8.46.3"
+      prettier: "3.6.2"
+      jest: "30.2.0"
+      "@types/jest": "30.0.0"
+      ts-jest: "29.4.5"
+      jest-environment-jsdom: "30.2.0"
+      "@testing-library/react": "16.3.0"
+      "@testing-library/jest-dom": "6.9.1"
+
+    tier2_standard:
+      husky: "9.1.7"
+      lint-staged: "16.2.6"
+
+    tier3_comprehensive:
+      jscpd: "4.0.5"
+      ts-prune: "0.10.3"
+      type-coverage: "2.29.7"
+      "@stryker-mutator/core": "9.3.0"
+      "@stryker-mutator/jest-runner": "9.3.0"
+      playwright: "1.56.1"
+      "@axe-core/playwright": "4.11.0"
+      eslint-plugin-jest-dom: "5.5.0"
+      eslint-plugin-testing-library: "7.13.3"
+
+    tier4_production:
+      # IMPORTANT: patch-package must be installed FIRST
+      patch-package: "latest"
+      "@next/bundle-analyzer": "latest"
+      "@lhci/cli": "latest"
+      dotenv-cli: "latest"
+      "@sentry/nextjs": "latest"
+      "@vercel/analytics": "latest"
+
+    installation:
+      pre_install:
+        - "# Use 'yes n' to auto-answer create-next-app prompts (No to React Compiler and Turbopack)"
+        - "(yes \"n\" | npx create-next-app@latest <project-name> --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\")"
+
+      commands:
+        base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 @trpc/server@11.7.1 @trpc/client@11.7.1 @trpc/react-query@11.7.1 @trpc/next@11.7.1 @tanstack/react-query@5.90.7 prisma@6.19.0 @prisma/client@6.19.0 zod@4.1.12 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17 postcss@8.4.49 autoprefixer@10.4.20"
+
+        tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 @typescript-eslint/parser@8.46.3 @typescript-eslint/eslint-plugin@8.46.3 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
+
+        tier2: "npm install --save-dev husky@9.1.7 lint-staged@16.2.6"
+
+        tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
+
+        # CRITICAL: patch-package MUST be installed before Sentry
+        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
+        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+
+      test_command: "npm run build"
+      dev_command: "npm run dev"
+
+    known_issues:
+      - package: "@lhci/cli"
+        severity: "LOW"
+        type: "security_vulnerability"
+        count: 4
+        description: "4 LOW severity vulnerabilities in dev dependencies (tmp, inquirer)"
+        impact: "Dev-only tool, no production impact"
+        resolution: "Accepted and documented - cannot fix without breaking @lhci/cli functionality"
+        production_risk: "NONE"
+
+      - package: "@sentry/nextjs"
+        severity: "LOW"
+        type: "installation_dependency"
+        description: "Requires patch-package to be installed first"
+        impact: "Installation fails if patch-package not present"
+        resolution: "Include patch-package in Tier 4 dev dependencies, install before Sentry"
+        fix: "automatic"
+
+# =============================================================================
+# Stack 2: ML/AI FastAPI Stack (Python + FastAPI + SQLModel)
+# =============================================================================
+  ml_ai_fastapi:
+    name: "FastAPI ML/AI Stack"
+    description: "Python ML/AI backend with FastAPI, SQLModel, and comprehensive testing"
+    package_manager: "pip"
+    total_packages: 160
+    install_time_minutes: 35
+    python_version_required: "3.11+"
+
+    base_framework:
+      python: "3.11.7"  # Minimum 3.11.0
+      fastapi: "0.115.6"
+      uvicorn: "0.34.0"  # with [standard] extras
+      pydantic: "2.12.4"
+      pydantic-core: "2.41.5"
+
+    database_orm:
+      sqlmodel: "0.0.25"
+      sqlalchemy: "2.0.37"
+      psycopg2-binary: "2.9.10"
+      asyncpg: "0.30.0"
+      alembic: "1.14.0"
+
+    tier1_essential:
+      pytest: "8.3.4"
+      pytest-cov: "6.0.0"
+      pytest-asyncio: "0.25.2"
+      httpx: "0.28.1"
+      ruff: "0.9.2"
+      pyright: "1.1.396"
+      aiosqlite: "0.20.0"
+
+    tier2_standard:
+      detect-secrets: "1.5.0"
+      pip-audit: "2.7.3"
+      bandit: "1.8.0"  # with [toml] extra
+      pre-commit: "4.0.1"
+
+    tier3_comprehensive:
+      radon: "6.0.1"
+      vulture: "2.14"
+      mutmut: "3.3.1"
+      locust: "2.42.2"  # Requires Python >=3.10
+      semgrep: "1.142.1"
+      coverage: "7.11.1"  # with [toml] extra
+
+    tier4_production:
+      prometheus-client: "0.23.1"
+      statsd: "4.0.1"
+      structlog: "25.5.0"
+      python-json-logger: "4.0.0"
+      fastapi-health: "0.4.0"
+      pydantic-settings: "2.11.0"
+      python-dotenv: "1.2.1"
+      # OpenTelemetry packages (optional due to version conflicts)
+      opentelemetry-api: "1.38.0"
+      opentelemetry-instrumentation: "0.59b0"
+      opentelemetry-instrumentation-fastapi: "0.59b0"
+
+    installation:
+      pre_install:
+        - "# CRITICAL: Check Python version first"
+        - "python3 --version  # Must be 3.11+ for Tier 3+ packages"
+        - "# If < 3.11, locate Python 3.11:"
+        - "which python3.11"
+        - "# Create virtual environment with Python 3.11+"
+        - "python3.11 -m venv venv"
+        - "source venv/bin/activate"
+        - "pip install --upgrade pip"
+
+      commands:
+        # Incremental installation matching tier structure
+        base: "pip install fastapi==0.115.6 'uvicorn[standard]==0.34.0' pydantic==2.12.4 sqlmodel==0.0.25 sqlalchemy==2.0.37 psycopg2-binary==2.9.10 asyncpg==0.30.0 alembic==1.14.0"
+
+        tier1: "pip install pytest==8.3.4 pytest-cov==6.0.0 pytest-asyncio==0.25.2 httpx==0.28.1 ruff==0.9.2 pyright==1.1.396 aiosqlite==0.20.0"
+
+        tier2: "pip install detect-secrets==1.5.0 pip-audit==2.7.3 'bandit[toml]==1.8.0' pre-commit==4.0.1"
+
+        tier3: "pip install radon==6.0.1 vulture==2.14 mutmut==3.3.1 locust==2.42.2 semgrep==1.142.1 'coverage[toml]==7.11.1'"
+
+        tier4_dev: "pip install prometheus-client==0.23.1 statsd==4.0.1 structlog==25.5.0 python-json-logger==4.0.0"
+
+        tier4_prod: "pip install fastapi-health==0.4.0 pydantic-settings==2.11.0 python-dotenv==1.2.1 opentelemetry-api==1.38.0 opentelemetry-instrumentation==0.59b0 opentelemetry-instrumentation-fastapi==0.59b0"
+
+        security_fixes: "pip install --upgrade setuptools starlette"
+
+      test_command: "pytest"
+      audit_command: "pip-audit"
+      dev_command: "uvicorn main:app --reload"
+
+    known_issues:
+      - package: "locust"
+        severity: "CRITICAL"
+        type: "python_version_requirement"
+        description: "Requires Python >=3.10, but many systems still use Python 3.9"
+        impact: "Installation fails with 'No matching distribution found for locust'"
+        resolution: "Pre-flight check enforces Python 3.11+, auto-detect python3.11 binary"
+        fix: "automatic_with_guidance"
+        remediation:
+          - "Check Python version: python3 --version"
+          - "Locate Python 3.11: which python3.11"
+          - "macOS: brew install python@3.11"
+          - "Ubuntu: sudo apt install python3.11 python3.11-venv"
+
+      - package: "opentelemetry"
+        severity: "LOW"
+        type: "version_conflict"
+        description: "Version incompatibility between semgrep (Tier 3) and OpenTelemetry instrumentation (Tier 4)"
+        impact: "Warning messages during pip install, potential runtime compatibility issues"
+        resolution: "Make OpenTelemetry instrumentation optional in Tier 4"
+        fix: "user_choice"
+        details:
+          - "semgrep requires: opentelemetry-api~=1.37.0"
+          - "OpenTelemetry instrumentation requires: opentelemetry-api>=1.38.0"
+          - "Packages still work despite version mismatch"
+
+      - package: "setuptools,starlette"
+        severity: "MEDIUM"
+        type: "security_vulnerability"
+        count: 5
+        description: "5 vulnerabilities found initially in setuptools and starlette"
+        impact: "Security risks in dependencies"
+        resolution: "Fixed by running: pip install --upgrade setuptools starlette"
+        fix: "automatic"
+        status: "resolved"
+
+# =============================================================================
+# Stack 3: Dashboard Refine Stack (Next.js + Refine + React)
+# =============================================================================
+  dashboard_refine:
+    name: "Dashboard Refine Stack"
+    description: "React admin dashboard with Refine framework and Next.js"
+    package_manager: "npm"
+    total_packages: 1408
+    build_time_seconds: 3.0
+    install_time_minutes: 20
+
+    base_framework:
+      next: "16.0.1"
+      react: "19.2.0"
+      react-dom: "19.2.0"
+      typescript: "5.9.3"
+      "@types/node": "20.19.24"
+      "@types/react": "19.2.2"
+      "@types/react-dom": "19.2.2"
+
+    styling:
+      tailwindcss: "4.1.17"
+      "@tailwindcss/postcss": "4.1.17"
+
+    refine_core:
+      "@refinedev/cli": "2.16.50"
+      "@refinedev/core": "5.0.5"
+      "@refinedev/nextjs-router": "7.0.4"
+      "@refinedev/react-table": "6.0.1"
+      "@refinedev/react-hook-form": "5.0.2"
+
+    ui_forms:
+      recharts: "3.3.0"
+      react-hook-form: "7.66.0"
+      zod: "4.1.12"
+      "@hookform/resolvers": "5.2.2"
+      lucide-react: "0.553.0"
+      class-variance-authority: "0.7.1"
+      clsx: "2.1.1"
+      tailwind-merge: "3.3.1"
+
+    tier1_essential:
+      eslint: "9.39.1"
+      eslint-config-next: "16.0.1"
+      "@typescript-eslint/parser": "8.46.3"
+      "@typescript-eslint/eslint-plugin": "8.46.3"
+      prettier: "3.6.2"
+      jest: "30.2.0"
+      "@types/jest": "30.0.0"
+      ts-jest: "29.4.5"
+      jest-environment-jsdom: "30.2.0"
+      "@testing-library/react": "16.3.0"
+      "@testing-library/jest-dom": "6.9.1"
+
+    tier2_standard:
+      husky: "9.1.7"
+      lint-staged: "16.2.6"
+
+    tier3_comprehensive:
+      jscpd: "4.0.5"
+      ts-prune: "0.10.3"
+      type-coverage: "2.29.7"
+      "@stryker-mutator/core": "9.3.0"
+      "@stryker-mutator/jest-runner": "9.3.0"
+      playwright: "1.56.1"
+      "@axe-core/playwright": "4.11.0"
+      eslint-plugin-jest-dom: "5.5.0"
+      eslint-plugin-testing-library: "7.13.3"
+
+    tier4_production:
+      patch-package: "latest"
+      "@next/bundle-analyzer": "latest"
+      "@lhci/cli": "latest"
+      dotenv-cli: "latest"
+      "@sentry/nextjs": "latest"
+      "@vercel/analytics": "latest"
+
+    installation:
+      pre_install:
+        - "(yes \"n\" | npx create-next-app@latest <project-name> --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\")"
+
+      commands:
+        # Incremental installation matching tier structure
+        base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 @refinedev/cli@2.16.50 @refinedev/core@5.0.5 @refinedev/nextjs-router@7.0.4 @refinedev/react-table@6.0.1 @refinedev/react-hook-form@5.0.2 recharts@3.3.0 react-hook-form@7.66.0 zod@4.1.12 @hookform/resolvers@5.2.2 lucide-react@0.553.0 class-variance-authority@0.7.1 clsx@2.1.1 tailwind-merge@3.3.1 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17"
+
+        tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 @typescript-eslint/parser@8.46.3 @typescript-eslint/eslint-plugin@8.46.3 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
+
+        tier2: "npm install --save-dev husky@9.1.7 lint-staged@16.2.6"
+
+        tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
+
+        # CRITICAL: patch-package MUST be installed before Sentry
+        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
+
+        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+
+      test_command: "npm run build"
+      dev_command: "npm run dev"
+
+    known_issues:
+      - package: "@lhci/cli"
+        severity: "LOW"
+        type: "security_vulnerability"
+        count: 4
+        description: "Same 4 LOW severity vulnerabilities as T3 Stack"
+        impact: "Dev-only tool, no production impact"
+        resolution: "Accepted and documented"
+        production_risk: "NONE"
+
+      - package: "@sentry/nextjs"
+        severity: "LOW"
+        type: "installation_dependency"
+        description: "Requires patch-package to be installed first"
+        impact: "Installation fails if patch-package not present"
+        resolution: "Install patch-package before Sentry"
+        fix: "automatic"
+
+# =============================================================================
+# Stack 4: Full-Stack Next.js (Next.js + Prisma + Zod)
+# =============================================================================
+  fullstack_nextjs:
+    name: "Full-Stack Next.js"
+    description: "Simplest full-stack setup with Next.js, Prisma, and Zod"
+    package_manager: "npm"
+    total_packages: 1231
+    build_time_seconds: 3.2
+    install_time_minutes: 10
+
+    base_framework:
+      next: "16.0.1"
+      react: "19.2.0"
+      react-dom: "19.2.0"
+      typescript: "5.9.3"
+      "@types/node": "20.19.24"
+      "@types/react": "19.2.2"
+      "@types/react-dom": "19.2.2"
+
+    styling:
+      tailwindcss: "4.1.17"
+      "@tailwindcss/postcss": "4.1.17"
+
+    database:
+      prisma: "6.19.0"
+      "@prisma/client": "6.19.0"
+      zod: "4.1.12"
+
+    tier1_essential:
+      eslint: "9.39.1"
+      eslint-config-next: "16.0.1"
+      prettier: "3.6.2"
+      jest: "30.2.0"
+      "@types/jest": "30.0.0"
+      ts-jest: "29.4.5"
+      jest-environment-jsdom: "30.2.0"
+      "@testing-library/react": "16.3.0"
+      "@testing-library/jest-dom": "6.9.1"
+
+    tier2_standard:
+      husky: "9.1.7"
+      lint-staged: "16.2.6"
+
+    tier3_comprehensive:
+      jscpd: "4.0.5"
+      ts-prune: "0.10.3"
+      type-coverage: "2.29.7"
+      "@stryker-mutator/core": "9.3.0"
+      "@stryker-mutator/jest-runner": "9.3.0"
+      playwright: "1.56.1"
+      "@axe-core/playwright": "4.11.0"
+      eslint-plugin-jest-dom: "5.5.0"
+      eslint-plugin-testing-library: "7.13.3"
+
+    tier4_production:
+      patch-package: "latest"
+      "@next/bundle-analyzer": "latest"
+      "@lhci/cli": "latest"
+      dotenv-cli: "latest"
+      "@sentry/nextjs": "latest"
+      "@vercel/analytics": "latest"
+
+    installation:
+      pre_install:
+        - "(yes \"n\" | npx create-next-app@latest <project-name> --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\")"
+
+      commands:
+        # Incremental installation matching tier structure
+        base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 prisma@6.19.0 @prisma/client@6.19.0 zod@4.1.12 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17"
+
+        tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
+
+        tier2: "npm install --save-dev husky@9.1.7 lint-staged@16.2.6"
+
+        tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
+
+        # CRITICAL: patch-package MUST be installed before Sentry
+        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
+
+        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+
+      test_command: "npm run build"
+      dev_command: "npm run dev"
+
+    known_issues:
+      - package: "@lhci/cli"
+        severity: "LOW"
+        type: "security_vulnerability"
+        count: 4
+        description: "Same 4 LOW severity vulnerabilities as other Next.js stacks"
+        impact: "Dev-only tool, no production impact"
+        resolution: "Accepted and documented"
+        production_risk: "NONE"
+
+      - package: "@sentry/nextjs"
+        severity: "LOW"
+        type: "installation_dependency"
+        description: "Requires patch-package (included preemptively)"
+        impact: "None - patch-package installed automatically"
+        resolution: "Included in combined installation command"
+        fix: "automatic"
+
+# =============================================================================
+# Cross-Stack Insights
+# =============================================================================
+version_convergence:
+  description: "All three Next.js-based stacks converged on identical versions for shared dependencies"
+  benefits:
+    - "Simplified maintenance and updates"
+    - "Consistent developer experience across stacks"
+    - "Easier transitions between project types"
+    - "Single source of truth for Next.js ecosystem versions"
+
+  shared_versions:
+    next: "16.0.1"
+    react: "19.2.0"
+    react-dom: "19.2.0"
+    tailwindcss: "4.1.17"
+    jest: "30.2.0"
+    zod: "4.1.12"
+    eslint: "9.39.1"
+    prettier: "3.6.2"
+    playwright: "1.56.1"
+
+key_learnings:
+  javascript_typescript:
+    - "Always use @latest for better version resolution"
+    - "React 19.2 is production-ready with modern stack"
+    - "Next.js 16 just released, fully compatible"
+    - "Zod v4 major version appears backward compatible"
+    - "Jest v30 major version updated seamlessly"
+    - "Prisma rapid minor updates (6.1.0 → 6.19.0)"
+    - "Tailwind v4 requires migration to @tailwindcss/postcss"
+    - "tRPC versioning is critical (11.7.1 works with Next 16)"
+
+  python:
+    - "Use --upgrade flag for best compatible versions"
+    - "Pydantic 2.x auto-upgrades are safe"
+    - "Quality tools update frequently (semgrep 1.99 → 1.142)"
+    - "Python patch versions flexible (3.11.7 vs 3.11.11)"
+    - "Core packages stable (FastAPI, SQLModel, SQLAlchemy)"
+
+  universal:
+    - "Incremental validation works - add one tier at a time"
+    - "Let package managers resolve - auto-resolution finds better versions"
+    - "Document actual versions - what installs ≠ what was researched"
+    - "Test everything - build, test, dev server all critical"
+
+installation_strategy:
+  incremental:
+    description: "Install and test each tier separately"
+    pros:
+      - "Safer - catches issues early"
+      - "Easier to debug if problems occur"
+      - "Better for first-time users"
+    cons:
+      - "Slower total installation time"
+      - "More intermediate steps"
+    recommended_for:
+      - "First-time users"
+      - "Debugging installation issues"
+      - "Learning the stack"
+
+  combined:
+    description: "Install multiple tiers at once"
+    pros:
+      - "Faster total installation time"
+      - "Fewer intermediate steps"
+      - "Better for CI/CD"
+    cons:
+      - "Harder to debug if issues occur"
+      - "Requires confidence in tested patterns"
+    recommended_for:
+      - "CI/CD pipelines"
+      - "Experienced users"
+      - "Repeat installations"
+
+time_estimates:
+  by_tier:
+    tier1_only:
+      saas_t3: "10 minutes"
+      ml_ai_fastapi: "15 minutes"
+      dashboard_refine: "8 minutes"
+      fullstack_nextjs: "5 minutes"
+
+    tier1_2:
+      saas_t3: "15 minutes"
+      ml_ai_fastapi: "20 minutes"
+      dashboard_refine: "12 minutes"
+      fullstack_nextjs: "7 minutes"
+
+    tier1_3:
+      saas_t3: "20 minutes"
+      ml_ai_fastapi: "28 minutes"
+      dashboard_refine: "15 minutes"
+      fullstack_nextjs: "8 minutes"
+
+    tier1_4:
+      saas_t3: "25 minutes"
+      ml_ai_fastapi: "35 minutes"
+      dashboard_refine: "20 minutes"
+      fullstack_nextjs: "10 minutes"
+
+# =============================================================================
+# Usage Instructions
+# =============================================================================
+usage_instructions:
+  reading_versions:
+    - "Access versions via: stacks.<stack_name>.<tier>.<package>"
+    - "Example: stacks.saas_t3.base_framework.next → '16.0.1'"
+    - "Example: stacks.ml_ai_fastapi.tier1_essential.pytest → '8.3.4'"
+
+  installation_commands:
+    - "Installation commands available at: stacks.<stack_name>.installation.commands"
+    - "Pre-install steps at: stacks.<stack_name>.installation.pre_install"
+    - "Test commands at: stacks.<stack_name>.installation.test_command"
+
+  known_issues:
+    - "Check known_issues array for each stack before installation"
+    - "Each issue includes severity, description, impact, and resolution"
+    - "Some fixes are automatic, others require user choice or guidance"
+
+  version_updates:
+    - "This file should be updated whenever versions are validated"
+    - "Future: Automated script to check for updates and test compatibility"
+    - "Update validation_date in metadata when versions change"
+
+# =============================================================================
+# Future Enhancements
+# =============================================================================
+future_enhancements:
+  - name: "Automated version checking"
+    description: "Script to check npm/PyPI for latest versions and test compatibility"
+    status: "planned"
+
+  - name: "Dependency vulnerability scanning"
+    description: "Automated npm audit / pip-audit integration"
+    status: "planned"
+
+  - name: "Breaking change detection"
+    description: "Detect when major versions change and require testing"
+    status: "planned"
+
+  - name: "Multi-environment support"
+    description: "Separate versions for development, staging, production"
+    status: "consideration"

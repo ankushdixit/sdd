@@ -1,0 +1,25 @@
+# Production Dependencies for {project_name}
+
+# Monitoring & Metrics
+prometheus-client==0.23.1
+statsd==4.0.1
+
+# Structured Logging
+structlog==25.5.0
+python-json-logger==4.0.0
+
+# Health Checks
+fastapi-health==0.4.0
+
+# Error Tracking
+sentry-sdk==2.27.0
+
+# OpenTelemetry (optional - may conflict with semgrep)
+opentelemetry-api==1.38.0
+opentelemetry-sdk==1.38.0
+opentelemetry-instrumentation==0.59b0
+opentelemetry-instrumentation-fastapi==0.59b0
+opentelemetry-exporter-otlp==1.38.0
+
+# Performance
+gunicorn==23.0.0

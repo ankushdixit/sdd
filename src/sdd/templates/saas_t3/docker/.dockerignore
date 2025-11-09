@@ -1,0 +1,74 @@
+# dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# testing
+coverage
+.nyc_output
+
+# next.js
+.next/
+out/
+build
+dist
+
+# production
+.vercel
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+*.log
+
+# local env files
+.env
+.env*.local
+.env.production
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# CI/CD
+.github
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Tests
+tests
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+README.md
+docs/
+
+# Stryker
+.stryker-tmp
+reports/
+
+# Playwright
+playwright-report/
+test-results/

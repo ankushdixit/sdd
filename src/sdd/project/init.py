@@ -27,6 +27,13 @@ from sdd.core.exceptions import (
 logger = logging.getLogger(__name__)
 
 
+# ============================================================================
+# LEGACY INIT FUNCTIONS
+# These functions are kept for backward compatibility with init_project()
+# New template-based init uses modules in src/sdd/init/ instead
+# ============================================================================
+
+
 def check_or_init_git(project_root: Path | None = None) -> bool:
     """
     Check if git is initialized, if not initialize it.
@@ -931,11 +938,11 @@ def create_initial_commit(project_root: Path | None = None) -> bool:
     runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT, working_dir=project_root)
 
     try:
-        # Check if there are already commits in the repository
-        result = runner.run(["git", "rev-list", "--count", "HEAD"])
+        # Check if repository has any commits by trying to count them
+        # This will fail gracefully if no commits exist yet
+        result = runner.run(["git", "rev-list", "--count", "--all"], check=False)
 
-        # If command succeeds, there are commits
-        if result.success and int(result.stdout.strip()) > 0:
+        if result.success and result.stdout.strip() and int(result.stdout.strip()) > 0:
             logger.info("Git repository already has commits, skipping initial commit")
             return True
 
@@ -981,7 +988,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
 
 def init_project() -> int:
     """
-    Main initialization function - deterministic setup.
+    LEGACY: Basic initialization function without templates.
+
+    This function is deprecated in favor of template-based initialization.
+    Use `sdd init --template=<template> --tier=<tier> --coverage=<coverage>` instead.
 
     Returns:
         0 on success, 1 if already initialized, or raises exception on critical errors.
@@ -997,6 +1007,9 @@ def init_project() -> int:
         and don't stop the initialization process. The user can fix these manually.
         All output is now through logger instead of print().
     """
+    logger.warning("⚠️  Using legacy initialization mode")
+    logger.warning("⚠️  Consider using template-based init for better experience")
+    logger.warning("")
     logger.info("🚀 Initializing Session-Driven Development...\n")
 
     # 1. Check if already initialized
@@ -1068,5 +1081,84 @@ def init_project() -> int:
     return 0
 
 
+# ============================================================================
+# NEW TEMPLATE-BASED INIT (PRIMARY ENTRY POINT)
+# ============================================================================
+
+
+def main() -> int:
+    """
+    Main entry point for init command with template-based initialization.
+
+    Handles CLI argument parsing and routes to appropriate init function:
+    - With arguments (--template, --tier, etc.): Template-based init
+    - Without arguments (legacy): Basic init (deprecated)
+
+    Returns:
+        0 on success, non-zero on failure
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Initialize Session-Driven Development project"
+    )
+    parser.add_argument(
+        "--template",
+        choices=["saas_t3", "ml_ai_fastapi", "dashboard_refine", "fullstack_nextjs"],
+        help="Template to use for initialization",
+    )
+    parser.add_argument(
+        "--tier",
+        choices=[
+            "tier-1-essential",
+            "tier-2-standard",
+            "tier-3-comprehensive",
+            "tier-4-production",
+        ],
+        help="Quality gates tier",
+    )
+    parser.add_argument(
+        "--coverage",
+        type=int,
+        help="Test coverage target percentage (e.g., 60, 80, 90)",
+    )
+    parser.add_argument(
+        "--options",
+        help="Comma-separated list of additional options (ci_cd,docker,pre_commit,env_templates)",
+    )
+
+    args = parser.parse_args()
+
+    # Check if template-based init is requested
+    if args.template:
+        # Template-based initialization (new flow)
+        from sdd.init.orchestrator import run_template_based_init
+
+        # Validate required arguments
+        if not args.tier:
+            logger.error("--tier is required when using --template")
+            return 1
+        if not args.coverage:
+            logger.error("--coverage is required when using --template")
+            return 1
+
+        # Parse additional options
+        additional_options = []
+        if args.options:
+            additional_options = [opt.strip() for opt in args.options.split(",")]
+
+        # Run template-based init
+        return run_template_based_init(
+            template_id=args.template,
+            tier=args.tier,
+            coverage_target=args.coverage,
+            additional_options=additional_options,
+        )
+    else:
+        # Legacy init (basic initialization without templates)
+        # The deprecation warning is shown in init_project() itself
+        return init_project()
+
+
 if __name__ == "__main__":
-    exit(init_project())
+    exit(main())

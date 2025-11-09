@@ -1,0 +1,22 @@
+# Bandit security linter configuration
+# https://bandit.readthedocs.io/
+
+[bandit]
+exclude_dirs = [
+    '/tests',
+    '/.venv',
+    '/venv',
+    '/alembic/versions',
+]
+
+# Skip specific test IDs
+skips = [
+    'B101',  # assert_used - we use asserts in tests
+    'B601',  # paramiko_calls - not applicable
+]
+
+# Test level (LOW, MEDIUM, HIGH)
+level = MEDIUM
+
+# Confidence level (LOW, MEDIUM, HIGH)
+confidence = MEDIUM

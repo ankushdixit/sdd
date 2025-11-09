@@ -1,0 +1,16 @@
+{
+  "atLeast": 90,
+  "cache": true,
+  "ignoreCatch": true,
+  "ignoreFiles": [
+    "node_modules/**",
+    ".next/**",
+    "coverage/**",
+    "dist/**",
+    "build/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
+}

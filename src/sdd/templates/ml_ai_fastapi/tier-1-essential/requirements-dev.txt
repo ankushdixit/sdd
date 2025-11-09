@@ -1,0 +1,17 @@
+# Development Dependencies for {project_name}
+
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-asyncio==0.25.2
+httpx==0.28.1
+aiosqlite==0.20.0
+
+# Linting & Formatting
+ruff==0.9.2
+
+# Type Checking
+pyright==1.1.396
+
+# Database (async support for testing)
+asyncpg==0.30.0

@@ -1,6 +1,0 @@
-node_modules
-dist
-coverage
-.session
-*.min.js
-*.min.css

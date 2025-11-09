@@ -1,0 +1,50 @@
+{
+  "name": "{project_name}",
+  "version": "0.1.0",
+  "description": "{project_description}",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\""
+  },
+  "dependencies": {
+    "next": "16.0.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "prisma": "6.19.0",
+    "@prisma/client": "6.19.0",
+    "zod": "4.1.12",
+    "tailwindcss": "4.1.17",
+    "@tailwindcss/postcss": "4.1.17",
+    "postcss": "8.4.49",
+    "autoprefixer": "10.4.20",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.3.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "20.19.24",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.0.1",
+    "@typescript-eslint/parser": "8.46.3",
+    "@typescript-eslint/eslint-plugin": "8.46.3",
+    "prettier": "3.6.2",
+    "jest": "30.2.0",
+    "@types/jest": "30.0.0",
+    "ts-jest": "29.4.5",
+    "jest-environment-jsdom": "30.2.0",
+    "@testing-library/react": "16.3.0",
+    "@testing-library/jest-dom": "6.9.1"
+  }
+}

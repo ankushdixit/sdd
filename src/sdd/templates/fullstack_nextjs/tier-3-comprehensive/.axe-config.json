@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "color-contrast": { "enabled": true },
+    "valid-lang": { "enabled": true },
+    "html-has-lang": { "enabled": true },
+    "label": { "enabled": true },
+    "image-alt": { "enabled": true },
+    "button-name": { "enabled": true },
+    "link-name": { "enabled": true },
+    "aria-roles": { "enabled": true },
+    "aria-valid-attr": { "enabled": true }
+  },
+  "reporter": "v2",
+  "runOnly": {
+    "type": "tag",
+    "values": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  }
+}

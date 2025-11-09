@@ -1,0 +1,257 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "last_updated": "2025-11-07",
+    "total_templates": 4,
+    "validation_source": "stack-versions.yaml"
+  },
+  "templates": {
+    "saas_t3": {
+      "id": "saas_t3",
+      "display_name": "SaaS Application (T3 Stack)",
+      "category": "saas",
+      "description": "Full-featured SaaS with Next.js 16, React 19, tRPC, Prisma, and Tailwind",
+      "stack": {
+        "frontend": "Next.js 16.0.1 + React 19.2.0",
+        "language": "TypeScript 5.7.3",
+        "api": "tRPC 11.7.1",
+        "database": "PostgreSQL with Prisma 6.19.0",
+        "styling": "Tailwind CSS 4.1.17"
+      },
+      "package_manager": "npm",
+      "runtime_requirements": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+      },
+      "supports_docker": true,
+      "supports_ci_cd": true,
+      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "known_issues": [
+        {
+          "package": "@sentry/nextjs",
+          "severity": "LOW",
+          "type": "installation_dependency",
+          "description": "Requires patch-package to be installed first",
+          "resolution": "automatic"
+        },
+        {
+          "package": "@lhci/cli",
+          "severity": "LOW",
+          "type": "security_vulnerability",
+          "description": "4 LOW severity vulnerabilities in dev dependencies",
+          "resolution": "accepted"
+        }
+      ]
+    },
+    "ml_ai_fastapi": {
+      "id": "ml_ai_fastapi",
+      "display_name": "ML/AI Tooling (FastAPI)",
+      "category": "ml_ai",
+      "description": "Python ML/AI backend with FastAPI, SQLModel, and comprehensive testing",
+      "stack": {
+        "framework": "FastAPI 0.115.6",
+        "language": "Python 3.11+",
+        "validation": "Pydantic 2.12.4",
+        "orm": "SQLModel 0.0.25 + SQLAlchemy 2.0.37",
+        "database": "PostgreSQL with Alembic migrations"
+      },
+      "package_manager": "pip",
+      "runtime_requirements": {
+        "python": ">=3.11.0"
+      },
+      "supports_docker": true,
+      "supports_ci_cd": true,
+      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "known_issues": [
+        {
+          "package": "locust",
+          "severity": "CRITICAL",
+          "type": "python_version_requirement",
+          "description": "Requires Python >=3.11 (Tier 3)",
+          "resolution": "automatic_with_guidance"
+        },
+        {
+          "package": "opentelemetry",
+          "severity": "LOW",
+          "type": "version_conflict",
+          "description": "Version incompatibility between semgrep and OpenTelemetry",
+          "resolution": "user_choice"
+        }
+      ]
+    },
+    "dashboard_refine": {
+      "id": "dashboard_refine",
+      "display_name": "Internal Dashboard (Refine)",
+      "category": "dashboard",
+      "description": "React admin dashboard with Refine framework and Next.js",
+      "stack": {
+        "framework": "Refine 5.0.5 + Next.js 16.0.1",
+        "language": "TypeScript 5.9.3",
+        "ui": "React 19.2.0 + shadcn/ui components",
+        "forms": "React Hook Form 7.66.0 + Zod 4.1.12",
+        "styling": "Tailwind CSS 4.1.17"
+      },
+      "package_manager": "npm",
+      "runtime_requirements": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+      },
+      "supports_docker": true,
+      "supports_ci_cd": true,
+      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "known_issues": [
+        {
+          "package": "@sentry/nextjs",
+          "severity": "LOW",
+          "type": "installation_dependency",
+          "description": "Requires patch-package to be installed first",
+          "resolution": "automatic"
+        },
+        {
+          "package": "@lhci/cli",
+          "severity": "LOW",
+          "type": "security_vulnerability",
+          "description": "4 LOW severity vulnerabilities in dev dependencies",
+          "resolution": "accepted"
+        }
+      ]
+    },
+    "fullstack_nextjs": {
+      "id": "fullstack_nextjs",
+      "display_name": "Full-Stack Product (Next.js)",
+      "category": "fullstack",
+      "description": "General purpose full-stack with Next.js, Prisma, and Zod",
+      "stack": {
+        "framework": "Next.js 16.0.1",
+        "language": "TypeScript 5.9.3",
+        "frontend": "React 19.2.0",
+        "database": "Prisma 6.19.0",
+        "validation": "Zod 4.1.12",
+        "styling": "Tailwind CSS 4.1.17"
+      },
+      "package_manager": "npm",
+      "runtime_requirements": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+      },
+      "supports_docker": true,
+      "supports_ci_cd": true,
+      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "known_issues": [
+        {
+          "package": "@sentry/nextjs",
+          "severity": "LOW",
+          "type": "installation_dependency",
+          "description": "Requires patch-package to be installed first",
+          "resolution": "automatic"
+        },
+        {
+          "package": "@lhci/cli",
+          "severity": "LOW",
+          "type": "security_vulnerability",
+          "description": "4 LOW severity vulnerabilities in dev dependencies",
+          "resolution": "accepted"
+        }
+      ]
+    }
+  },
+  "categories": {
+    "saas": {
+      "name": "SaaS Applications",
+      "description": "Full-featured web apps with auth, payments, multi-tenancy"
+    },
+    "ml_ai": {
+      "name": "ML/AI Tooling",
+      "description": "Machine learning APIs, data pipelines, model serving"
+    },
+    "dashboard": {
+      "name": "Internal Dashboards",
+      "description": "Admin panels, analytics dashboards, internal tools"
+    },
+    "fullstack": {
+      "name": "Full-Stack Products",
+      "description": "General purpose web applications"
+    }
+  },
+  "quality_tiers": {
+    "tier-1-essential": {
+      "name": "Essential",
+      "description": "Linting, formatting, type-check, basic tests",
+      "best_for": "Prototypes, MVPs, small internal tools",
+      "includes": [
+        "Linting (ESLint/Ruff)",
+        "Formatting (Prettier/Ruff)",
+        "Type checking (TypeScript strict/Pyright)",
+        "Basic unit tests (Jest/pytest)",
+        "80% test coverage minimum"
+      ]
+    },
+    "tier-2-standard": {
+      "name": "Standard",
+      "description": "Essential + Pre-commit hooks + Security foundation",
+      "best_for": "Production applications, funded startups, small teams",
+      "extends": "tier-1-essential",
+      "adds": [
+        "Pre-commit hooks (Husky + lint-staged)",
+        "Secret scanning (git-secrets, detect-secrets)",
+        "Dependency vulnerability scanning",
+        "Basic SAST (ESLint security/bandit)",
+        "License compliance checking"
+      ]
+    },
+    "tier-3-comprehensive": {
+      "name": "Comprehensive",
+      "description": "Standard + Advanced quality + Testing",
+      "best_for": "Production SaaS, growing teams, mission-critical apps",
+      "extends": "tier-2-standard",
+      "adds": [
+        "Code complexity enforcement",
+        "Code duplication detection",
+        "Dead code detection",
+        "Type coverage enforcement",
+        "Mutation testing (>75% score)",
+        "Integration tests required",
+        "E2E tests (Playwright)",
+        "Performance regression tests"
+      ]
+    },
+    "tier-4-production": {
+      "name": "Production-Ready",
+      "description": "Comprehensive + Operations + Deployment",
+      "best_for": "Enterprise applications, regulated industries, high-scale",
+      "extends": "tier-3-comprehensive",
+      "adds": [
+        "Health check endpoints",
+        "Metrics and observability",
+        "Error tracking (Sentry)",
+        "Structured logging",
+        "Deployment dry-run",
+        "Breaking change detection",
+        "Performance benchmarks",
+        "Security monitoring"
+      ]
+    }
+  },
+  "additional_options": {
+    "ci_cd": {
+      "name": "GitHub Actions CI/CD",
+      "description": "Automated testing and deployment workflows",
+      "files_created": [".github/workflows/quality-check.yml", ".github/workflows/test.yml", ".github/workflows/security.yml", ".github/workflows/deploy.yml"]
+    },
+    "docker": {
+      "name": "Docker Support",
+      "description": "Containerization with docker-compose",
+      "files_created": ["Dockerfile", ".dockerignore", "docker-compose.yml"]
+    },
+    "pre_commit": {
+      "name": "Pre-commit Hooks",
+      "description": "Automated code quality checks before commits",
+      "files_created": [".pre-commit-config.yaml", ".husky/"]
+    },
+    "env_templates": {
+      "name": "Environment Templates",
+      "description": ".env files and .editorconfig for all editors",
+      "files_created": [".env.example", ".env.local.example", ".editorconfig"]
+    }
+  }
+}

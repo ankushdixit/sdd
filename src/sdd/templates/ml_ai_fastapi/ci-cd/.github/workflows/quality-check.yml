@@ -1,0 +1,52 @@
+name: Quality Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pyright
+
+      - name: Lint with Ruff
+        run: ruff check src/ tests/
+
+      - name: Format check with Ruff
+        run: ruff format --check src/ tests/
+
+      - name: Type check with Pyright
+        run: pyright src/ tests/
+        continue-on-error: true
+
+      - name: Check complexity with Radon
+        run: |
+          pip install radon
+          radon cc src/ -a -nb
+        continue-on-error: true
+
+      - name: Check for dead code with Vulture
+        run: |
+          pip install vulture
+          vulture src/ --min-confidence 80
+        continue-on-error: true
