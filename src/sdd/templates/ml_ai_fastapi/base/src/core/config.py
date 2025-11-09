@@ -1,0 +1,64 @@
+"""
+Application configuration using pydantic-settings
+"""
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """
+    Application settings loaded from environment variables.
+
+    Attributes:
+        APP_NAME: Application name
+        APP_VERSION: Application version
+        DEBUG: Debug mode
+        ENVIRONMENT: Environment (development, staging, production)
+        DATABASE_URL: Database connection string
+        SECRET_KEY: Secret key for cryptographic operations
+        CORS_ORIGINS: List of allowed CORS origins
+        LOG_LEVEL: Logging level
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
+
+    # Application
+    APP_NAME: str = "{project_name}"
+    APP_VERSION: str = "0.1.0"
+    DEBUG: bool = True
+    ENVIRONMENT: str = "development"
+
+    # Database
+    DATABASE_URL: str = "postgresql://user:password@localhost:5432/{project_name}_db"
+
+    # Security
+    SECRET_KEY: str = "change-this-to-a-random-secret-key"
+    ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
+
+    # CORS
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+
+    # Logging
+    LOG_LEVEL: str = "DEBUG"
+    LOG_FORMAT: str = "json"
+
+    # Server
+    HOST: str = "0.0.0.0"  # nosec B104 - Binding to all interfaces is intentional for development
+    PORT: int = 8000
+
+
+# Global settings instance
+settings = Settings()

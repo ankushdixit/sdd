@@ -63,16 +63,71 @@ def sdd_project_with_work_items():
             capture_output=True,
         )
 
-        # Run sdd init
-        result = subprocess.run(
-            ["sdd", "init"],
-            cwd=project_dir,
-            capture_output=True,
-            text=True,
-        )
+        # Create .session directory structure manually (instead of using deprecated legacy init)
+        session_dir = project_dir / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+        (session_dir / "briefings").mkdir()
+        (session_dir / "history").mkdir()
+        (session_dir / "specs").mkdir()
 
-        if result.returncode != 0:
-            pytest.skip(f"sdd command not available: {result.stderr}")
+        # Create initial tracking files
+        (session_dir / "tracking" / "work_items.json").write_text(
+            json.dumps(
+                {
+                    "metadata": {
+                        "total_items": 0,
+                        "completed": 0,
+                        "in_progress": 0,
+                        "blocked": 0,
+                    },
+                    "milestones": {},
+                    "work_items": {},
+                },
+                indent=2,
+            )
+        )
+        (session_dir / "tracking" / "active_session.json").write_text(
+            json.dumps({"active": False}, indent=2)
+        )
+        (session_dir / "tracking" / "learnings.json").write_text(
+            json.dumps({"learnings": [], "categories": {}}, indent=2)
+        )
+        (session_dir / "tracking" / "status_update.json").write_text(
+            json.dumps(
+                {
+                    "current_session": None,
+                    "current_work_item": None,
+                    "started_at": None,
+                    "status": "idle",
+                },
+                indent=2,
+            )
+        )
+        (session_dir / "tracking" / "stack.txt").write_text(
+            "# Technology Stack\n\n## Languages\n- Python detected\n"
+        )
+        (session_dir / "tracking" / "tree.txt").write_text(".\n├── README.md\n└── main.py\n")
+
+        # Create config.json
+        (session_dir / "config.json").write_text(
+            json.dumps(
+                {
+                    "curation": {
+                        "auto_curate": True,
+                        "frequency": 5,
+                        "dry_run": False,
+                        "similarity_threshold": 0.7,
+                    },
+                    "quality_gates": {
+                        "test_coverage_minimum": 80,
+                        "require_tests": True,
+                        "require_linting": True,
+                    },
+                },
+                indent=2,
+            )
+        )
 
         # Create work items
         work_items_to_create = [

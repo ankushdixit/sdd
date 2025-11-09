@@ -1,0 +1,29 @@
+# Vulture configuration for dead code detection
+# https://github.com/jendrikseipp/vulture
+
+# Minimum confidence (0-100) for reporting unused code
+min_confidence = 80
+
+# Paths to check
+paths = src
+
+# Exclude patterns
+exclude =
+    .venv/
+    venv/
+    __pycache__/
+    alembic/versions/
+    tests/
+
+# Ignore names (regex patterns)
+ignore_names =
+    # SQLModel/Pydantic model fields
+    __tablename__
+    __table_args__
+    model_config
+    model_fields
+    # FastAPI lifespan
+    lifespan
+    # Common method names
+    __str__
+    __repr__

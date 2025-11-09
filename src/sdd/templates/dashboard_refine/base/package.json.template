@@ -1,0 +1,40 @@
+{
+  "name": "{project_name}",
+  "version": "0.1.0",
+  "description": "{project_description}",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.0.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@refinedev/cli": "latest",
+    "@refinedev/core": "latest",
+    "@refinedev/nextjs-router": "latest",
+    "@refinedev/react-table": "latest",
+    "@refinedev/react-hook-form": "latest",
+    "recharts": "latest",
+    "react-hook-form": "7.66.0",
+    "zod": "4.1.12",
+    "@hookform/resolvers": "latest",
+    "lucide-react": "latest",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.3.1",
+    "tailwindcss": "4.1.17",
+    "@tailwindcss/postcss": "4.1.17"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "20.19.24",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
+  }
+}

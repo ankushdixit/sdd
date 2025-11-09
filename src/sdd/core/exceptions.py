@@ -60,6 +60,8 @@ class ErrorCode(Enum):
     INVALID_STATUS = 1006
     INVALID_PRIORITY = 1007
     INVALID_COMMAND = 1008
+    PROJECT_NOT_BLANK = 1009
+    INVALID_CONFIGURATION = 1010
 
     # Not found errors (2000-2999)
     WORK_ITEM_NOT_FOUND = 2001
@@ -620,14 +622,38 @@ class CommandExecutionError(SystemError):
     """
 
     def __init__(
-        self, command: str, returncode: int, stderr: str | None = None, stdout: str | None = None
+        self,
+        command: str,
+        returncode: int | None = None,
+        stderr: str | None = None,
+        stdout: str | None = None,
+        exit_code: int | None = None,
+        context: dict[str, Any] | None = None,
     ):
-        context = {"command": command, "returncode": returncode, "stderr": stderr, "stdout": stdout}
+        # Support both returncode and exit_code for backwards compatibility
+        actual_code = exit_code if exit_code is not None else returncode
+
+        # Merge provided context with command details
+        ctx = context or {}
+        ctx.update(
+            {
+                "command": command,
+                "returncode": actual_code,
+                "stderr": stderr,
+                "stdout": stdout,
+            }
+        )
+
         super().__init__(
             message=f"Command execution failed: {command}",
             code=ErrorCode.COMMAND_FAILED,
-            context=context,
+            context=ctx,
         )
+        # Store returncode for easy access (can't override exit_code which is a property)
+        self.returncode = actual_code
+        # Store stderr and stdout for easy access
+        self.stderr = stderr
+        self.stdout = stdout
 
 
 # ============================================================================
@@ -859,6 +885,10 @@ class FileOperationError(SystemError):
         super().__init__(
             message=message, code=ErrorCode.FILE_OPERATION_FAILED, context=context, cause=cause
         )
+        # Store as instance attributes for easy access
+        self.operation = operation
+        self.file_path = file_path
+        self.details = details
 
 
 # ============================================================================
@@ -1530,6 +1560,8 @@ class TemplateNotFoundError(FileNotFoundError):
     def __init__(self, template_name: str, template_path: str):
         super().__init__(file_path=f"{template_path}/{template_name}", file_type="template")
         self.context["template_name"] = template_name
+        self.template_name = template_name
+        self.template_path = template_path
         self.remediation = (
             f"Ensure SDD is properly installed and template file exists: {template_name}"
         )

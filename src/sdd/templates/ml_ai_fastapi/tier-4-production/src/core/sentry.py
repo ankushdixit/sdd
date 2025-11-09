@@ -1,0 +1,66 @@
+"""
+Sentry error tracking integration
+"""
+
+from typing import Any
+
+import sentry_sdk  # type: ignore[import-not-found]
+from sentry_sdk.integrations.fastapi import FastApiIntegration  # type: ignore[import-not-found]
+from sentry_sdk.integrations.sqlalchemy import (
+    SqlalchemyIntegration,  # type: ignore[import-not-found]
+)
+from src.core.config import settings  # type: ignore[import-not-found]
+
+
+def initialize_sentry() -> None:
+    """
+    Initialize Sentry SDK for error tracking.
+    Only initializes in non-development environments.
+    """
+    # Only initialize Sentry in production/staging
+    if settings.ENVIRONMENT == "development":
+        return
+
+    # Check if Sentry DSN is configured
+    sentry_dsn = getattr(settings, "SENTRY_DSN", None)
+    if not sentry_dsn:
+        return
+
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=settings.ENVIRONMENT,
+        release=f"{settings.APP_NAME}@{settings.APP_VERSION}",
+        traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
+        profiles_sample_rate=0.1,  # 10% of transactions for profiling
+        integrations=[
+            FastApiIntegration(),
+            SqlalchemyIntegration(),
+        ],
+        # Set traces_sample_rate to 1.0 to capture 100% of transactions
+        # Adjust this value in production to reduce overhead
+        send_default_pii=False,  # Don't send personally identifiable information
+        before_send=before_send_filter,
+    )
+
+
+def before_send_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    Filter events before sending to Sentry.
+
+    Args:
+        event: Sentry event
+        hint: Additional context
+
+    Returns:
+        dict | None: Event to send or None to skip
+    """
+    # Filter out specific exceptions or add custom logic
+    # Example: Don't send 404 errors
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
+        if exc_type.__name__ == "HTTPException":
+            # Don't send HTTP 404 errors
+            if hasattr(exc_value, "status_code") and exc_value.status_code == 404:
+                return None
+
+    return event

@@ -1,0 +1,52 @@
+# Coverage.py configuration
+# https://coverage.readthedocs.io/
+
+[run]
+source = src
+omit =
+    tests/*
+    alembic/*
+    */__init__.py
+    */venv/*
+    */.venv/*
+    # Tier 4 Production modules (optional features)
+    src/api/routes/metrics.py
+    src/core/logging.py
+    src/core/monitoring.py
+    src/core/sentry.py
+    src/middleware/logging.py
+    src/middleware/tracing.py
+
+branch = True
+parallel = True
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+sort = Cover
+
+# Fail if coverage is below threshold
+fail_under = 80
+
+exclude_lines =
+    # Default exclude patterns
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+
+    # Additional exclude patterns
+    pass
+    \.\.\.
+    raise NotImplemented
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

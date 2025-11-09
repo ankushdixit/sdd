@@ -89,7 +89,7 @@ COMMANDS = {
     "learn-search": ("sdd.learning.curator", None, "main", True),
     "learn-curate": ("sdd.learning.curator", None, "main", True),
     # Project Initialization
-    "init": ("sdd.project.init", None, "init_project", False),
+    "init": ("sdd.project.init", None, "main", True),
 }
 
 

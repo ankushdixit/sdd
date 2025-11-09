@@ -1,31 +1,45 @@
-# Work Item Graph Command
+# Work Graph Command
 
 **Usage:** `/sdd:work-graph [OPTIONS]`
 
 **Description:** Generate dependency graph visualization for work items with critical path analysis and bottleneck detection.
 
-**Behavior:**
+## Overview
 
-Creates visual representations of work item dependencies, helping identify critical paths, bottlenecks, and project structure. Supports multiple output formats and flexible filtering.
+The `work-graph` command creates visual representations of work item dependencies, helping you understand project structure, identify critical paths, detect bottlenecks, and make informed decisions about what to work on next.
+
+**Key features:**
+- Multiple output formats (ASCII, DOT, SVG)
+- Critical path identification
+- Bottleneck detection
+- Flexible filtering by status, milestone, or type
+- Focus mode for specific items
+- Graph statistics and metrics
+- Export capabilities for documentation
 
 ## Arguments
 
-All arguments are optional. Multiple options can be combined.
+All arguments are optional and can be combined.
 
 ### Format Options
 
 #### `--format <format>`
+
 Output format for the graph:
-- `ascii` (default) - Terminal-friendly box drawing, color-coded
+- `ascii` (default) - Terminal-friendly box drawing with color coding
 - `dot` - Graphviz DOT format (plaintext graph description)
 - `svg` - SVG image (requires Graphviz installed)
 
 #### `--output <file>`
-Save graph to file instead of terminal output. Only works with `--format dot` or `--format svg`.
+
+Save graph to file instead of displaying in terminal. Only works with `--format dot` or `--format svg`.
+
+**Example:** `--output project-dependencies.svg`
 
 ### Filter Options
 
 #### `--status <status>`
+
 Show only items with specific status:
 - `not_started` - Items not yet begun
 - `in_progress` - Items currently being worked on
@@ -33,30 +47,46 @@ Show only items with specific status:
 - `blocked` - Items waiting on dependencies
 
 #### `--milestone <milestone>`
+
 Show only items in a specific milestone.
-Example: `--milestone "Phase 3"`
+
+**Example:** `--milestone "Phase 3"`
 
 #### `--type <type>`
+
 Show only specific work item types:
 - `feature`, `bug`, `refactor`, `security`, `integration_test`, `deployment`
 
 #### `--include-completed`
-Include completed items in the graph (default: excluded for clarity)
+
+Include completed items in the graph (default: excluded for clarity).
+
+**Use case:** Show full project history or milestone progress.
 
 #### `--focus <work_item_id>`
+
 Show only the specified item and its dependency neighborhood:
 - Direct dependencies (items this depends on)
 - Direct dependents (items that depend on this)
 
+**Example:** `--focus feature_oauth`
+
 ### Analysis Options
 
 #### `--critical-path`
-Show only items on the critical path (longest dependency chain). These items determine the minimum project timeline.
+
+Show only items on the critical path - the longest dependency chain that determines minimum project timeline.
+
+**Use case:** Identify items that directly impact project completion date.
 
 #### `--bottlenecks`
-Highlight bottleneck analysis - items that block 2+ other items. Sorted by impact (number of blocked items).
+
+Highlight bottleneck analysis - items that block 2+ other items, sorted by impact.
+
+**Use case:** Find high-impact items to prioritize for maximum unblocking.
 
 #### `--stats`
+
 Show graph statistics without rendering full graph:
 - Total items by status
 - Completion percentage
@@ -64,40 +94,32 @@ Show graph statistics without rendering full graph:
 - Bottleneck count
 - Timeline projection
 
-## Execution
-
-Parse `$ARGUMENTS` and construct the command:
-
-```bash
-sdd work-graph [OPTIONS]
-```
-
-Replace `[OPTIONS]` with any combination of the arguments above.
+**Use case:** Quick health check of project status.
 
 ## Output Formats
 
 ### ASCII Format (Terminal)
 
-Box-drawing characters with color coding:
+Default format using box-drawing characters with color coding:
 
 ```
 Work Item Dependency Graph
 ==========================
 
 ┌─────────────────────────────┐
-│ feature-001                 │ [●] In Progress (CRITICAL PATH)
+│ feature_auth                │ [●] In Progress (CRITICAL PATH)
 │ User Authentication         │
 │ Priority: high              │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-002                 │ [○] Not Started (CRITICAL PATH)
+│ feature_oauth               │ [○] Not Started (CRITICAL PATH)
 │ OAuth Integration           │
 │ Priority: high              │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-003                 │ [○] Not Started
+│ feature_profile             │ [○] Not Started
 │ User Profile Page           │
 │ Priority: medium            │
 └─────────────────────────────┘
@@ -108,429 +130,788 @@ Legend:
 
 Critical Path Length: 3 items
 Timeline Estimate: 3 sessions minimum
-Bottlenecks: feature-001 (blocks 2 items)
+Bottlenecks: feature_auth (blocks 2 items)
 ```
 
 ### DOT Format (Graphviz)
 
-Plaintext graph description:
+Plaintext graph description for use with Graphviz tools:
 
 ```dot
 digraph work_items {
   rankdir=LR;
   node [shape=box, style=rounded];
 
-  "feature-001" [label="feature-001\nUser Authentication\nPriority: high", color=red, style=filled, fillcolor=lightblue];
-  "feature-002" [label="feature-002\nOAuth Integration\nPriority: high", color=red];
-  "feature-003" [label="feature-003\nUser Profile Page\nPriority: medium"];
+  "feature_auth" [label="feature_auth\nUser Authentication\nPriority: high",
+                  color=red, style=filled, fillcolor=lightblue];
+  "feature_oauth" [label="feature_oauth\nOAuth Integration\nPriority: high",
+                   color=red];
+  "feature_profile" [label="feature_profile\nUser Profile\nPriority: medium"];
 
-  "feature-001" -> "feature-002" [color=red, penwidth=2];
-  "feature-002" -> "feature-003";
+  "feature_auth" -> "feature_oauth" [color=red, penwidth=2];
+  "feature_oauth" -> "feature_profile";
 }
 ```
 
 ### SVG Format (Visual)
 
-Rendered graph image suitable for documentation, presentations, or embedding in reports.
+Rendered graph image suitable for:
+- Documentation
+- Architecture reviews
+- Presentations
+- Team dashboards
+- Embedding in reports
 
 ## Examples
 
 ### Example 1: Basic Graph (All Incomplete Items)
 
+```bash
+/sdd:work-graph
 ```
-User: /sdd:work-graph
 
-Claude: [Executes: sdd work-graph]
-
+**Output:**
+```
 Work Item Dependency Graph
 ==========================
 
-Total: 12 work items (5 complete, 2 in progress, 5 not started)
+Total: 12 work items (5 completed, 2 in progress, 5 not started)
 
 ┌─────────────────────────────┐
-│ feature-001                 │ [●] In Progress (CRITICAL PATH)
+│ feature_auth                │ [●] In Progress (CRITICAL PATH)
 │ User Authentication         │
+│ Priority: high              │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-002                 │ [○] Not Started (CRITICAL PATH)
+│ feature_oauth               │ [○] Not Started (CRITICAL PATH)
 │ OAuth Integration           │
+│ Priority: high              │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-003                 │ [○] Not Started
+│ feature_profile             │ [○] Not Started
 │ User Profile Page           │
+│ Priority: medium            │
+└─────────────────────────────┘
+              ↓
+┌─────────────────────────────┐
+│ feature_dashboard           │ [○] Not Started
+│ Admin Dashboard             │
+│ Priority: high              │
 └─────────────────────────────┘
 
-... [9 more items] ...
+... [3 more items] ...
 
-Critical Path: 5 items
+Critical Path: 5 items (feature_auth → feature_oauth → feature_dashboard → integration_auth → deployment_prod)
 Timeline Estimate: 5 sessions minimum
-Next Recommended: feature-001 (in progress, high priority, critical path)
+Next Recommended: feature_auth (in progress, high priority, critical path)
+Bottlenecks: feature_auth (blocks 4 items)
 ```
 
 ### Example 2: Critical Path Analysis
 
+```bash
+/sdd:work-graph --critical-path
 ```
-User: /sdd:work-graph --critical-path
 
-Claude: [Executes: sdd work-graph --critical-path]
-
+**Output:**
+```
 Critical Path Analysis
 =====================
 
 The critical path determines your minimum project timeline.
+Focus on these items to minimize overall project duration.
 
 Critical Path (5 items):
 
-  1. [●] feature-001: User Authentication (Session 12, in progress)
+  1. [●] feature_auth: User Authentication
+     Status: In Progress (Session 12)
+     Impact: Blocks 4 downstream items
           ↓
-  2. [○] feature-002: OAuth Integration (depends on feature-001)
+  2. [○] feature_oauth: OAuth Integration
+     Status: Not Started (depends on feature_auth)
+     Impact: Blocks 3 downstream items
           ↓
-  3. [○] feature-006: Admin Dashboard (depends on feature-002)
+  3. [○] feature_dashboard: Admin Dashboard
+     Status: Not Started (depends on feature_oauth)
+     Impact: Blocks 2 downstream items
           ↓
-  4. [○] integration-001: End-to-end Auth Tests (depends on feature-006)
+  4. [○] integration_auth: End-to-end Auth Tests
+     Status: Not Started (depends on feature_dashboard)
+     Impact: Blocks deployment
           ↓
-  5. [○] deployment-001: Production Deploy (depends on integration-001)
+  5. [○] deployment_prod: Production Deploy
+     Status: Not Started (depends on integration_auth)
+     Impact: Final milestone
 
-Timeline:
+Timeline Analysis:
   - Completed: 0/5 (0%)
   - In Progress: 1/5 (20%)
   - Remaining: 4/5 (80%)
   - Estimated Duration: 4+ sessions
 
-💡 To minimize project duration, prioritize completing critical path items.
+💡 To minimize project duration:
+   1. Complete feature_auth (currently in progress)
+   2. Immediately start feature_oauth
+   3. Continue sequentially through critical path
 ```
 
 ### Example 3: Bottleneck Detection
 
+```bash
+/sdd:work-graph --bottlenecks
 ```
-User: /sdd:work-graph --bottlenecks
 
-Claude: [Executes: sdd work-graph --bottlenecks]
-
+**Output:**
+```
 Bottleneck Analysis
 ===================
 
-Items that block multiple other items (prioritize these!):
+Items that block multiple other items. Prioritize these for maximum impact!
 
-1. feature-001: User Authentication (blocks 4 items)
+1. feature_auth: User Authentication (blocks 4 items) ⚠️ HIGH IMPACT
    Status: In Progress (Session 12)
+   Priority: high
    Blocking:
-     - feature-002: OAuth Integration
-     - feature-003: User Profile Page
-     - feature-005: Password Reset Flow
-     - security-001: Security Audit
+     - feature_oauth: OAuth Integration
+     - feature_profile: User Profile Page
+     - feature_password_reset: Password Reset Flow
+     - security_audit: Security Audit
 
-2. feature-002: OAuth Integration (blocks 3 items)
+   Impact: Completing this will unblock 33% of remaining work
+
+2. feature_oauth: OAuth Integration (blocks 3 items)
+   Status: Not Started (blocked by feature_auth)
+   Priority: high
+   Blocking:
+     - feature_dashboard: Admin Dashboard
+     - feature_rate_limit: API Rate Limiting
+     - integration_auth: End-to-end Tests
+
+   Impact: Next bottleneck after feature_auth completes
+
+3. bug_db_pool: Database Connection Pool Issue (blocks 2 items)
    Status: Not Started
+   Priority: critical
    Blocking:
-     - feature-006: Admin Dashboard
-     - feature-007: API Rate Limiting
-     - integration-001: End-to-end Tests
+     - feature_batch: Batch Processing
+     - feature_jobs: Background Jobs
 
-3. bug-003: Database Connection Pool Issue (blocks 2 items)
-   Status: Not Started
-   Blocking:
-     - feature-008: Batch Processing
-     - feature-009: Background Jobs
+   Impact: Independent bottleneck, can work on in parallel
 
-💡 Completing feature-001 will unblock 4 items.
-   This is your highest-impact work item.
+💡 Recommendation:
+   Focus on completing feature_auth to unblock the most work.
+   Bug_db_pool can be tackled in parallel by another team member.
 ```
 
 ### Example 4: Milestone View
 
+```bash
+/sdd:work-graph --milestone "Phase 3" --include-completed
 ```
-User: /sdd:work-graph --milestone "Phase 3" --include-completed
 
-Claude: [Executes: sdd work-graph --milestone "Phase 3" --include-completed]
-
+**Output:**
+```
 Phase 3 Dependency Graph
 ========================
 
-Milestone: Phase 3 (8 items total)
+Milestone: Phase 3 (8 items total, 2 completed, 1 in progress, 5 not started)
 
 ┌─────────────────────────────┐
-│ feature-010                 │ [✓] Completed
+│ feature_search              │ [✓] Completed (2025-11-05)
 │ Search Functionality        │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-011                 │ [✓] Completed
+│ feature_filters             │ [✓] Completed (2025-11-06)
 │ Search Filters              │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-012                 │ [●] In Progress (CRITICAL PATH)
+│ feature_analytics           │ [●] In Progress (CRITICAL PATH)
 │ Search Analytics            │
+│ Session: 15                 │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ integration-002             │ [○] Not Started (CRITICAL PATH)
+│ integration_search          │ [○] Not Started (CRITICAL PATH)
 │ Search Integration Tests    │
 └─────────────────────────────┘
+              ↓
+┌─────────────────────────────┐
+│ feature_export              │ [○] Not Started
+│ Export Results              │
+└─────────────────────────────┘
 
-Progress: 2/8 completed (25%)
-Next Item: feature-012 (in progress)
+Phase 3 Progress:
+  - Completed: 2/8 (25%)
+  - In Progress: 1/8 (13%)
+  - Not Started: 5/8 (62%)
+  - Estimated Completion: 5+ sessions remaining
+
+Next Items:
+  1. feature_analytics (in progress, finish this first)
+  2. integration_search (next on critical path)
+  3. feature_export (can work in parallel)
 ```
 
 ### Example 5: Focus on Specific Item
 
+```bash
+/sdd:work-graph --focus feature_oauth
 ```
-User: /sdd:work-graph --focus feature-002
 
-Claude: [Executes: sdd work-graph --focus feature-002]
+**Output:**
+```
+Focused View: feature_oauth
+===========================
 
-Focused View: feature-002
-=========================
+Showing feature_oauth and its dependency neighborhood.
 
-Dependencies (items feature-002 depends on):
+Dependencies (items feature_oauth depends on):
 
 ┌─────────────────────────────┐
-│ feature-001                 │ [●] In Progress
+│ feature_auth                │ [●] In Progress (Session 12)
 │ User Authentication         │
+│ Status: 70% complete        │
 └─────────────────────────────┘
               ↓
 ┌─────────────────────────────┐
-│ feature-002                 │ [○] Not Started (TARGET)
+│ feature_oauth               │ [○] Not Started ← TARGET
 │ OAuth Integration           │
+│ Priority: high              │
 └─────────────────────────────┘
               ↓
-Dependents (items that depend on feature-002):
+Dependents (items that depend on feature_oauth):
 
 ┌─────────────────────────────┐
-│ feature-006                 │ [○] Not Started
+│ feature_dashboard           │ [○] Not Started
 │ Admin Dashboard             │
 └─────────────────────────────┘
 
 ┌─────────────────────────────┐
-│ feature-007                 │ [○] Not Started
+│ feature_rate_limit          │ [○] Not Started
 │ API Rate Limiting           │
 └─────────────────────────────┘
 
-Status: feature-002 cannot start until feature-001 is completed
-Impact: Completing feature-002 will unblock 2 items
+┌─────────────────────────────┐
+│ integration_auth            │ [○] Not Started
+│ End-to-end Auth Tests       │
+└─────────────────────────────┘
+
+Analysis:
+  - Blocked by: 1 item (feature_auth, in progress)
+  - Blocks: 3 items (shown above)
+  - On critical path: Yes
+  - Estimated availability: After feature_auth completes (~1 session)
+
+💡 feature_oauth cannot start until feature_auth is completed.
+   Completing feature_oauth will unblock 3 downstream items.
 ```
 
 ### Example 6: Statistics Only
 
+```bash
+/sdd:work-graph --stats
 ```
-User: /sdd:work-graph --stats
 
-Claude: [Executes: sdd work-graph --stats]
-
+**Output:**
+```
 Work Item Graph Statistics
 ==========================
 
 Total Work Items: 24
 
 By Status:
-  - Completed:     8 (33%)
-  - In Progress:   3 (13%)
-  - Not Started:  12 (50%)
-  - Blocked:       1 (4%)
+  - Completed:     8 (33%) ████████░░░░░░░░
+  - In Progress:   3 (13%) ███░░░░░░░░░░░░░
+  - Not Started:  12 (50%) ████████████░░░░
+  - Blocked:       1 (4%)  █░░░░░░░░░░░░░░░
 
 By Type:
-  - feature:           15 items
-  - bug:                4 items
-  - refactor:           2 items
-  - security:           1 item
-  - integration_test:   1 item
-  - deployment:         1 item
+  - feature:           15 items (63%)
+  - bug:                4 items (17%)
+  - refactor:           2 items (8%)
+  - security:           1 item  (4%)
+  - integration_test:   1 item  (4%)
+  - deployment:         1 item  (4%)
 
 By Priority:
-  - Critical:  2 items
-  - High:      8 items
-  - Medium:   10 items
-  - Low:       4 items
+  - Critical:  2 items (8%)  - Requires immediate attention
+  - High:      8 items (33%) - Important work
+  - Medium:   10 items (42%) - Normal priority
+  - Low:       4 items (17%) - Nice to have
 
 By Milestone:
-  - Phase 1:   6 items (100% complete)
-  - Phase 2:   8 items (75% complete)
-  - Phase 3:  10 items (20% complete)
+  - Phase 1:   6 items (100% complete) ✓
+  - Phase 2:   8 items (75% complete)  ████████████░░░░
+  - Phase 3:  10 items (20% complete)  ████░░░░░░░░░░░░
 
 Critical Path:
   - Length: 7 items
   - Completed: 2 items (29%)
-  - Remaining: 5 items
-  - Estimated Duration: 5+ sessions
+  - In Progress: 1 item (14%)
+  - Remaining: 4 items (57%)
+  - Estimated Duration: 4+ sessions
 
 Bottlenecks:
   - 3 items blocking 2+ other items
-  - Top bottleneck: feature-001 (blocks 4 items)
+  - Top bottleneck: feature_auth (blocks 4 items)
+  - Second: feature_oauth (blocks 3 items)
+  - Third: bug_db_pool (blocks 2 items)
 
-Next Recommended Items:
-  1. feature-001 (in progress, high priority, critical path)
-  2. bug-005 (blocked by feature-001, high priority)
-  3. refactor-002 (no dependencies, medium priority)
+Dependency Health:
+  - Total dependencies: 18
+  - Satisfied: 10 (56%)
+  - Pending: 8 (44%)
+  - Circular dependencies: 0 ✓
+
+Next Recommended Items (ready to start):
+  1. feature_auth (in progress, high priority, critical path)
+  2. bug_db_pool (not started, critical priority, blocks 2)
+  3. refactor_api (not started, medium priority, no blockers)
+
+Project Health: ⚠️ Moderate
+  - 50% work remaining
+  - Critical path progressing (29% complete)
+  - Some bottlenecks need attention
+  - No circular dependencies detected
 ```
 
 ### Example 7: Export to SVG
 
+```bash
+/sdd:work-graph --format svg --output project-dependencies.svg
 ```
-User: /sdd:work-graph --format svg --output project-dependencies.svg
 
-Claude: [Executes: sdd work-graph --format svg --output project-dependencies.svg]
+**Output:**
+```
+Generating dependency graph...
 
 ✓ Dependency graph generated successfully!
 
 Format: SVG
 Output: project-dependencies.svg
 Size: 24 work items, 18 dependencies
+File size: 45.2 KB
 
 The graph includes:
+  - All work items color-coded by status
   - Critical path highlighted in red
-  - Color coding by status
-  - Priority indicators
+  - Priority indicators on nodes
   - Milestone grouping
+  - Bottlenecks marked with ⚠️
 
 You can:
-  - Open in browser to view
+  - Open in browser: open project-dependencies.svg
   - Include in documentation
-  - Share with team
+  - Share with team via Slack/email
   - Embed in presentations
+  - Add to README or wiki
 
-To view: open project-dependencies.svg
+To view the graph now, run:
+  open project-dependencies.svg
 ```
 
 ### Example 8: Combined Filters
 
+```bash
+/sdd:work-graph --status not_started --milestone "Phase 3" --type feature
 ```
-User: /sdd:work-graph --status not_started --milestone "Phase 3" --type feature
 
-Claude: [Executes: sdd work-graph --status not_started --milestone "Phase 3" --type feature]
-
+**Output:**
+```
 Filtered Work Items
 ===================
 
-Filters: Status=not_started, Milestone=Phase 3, Type=feature
+Active Filters:
+  - Status: not_started
+  - Milestone: Phase 3
+  - Type: feature
 
-Found 6 matching items:
+Found 5 matching items:
 
 ┌─────────────────────────────┐
-│ feature-012                 │ [○] Not Started (CRITICAL PATH)
-│ Search Analytics            │
+│ feature_analytics           │ [○] Not Started (CRITICAL PATH)
+│ Search Analytics Dashboard  │
+│ Priority: high              │
+│ Depends on: feature_filters │
+└─────────────────────────────┘
+              ↓
+┌─────────────────────────────┐
+│ feature_export              │ [○] Not Started
+│ Export Search Results       │
+│ Priority: medium            │
+│ Depends on: feature_analytics│
 └─────────────────────────────┘
 
 ┌─────────────────────────────┐
-│ feature-013                 │ [○] Not Started
-│ Export Functionality        │
+│ feature_sharing             │ [○] Not Started
+│ Share Search Results        │
+│ Priority: low               │
+│ No dependencies             │
 └─────────────────────────────┘
 
-... [4 more items] ...
+... [2 more items] ...
 
-2 of these are on the critical path.
-Next Recommended: feature-012 (critical path, high priority, no blockers)
+Analysis:
+  - 2 of these are on the critical path
+  - 3 have no blockers and can start immediately
+  - 2 are waiting on other Phase 3 items
+
+Next Recommended: feature_analytics
+  - Critical path item
+  - High priority
+  - Blocked by feature_filters (70% complete)
+  - Will unblock 2 downstream items
+```
+
+### Example 9: Type-Specific Graph
+
+```bash
+/sdd:work-graph --type bug --include-completed
+```
+
+**Output:**
+```
+Bug Tracking Graph
+==================
+
+Showing all bug work items (completed and incomplete)
+
+┌─────────────────────────────┐
+│ bug_login_timeout           │ [✓] Completed (2025-11-03)
+│ Fix login timeout issue     │
+└─────────────────────────────┘
+
+┌─────────────────────────────┐
+│ bug_db_pool                 │ [○] Not Started (BOTTLENECK)
+│ Database pool exhaustion    │
+│ Priority: critical          │
+└─────────────────────────────┘
+              ↓
+┌─────────────────────────────┐
+│ bug_memory_leak             │ [○] Not Started
+│ Memory leak in batch jobs   │
+│ Priority: high              │
+│ Depends on: bug_db_pool     │
+└─────────────────────────────┘
+
+┌─────────────────────────────┐
+│ bug_cors_preflight          │ [●] In Progress (Session 14)
+│ CORS preflight failing      │
+│ Priority: high              │
+└─────────────────────────────┘
+
+Bug Summary:
+  - Total bugs: 4
+  - Fixed: 1 (25%)
+  - In Progress: 1 (25%)
+  - Open: 2 (50%)
+  - Critical: 1 (bug_db_pool)
+
+💡 bug_db_pool is blocking other work. Consider prioritizing.
 ```
 
 ## Understanding the Visualization
 
-### Node Colors
+### Node Colors and Symbols
 
+**Status Indicators:**
+- `[✓]` - Completed (green)
+- `[●]` - In Progress (blue)
+- `[○]` - Not Started (black/white)
+- `[✗]` - Blocked (gray)
+- `[⚠]` - Bottleneck (orange)
+
+**Color Coding:**
 - **Red nodes/text**: Critical path items (determine project timeline)
-- **Green**: Completed items (✓)
-- **Blue**: In progress items (●)
-- **Black/White**: Not started items (○)
+- **Green**: Completed items
+- **Blue**: In progress items
 - **Orange**: Bottleneck items (blocking 2+ others)
-- **Gray**: Blocked items (✗)
+- **Gray**: Blocked items
 
 ### Edge (Arrow) Styles
 
-- **Solid arrows**: Standard dependencies
-- **Bold red arrows**: Critical path connections
-- **Dashed arrows**: Optional/soft dependencies
+- **Solid arrows** → : Standard dependencies
+- **Bold red arrows** ⇒ : Critical path connections
+- **Dashed arrows** ⇢ : Optional/soft dependencies
 
-### Symbols
+### Priority Indicators
 
-- `[✓]` - Completed
-- `[●]` - In Progress
-- `[○]` - Not Started
-- `[✗]` - Blocked
-- `[⚠]` - Bottleneck
+- 🔴 Critical
+- 🟠 High
+- 🟡 Medium
+- 🟢 Low
 
 ## Use Cases
 
 ### 1. Project Planning
+
 ```bash
 /sdd:work-graph --stats
 ```
-Get overview of project structure and completion status.
+
+Get high-level overview of project structure, completion status, and timeline.
 
 ### 2. Sprint Planning
+
 ```bash
 /sdd:work-graph --milestone "Sprint 5" --status not_started
 ```
+
 See what's available to work on in upcoming sprint.
 
 ### 3. Timeline Estimation
+
 ```bash
 /sdd:work-graph --critical-path
 ```
-Identify minimum project duration.
+
+Identify minimum project duration and items that directly impact deadline.
 
 ### 4. Unblocking Work
+
 ```bash
 /sdd:work-graph --bottlenecks
 ```
-Find high-impact items to prioritize.
+
+Find high-impact items to prioritize for maximum team unblocking.
 
 ### 5. Documentation
+
 ```bash
-/sdd:work-graph --format svg --output docs/dependencies.svg
+/sdd:work-graph --format svg --output docs/architecture/dependencies.svg
 ```
-Generate visual documentation for architecture reviews.
+
+Generate visual documentation for:
+- Architecture reviews
+- Stakeholder presentations
+- Team onboarding
+- Technical documentation
 
 ### 6. Status Reports
+
 ```bash
 /sdd:work-graph --milestone "Q4 Goals" --include-completed
 ```
-Show progress on milestone objectives.
 
-## Tips
+Show progress on milestone objectives for:
+- Standups
+- Manager check-ins
+- Stakeholder updates
 
-**For terminal viewing:**
-- Use ASCII format (default) for best readability
-- Exclude completed items for cleaner view
-- Focus on critical path to prioritize work
+### 7. Dependency Analysis
 
-**For documentation:**
-- Export to SVG format for visual diagrams
-- Include completed items to show progress
-- Use milestone filters for phase-specific views
+```bash
+/sdd:work-graph --focus feature_complex_item
+```
 
-**For planning:**
-- Check bottlenecks regularly to avoid blocking work
-- Review critical path when estimating timelines
-- Use stats view for quick health checks
+Understand dependencies before starting complex work item.
 
-## Integration
+### 8. Bug Triage
 
-This command integrates with:
-- **Work Item System** - Reads from `.session/tracking/work_items.json`
-- **Dependency Resolution** - DFS-based critical path algorithm
-- **Milestone Tracking** - Filter by milestone
-- **Priority System** - Visual priority indicators
+```bash
+/sdd:work-graph --type bug --stats
+```
 
-## Related Commands
+See bug distribution and dependencies for prioritization.
 
-- `/sdd:work-next` - Get next recommended work item (considers dependencies)
-- `/sdd:work-list` - List work items with filters
-- `/sdd:work-show <id>` - Show detailed work item including dependency info
-- `/sdd:start <id>` - Start working on recommended item
+## Best Practices
+
+### 1. Regular Critical Path Reviews
+
+```bash
+# Weekly review
+/sdd:work-graph --critical-path
+```
+
+Stay aware of items that impact project timeline.
+
+### 2. Bottleneck Monitoring
+
+```bash
+# Before sprint planning
+/sdd:work-graph --bottlenecks
+```
+
+Identify and address bottlenecks proactively.
+
+### 3. Milestone Visualization
+
+```bash
+# Start of milestone
+/sdd:work-graph --milestone "current" --format svg --output milestone-start.svg
+
+# End of milestone
+/sdd:work-graph --milestone "current" --include-completed --format svg --output milestone-complete.svg
+```
+
+Document milestone progress visually.
+
+### 4. Focus Before Starting Work
+
+```bash
+# Before starting complex item
+/sdd:work-graph --focus <work_item_id>
+```
+
+Understand full context of dependencies and impact.
+
+### 5. Export for Communication
+
+```bash
+# For stakeholder review
+/sdd:work-graph --format svg --output stakeholder-review.svg
+```
+
+Visual graphs communicate better than text lists.
+
+## Error Handling
+
+### Work Item Not Found (Focus Mode)
+
+```bash
+/sdd:work-graph --focus nonexistent_item
+```
+
+**Output:**
+```
+ERROR: Work item 'nonexistent_item' not found
+
+Available work items:
+  feature_auth, feature_oauth, feature_profile, bug_db_pool, ...
+
+Use /sdd:work-list to see all work items.
+```
+
+### No Items Match Filters
+
+```bash
+/sdd:work-graph --status completed --milestone "Future Phase"
+```
+
+**Output:**
+```
+No work items match the specified filters.
+
+Active Filters:
+  - Status: completed
+  - Milestone: Future Phase
+
+Suggestions:
+  - Remove --status filter to see all items in milestone
+  - Check milestone name: /sdd:work-list --milestone "Future Phase"
+  - View all milestones: /sdd:work-list
+```
+
+### Graphviz Not Installed (SVG Format)
+
+```bash
+/sdd:work-graph --format svg --output graph.svg
+```
+
+**Output:**
+```
+ERROR: SVG format requires Graphviz
+
+Graphviz not found on your system.
+
+To install:
+  macOS:   brew install graphviz
+  Ubuntu:  sudo apt-get install graphviz
+  Windows: choco install graphviz
+
+Falling back to DOT format...
+
+✓ Generated graph.dot instead
+  You can convert to SVG after installing Graphviz:
+    dot -Tsvg graph.dot -o graph.svg
+```
+
+### Circular Dependencies Detected
+
+```bash
+/sdd:work-graph
+```
+
+**Output:**
+```
+⚠️  WARNING: Circular dependencies detected!
+
+Circular dependency chain:
+  feature_a → feature_b → feature_c → feature_a
+
+This creates a deadlock - none of these items can start.
+
+To fix:
+  1. /sdd:work-show feature_a
+  2. /sdd:work-update feature_a remove-dependency
+  3. Remove the circular dependency
+
+Graph generated with circular dependencies marked.
+```
+
+## Integration with Other Commands
+
+### Before Starting Work
+
+```bash
+/sdd:work-graph --bottlenecks     # Find high-impact item
+/sdd:work-next                     # Get recommendation
+/sdd:start <recommended_item>      # Begin work
+```
+
+### During Sprint Planning
+
+```bash
+/sdd:work-graph --milestone "Sprint 5" --stats
+/sdd:work-list --milestone "Sprint 5" --status not_started
+/sdd:work-next  # Get first item to start
+```
+
+### After Completing Work
+
+```bash
+/sdd:end                          # Complete current work
+/sdd:work-graph --bottlenecks     # See if you unblocked work
+/sdd:work-next                    # Get next item
+```
+
+### For Documentation
+
+```bash
+/sdd:work-graph --format svg --output docs/dependencies.svg
+# Commit and push for team visibility
+```
+
+## Performance
+
+The command is optimized for:
+- Fast graph construction (O(V + E) where V=items, E=dependencies)
+- Efficient critical path computation (DFS-based)
+- Quick filtering without full graph traversal
+- Minimal memory usage even with hundreds of items
+- Typical runtime: <1 second for 50-100 work items
 
 ## Requirements
 
 **For ASCII and DOT formats:**
 - No external dependencies required
+- Works out of the box
 
 **For SVG format:**
-- Requires Graphviz installed (`brew install graphviz` on macOS)
-- If Graphviz not installed, falls back to DOT format with instructions
+- Requires Graphviz installed
+  - macOS: `brew install graphviz`
+  - Ubuntu: `sudo apt-get install graphviz`
+  - Windows: `choco install graphviz`
+- Falls back to DOT format with instructions if not installed
 
-## Implementation
+## See Also
 
-**Module:** `sdd.visualization.dependency_graph`
-**Algorithm:** DFS-based critical path analysis with Kahn's algorithm for cycle detection
-**Output:** ASCII art with box-drawing characters, DOT language, or SVG via Graphviz
-**Database:** `.session/tracking/work_items.json`
+- [Work Next Command](work-next.md) - Get next recommended work item (considers dependencies)
+- [Work List Command](work-list.md) - List work items with filters
+- [Work Show Command](work-show.md) - Show detailed work item with dependency info
+- [Work Update Command](work-update.md) - Update dependencies
+- [Start Command](start.md) - Start working on recommended item
