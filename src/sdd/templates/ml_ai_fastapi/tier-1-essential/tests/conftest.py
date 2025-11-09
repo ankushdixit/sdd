@@ -3,16 +3,17 @@ Pytest fixtures for testing
 """
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
+from httpx import ASGITransport, AsyncClient  # type: ignore[import-not-found]
+from sqlalchemy.ext.asyncio import create_async_engine  # type: ignore[import-not-found]
+from sqlalchemy.orm import sessionmaker  # type: ignore[import-not-found]
+from sqlmodel import SQLModel  # type: ignore[import-not-found]
+from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
 
-from src.api.dependencies import get_db
-from src.main import app
+from src.api.dependencies import get_db  # type: ignore[import-not-found]
+from src.main import app  # type: ignore[import-not-found]
 
 
 # Test database URL (use in-memory SQLite for testing)
@@ -20,7 +21,7 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest.fixture
-async def db_engine():
+async def db_engine() -> AsyncGenerator[Any, None]:
     """Create a test database engine."""
     engine = create_async_engine(
         TEST_DATABASE_URL,
@@ -40,7 +41,7 @@ async def db_engine():
 
 
 @pytest.fixture
-async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(db_engine: Any) -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session."""
     async_session_maker = sessionmaker(
         db_engine,

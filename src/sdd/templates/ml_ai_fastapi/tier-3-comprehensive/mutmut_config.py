@@ -3,8 +3,10 @@ Mutation testing configuration for mutmut
 https://mutmut.readthedocs.io/
 """
 
+from typing import Any
 
-def pre_mutation(context):
+
+def pre_mutation(context: Any) -> None:
     """
     Called before each mutation is tested.
     Can be used to skip certain mutations.
@@ -18,7 +20,7 @@ def pre_mutation(context):
         context.skip = True
 
 
-def post_mutation(context):
+def post_mutation(context: Any) -> None:
     """
     Called after each mutation is tested.
     Can be used for custom reporting.

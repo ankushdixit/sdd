@@ -6,9 +6,9 @@ import logging
 import sys
 from typing import Any
 
-import structlog
-from src.core.config import settings
-from structlog.types import EventDict, Processor
+import structlog  # type: ignore[import-not-found]
+from src.core.config import settings  # type: ignore[import-not-found]
+from structlog.types import EventDict, Processor  # type: ignore[import-not-found]
 
 
 def add_app_context(logger: Any, method_name: str, event_dict: EventDict) -> EventDict:
@@ -33,10 +33,10 @@ def configure_logging() -> None:
     Configure structured logging with structlog.
     """
     # Determine log level
-    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
+    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)  # type: ignore[attr-defined]
 
     # Configure standard library logging
-    logging.basicConfig(
+    logging.basicConfig(  # type: ignore[attr-defined]
         format="%(message)s",
         stream=sys.stdout,
         level=log_level,

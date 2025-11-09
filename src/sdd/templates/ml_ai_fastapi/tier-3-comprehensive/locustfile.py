@@ -3,7 +3,7 @@ Locust load testing configuration for FastAPI application
 https://docs.locust.io/
 """
 
-from locust import HttpUser, between, task
+from locust import HttpUser, between, task  # type: ignore[import-not-found]
 
 
 class FastAPIUser(HttpUser):
@@ -17,22 +17,22 @@ class FastAPIUser(HttpUser):
     # Base host will be set via command line: locust --host=http://localhost:8000
 
     @task(3)
-    def get_root(self):
+    def get_root(self) -> None:
         """Test the root endpoint (higher weight = 3)."""
         self.client.get("/")
 
     @task(5)
-    def health_check(self):
+    def health_check(self) -> None:
         """Test the health check endpoint (higher weight = 5)."""
         self.client.get("/health")
 
     @task(2)
-    def list_items(self):
+    def list_items(self) -> None:
         """Test listing items."""
         self.client.get("/api/v1/items")
 
     @task(1)
-    def create_item(self):
+    def create_item(self) -> None:
         """Test creating an item."""
         self.client.post(
             "/api/v1/items",
@@ -44,7 +44,7 @@ class FastAPIUser(HttpUser):
         )
 
     @task(1)
-    def get_item(self):
+    def get_item(self) -> None:
         """Test getting a specific item."""
         # Note: This assumes item with ID 1 exists
         # In production, you'd create items first
@@ -52,7 +52,7 @@ class FastAPIUser(HttpUser):
             if response.status_code == 404:
                 response.success()  # Mark as success even if not found
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Called when a simulated user starts.
         Use this to set up test data or authenticate.
@@ -68,7 +68,7 @@ class FastAPIUser(HttpUser):
                 },
             )
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Called when a simulated user stops.
         Use this to clean up test data.
@@ -84,12 +84,12 @@ class AdminUser(HttpUser):
     wait_time = between(2, 5)
 
     @task(1)
-    def check_readiness(self):
+    def check_readiness(self) -> None:
         """Test the readiness check endpoint."""
         self.client.get("/health/ready")
 
     @task(1)
-    def check_liveness(self):
+    def check_liveness(self) -> None:
         """Test the liveness check endpoint."""
         self.client.get("/health/live")
 

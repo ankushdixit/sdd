@@ -3,17 +3,17 @@ Unit tests for example service
 """
 
 import pytest
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
 
-from src.models.example import ItemCreate, ItemUpdate
-from src.services.example import ItemService
+from src.models.example import ItemCreate, ItemUpdate  # type: ignore[import-not-found]
+from src.services.example import ItemService  # type: ignore[import-not-found]
 
 
 @pytest.mark.unit
 class TestItemService:
     """Test cases for ItemService."""
 
-    async def test_create_item(self, db_session: AsyncSession):
+    async def test_create_item(self, db_session: AsyncSession) -> None:
         """Test creating an item."""
         service = ItemService(db_session)
         item_data = ItemCreate(
@@ -30,7 +30,7 @@ class TestItemService:
         assert item.price == 9.99
         assert item.is_active is True
 
-    async def test_get_item(self, db_session: AsyncSession):
+    async def test_get_item(self, db_session: AsyncSession) -> None:
         """Test retrieving an item."""
         service = ItemService(db_session)
 
@@ -45,13 +45,13 @@ class TestItemService:
         assert retrieved_item.id == created_item.id
         assert retrieved_item.name == created_item.name
 
-    async def test_get_nonexistent_item(self, db_session: AsyncSession):
+    async def test_get_nonexistent_item(self, db_session: AsyncSession) -> None:
         """Test retrieving a non-existent item."""
         service = ItemService(db_session)
         item = await service.get_item(999)
         assert item is None
 
-    async def test_get_items_pagination(self, db_session: AsyncSession):
+    async def test_get_items_pagination(self, db_session: AsyncSession) -> None:
         """Test listing items with pagination."""
         service = ItemService(db_session)
 
@@ -67,7 +67,7 @@ class TestItemService:
         items = await service.get_items(skip=3, limit=3)
         assert len(items) == 2
 
-    async def test_update_item(self, db_session: AsyncSession):
+    async def test_update_item(self, db_session: AsyncSession) -> None:
         """Test updating an item."""
         service = ItemService(db_session)
 
@@ -83,14 +83,14 @@ class TestItemService:
         assert updated_item.name == "Updated Name"
         assert updated_item.price == 15.0
 
-    async def test_update_nonexistent_item(self, db_session: AsyncSession):
+    async def test_update_nonexistent_item(self, db_session: AsyncSession) -> None:
         """Test updating a non-existent item."""
         service = ItemService(db_session)
         update_data = ItemUpdate(name="Updated Name")
         result = await service.update_item(999, update_data)
         assert result is None
 
-    async def test_delete_item(self, db_session: AsyncSession):
+    async def test_delete_item(self, db_session: AsyncSession) -> None:
         """Test deleting an item."""
         service = ItemService(db_session)
 
@@ -106,7 +106,7 @@ class TestItemService:
         deleted_item = await service.get_item(created_item.id)
         assert deleted_item is None
 
-    async def test_delete_nonexistent_item(self, db_session: AsyncSession):
+    async def test_delete_nonexistent_item(self, db_session: AsyncSession) -> None:
         """Test deleting a non-existent item."""
         service = ItemService(db_session)
         success = await service.delete_item(999)

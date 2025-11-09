@@ -109,6 +109,9 @@ warn_unreachable = true
 strict_equality = true
 extra_checks = true
 files = ["src/sdd"]
+exclude = [
+    "src/sdd/templates/",
+]
 show_error_codes = true
 pretty = true
 

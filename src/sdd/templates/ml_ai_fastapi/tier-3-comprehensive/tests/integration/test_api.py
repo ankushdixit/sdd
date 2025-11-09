@@ -3,7 +3,7 @@ Integration tests for API endpoints
 """
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient  # type: ignore[import-not-found]
 
 
 @pytest.mark.integration
@@ -11,7 +11,7 @@ from httpx import AsyncClient
 class TestItemAPIIntegration:
     """Integration tests for Item API endpoints."""
 
-    async def test_create_and_retrieve_item(self, integration_client: AsyncClient):
+    async def test_create_and_retrieve_item(self, integration_client: AsyncClient) -> None:
         """Test full cycle: create item and retrieve it."""
         # Create an item
         create_response = await integration_client.post(
@@ -34,7 +34,7 @@ class TestItemAPIIntegration:
         assert retrieved_item["id"] == item_id
         assert retrieved_item["name"] == "Integration Test Item"
 
-    async def test_create_update_delete_workflow(self, integration_client: AsyncClient):
+    async def test_create_update_delete_workflow(self, integration_client: AsyncClient) -> None:
         """Test complete CRUD workflow."""
         # Create
         create_response = await integration_client.post(
@@ -67,7 +67,7 @@ class TestItemAPIIntegration:
         get_deleted_response = await integration_client.get(f"/api/v1/items/{item_id}")
         assert get_deleted_response.status_code == 404
 
-    async def test_list_items_pagination(self, integration_client: AsyncClient):
+    async def test_list_items_pagination(self, integration_client: AsyncClient) -> None:
         """Test listing items with pagination."""
         # Create multiple items
         for i in range(15):
@@ -88,7 +88,7 @@ class TestItemAPIIntegration:
         items = response.json()
         assert len(items) == 5
 
-    async def test_validation_errors(self, integration_client: AsyncClient):
+    async def test_validation_errors(self, integration_client: AsyncClient) -> None:
         """Test API validation errors."""
         # Missing required field
         response = await integration_client.post(
@@ -104,7 +104,7 @@ class TestItemAPIIntegration:
         )
         assert response.status_code == 422
 
-    async def test_not_found_error(self, integration_client: AsyncClient):
+    async def test_not_found_error(self, integration_client: AsyncClient) -> None:
         """Test 404 error for non-existent item."""
         response = await integration_client.get("/api/v1/items/99999")
         assert response.status_code == 404
@@ -114,7 +114,7 @@ class TestItemAPIIntegration:
 class TestHealthEndpoints:
     """Integration tests for health check endpoints."""
 
-    async def test_health_endpoints_integration(self, integration_client: AsyncClient):
+    async def test_health_endpoints_integration(self, integration_client: AsyncClient) -> None:
         """Test all health check endpoints."""
         # Health check
         response = await integration_client.get("/health")

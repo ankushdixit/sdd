@@ -3,22 +3,23 @@ Integration test fixtures
 """
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-from src.api.dependencies import get_db
-from src.main import app
+from httpx import ASGITransport, AsyncClient  # type: ignore[import-not-found]
+from sqlalchemy.ext.asyncio import create_async_engine  # type: ignore[import-not-found]
+from sqlalchemy.orm import sessionmaker  # type: ignore[import-not-found]
+from sqlmodel import SQLModel  # type: ignore[import-not-found]
+from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
+from src.api.dependencies import get_db  # type: ignore[import-not-found]
+from src.main import app  # type: ignore[import-not-found]
 
 # Use a separate test database for integration tests
 INTEGRATION_DATABASE_URL = "sqlite+aiosqlite:///./test_integration.db"
 
 
 @pytest.fixture(scope="function")
-async def integration_db_engine():
+async def integration_db_engine() -> AsyncGenerator[Any, None]:
     """Create a test database engine for integration tests."""
     engine = create_async_engine(
         INTEGRATION_DATABASE_URL,
@@ -39,7 +40,7 @@ async def integration_db_engine():
 
 @pytest.fixture(scope="function")
 async def integration_db_session(
-    integration_db_engine,
+    integration_db_engine: Any,
 ) -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session for integration tests."""
     async_session_maker = sessionmaker(
