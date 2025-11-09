@@ -63,7 +63,9 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_db] = override_get_db
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", timeout=30.0
+    ) as ac:  # nosec B113 - Test client timeout is set to 30 seconds
         yield ac
 
     app.dependency_overrides.clear()

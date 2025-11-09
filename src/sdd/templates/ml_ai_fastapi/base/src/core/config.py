@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "json"
 
     # Server
-    HOST: str = "0.0.0.0"
+    HOST: str = "0.0.0.0"  # nosec B104 - Binding to all interfaces is intentional for development
     PORT: int = 8000
 
 
