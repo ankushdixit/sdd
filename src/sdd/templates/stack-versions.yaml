@@ -36,8 +36,6 @@ stacks:
     styling:
       tailwindcss: "4.1.17"
       "@tailwindcss/postcss": "4.1.17"
-      postcss: "8.4.49"
-      autoprefixer: "10.4.20"
 
     t3_core:
       "@trpc/server": "11.7.1"
@@ -92,7 +90,7 @@ stacks:
         - "(yes \"n\" | npx create-next-app@latest <project-name> --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\")"
 
       commands:
-        base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 @trpc/server@11.7.1 @trpc/client@11.7.1 @trpc/react-query@11.7.1 @trpc/next@11.7.1 @tanstack/react-query@5.90.7 prisma@6.19.0 @prisma/client@6.19.0 zod@4.1.12 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17 postcss@8.4.49 autoprefixer@10.4.20"
+        base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 @trpc/server@11.7.1 @trpc/client@11.7.1 @trpc/react-query@11.7.1 @trpc/next@11.7.1 @tanstack/react-query@5.90.7 prisma@6.19.0 @prisma/client@6.19.0 zod@4.1.12 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17"
 
         tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 @typescript-eslint/parser@8.46.3 @typescript-eslint/eslint-plugin@8.46.3 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
 

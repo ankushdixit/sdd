@@ -38,8 +38,6 @@
     "zod": "4.1.12",
     "tailwindcss": "4.1.17",
     "@tailwindcss/postcss": "4.1.17",
-    "postcss": "8.4.49",
-    "autoprefixer": "10.4.20",
     "superjson": "2.2.2",
     "clsx": "2.1.1",
     "tailwind-merge": "3.3.1"
