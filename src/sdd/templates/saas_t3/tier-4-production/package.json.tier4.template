@@ -46,8 +46,8 @@
     "superjson": "2.2.2",
     "clsx": "2.1.1",
     "tailwind-merge": "3.3.1",
-    "@sentry/nextjs": "latest",
-    "@vercel/analytics": "latest"
+    "@sentry/nextjs": "10.23.0",
+    "@vercel/analytics": "1.5.0"
   },
   "devDependencies": {
     "typescript": "5.7.3",
@@ -72,14 +72,14 @@
     "type-coverage": "2.29.7",
     "@stryker-mutator/core": "9.3.0",
     "@stryker-mutator/jest-runner": "9.3.0",
+    "@playwright/test": "1.56.1",
     "playwright": "1.56.1",
     "@axe-core/playwright": "4.11.0",
     "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-testing-library": "7.13.3",
-    "axe-playwright": "2.0.3",
-    "patch-package": "latest",
-    "@next/bundle-analyzer": "latest",
-    "@lhci/cli": "latest",
-    "dotenv-cli": "latest"
+    "patch-package": "8.0.1",
+    "@next/bundle-analyzer": "16.0.1",
+    "@lhci/cli": "0.15.1",
+    "dotenv-cli": "11.0.0"
   }
 }

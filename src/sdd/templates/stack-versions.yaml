@@ -79,12 +79,12 @@ stacks:
 
     tier4_production:
       # IMPORTANT: patch-package must be installed FIRST
-      patch-package: "latest"
-      "@next/bundle-analyzer": "latest"
-      "@lhci/cli": "latest"
-      dotenv-cli: "latest"
-      "@sentry/nextjs": "latest"
-      "@vercel/analytics": "latest"
+      patch-package: "8.0.1"
+      "@next/bundle-analyzer": "16.0.1"
+      "@lhci/cli": "0.15.1"
+      dotenv-cli: "11.0.0"
+      "@sentry/nextjs": "10.23.0"
+      "@vercel/analytics": "1.5.0"
 
     installation:
       pre_install:
@@ -101,8 +101,8 @@ stacks:
         tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
 
         # CRITICAL: patch-package MUST be installed before Sentry
-        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
-        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+        tier4_dev: "npm install --save-dev patch-package@8.0.1 @next/bundle-analyzer@16.0.1 @lhci/cli@0.15.1 dotenv-cli@11.0.0"
+        tier4_prod: "npm install @sentry/nextjs@10.23.0 @vercel/analytics@1.5.0"
 
       test_command: "npm run build"
       dev_command: "npm run dev"
@@ -323,12 +323,12 @@ stacks:
       eslint-plugin-testing-library: "7.13.3"
 
     tier4_production:
-      patch-package: "latest"
-      "@next/bundle-analyzer": "latest"
-      "@lhci/cli": "latest"
-      dotenv-cli: "latest"
-      "@sentry/nextjs": "latest"
-      "@vercel/analytics": "latest"
+      patch-package: "8.0.1"
+      "@next/bundle-analyzer": "16.0.1"
+      "@lhci/cli": "0.15.1"
+      dotenv-cli: "11.0.0"
+      "@sentry/nextjs": "10.23.0"
+      "@vercel/analytics": "1.5.0"
 
     installation:
       pre_install:
@@ -345,9 +345,9 @@ stacks:
         tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
 
         # CRITICAL: patch-package MUST be installed before Sentry
-        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
+        tier4_dev: "npm install --save-dev patch-package@8.0.1 @next/bundle-analyzer@16.0.1 @lhci/cli@0.15.1 dotenv-cli@11.0.0"
 
-        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+        tier4_prod: "npm install @sentry/nextjs@10.23.0 @vercel/analytics@1.5.0"
 
       test_command: "npm run build"
       dev_command: "npm run dev"
@@ -426,12 +426,12 @@ stacks:
       eslint-plugin-testing-library: "7.13.3"
 
     tier4_production:
-      patch-package: "latest"
-      "@next/bundle-analyzer": "latest"
-      "@lhci/cli": "latest"
-      dotenv-cli: "latest"
-      "@sentry/nextjs": "latest"
-      "@vercel/analytics": "latest"
+      patch-package: "8.0.1"
+      "@next/bundle-analyzer": "16.0.1"
+      "@lhci/cli": "0.15.1"
+      dotenv-cli: "11.0.0"
+      "@sentry/nextjs": "10.23.0"
+      "@vercel/analytics": "1.5.0"
 
     installation:
       pre_install:
@@ -441,16 +441,16 @@ stacks:
         # Incremental installation matching tier structure
         base: "npm install next@16.0.1 react@19.2.0 react-dom@19.2.0 prisma@6.19.0 @prisma/client@6.19.0 zod@4.1.12 tailwindcss@4.1.17 @tailwindcss/postcss@4.1.17"
 
-        tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
+        tier1: "npm install --save-dev eslint@9.39.1 eslint-config-next@16.0.1 @typescript-eslint/parser@8.46.3 @typescript-eslint/eslint-plugin@8.46.3 prettier@3.6.2 jest@30.2.0 @types/jest@30.0.0 ts-jest@29.4.5 jest-environment-jsdom@30.2.0 @testing-library/react@16.3.0 @testing-library/jest-dom@6.9.1"
 
         tier2: "npm install --save-dev husky@9.1.7 lint-staged@16.2.6"
 
         tier3: "npm install --save-dev jscpd@4.0.5 ts-prune@0.10.3 type-coverage@2.29.7 @stryker-mutator/core@9.3.0 @stryker-mutator/jest-runner@9.3.0 @playwright/test@1.56.1 playwright@1.56.1 @axe-core/playwright@4.11.0 eslint-plugin-jest-dom@5.5.0 eslint-plugin-testing-library@7.13.3"
 
         # CRITICAL: patch-package MUST be installed before Sentry
-        tier4_dev: "npm install --save-dev patch-package @next/bundle-analyzer@latest @lhci/cli@latest dotenv-cli@latest"
+        tier4_dev: "npm install --save-dev patch-package@8.0.1 @next/bundle-analyzer@16.0.1 @lhci/cli@0.15.1 dotenv-cli@11.0.0"
 
-        tier4_prod: "npm install @sentry/nextjs@latest @vercel/analytics@latest"
+        tier4_prod: "npm install @sentry/nextjs@10.23.0 @vercel/analytics@1.5.0"
 
       test_command: "npm run build"
       dev_command: "npm run dev"
