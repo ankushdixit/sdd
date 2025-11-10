@@ -62,18 +62,34 @@ class TestMain:
 
             assert result == 1
 
-    def test_legacy_init_without_template(self):
-        """Test legacy init when no --template is provided."""
+    def test_interactive_init_without_args(self):
+        """Test interactive init when no arguments are provided."""
         test_args = ["init"]
 
         with patch.object(sys, "argv", test_args):
-            with patch("solokit.project.init.init_project") as mock_legacy:
-                mock_legacy.return_value = 0
+            with patch("solokit.project.init.prompt_template_selection", return_value="saas_t3"):
+                with patch(
+                    "solokit.project.init.prompt_quality_tier", return_value="tier-2-standard"
+                ):
+                    with patch("solokit.project.init.prompt_coverage_target", return_value=80):
+                        with patch(
+                            "solokit.project.init.prompt_additional_options", return_value=["ci_cd"]
+                        ):
+                            with patch("builtins.input", return_value="y"):  # Confirm prompt
+                                with patch(
+                                    "solokit.init.orchestrator.run_template_based_init"
+                                ) as mock_run:
+                                    mock_run.return_value = 0
 
-                result = main()
+                                    result = main()
 
-                assert result == 0
-                mock_legacy.assert_called_once()
+                                    assert result == 0
+                                    mock_run.assert_called_once_with(
+                                        template_id="saas_t3",
+                                        tier="tier-2-standard",
+                                        coverage_target=80,
+                                        additional_options=["ci_cd"],
+                                    )
 
     def test_parse_multiple_options(self):
         """Test parsing multiple additional options."""

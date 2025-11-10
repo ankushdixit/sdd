@@ -26,7 +26,9 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 requires-python = ">=3.9"
-dependencies = []  # Core has no runtime dependencies (uses stdlib only)
+dependencies = [
+    "PyYAML>=6.0.0,<7.0.0",  # Required by init system and quality validators
+]
 
 [project.optional-dependencies]
 test = [
