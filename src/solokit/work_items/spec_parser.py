@@ -22,7 +22,7 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.logging_config import get_logger
 from solokit.core.output import get_output
@@ -724,7 +724,7 @@ def parse_spec_file(work_item: str | dict[str, Any]) -> dict[str, Any]:
 
     if not spec_path.exists():
         logger.error("Spec file not found: %s", spec_path)
-        raise SDDFileNotFoundError(file_path=str(spec_path), file_type="spec")
+        raise SolokitFileNotFoundError(file_path=str(spec_path), file_type="spec")
 
     try:
         with open(spec_path, encoding="utf-8") as f:

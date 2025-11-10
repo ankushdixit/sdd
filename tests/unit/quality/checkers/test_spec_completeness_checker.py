@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 from solokit.core.exceptions import SpecValidationError
 from solokit.quality.checkers.spec_completeness import SpecCompletenessChecker
 
@@ -142,7 +142,9 @@ class TestSpecCompletenessCheckerRun:
         work_item = {"id": "WI-001", "type": "feature"}
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        file_error = SDDFileNotFoundError(file_path=".session/specs/WI-001.md", file_type="spec")
+        file_error = SolokitFileNotFoundError(
+            file_path=".session/specs/WI-001.md", file_type="spec"
+        )
 
         with patch(
             "solokit.quality.checkers.spec_completeness.validate_spec_file",

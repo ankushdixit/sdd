@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.exceptions import (
     FileOperationError,
@@ -87,7 +87,7 @@ class TestValidateRepos:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.validate_repos()
 
         assert str(main_repo) in exc_info.value.context["file_path"]
@@ -109,7 +109,7 @@ class TestValidateRepos:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.validate_repos()
 
         assert str(plugin_repo) in exc_info.value.context["file_path"]
@@ -199,7 +199,7 @@ class TestGetVersionFromMain:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.get_version_from_main()
 
         assert "pyproject.toml" in exc_info.value.context["file_path"]
@@ -710,7 +710,7 @@ class TestSync:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises((SDDFileNotFoundError, ValidationError)):
+        with pytest.raises((SolokitFileNotFoundError, ValidationError)):
             syncer.sync()
 
     def test_sync_dry_run(self, tmp_path):

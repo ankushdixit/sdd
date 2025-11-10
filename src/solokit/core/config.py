@@ -167,7 +167,7 @@ class CurationConfig:
 
 
 @dataclass
-class SDDConfig:
+class SolokitConfig:
     """Main Solokit configuration."""
 
     quality_gates: QualityGatesConfig = field(default_factory=QualityGatesConfig)
@@ -191,7 +191,7 @@ class ConfigManager:
     """
 
     _instance: Optional["ConfigManager"] = None
-    _config: Optional[SDDConfig] = None
+    _config: Optional[SolokitConfig] = None
     _config_path: Optional[Path] = None
 
     def __new__(cls) -> "ConfigManager":
@@ -203,7 +203,7 @@ class ConfigManager:
     def __init__(self) -> None:
         """Initialize with default configuration if not already initialized."""
         if self._config is None:
-            self._config = SDDConfig()
+            self._config = SolokitConfig()
 
     def load_config(self, config_path: Path, force_reload: bool = False) -> None:
         """Load configuration from file.
@@ -228,7 +228,7 @@ class ConfigManager:
 
         if not config_path.exists():
             logger.info("Config file not found at %s, using defaults", config_path)
-            self._config = SDDConfig()
+            self._config = SolokitConfig()
             return
 
         try:
@@ -263,7 +263,7 @@ class ConfigManager:
             )
 
             # Create config with parsed data
-            self._config = SDDConfig(
+            self._config = SolokitConfig(
                 quality_gates=quality_gates_data,
                 git_workflow=(
                     GitWorkflowConfig(**git_workflow_data)
@@ -412,7 +412,7 @@ class ConfigManager:
         assert self._config is not None, "Config not initialized"
         return self._config.curation
 
-    def get_config(self) -> SDDConfig:
+    def get_config(self) -> SolokitConfig:
         """Get full configuration.
 
         Returns:

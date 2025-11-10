@@ -27,7 +27,7 @@ import pytest
 
 
 @pytest.fixture
-def sdd_project_with_work_items():
+def solokit_project_with_work_items():
     """Create a temp Solokit project with multiple work items for testing.
 
     Returns:
@@ -217,10 +217,10 @@ class TestWorkItemTypeTemplates:
 class TestWorkItemCreation:
     """Tests for work item creation with all types."""
 
-    def test_create_all_six_work_item_types(self, sdd_project_with_work_items):
+    def test_create_all_six_work_item_types(self, solokit_project_with_work_items):
         """Test creating all 6 work item types."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
 
         # Act
         work_items_file = project_dir / ".session/tracking/work_items.json"
@@ -244,10 +244,10 @@ class TestWorkItemCreation:
         for expected_type in expected_types:
             assert expected_type in types_found, f"Work item type not created: {expected_type}"
 
-    def test_work_item_spec_files_created(self, sdd_project_with_work_items):
+    def test_work_item_spec_files_created(self, solokit_project_with_work_items):
         """Test that spec files are created for all work items."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
 
         # Act & Assert
         for work_id in created_ids:
@@ -255,10 +255,10 @@ class TestWorkItemCreation:
             assert spec_file.exists(), f"Spec file not created: {work_id}.md"
             assert spec_file.stat().st_size > 0, f"Spec file is empty: {work_id}.md"
 
-    def test_work_item_with_dependencies(self, sdd_project_with_work_items):
+    def test_work_item_with_dependencies(self, solokit_project_with_work_items):
         """Test creating a work item with dependencies."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
         base_work_id = created_ids[0]
 
         # Act
@@ -309,10 +309,10 @@ class TestWorkItemCreation:
 class TestWorkItemList:
     """Tests for work item listing with filtering."""
 
-    def test_list_all_work_items(self, sdd_project_with_work_items):
+    def test_list_all_work_items(self, solokit_project_with_work_items):
         """Test listing all work items."""
         # Arrange
-        project_dir, _ = sdd_project_with_work_items
+        project_dir, _ = solokit_project_with_work_items
 
         # Act
         result = subprocess.run(
@@ -326,10 +326,10 @@ class TestWorkItemList:
         assert result.returncode == 0, f"List command failed: {result.stderr}"
         assert "Work Items" in result.stdout or len(result.stdout) > 0, "List output empty"
 
-    def test_list_filter_by_type(self, sdd_project_with_work_items):
+    def test_list_filter_by_type(self, solokit_project_with_work_items):
         """Test filtering work items by type."""
         # Arrange
-        project_dir, _ = sdd_project_with_work_items
+        project_dir, _ = solokit_project_with_work_items
 
         # Act
         result = subprocess.run(
@@ -344,10 +344,10 @@ class TestWorkItemList:
         # Should contain feature items
         assert "feature" in result.stdout.lower() or "User Authentication" in result.stdout
 
-    def test_list_filter_by_status(self, sdd_project_with_work_items):
+    def test_list_filter_by_status(self, solokit_project_with_work_items):
         """Test filtering work items by status."""
         # Arrange
-        project_dir, _ = sdd_project_with_work_items
+        project_dir, _ = solokit_project_with_work_items
 
         # Act
         result = subprocess.run(
@@ -369,10 +369,10 @@ class TestWorkItemList:
 class TestWorkItemShow:
     """Tests for work item details display."""
 
-    def test_show_work_item_details(self, sdd_project_with_work_items):
+    def test_show_work_item_details(self, solokit_project_with_work_items):
         """Test showing detailed work item information."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
         work_id = created_ids[0]
 
         # Act
@@ -403,10 +403,10 @@ class TestWorkItemShow:
 class TestWorkItemUpdate:
     """Tests for work item field updates."""
 
-    def test_update_work_item_priority(self, sdd_project_with_work_items):
+    def test_update_work_item_priority(self, solokit_project_with_work_items):
         """Test updating work item priority."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
         work_id = created_ids[0]
 
         # Act
@@ -426,10 +426,10 @@ class TestWorkItemUpdate:
 
         assert item["priority"] == "medium", f"Priority not updated: {item['priority']}"
 
-    def test_update_work_item_status(self, sdd_project_with_work_items):
+    def test_update_work_item_status(self, solokit_project_with_work_items):
         """Test updating work item status."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
         work_id = created_ids[0]
 
         # Act
@@ -449,10 +449,10 @@ class TestWorkItemUpdate:
 
         assert item["status"] == "in_progress", f"Status not updated: {item['status']}"
 
-    def test_update_work_item_milestone(self, sdd_project_with_work_items):
+    def test_update_work_item_milestone(self, solokit_project_with_work_items):
         """Test updating work item milestone."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
         work_id = created_ids[0]
 
         # Act
@@ -481,10 +481,10 @@ class TestWorkItemUpdate:
 class TestWorkItemNextAndMilestones:
     """Tests for next work item recommendation and milestone tracking."""
 
-    def test_work_next_recommendation(self, sdd_project_with_work_items):
+    def test_work_next_recommendation(self, solokit_project_with_work_items):
         """Test getting next recommended work item."""
         # Arrange
-        project_dir, _ = sdd_project_with_work_items
+        project_dir, _ = solokit_project_with_work_items
 
         # Act
         result = subprocess.run(
@@ -499,10 +499,10 @@ class TestWorkItemNextAndMilestones:
         # Should provide some recommendation or message
         assert len(result.stdout) > 0 or len(result.stderr) > 0, "No output from work-next"
 
-    def test_milestone_filtering(self, sdd_project_with_work_items):
+    def test_milestone_filtering(self, solokit_project_with_work_items):
         """Test filtering work items by milestone."""
         # Arrange
-        project_dir, created_ids = sdd_project_with_work_items
+        project_dir, created_ids = solokit_project_with_work_items
 
         # Update some work items with milestone
         for work_id in created_ids[:3]:
@@ -533,10 +533,10 @@ class TestWorkItemNextAndMilestones:
 class TestSessionStatus:
     """Tests for session status command."""
 
-    def test_session_status_displays(self, sdd_project_with_work_items):
+    def test_session_status_displays(self, solokit_project_with_work_items):
         """Test that session status command executes."""
         # Arrange
-        project_dir, _ = sdd_project_with_work_items
+        project_dir, _ = solokit_project_with_work_items
 
         # Act
         result = subprocess.run(

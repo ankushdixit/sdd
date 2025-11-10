@@ -30,7 +30,7 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.logging_config import get_logger
 
@@ -78,12 +78,14 @@ class PluginSyncer:
         Validate that both repositories exist and have expected structure.
 
         Raises:
-            SDDFileNotFoundError: If repository path doesn't exist
+            SolokitFileNotFoundError: If repository path doesn't exist
             ValidationError: If repository is missing expected files/directories
         """
         # Check main repo
         if not self.main_repo.exists():
-            raise SDDFileNotFoundError(file_path=str(self.main_repo), file_type="main repository")
+            raise SolokitFileNotFoundError(
+                file_path=str(self.main_repo), file_type="main repository"
+            )
 
         main_markers = ["src/solokit/cli.py", "pyproject.toml", ".claude/commands"]
         for marker in main_markers:
@@ -101,7 +103,7 @@ class PluginSyncer:
 
         # Check plugin repo
         if not self.plugin_repo.exists():
-            raise SDDFileNotFoundError(
+            raise SolokitFileNotFoundError(
                 file_path=str(self.plugin_repo), file_type="plugin repository"
             )
 
@@ -129,13 +131,15 @@ class PluginSyncer:
             Version string (e.g., "0.5.7")
 
         Raises:
-            SDDFileNotFoundError: If pyproject.toml doesn't exist
+            SolokitFileNotFoundError: If pyproject.toml doesn't exist
             ValidationError: If version field not found in pyproject.toml
             FileOperationError: If file cannot be read
         """
         pyproject_path = self.main_repo / "pyproject.toml"
         if not pyproject_path.exists():
-            raise SDDFileNotFoundError(file_path=str(pyproject_path), file_type="pyproject.toml")
+            raise SolokitFileNotFoundError(
+                file_path=str(pyproject_path), file_type="pyproject.toml"
+            )
 
         try:
             with open(pyproject_path) as f:
@@ -335,7 +339,7 @@ class PluginSyncer:
         Execute the sync process.
 
         Raises:
-            SDDFileNotFoundError: If repository paths don't exist
+            SolokitFileNotFoundError: If repository paths don't exist
             ValidationError: If repositories are missing expected files
             FileOperationError: If file operations fail
         """
@@ -410,7 +414,7 @@ def main() -> None:
     try:
         syncer.sync()
         sys.exit(0)
-    except SDDFileNotFoundError as e:
+    except SolokitFileNotFoundError as e:
         logger.error(f"File not found: {e.message}")
         if e.remediation:
             logger.error(f"Remediation: {e.remediation}")

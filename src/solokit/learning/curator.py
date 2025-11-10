@@ -20,7 +20,7 @@ from pathlib import Path
 
 from solokit.core.constants import MAX_LEARNING_AGE_SESSIONS
 from solokit.core.error_handlers import log_errors
-from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 from solokit.core.logging_config import get_logger
 from solokit.core.output import get_output
 from solokit.learning.archiver import LearningArchiver
@@ -394,7 +394,7 @@ def main() -> None:
     session_dir = project_root / ".session"
 
     if not session_dir.exists():
-        raise SDDFileNotFoundError(file_path=str(session_dir), file_type="session directory")
+        raise SolokitFileNotFoundError(file_path=str(session_dir), file_type="session directory")
 
     curator = LearningsCurator(project_root)
 

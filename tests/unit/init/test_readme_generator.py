@@ -124,7 +124,7 @@ class TestGenerateReadme:
                 content = readme_path.read_text()
                 assert "my-awesome-project" in content
 
-    def test_readme_includes_sdd_commands(self, tmp_path, mock_template_registry):
+    def test_readme_includes_solokit_commands(self, tmp_path, mock_template_registry):
         """Test that README includes Solokit workflow commands."""
         with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]

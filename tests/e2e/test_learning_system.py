@@ -23,7 +23,7 @@ import pytest
 
 
 @pytest.fixture
-def sdd_project_with_learnings():
+def solokit_project_with_learnings():
     """Create a temp Solokit project with some learnings for testing.
 
     Returns:
@@ -135,7 +135,7 @@ def sdd_project_with_learnings():
 class TestLearningCapture:
     """Tests for capturing learnings with various fields."""
 
-    def test_capture_learning_with_all_fields(self, sdd_project_with_learnings):
+    def test_capture_learning_with_all_fields(self, solokit_project_with_learnings):
         """Test capturing a learning with all fields populated."""
         # Arrange & Act
         result = subprocess.run(
@@ -153,7 +153,7 @@ class TestLearningCapture:
                 "--context",
                 "Test context",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             capture_output=True,
             text=True,
         )
@@ -162,7 +162,7 @@ class TestLearningCapture:
         assert result.returncode == 0, f"Learning capture failed: {result.stderr}"
 
         # Verify in learnings.json
-        learnings_file = sdd_project_with_learnings / ".session/tracking/learnings.json"
+        learnings_file = solokit_project_with_learnings / ".session/tracking/learnings.json"
         data = json.loads(learnings_file.read_text())
 
         # Check that learning was saved
@@ -170,7 +170,7 @@ class TestLearningCapture:
         assert "best_practices" in data["categories"]
         assert len(data["categories"]["best_practices"]) > 0
 
-    def test_capture_learning_minimal_fields(self, sdd_project_with_learnings):
+    def test_capture_learning_minimal_fields(self, solokit_project_with_learnings):
         """Test capturing a learning with only required fields."""
         # Arrange & Act
         result = subprocess.run(
@@ -182,7 +182,7 @@ class TestLearningCapture:
                 "--category",
                 "gotchas",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             capture_output=True,
             text=True,
         )
@@ -200,7 +200,7 @@ class TestLearningDisplay:
     """Tests for showing and filtering learnings."""
 
     @pytest.fixture
-    def project_with_multiple_learnings(self, sdd_project_with_learnings):
+    def project_with_multiple_learnings(self, solokit_project_with_learnings):
         """Add multiple learnings for filtering tests."""
         # Add learnings
         subprocess.run(
@@ -214,7 +214,7 @@ class TestLearningDisplay:
                 "--tags",
                 "testing",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
@@ -229,17 +229,17 @@ class TestLearningDisplay:
                 "--tags",
                 "database",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
         subprocess.run(
             ["sk", "learn", "--content", "Learning 3", "--category", "architecture_patterns"],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
-        return sdd_project_with_learnings
+        return solokit_project_with_learnings
 
     def test_show_all_learnings(self, project_with_multiple_learnings):
         """Test displaying all learnings without filters."""
@@ -291,7 +291,7 @@ class TestLearningSearch:
     """Tests for searching learnings by keyword."""
 
     @pytest.fixture
-    def project_with_searchable_learnings(self, sdd_project_with_learnings):
+    def project_with_searchable_learnings(self, solokit_project_with_learnings):
         """Add learnings with searchable content."""
         subprocess.run(
             [
@@ -302,7 +302,7 @@ class TestLearningSearch:
                 "--category",
                 "gotchas",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
@@ -315,11 +315,11 @@ class TestLearningSearch:
                 "--category",
                 "best_practices",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
-        return sdd_project_with_learnings
+        return solokit_project_with_learnings
 
     def test_search_learnings_by_keyword(self, project_with_searchable_learnings):
         """Test searching learnings by keyword."""
@@ -346,7 +346,7 @@ class TestLearningCuration:
     """Tests for learning curation and duplicate detection."""
 
     @pytest.fixture
-    def project_with_similar_learnings(self, sdd_project_with_learnings):
+    def project_with_similar_learnings(self, solokit_project_with_learnings):
         """Add similar learnings for duplicate detection."""
         subprocess.run(
             [
@@ -357,7 +357,7 @@ class TestLearningCuration:
                 "--category",
                 "best_practices",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
@@ -370,11 +370,11 @@ class TestLearningCuration:
                 "--category",
                 "best_practices",
             ],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             check=True,
             capture_output=True,
         )
-        return sdd_project_with_learnings
+        return solokit_project_with_learnings
 
     def test_curation_dry_run(self, project_with_similar_learnings):
         """Test curation dry-run mode doesn't save changes."""
@@ -431,7 +431,7 @@ class TestLearningCuration:
 class TestAutoCategorization:
     """Tests for learning categorization."""
 
-    def test_all_six_categories_work(self, sdd_project_with_learnings):
+    def test_all_six_categories_work(self, solokit_project_with_learnings):
         """Test that all 6 learning categories can be used."""
         # Arrange
         categories = [
@@ -454,7 +454,7 @@ class TestAutoCategorization:
                     "--category",
                     category,
                 ],
-                cwd=sdd_project_with_learnings,
+                cwd=solokit_project_with_learnings,
                 capture_output=True,
                 text=True,
             )
@@ -462,7 +462,7 @@ class TestAutoCategorization:
             assert result.returncode == 0, f"Failed to add learning for category: {category}"
 
         # Verify all categories in learnings.json
-        learnings_file = sdd_project_with_learnings / ".session/tracking/learnings.json"
+        learnings_file = solokit_project_with_learnings / ".session/tracking/learnings.json"
         data = json.loads(learnings_file.read_text())
 
         for category in categories:
@@ -477,14 +477,14 @@ class TestAutoCategorization:
 class TestLearningEdgeCases:
     """Tests for edge cases in learning management."""
 
-    def test_empty_learnings_operations(self, sdd_project_with_learnings):
+    def test_empty_learnings_operations(self, solokit_project_with_learnings):
         """Test operations on empty learnings file."""
         # Arrange - Already empty from fixture
 
         # Act & Assert - Show learnings
         result = subprocess.run(
             ["sk", "learn-show"],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             capture_output=True,
             text=True,
         )
@@ -493,7 +493,7 @@ class TestLearningEdgeCases:
         # Act & Assert - Search learnings
         result = subprocess.run(
             ["sk", "learn-search", "test"],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             capture_output=True,
             text=True,
         )
@@ -502,7 +502,7 @@ class TestLearningEdgeCases:
         # Act & Assert - Curate learnings
         result = subprocess.run(
             ["sk", "learn-curate"],
-            cwd=sdd_project_with_learnings,
+            cwd=solokit_project_with_learnings,
             capture_output=True,
             text=True,
         )

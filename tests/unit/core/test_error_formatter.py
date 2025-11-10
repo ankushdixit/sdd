@@ -23,8 +23,8 @@ from solokit.core.exceptions import (
 class TestErrorFormatter:
     """Test ErrorFormatter class"""
 
-    def test_format_sdd_error_basic(self):
-        """Test formatting basic SDDError"""
+    def test_format_solokit_error_basic(self):
+        """Test formatting basic SolokitError"""
         error = WorkItemNotFoundError("my_feature")
         formatted = ErrorFormatter.format_error(error, verbose=False)
 
@@ -32,7 +32,7 @@ class TestErrorFormatter:
         assert "my_feature" in formatted
         assert "sk work-list" in formatted  # Remediation
 
-    def test_format_sdd_error_verbose(self):
+    def test_format_solokit_error_verbose(self):
         """Test verbose formatting includes context and error code"""
         error = ValidationError(
             message="Test error",
@@ -126,8 +126,8 @@ class TestErrorFormatter:
         assert "my_feature" in result
         assert "🔍" in result
 
-    def test_get_exit_code_sdd_error(self):
-        """Test exit code extraction from SDDError"""
+    def test_get_exit_code_solokit_error(self):
+        """Test exit code extraction from SolokitError"""
         validation_error = ValidationError("test")
         assert ErrorFormatter.get_exit_code(validation_error) == 2
 

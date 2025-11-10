@@ -14,7 +14,7 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
         logger.warning("jsonschema not installed, skipping validation")
         # Still try to load and return config
         if not config_path.exists():
-            raise SDDFileNotFoundError(str(config_path), file_type="config")
+            raise SolokitFileNotFoundError(str(config_path), file_type="config")
         try:
             with open(config_path) as f:
                 config: dict[str, Any] = json.load(f)
@@ -61,7 +61,7 @@ def validate_config(config_path: Path, schema_path: Path) -> dict[str, Any]:
 
     # Load config
     if not config_path.exists():
-        raise SDDFileNotFoundError(str(config_path), file_type="config")
+        raise SolokitFileNotFoundError(str(config_path), file_type="config")
 
     try:
         with open(config_path) as f:
@@ -154,7 +154,7 @@ def main() -> None:
     """
     import sys
 
-    from solokit.core.exceptions import SDDError
+    from solokit.core.exceptions import SolokitError
     from solokit.core.output import get_output
 
     output = get_output()
@@ -185,7 +185,7 @@ def main() -> None:
         validate_config(config_path, schema_path)
         output.success("Configuration is valid!")
         sys.exit(0)
-    except SDDError as e:
+    except SolokitError as e:
         output.info("✗ Configuration validation failed!\n")
         output.info(f"Error: {e.message}")
         if e.context:

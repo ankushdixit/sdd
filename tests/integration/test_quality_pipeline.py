@@ -374,9 +374,9 @@ class TestIntegrationTestExecution:
         work_item = {"id": "INTEG-001", "type": "integration_test"}
 
         # Act & Assert
-        from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+        from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 
         with pytest.raises(
-            SDDFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"
+            SolokitFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"
         ):
             gates.run_integration_tests(work_item)

@@ -15,7 +15,7 @@ from solokit.core.exceptions import (
     SystemError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -240,11 +240,11 @@ def backup_file(file_path: Path) -> Path:
         Path to backup file
 
     Raises:
-        SDDFileNotFoundError: If source file doesn't exist
+        SolokitFileNotFoundError: If source file doesn't exist
         FileOperationError: If backup operation fails
     """
     if not file_path.exists():
-        raise SDDFileNotFoundError(file_path=str(file_path), file_type="backup source")
+        raise SolokitFileNotFoundError(file_path=str(file_path), file_type="backup source")
 
     try:
         backup_path = file_path.with_suffix(f"{file_path.suffix}.backup")
@@ -269,11 +269,11 @@ def read_file(file_path: Path) -> str:
         File contents as string
 
     Raises:
-        SDDFileNotFoundError: If file doesn't exist
+        SolokitFileNotFoundError: If file doesn't exist
         FileOperationError: If read operation fails
     """
     if not file_path.exists():
-        raise SDDFileNotFoundError(file_path=str(file_path), file_type="text file")
+        raise SolokitFileNotFoundError(file_path=str(file_path), file_type="text file")
 
     try:
         with open(file_path) as f:

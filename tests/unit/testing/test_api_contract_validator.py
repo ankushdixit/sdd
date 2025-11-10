@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.exceptions import (
     InvalidOpenAPISpecError,
@@ -78,7 +78,7 @@ class TestContractFileValidation:
         validator = APIContractValidator(work_item)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             validator._validate_contract_file("/nonexistent/contract.yaml")
 
         assert "/nonexistent/contract.yaml" in str(exc_info.value.context.get("file_path", ""))

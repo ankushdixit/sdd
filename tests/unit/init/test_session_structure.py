@@ -74,14 +74,14 @@ class TestInitializeTrackingFiles:
         # Mock __file__ to point to a fake location so template_dir points to our test templates
         import solokit.init.session_structure as session_structure_module
 
-        # Create a fake module structure: fake_sdd/init/session_structure.py
-        # So Path(__file__).parent.parent / "templates" = fake_sdd/templates
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        # Create a fake module structure: fake_solokit/init/session_structure.py
+        # So Path(__file__).parent.parent / "templates" = fake_solokit/templates
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        # Copy template files to fake_sdd/templates
-        fake_templates = fake_sdd_dir / "templates"
+        # Copy template files to fake_solokit/templates
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         import shutil
@@ -90,7 +90,7 @@ class TestInitializeTrackingFiles:
             if item.is_file():
                 shutil.copy(item, fake_templates / item.name)
 
-        # Set __file__ to fake_sdd/init/session_structure.py
+        # Set __file__ to fake_solokit/init/session_structure.py
         fake_file = str(fake_init_dir / "session_structure.py")
 
         with patch.object(session_structure_module, "__file__", fake_file):
@@ -107,13 +107,13 @@ class TestInitializeTrackingFiles:
 
         import solokit.init.session_structure as session_structure_module
 
-        # Create a fake module structure: fake_sdd/init/session_structure.py
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        # Create a fake module structure: fake_solokit/init/session_structure.py
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        # Copy template files to fake_sdd/templates
-        fake_templates = fake_sdd_dir / "templates"
+        # Copy template files to fake_solokit/templates
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         for item in tracking_template_files.iterdir():
@@ -137,13 +137,13 @@ class TestInitializeTrackingFiles:
 
         import solokit.init.session_structure as session_structure_module
 
-        # Create a fake module structure: fake_sdd/init/session_structure.py
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        # Create a fake module structure: fake_solokit/init/session_structure.py
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        # Copy template files to fake_sdd/templates
-        fake_templates = fake_sdd_dir / "templates"
+        # Copy template files to fake_solokit/templates
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         for item in tracking_template_files.iterdir():
@@ -174,11 +174,11 @@ class TestInitializeTrackingFiles:
             (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
             # Set up fake module structure
-            fake_sdd_dir = tmp_path / "fake_sdd"
-            fake_init_dir = fake_sdd_dir / "init"
+            fake_solokit_dir = tmp_path / "fake_solokit"
+            fake_init_dir = fake_solokit_dir / "init"
             fake_init_dir.mkdir(parents=True)
 
-            fake_templates = fake_sdd_dir / "templates"
+            fake_templates = fake_solokit_dir / "templates"
             fake_templates.mkdir()
 
             for item in tracking_template_files.iterdir():
@@ -204,11 +204,11 @@ class TestInitializeTrackingFiles:
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
         # Set up fake module structure
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        fake_templates = fake_sdd_dir / "templates"
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         for item in tracking_template_files.iterdir():
@@ -234,11 +234,11 @@ class TestInitializeTrackingFiles:
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
         # Set up fake module structure
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        fake_templates = fake_sdd_dir / "templates"
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         for item in tracking_template_files.iterdir():
@@ -264,11 +264,11 @@ class TestInitializeTrackingFiles:
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
         # Set up fake module structure
-        fake_sdd_dir = tmp_path / "fake_sdd"
-        fake_init_dir = fake_sdd_dir / "init"
+        fake_solokit_dir = tmp_path / "fake_solokit"
+        fake_init_dir = fake_solokit_dir / "init"
         fake_init_dir.mkdir(parents=True)
 
-        fake_templates = fake_sdd_dir / "templates"
+        fake_templates = fake_solokit_dir / "templates"
         fake_templates.mkdir()
 
         for item in tracking_template_files.iterdir():

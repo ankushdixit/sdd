@@ -24,7 +24,7 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 
 
@@ -47,7 +47,7 @@ def minimal_schema(tmp_path):
 
 
 @pytest.fixture
-def full_sdd_schema(tmp_path):
+def full_solokit_schema(tmp_path):
     """Create full Solokit config schema for comprehensive testing.
 
     Returns:
@@ -138,7 +138,7 @@ class TestValidateConfig:
         config_path = tmp_path / "nonexistent.json"
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             validate_config(config_path, minimal_schema)
 
         assert str(config_path) in exc_info.value.message
@@ -285,10 +285,12 @@ class TestLoadAndValidateConfig:
         assert result == config
 
 
-class TestSDDConfigValidation:
+class TestSolokitConfigValidation:
     """Test suite for Solokit-specific configuration validation."""
 
-    def test_sdd_config_accepts_complete_valid_configuration(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_accepts_complete_valid_configuration(
+        self, tmp_path, full_solokit_schema
+    ):
         """Test that full Solokit configuration with all valid fields passes validation."""
         # Arrange
         config = {
@@ -308,12 +310,12 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        result = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_solokit_schema)
 
         # Assert
         assert result == config
 
-    def test_sdd_config_rejects_invalid_severity_value(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_rejects_invalid_severity_value(self, tmp_path, full_solokit_schema):
         """Test that Solokit config raises ConfigValidationError for invalid security severity value."""
         # Arrange
         config = {
@@ -324,11 +326,11 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "severity" in str(exc_info.value.context)
 
-    def test_sdd_config_rejects_out_of_range_threshold(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_rejects_out_of_range_threshold(self, tmp_path, full_solokit_schema):
         """Test that Solokit config raises ConfigValidationError for threshold outside valid range."""
         # Arrange
         config = {
@@ -342,13 +344,13 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "similarity_threshold" in str(exc_info.value.context) or "maximum" in str(
             exc_info.value.context
         )
 
-    def test_sdd_config_rejects_invalid_timeout_value(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_rejects_invalid_timeout_value(self, tmp_path, full_solokit_schema):
         """Test that Solokit config raises ConfigValidationError for timeout value less than minimum."""
         # Arrange
         config = {
@@ -359,11 +361,11 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "timeout" in str(exc_info.value.context) or "minimum" in str(exc_info.value.context)
 
-    def test_sdd_config_rejects_missing_required_field(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_rejects_missing_required_field(self, tmp_path, full_solokit_schema):
         """Test that Solokit config raises ConfigValidationError for quality gate missing required field."""
         # Arrange
         config = {
@@ -380,11 +382,11 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "required" in str(exc_info.value.context)
 
-    def test_sdd_config_allows_additional_properties(self, tmp_path, full_sdd_schema):
+    def test_solokit_config_allows_additional_properties(self, tmp_path, full_solokit_schema):
         """Test that Solokit config schema allows additional custom properties."""
         # Arrange
         config = {
@@ -395,7 +397,7 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        result = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_solokit_schema)
 
         # Assert
         assert result == config  # Should be valid (additionalProperties: true in schema)

@@ -21,8 +21,8 @@ import subprocess
 import time
 from typing import Any, Callable, Literal, TypeVar
 
-from solokit.core.exceptions import ErrorCode, GitError, SDDError, SubprocessError, SystemError
-from solokit.core.exceptions import TimeoutError as SDDTimeoutError
+from solokit.core.exceptions import ErrorCode, GitError, SolokitError, SubprocessError, SystemError
+from solokit.core.exceptions import TimeoutError as SolokitTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def with_timeout(
                 import signal
 
                 def timeout_handler(signum: int, frame: Any) -> None:
-                    raise SDDTimeoutError(operation=operation_name, timeout_seconds=seconds)
+                    raise SolokitTimeoutError(operation=operation_name, timeout_seconds=seconds)
 
                 # Set up timeout signal (Unix only)
                 old_handler = signal.signal(signal.SIGALRM, timeout_handler)
@@ -153,7 +153,7 @@ def log_errors(
     Example:
         >>> @log_errors()
         ... def process_work_item(item_id: str):
-        ...     # Business logic that may raise SDDError
+        ...     # Business logic that may raise SolokitError
         ...     pass
     """
 
@@ -164,7 +164,7 @@ def log_errors(
 
             try:
                 return func(*args, **kwargs)
-            except SDDError as e:
+            except SolokitError as e:
                 # Log structured error data
                 log.error(
                     f"{func.__name__} failed: {e.message}",
@@ -191,7 +191,7 @@ def log_errors(
 
 def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
     """
-    Decorator to convert subprocess exceptions to SDDError.
+    Decorator to convert subprocess exceptions to SolokitError.
 
     Converts FileNotFoundError and subprocess exceptions to structured errors.
 
@@ -207,7 +207,7 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
         try:
             return func(*args, **kwargs)
         except subprocess.TimeoutExpired as e:
-            raise SDDTimeoutError(
+            raise SolokitTimeoutError(
                 operation=f"subprocess: {' '.join(e.cmd) if isinstance(e.cmd, list) else e.cmd}",
                 timeout_seconds=int(e.timeout),
                 context={"stdout": e.stdout, "stderr": e.stderr},
@@ -234,7 +234,7 @@ def convert_subprocess_errors(func: Callable[..., T]) -> Callable[..., T]:
 
 def convert_file_errors(func: Callable[..., T]) -> Callable[..., T]:
     """
-    Decorator to convert file operation exceptions to SDDError.
+    Decorator to convert file operation exceptions to SolokitError.
 
     Converts IOError, OSError, FileNotFoundError, etc. to structured errors.
 
@@ -249,14 +249,14 @@ def convert_file_errors(func: Callable[..., T]) -> Callable[..., T]:
     def wrapper(*args: Any, **kwargs: Any) -> T:
         import builtins
 
-        from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+        from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 
         try:
             return func(*args, **kwargs)
         except builtins.FileNotFoundError as e:
             # Catch FileNotFoundError first (it's a subclass of OSError)
             file_path = getattr(e, "filename", "unknown")
-            raise SDDFileNotFoundError(file_path=file_path) from e
+            raise SolokitFileNotFoundError(file_path=file_path) from e
         except OSError as e:
             # Extract file path from exception if available
             file_path = getattr(e, "filename", "unknown")
@@ -298,8 +298,8 @@ class ErrorContext:
             except Exception as e:  # noqa: BLE001 - Cleanup must not fail the main operation
                 logger.error(f"Cleanup failed for {self.operation}: {e}")
 
-        # Add context to SDDError if present
-        if exc_type and issubclass(exc_type, SDDError):
+        # Add context to SolokitError if present
+        if exc_type and issubclass(exc_type, SolokitError):
             exc_val.context.update(self.context_data)
 
         # Don't suppress exception

@@ -59,13 +59,13 @@ class TestDocumentationUpdates:
     def test_session_driven_development_updated_with_spec_architecture(self):
         """Test that docs/architecture/solokit-methodology.md includes spec architecture section."""
         # Arrange
-        sdd_doc_path = project_root / "docs" / "architecture" / "solokit-methodology.md"
+        solokit_doc_path = project_root / "docs" / "architecture" / "solokit-methodology.md"
 
         # Assert file exists
-        assert sdd_doc_path.exists(), "docs/architecture/solokit-methodology.md should exist"
+        assert solokit_doc_path.exists(), "docs/architecture/solokit-methodology.md should exist"
 
         # Act
-        content = sdd_doc_path.read_text(encoding="utf-8")
+        content = solokit_doc_path.read_text(encoding="utf-8")
 
         # Assert - check for spec architecture section
         required_sections = [

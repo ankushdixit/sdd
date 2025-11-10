@@ -60,7 +60,7 @@ def mock_template_dir(tmp_path):
     tests_dir.mkdir()
     (tests_dir / "solokit-setup.test.ts").write_text("test('setup', () => {});")
     (tests_dir / "solokit-setup.test.js").write_text("test('setup', () => {});")
-    (tests_dir / "test_sdd_setup.py").write_text("def test_setup(): pass")
+    (tests_dir / "test_solokit_setup.py").write_text("def test_setup(): pass")
 
     # Create config templates
     (template_dir / "package.json.template").write_text('{"name": "{project_name}"}')

@@ -112,7 +112,7 @@ class SessionBriefing:
             Validation warning string or None if valid
         """
         try:
-            from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+            from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
             from solokit.core.exceptions import SpecValidationError
             from solokit.work_items.spec_validator import (
                 format_validation_report,
@@ -126,7 +126,7 @@ class SessionBriefing:
             except SpecValidationError as e:
                 # Spec has validation errors
                 return format_validation_report(item_id, work_item_type, e)
-            except (SDDFileNotFoundError, Exception):
+            except (SolokitFileNotFoundError, Exception):
                 # Spec file doesn't exist or other error - this is not critical for briefing
                 # Just return None and let the briefing proceed
                 return None

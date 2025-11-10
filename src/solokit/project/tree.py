@@ -307,7 +307,7 @@ def main() -> None:
     """
     import argparse
 
-    from solokit.core.exceptions import SDDError
+    from solokit.core.exceptions import SolokitError
     from solokit.core.output import get_output
 
     output = get_output()
@@ -355,7 +355,7 @@ def main() -> None:
 
             output.info(f"✓ Saved to: {generator.tree_file}")
 
-    except SDDError as e:
+    except SolokitError as e:
         # Handle structured Solokit errors with user-friendly output
         output.error(f"\nError: {e.message}")
         if e.remediation:

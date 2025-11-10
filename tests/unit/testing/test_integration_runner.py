@@ -16,10 +16,10 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.exceptions import (
-    TimeoutError as SDDTimeoutError,
+    TimeoutError as SolokitTimeoutError,
 )
 from solokit.testing.integration_runner import IntegrationTestRunner
 
@@ -76,12 +76,12 @@ class TestIntegrationTestRunnerInit:
 
         with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             # Use the Solokit FileNotFoundError exception
-            mock_parser.parse_spec_file.side_effect = SDDFileNotFoundError(
+            mock_parser.parse_spec_file.side_effect = SolokitFileNotFoundError(
                 file_path=".session/specs/INTEG-002.md", file_type="spec file"
             )
 
             # Act & Assert - FileNotFoundError is re-raised directly, not wrapped
-            with pytest.raises(SDDFileNotFoundError):
+            with pytest.raises(SolokitFileNotFoundError):
                 IntegrationTestRunner(work_item)
 
     def test_init_with_invalid_spec_file_raises_error(self):
@@ -572,7 +572,7 @@ class TestEnvironmentSetup:
             runner = IntegrationTestRunner(work_item)
 
             # Act & Assert
-            with pytest.raises(SDDFileNotFoundError) as exc_info:
+            with pytest.raises(SolokitFileNotFoundError) as exc_info:
                 runner.setup_environment()
 
             assert "docker-compose.integration.yml" in str(exc_info.value)
@@ -620,7 +620,7 @@ class TestEnvironmentSetup:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner.setup_environment()
 
                 assert exc_info.value.context["timeout_seconds"] == 180
@@ -670,13 +670,13 @@ class TestEnvironmentSetup:
                 with patch.object(
                     runner,
                     "_wait_for_service",
-                    side_effect=SDDTimeoutError(
+                    side_effect=SolokitTimeoutError(
                         operation="waiting for service 'postgresql' to become healthy",
                         timeout_seconds=60,
                     ),
                 ):
                     # Act & Assert
-                    with pytest.raises(SDDTimeoutError) as exc_info:
+                    with pytest.raises(SolokitTimeoutError) as exc_info:
                         runner.setup_environment()
 
                     assert "postgresql" in str(exc_info.value)
@@ -782,7 +782,7 @@ class TestWaitForService:
 
                 with patch("time.sleep"):  # Speed up test
                     # Act & Assert
-                    with pytest.raises(SDDTimeoutError) as exc_info:
+                    with pytest.raises(SolokitTimeoutError) as exc_info:
                         runner._wait_for_service("test-service", timeout=1)
 
                     assert "test-service" in str(exc_info.value)
@@ -1036,7 +1036,7 @@ class TestRunPytest:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner._run_pytest()
 
                 assert exc_info.value.context["timeout_seconds"] == 600
@@ -1137,7 +1137,7 @@ class TestRunJest:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner._run_jest()
 
                 assert exc_info.value.context["timeout_seconds"] == 600
@@ -1219,7 +1219,7 @@ class TestTeardownEnvironment:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner.teardown_environment()
 
                 assert exc_info.value.context["timeout_seconds"] == 60

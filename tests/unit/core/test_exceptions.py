@@ -12,9 +12,9 @@ from solokit.core.exceptions import (
     GitError,
     NotAGitRepoError,
     QualityTestFailedError,
-    SDDError,
     SessionAlreadyActiveError,
     SessionNotFoundError,
+    SolokitError,
     SpecValidationError,
     SubprocessError,
     SystemError,
@@ -27,12 +27,12 @@ from solokit.core.exceptions import (
 )
 
 
-class TestSDDError:
-    """Test base SDDError class"""
+class TestSolokitError:
+    """Test base SolokitError class"""
 
     def test_basic_error_creation(self):
-        """Test creating a basic SDDError"""
-        error = SDDError(
+        """Test creating a basic SolokitError"""
+        error = SolokitError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
@@ -47,7 +47,7 @@ class TestSDDError:
 
     def test_error_with_context(self):
         """Test error with context data"""
-        error = SDDError(
+        error = SolokitError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
@@ -59,7 +59,7 @@ class TestSDDError:
 
     def test_error_with_remediation(self):
         """Test error with remediation"""
-        error = SDDError(
+        error = SolokitError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
@@ -72,7 +72,7 @@ class TestSDDError:
     def test_error_with_cause(self):
         """Test error with cause chain"""
         original = ValueError("Original error")
-        error = SDDError(
+        error = SolokitError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,
@@ -83,7 +83,7 @@ class TestSDDError:
 
     def test_error_to_dict(self):
         """Test converting error to dictionary"""
-        error = SDDError(
+        error = SolokitError(
             message="Test error",
             code=ErrorCode.FILE_OPERATION_FAILED,
             category=ErrorCategory.SYSTEM,

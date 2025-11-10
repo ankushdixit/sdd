@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Union, cast
 
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.exceptions import SpecValidationError
 from solokit.core.logging_config import get_logger
@@ -103,7 +103,7 @@ class SpecCompletenessChecker(QualityChecker):
                 },
                 execution_time=execution_time,
             )
-        except SDDFileNotFoundError as e:
+        except SolokitFileNotFoundError as e:
             execution_time = time.time() - start_time
             return CheckResult(
                 checker_name=self.name(),

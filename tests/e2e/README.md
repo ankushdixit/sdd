@@ -122,7 +122,7 @@ E2E tests use fixtures to create isolated test environments:
 
 ```python
 @pytest.fixture
-def temp_sdd_project():
+def temp_solokit_project():
     """Create a temporary Solokit project with git and basic files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         # Initialize git repository
@@ -136,13 +136,13 @@ def temp_sdd_project():
 Tests follow the Arrange-Act-Assert pattern:
 
 ```python
-def test_create_work_item(temp_sdd_project):
+def test_create_work_item(temp_solokit_project):
     # Arrange - project already initialized by fixture
 
     # Act - run actual CLI command
     result = subprocess.run(
         ["solokit", "work-new", "--type", "feature", "--title", "Test"],
-        cwd=temp_sdd_project,
+        cwd=temp_solokit_project,
         capture_output=True
     )
 

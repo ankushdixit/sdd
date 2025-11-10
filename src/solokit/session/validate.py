@@ -27,7 +27,7 @@ from solokit.core.exceptions import (
     ValidationError,
 )
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.logging_config import get_logger
 from solokit.core.output import get_output
@@ -222,7 +222,7 @@ class SessionValidator:
             with open(work_items_file) as f:
                 work_items_data = json.load(f)
         except FileNotFoundError as e:
-            raise SDDFileNotFoundError(
+            raise SolokitFileNotFoundError(
                 file_path=str(work_items_file),
                 file_type="work items",
             ) from e
@@ -242,7 +242,7 @@ class SessionValidator:
         spec_file_path = work_item.get("spec_file", f".session/specs/{work_id}.md")
         spec_file = self.project_root / spec_file_path
         if not spec_file.exists():
-            raise SDDFileNotFoundError(
+            raise SolokitFileNotFoundError(
                 file_path=str(spec_file),
                 file_type="spec",
             )
@@ -342,7 +342,7 @@ class SessionValidator:
             dict: Validation results with 'ready' boolean and 'checks' dict
 
         Raises:
-            SDDError: Any Solokit exception (GitError, ValidationError, FileOperationError, etc.)
+            SolokitError: Any Solokit exception (GitError, ValidationError, FileOperationError, etc.)
                      that occurs during validation will be raised to the caller
         """
         logger.info("Starting session validation (auto_fix=%s)", auto_fix)
@@ -429,7 +429,7 @@ def main() -> int:
     except (
         SessionNotFoundError,
         ValidationError,
-        SDDFileNotFoundError,
+        SolokitFileNotFoundError,
         FileOperationError,
         SpecValidationError,
         NotAGitRepoError,

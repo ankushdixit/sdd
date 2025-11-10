@@ -15,7 +15,7 @@ import pytest
 
 from solokit.core.command_runner import CommandResult
 from solokit.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 from solokit.core.exceptions import (
     GitError,
@@ -466,7 +466,7 @@ class TestValidateWorkItemCriteria:
             validator = SessionValidator(project_root=project_root)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             validator.validate_work_item_criteria()
 
         # Verify exception

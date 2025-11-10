@@ -136,7 +136,7 @@ class ErrorCode(Enum):
     LOAD_TEST_FAILED = 13004
 
 
-class SDDError(Exception):
+class SolokitError(Exception):
     """
     Base exception for all Solokit errors.
 
@@ -150,7 +150,7 @@ class SDDError(Exception):
         exit_code: Suggested exit code for CLI
 
     Example:
-        >>> error = SDDError(
+        >>> error = SolokitError(
         ...     message="Something went wrong",
         ...     code=ErrorCode.FILE_OPERATION_FAILED,
         ...     category=ErrorCategory.SYSTEM,
@@ -220,7 +220,7 @@ class SDDError(Exception):
 # ============================================================================
 
 
-class ValidationError(SDDError):
+class ValidationError(SolokitError):
     """
     Raised when validation fails.
 
@@ -283,7 +283,7 @@ class SpecValidationError(ValidationError):
 # ============================================================================
 
 
-class NotFoundError(SDDError):
+class NotFoundError(SolokitError):
     """
     Raised when a resource is not found.
 
@@ -382,7 +382,7 @@ class SessionNotFoundError(NotFoundError):
 # ============================================================================
 
 
-class ConfigurationError(SDDError):
+class ConfigurationError(SolokitError):
     """
     Raised when configuration is invalid.
 
@@ -443,7 +443,7 @@ class ConfigValidationError(ConfigurationError):
 # ============================================================================
 
 
-class GitError(SDDError):
+class GitError(SolokitError):
     """
     Raised for git-related errors.
 
@@ -533,7 +533,7 @@ class BranchNotFoundError(GitError):
 # ============================================================================
 
 
-class SystemError(SDDError):
+class SystemError(SolokitError):
     """
     Raised for system-level errors.
 
@@ -661,7 +661,7 @@ class CommandExecutionError(SystemError):
 # ============================================================================
 
 
-class DependencyError(SDDError):
+class DependencyError(SolokitError):
     """
     Raised for dependency-related errors.
 
@@ -731,7 +731,7 @@ class UnmetDependencyError(DependencyError):
 # ============================================================================
 
 
-class AlreadyExistsError(SDDError):
+class AlreadyExistsError(SolokitError):
     """
     Raised when resource already exists.
 
@@ -800,7 +800,7 @@ class WorkItemAlreadyExistsError(AlreadyExistsError):
 # ============================================================================
 
 
-class QualityGateError(SDDError):
+class QualityGateError(SolokitError):
     """
     Raised when quality gate fails.
 
@@ -945,7 +945,7 @@ class LearningNotFoundError(NotFoundError):
 # ============================================================================
 
 
-class DeploymentError(SDDError):
+class DeploymentError(SolokitError):
     """
     Raised when deployment operations fail.
 
@@ -1111,7 +1111,7 @@ class DeploymentStepError(DeploymentError):
 # ============================================================================
 
 
-class IntegrationTestError(SDDError):
+class IntegrationTestError(SolokitError):
     """
     Base exception for integration test failures.
 
@@ -1368,7 +1368,7 @@ class InvalidOpenAPISpecError(APIValidationError):
 # ============================================================================
 
 
-class PerformanceTestError(SDDError):
+class PerformanceTestError(SolokitError):
     """
     Base class for performance testing errors.
 
@@ -1500,7 +1500,7 @@ class LoadTestFailedError(PerformanceTestError):
 # ============================================================================
 
 
-class ProjectInitializationError(SDDError):
+class ProjectInitializationError(SolokitError):
     """
     Base exception for project initialization errors.
 

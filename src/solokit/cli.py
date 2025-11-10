@@ -26,7 +26,7 @@ from solokit.core.error_formatter import ErrorFormatter
 # Import error handling infrastructure
 from solokit.core.exceptions import (
     ErrorCode,
-    SDDError,
+    SolokitError,
     SystemError,
 )
 
@@ -275,8 +275,8 @@ def route_command(command_name: str, args: list[str]) -> int:
             remediation="This appears to be an internal error - please report it",
             cause=e,
         ) from e
-    except SDDError:
-        # Re-raise SDDError exceptions to be caught by main()
+    except SolokitError:
+        # Re-raise SolokitError exceptions to be caught by main()
         raise
     except Exception as e:
         # Wrap unexpected exceptions
@@ -354,7 +354,7 @@ def main() -> int:
         exit_code = route_command(command, command_args)
         return exit_code
 
-    except SDDError as e:
+    except SolokitError as e:
         # Structured Solokit errors with proper formatting
         ErrorFormatter.print_error(e, verbose=args.verbose if "args" in locals() else False)
         return e.exit_code
