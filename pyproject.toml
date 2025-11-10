@@ -68,10 +68,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 solokit = [
     "templates/**/*",
-    "templates/**/.gitignore",
-    "templates/**/.eslintrc.json",
-    "templates/**/.prettierrc.json",
-    "templates/.claude/commands/*.md"
+    "templates/**/.*",
+    "templates/**/.*/**/*",  # Include all files inside dot-directories
 ]
 
 [tool.setuptools.exclude-package-data]

@@ -79,18 +79,26 @@ class StackGenerator:
 
     def _detect_language_version(self, language: str) -> str:
         """Detect language version from environment."""
+        import shutil
+
         from solokit.core.command_runner import CommandRunner
         from solokit.core.constants import STACK_DETECTION_TIMEOUT
         from solokit.core.error_handlers import safe_execute
 
         version_commands = {
-            "python": ["python", "--version"],
+            "python": ["python3", "--version"],  # macOS has python3, not python
             "node": ["node", "--version"],
             "rust": ["rustc", "--version"],
             "go": ["go", "version"],
         }
 
         if language in version_commands:
+            # For Python, try python3 first, fall back to python
+            if language == "python":
+                python_cmd = shutil.which("python3") or shutil.which("python")
+                if not python_cmd:
+                    return ""
+                version_commands["python"] = [python_cmd, "--version"]
 
             def detect_version() -> str:
                 runner = CommandRunner(default_timeout=STACK_DETECTION_TIMEOUT)
