@@ -731,8 +731,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | Terminal CLI Approach | Claude Code Plugin |
 |------------|-------------------|
-| Shell commands for session start | `/sdd:start` slash command |
-| Shell commands for session complete | `/sdd:end` slash command |
+| Shell commands for session start | `/sk:start` slash command |
+| Shell commands for session complete | `/sk:end` slash command |
 | Shell commands for work items | `/work-item` slash command |
 | CLI framework | Plugin command markdown files |
 | Standalone scripts | Plugin hooks in `.claude/hooks/` (if needed) |
@@ -793,8 +793,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Phase 1: Core Plugin (Week 1)
 1. Plugin manifest and structure
-2. `/sdd:start` command (basic briefing)
-3. `/sdd:end` command (basic summary)
+2. `/sk:start` command (basic briefing)
+3. `/sk:end` command (basic summary)
 4. `.session/` directory initialization
 5. Basic work_items.json management
 

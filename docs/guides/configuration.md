@@ -1,6 +1,6 @@
-# SDD Configuration
+# Solokit Configuration
 
-SDD uses JSON-based configuration stored in `.session/config.json`. The configuration is automatically validated against a JSON schema to catch errors early.
+Solokit uses JSON-based configuration stored in `.session/config.json`. The configuration is automatically validated against a JSON schema to catch errors early.
 
 ## Configuration Schema
 
@@ -240,11 +240,11 @@ Configuration is automatically validated when loaded. If validation fails:
 You can manually validate your configuration:
 
 ```bash
-# Validate using the SDD CLI
-sdd validate-config .session/config.json
+# Validate using the Solokit CLI
+sk validate-config .session/config.json
 
 # Or use Python module directly
-python3 -m sdd.config.validator .session/config.json
+python3 -m solokit.config.validator .session/config.json
 ```
 
 ### Common Validation Errors
@@ -281,7 +281,7 @@ Validation error at 'quality_gates -> test -> timeout': 0 is less than the minim
 
 ## Default Configuration
 
-If `.session/config.json` doesn't exist or validation fails, SDD uses these defaults:
+If `.session/config.json` doesn't exist or validation fails, Solokit uses these defaults:
 
 ```json
 {
@@ -329,7 +329,7 @@ If `.session/config.json` doesn't exist or validation fails, SDD uses these defa
 To modify configuration:
 
 1. Edit `.session/config.json` directly
-2. Validate using `sdd validate-config .session/config.json`
+2. Validate using `sk validate-config .session/config.json`
 3. Fix any validation errors
 4. Re-run your session commands
 
@@ -372,7 +372,7 @@ The complete JSON schema is available at `.session/config.schema.json`. The sche
 python3 -m json.tool .session/config.json
 
 # Validate against schema
-sdd validate-config .session/config.json
+sk validate-config .session/config.json
 ```
 
 ### jsonschema not installed
@@ -395,7 +395,7 @@ cp templates/config.schema.json path/to/your/project/.session/
 
 ## Related Documentation
 
-- [Session-Driven Development Methodology](./session-driven-development.md)
-- [Quality Gates](../../src/sdd/quality/gates.py)
+- [Solokit Methodology](./solokit-methodology.md)
+- [Quality Gates](../../src/solokit/quality/gates.py)
 - [Learning System](./learning-system.md)
 - [Writing Specs](./writing-specs.md)

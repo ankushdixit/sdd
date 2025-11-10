@@ -1,6 +1,6 @@
-# SDD Workflow Enhancements
+# Solokit Workflow Enhancements
 
-This document tracks identified workflow improvements to make SDD more user-friendly and automated.
+This document tracks identified workflow improvements to make Solokit more user-friendly and automated.
 
 ## Status Legend
 - 🔵 IDENTIFIED - Enhancement identified, not yet implemented
@@ -13,18 +13,18 @@ This document tracks identified workflow improvements to make SDD more user-frie
 
 All core workflow enhancements have been implemented:
 
-- **Enhancement #1**: Auto Git Initialization in `sdd init` → ✅ IMPLEMENTED
+- **Enhancement #1**: Auto Git Initialization in `sk init` → ✅ IMPLEMENTED
 - **Enhancement #2**: CHANGELOG Update Workflow → ✅ IMPLEMENTED
-- **Enhancement #3**: Pre-flight Commit Check in `/sdd:end` → ✅ IMPLEMENTED
+- **Enhancement #3**: Pre-flight Commit Check in `/sk:end` → ✅ IMPLEMENTED
 - **Enhancement #4**: Add OS-Specific Files to Initial .gitignore → ✅ IMPLEMENTED
-- **Enhancement #5**: Create Initial Commit on Main During sdd init → ✅ IMPLEMENTED
+- **Enhancement #5**: Create Initial Commit on Main During sk init → ✅ IMPLEMENTED
 - **Enhancement #6**: Work Item Completion Status Control → ✅ IMPLEMENTED (Session 11)
 - **Enhancement #7**: Phase 1 - Documentation Reorganization & Project Files → ✅ IMPLEMENTED (Session 8)
 - **Enhancement #8**: Phase 2 - Test Suite Reorganization → ✅ IMPLEMENTED (Session 9, 1,401 tests, 85% coverage)
 - **Enhancement #9**: Phase 3 - Complete Phase 5.9 (src/ Layout Transition) → ✅ IMPLEMENTED (Session 12)
 - **Enhancement #10**: Add Work Item Deletion Command → ✅ IMPLEMENTED (Session 13, PR #90)
 - **Enhancement #11**: Enhanced Session Briefings with Context Continuity → ✅ IMPLEMENTED (Session 14)
-- **Enhancement #12**: Change `/sdd:end` Default to Complete → ✅ IMPLEMENTED (Session 30)
+- **Enhancement #12**: Change `/sk:end` Default to Complete → ✅ IMPLEMENTED (Session 30)
 - **Enhancement #13**: Interactive UI Integration → ✅ IMPLEMENTED (Session 31)
 - **Enhancement #14**: Template-Based Project Initialization → ✅ IMPLEMENTED (Session 32)
 
@@ -64,8 +64,8 @@ To be researched and determined during implementation. May include:
 **Files Affected:**
 
 **Modified:**
-- `src/sdd/session/briefing.py` - Session briefing generation
-- `src/sdd/session/briefing/` - Briefing module components
+- `src/solokit/session/briefing.py` - Session briefing generation
+- `src/solokit/session/briefing/` - Briefing module components
 - `.claude/commands/start.md` - Start command documentation
 - Briefing templates and data structures
 
@@ -91,7 +91,7 @@ To be researched and determined during implementation. May include:
 
 **Problem:**
 
-Currently, security scans run at `/sdd:end`, but if they fail, code might already be committed to the branch. There's no enforcement mechanism to prevent merging insecure code to main. Critical security issues include:
+Currently, security scans run at `/sk:end`, but if they fail, code might already be committed to the branch. There's no enforcement mechanism to prevent merging insecure code to main. Critical security issues include:
 
 1. **Secret exposure**: API keys, passwords, tokens accidentally committed
 2. **Known vulnerabilities**: Dependencies with CVEs in production
@@ -101,7 +101,7 @@ Currently, security scans run at `/sdd:end`, but if they fail, code might alread
 
 **Current Workflow Gap:**
 ```
-Code written → /sdd:end → Security scan (may fail) → Commit to branch → Merge to main
+Code written → /sk:end → Security scan (may fail) → Commit to branch → Merge to main
                                                       ❌ No gate here
 ```
 
@@ -140,7 +140,7 @@ Implement **mandatory pre-merge security gates** that prevent merging to main if
 **Pre-merge hook (Git or CI/CD):**
 ```bash
 # .git/hooks/pre-push or CI workflow
-sdd security-scan --pre-merge
+solokit security-scan --pre-merge
 → Runs all security checks
 → Exits with code 1 if critical issues found
 → Blocks push/merge
@@ -149,7 +149,7 @@ sdd security-scan --pre-merge
 **Quality gate integration:**
 ```python
 # Note: This file will be created during implementation
-# src/sdd/quality/security_gates.py
+# src/solokit/quality/security_gates.py
 def run_pre_merge_security_gates():
     results = {
         "secret_scan": run_secret_scanning(),
@@ -164,17 +164,17 @@ def run_pre_merge_security_gates():
 **Files Affected:**
 
 **New:**
-- `src/sdd/security/secret_scanner.py` - Secret detection (will be created)
-- `src/sdd/security/sast_scanner.py` - Static analysis (will be created)
-- `src/sdd/security/dependency_scanner.py` - CVE checking (will be created)
-- `src/sdd/security/supply_chain_checker.py` - Package verification (will be created)
-- `src/sdd/security/license_checker.py` - License compliance (will be created)
-- `src/sdd/quality/security_gates.py` - Pre-merge gate orchestration (will be created)
+- `src/solokit/security/secret_scanner.py` - Secret detection (will be created)
+- `src/solokit/security/sast_scanner.py` - Static analysis (will be created)
+- `src/solokit/security/dependency_scanner.py` - CVE checking (will be created)
+- `src/solokit/security/supply_chain_checker.py` - Package verification (will be created)
+- `src/solokit/security/license_checker.py` - License compliance (will be created)
+- `src/solokit/quality/security_gates.py` - Pre-merge gate orchestration (will be created)
 - `.git/hooks/pre-push` - Git hook for local enforcement
 - Tests for all security modules
 
 **Modified:**
-- `src/sdd/session/complete.py` - Integrate pre-merge security gates
+- `src/solokit/session/complete.py` - Integrate pre-merge security gates
 - `.session/config.json` - Add security gate configuration
 - CI/CD workflows - Add security gate job
 
@@ -249,13 +249,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run security monitoring
-        run: sdd security-monitor --create-work-items
+        run: solokit security-monitor --create-work-items
 ```
 
 **Monitoring system:**
 ```python
 # Note: This file will be created during implementation
-# src/sdd/security/monitor.py
+# src/solokit/security/monitor.py
 class SecurityMonitor:
     def scan_for_new_cves(self):
         # Check dependencies against CVE databases
@@ -273,16 +273,16 @@ class SecurityMonitor:
 **Files Affected:**
 
 **New:**
-- `src/sdd/security/monitor.py` - Continuous monitoring system (will be created)
-- `src/sdd/security/cve_database.py` - CVE lookup and caching (will be created)
-- `src/sdd/security/advisory_tracker.py` - Security advisory tracking (will be created)
+- `src/solokit/security/monitor.py` - Continuous monitoring system (will be created)
+- `src/solokit/security/cve_database.py` - CVE lookup and caching (will be created)
+- `src/solokit/security/advisory_tracker.py` - Security advisory tracking (will be created)
 - `.github/workflows/security-monitoring.yml` - Scheduled workflow (will be created)
 - Tests for monitoring system
 
 **Modified:**
-- `src/sdd/work_items/creator.py` - Auto-create security work items
+- `src/solokit/work_items/creator.py` - Auto-create security work items
 - `.session/config.json` - Add monitoring configuration
-- `src/sdd/notifications/` - Alert mechanisms (email, Slack) (will be created)
+- `src/solokit/notifications/` - Alert mechanisms (email, Slack) (will be created)
 
 **Benefits:**
 
@@ -363,7 +363,7 @@ Implement **test quality gates** that enforce test effectiveness:
 **Test quality gate:**
 ```python
 # Note: This file will be created during implementation
-# src/sdd/quality/test_quality_gates.py
+# src/solokit/quality/test_quality_gates.py
 class TestQualityGates:
     def check_critical_path_coverage(self, work_item):
         # Verify critical paths have >90% coverage
@@ -402,17 +402,17 @@ class TestQualityGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/test_quality_gates.py` - Test quality validation (will be created)
-- `src/sdd/testing/mutation_runner.py` - Mutation testing integration (will be created)
-- `src/sdd/testing/critical_path_analyzer.py` - Critical path identification (will be created)
-- `src/sdd/testing/flakiness_detector.py` - Flaky test detection (will be created)
-- `src/sdd/testing/performance_baseline.py` - Performance tracking (will be created)
+- `src/solokit/quality/test_quality_gates.py` - Test quality validation (will be created)
+- `src/solokit/testing/mutation_runner.py` - Mutation testing integration (will be created)
+- `src/solokit/testing/critical_path_analyzer.py` - Critical path identification (will be created)
+- `src/solokit/testing/flakiness_detector.py` - Flaky test detection (will be created)
+- `src/solokit/testing/performance_baseline.py` - Performance tracking (will be created)
 - Tests for all test quality modules
 
 **Modified:**
-- `src/sdd/session/complete.py` - Add test quality gates
-- `src/sdd/session/validate.py` - Add validation checks
-- `src/sdd/work_items/spec_parser.py` - Parse testing requirements
+- `src/solokit/session/complete.py` - Add test quality gates
+- `src/solokit/session/validate.py` - Add validation checks
+- `src/solokit/work_items/spec_parser.py` - Parse testing requirements
 - `.session/config.json` - Test quality thresholds
 
 **Benefits:**
@@ -498,7 +498,7 @@ Implement **advanced code quality gates** that enforce maintainability:
 **Code quality gate:**
 ```python
 # Note: This file will be created during implementation
-# src/sdd/quality/code_quality_gates.py
+# src/solokit/quality/code_quality_gates.py
 class CodeQualityGates:
     def check_complexity(self, file_changes):
         # Analyze cyclomatic complexity
@@ -560,17 +560,17 @@ class CodeQualityGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/code_quality_gates.py` - Code quality validation (will be created)
-- `src/sdd/analysis/complexity_analyzer.py` - Complexity calculation (will be created)
-- `src/sdd/analysis/duplication_detector.py` - Duplication detection (will be created)
-- `src/sdd/analysis/dead_code_finder.py` - Dead code detection (will be created)
-- `src/sdd/analysis/type_coverage.py` - TypeScript type coverage (will be created)
-- `src/sdd/analysis/documentation_validator.py` - Code documentation validation (will be created)
+- `src/solokit/quality/code_quality_gates.py` - Code quality validation (will be created)
+- `src/solokit/analysis/complexity_analyzer.py` - Complexity calculation (will be created)
+- `src/solokit/analysis/duplication_detector.py` - Duplication detection (will be created)
+- `src/solokit/analysis/dead_code_finder.py` - Dead code detection (will be created)
+- `src/solokit/analysis/type_coverage.py` - TypeScript type coverage (will be created)
+- `src/solokit/analysis/documentation_validator.py` - Code documentation validation (will be created)
 - Tests for all analysis modules
 
 **Modified:**
-- `src/sdd/session/complete.py` - Add code quality gates
-- `src/sdd/session/validate.py` - Add validation checks
+- `src/solokit/session/complete.py` - Add code quality gates
+- `src/solokit/session/validate.py` - Add validation checks
 - `.session/config.json` - Code quality thresholds
 
 **Benefits:**
@@ -647,7 +647,7 @@ Implement **production readiness gates** that validate operational requirements:
 
 **Production readiness gate:**
 ```python
-# src/sdd/quality/production_gates.py
+# src/solokit/quality/production_gates.py
 class ProductionReadinessGates:
     def validate_health_endpoints(self):
         # Check /health and /ready exist
@@ -686,15 +686,15 @@ class ProductionReadinessGates:
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/production_gates.py` - Production readiness validation (will be created)
-- `src/sdd/production/health_check_validator.py` - Health check testing (will be created)
-- `src/sdd/production/metrics_validator.py` - Metrics validation (will be created)
-- `src/sdd/production/migration_validator.py` - Migration safety checks (will be created)
+- `src/solokit/quality/production_gates.py` - Production readiness validation (will be created)
+- `src/solokit/production/health_check_validator.py` - Health check testing (will be created)
+- `src/solokit/production/metrics_validator.py` - Metrics validation (will be created)
+- `src/solokit/production/migration_validator.py` - Migration safety checks (will be created)
 - Tests for production validation
 
 **Modified:**
-- `src/sdd/session/complete.py` - Add production gates for deployment work items
-- `src/sdd/templates/deployment.md` - Add production checklist
+- `src/solokit/session/complete.py` - Add production gates for deployment work items
+- `src/solokit/templates/deployment.md` - Add production checklist
 - `.session/config.json` - Production requirements configuration
 
 **Benefits:**
@@ -763,7 +763,7 @@ Implement **deployment safety gates** that validate deployment readiness:
 
 **Deployment safety gate:**
 ```python
-# src/sdd/deployment/safety_gates.py
+# src/solokit/deployment/safety_gates.py
 class DeploymentSafetyGates:
     def run_dry_run(self, deployment_config):
         # Test deployment in staging
@@ -810,17 +810,17 @@ jobs:
 **Files Affected:**
 
 **New:**
-- `src/sdd/deployment/safety_gates.py` - Deployment validation (will be created)
-- `src/sdd/deployment/dry_run.py` - Dry-run execution (will be created)
-- `src/sdd/deployment/breaking_change_detector.py` - API diff analysis (will be created)
-- `src/sdd/deployment/rollback_tester.py` - Rollback validation (will be created)
-- `src/sdd/deployment/canary.py` - Canary deployment orchestration (will be created)
-- `src/sdd/deployment/smoke_tests.py` - Smoke test runner (will be created)
+- `src/solokit/deployment/safety_gates.py` - Deployment validation (will be created)
+- `src/solokit/deployment/dry_run.py` - Dry-run execution (will be created)
+- `src/solokit/deployment/breaking_change_detector.py` - API diff analysis (will be created)
+- `src/solokit/deployment/rollback_tester.py` - Rollback validation (will be created)
+- `src/solokit/deployment/canary.py` - Canary deployment orchestration (will be created)
+- `src/solokit/deployment/smoke_tests.py` - Smoke test runner (will be created)
 - Tests for deployment safety
 
 **Modified:**
 - CI/CD workflows - Add deployment gates
-- `src/sdd/templates/deployment.md` - Add safety checklist
+- `src/solokit/templates/deployment.md` - Add safety checklist
 - `.session/config.json` - Deployment safety configuration
 
 **Benefits:**
@@ -909,7 +909,7 @@ Implement **comprehensive disaster recovery and backup automation system**:
 
 **Backup orchestrator:**
 ```python
-# src/sdd/disaster_recovery/backup_manager.py
+# src/solokit/disaster_recovery/backup_manager.py
 class BackupManager:
     def schedule_backups(self, config):
         # Schedule automated backups based on config
@@ -935,7 +935,7 @@ class BackupManager:
 
 **Disaster recovery planner:**
 ```python
-# src/sdd/disaster_recovery/dr_planner.py
+# src/solokit/disaster_recovery/dr_planner.py
 class DisasterRecoveryPlanner:
     def generate_dr_plan(self, architecture):
         # Analyze system architecture
@@ -955,7 +955,7 @@ class DisasterRecoveryPlanner:
 
 **Recovery executor:**
 ```python
-# src/sdd/disaster_recovery/recovery_executor.py
+# src/solokit/disaster_recovery/recovery_executor.py
 class RecoveryExecutor:
     def full_system_restore(self, backup_id, target_env):
         # Restore entire system from backup
@@ -980,7 +980,7 @@ class RecoveryExecutor:
 
 **Backup configuration:**
 ```yaml
-# .session/config.json or .sdd/backup_config.yml
+# .session/config.json or .solokit/backup_config.yml
 backup_config:
   schedule:
     database:
@@ -1050,9 +1050,9 @@ backup_config:
 **Recovery Procedure**:
 1. Stop application servers (prevent further corruption)
 2. Identify last known good backup
-3. Restore database from backup: `sdd dr restore-database --backup-id <id>`
+3. Restore database from backup: `solokit dr restore-database --backup-id <id>`
 4. Replay transaction logs from backup point to current
-5. Verify data integrity: `sdd dr verify-database`
+5. Verify data integrity: `solokit dr verify-database`
 6. Restart application servers
 7. Monitor for errors
 **Estimated Recovery Time**: 30 minutes
@@ -1060,9 +1060,9 @@ backup_config:
 ### Scenario 2: Complete Infrastructure Loss
 **Detection**: All services unreachable
 **Recovery Procedure**:
-1. Activate secondary region: `sdd dr activate-failover --region us-west-2`
-2. Restore infrastructure: `sdd dr restore-infrastructure --backup-id <id>`
-3. Restore database: `sdd dr restore-database --backup-id <id> --region us-west-2`
+1. Activate secondary region: `solokit dr activate-failover --region us-west-2`
+2. Restore infrastructure: `solokit dr restore-infrastructure --backup-id <id>`
+3. Restore database: `solokit dr restore-database --backup-id <id> --region us-west-2`
 4. Update DNS to point to new region
 5. Verify all services operational
 6. Notify stakeholders
@@ -1072,7 +1072,7 @@ backup_config:
 **Detection**: Reports of missing data
 **Recovery Procedure**:
 1. Identify deletion timestamp
-2. Point-in-time restore: `sdd dr restore-point-in-time --timestamp "2025-10-29T10:30:00Z"`
+2. Point-in-time restore: `solokit dr restore-point-in-time --timestamp "2025-10-29T10:30:00Z"`
 3. Extract affected data
 4. Merge recovered data into production
 5. Verify data integrity
@@ -1082,42 +1082,42 @@ backup_config:
 **Commands:**
 ```bash
 # Configure backup system
-/sdd:dr-init
+/sk:dr-init
 
 # View backup status
-/sdd:dr-status
+/sk:dr-status
 
 # Test disaster recovery plan
-/sdd:dr-test [--scenario SCENARIO]
+/sk:dr-test [--scenario SCENARIO]
 
 # Restore from backup
-/sdd:dr-restore [--backup-id ID] [--point-in-time TIMESTAMP]
+/sk:dr-restore [--backup-id ID] [--point-in-time TIMESTAMP]
 
 # Verify backups
-/sdd:dr-verify-backups
+/sk:dr-verify-backups
 
 # Generate DR plan
-/sdd:dr-plan-generate
+/sk:dr-plan-generate
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/disaster_recovery/backup_manager.py` - Backup orchestration (will be created)
-- `src/sdd/disaster_recovery/dr_planner.py` - DR plan generation (will be created)
-- `src/sdd/disaster_recovery/recovery_executor.py` - Recovery execution (will be created)
-- `src/sdd/disaster_recovery/backup_verifier.py` - Backup verification (will be created)
-- `src/sdd/disaster_recovery/retention_manager.py` - Data lifecycle management (will be created)
+- `src/solokit/disaster_recovery/backup_manager.py` - Backup orchestration (will be created)
+- `src/solokit/disaster_recovery/dr_planner.py` - DR plan generation (will be created)
+- `src/solokit/disaster_recovery/recovery_executor.py` - Recovery execution (will be created)
+- `src/solokit/disaster_recovery/backup_verifier.py` - Backup verification (will be created)
+- `src/solokit/disaster_recovery/retention_manager.py` - Data lifecycle management (will be created)
 - `.claude/commands/dr-init.md` - DR initialization command (will be created)
 - `.claude/commands/dr-status.md` - DR status command (will be created)
 - `.claude/commands/dr-test.md` - DR testing command (will be created)
 - `.claude/commands/dr-restore.md` - Recovery command (will be created)
 - `docs/disaster_recovery_plan.md` - Generated DR plan (will be created)
-- `.sdd/backup_config.yml` - Backup configuration (will be created)
+- `.solokit/backup_config.yml` - Backup configuration (will be created)
 - Tests for DR system
 
 **Modified:**
-- `src/sdd/project/init.py` - Add DR setup to project initialization
+- `src/solokit/project/init.py` - Add DR setup to project initialization
 - `.session/config.json` - Add DR configuration section
 - CI/CD workflows - Add backup verification jobs
 
@@ -1212,10 +1212,10 @@ Implement **JSON Schema-based spec validation** for rigorous spec structure chec
 
 **JSON Schema definitions:**
 ```json
-// src/sdd/templates/schemas/feature_spec_schema.json
+// src/solokit/templates/schemas/feature_spec_schema.json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://sdd.dev/schemas/feature_spec.json",
+  "$id": "https://solokit.dev/schemas/feature_spec.json",
   "title": "Feature Spec",
   "description": "Schema for feature work item specifications",
   "type": "object",
@@ -1302,7 +1302,7 @@ Implement **JSON Schema-based spec validation** for rigorous spec structure chec
 
 **Spec parser:**
 ```python
-# src/sdd/work_items/spec_parser.py (enhanced)
+# src/solokit/work_items/spec_parser.py (enhanced)
 import yaml
 import json
 import jsonschema
@@ -1313,7 +1313,7 @@ class SpecParser:
     """Parse and validate markdown specs against JSON schemas"""
 
     def __init__(self):
-        self.schema_dir = Path("src/sdd/templates/schemas")
+        self.schema_dir = Path("src/solokit/templates/schemas")
         self.schemas = self.load_schemas()
 
     def load_schemas(self) -> Dict[str, Dict]:
@@ -1482,7 +1482,7 @@ class SpecParser:
         work_item_id: str
     ) -> tuple[bool, List[str]]:
         """Validate cross-references (dependencies exist, files exist, etc.)"""
-        from sdd.work_items.repository import WorkItemRepository
+        from solokit.work_items.repository import WorkItemRepository
 
         structure = self.parse_spec_to_structure(spec_path)
         errors = []
@@ -1510,7 +1510,7 @@ class SpecParser:
 
 **Enhanced spec validator:**
 ```python
-# src/sdd/work_items/spec_validator.py (enhanced)
+# src/solokit/work_items/spec_validator.py (enhanced)
 class SpecValidator:
     def __init__(self):
         self.parser = SpecParser()
@@ -1573,19 +1573,19 @@ class SpecValidator:
 **Files Affected:**
 
 **New:**
-- `src/sdd/templates/schemas/feature_spec_schema.json` - Feature spec schema (will be created)
-- `src/sdd/templates/schemas/bug_spec_schema.json` - Bug spec schema (will be created)
-- `src/sdd/templates/schemas/refactor_spec_schema.json` - Refactor spec schema (will be created)
-- `src/sdd/templates/schemas/security_spec_schema.json` - Security spec schema (will be created)
-- `src/sdd/templates/schemas/integration_test_spec_schema.json` - Integration test schema (will be created)
-- `src/sdd/templates/schemas/deployment_spec_schema.json` - Deployment spec schema (will be created)
+- `src/solokit/templates/schemas/feature_spec_schema.json` - Feature spec schema (will be created)
+- `src/solokit/templates/schemas/bug_spec_schema.json` - Bug spec schema (will be created)
+- `src/solokit/templates/schemas/refactor_spec_schema.json` - Refactor spec schema (will be created)
+- `src/solokit/templates/schemas/security_spec_schema.json` - Security spec schema (will be created)
+- `src/solokit/templates/schemas/integration_test_spec_schema.json` - Integration test schema (will be created)
+- `src/solokit/templates/schemas/deployment_spec_schema.json` - Deployment spec schema (will be created)
 - `tests/unit/test_spec_parser_schema.py` - Schema validation tests (will be created)
 - `tests/fixtures/specs/` - Test spec fixtures (will be created)
 
 **Modified:**
-- `src/sdd/work_items/spec_parser.py` - Enhanced with schema validation
-- `src/sdd/work_items/spec_validator.py` - Use schema validation
-- `src/sdd/work_items/creator.py` - Validate on work item creation
+- `src/solokit/work_items/spec_parser.py` - Enhanced with schema validation
+- `src/solokit/work_items/spec_validator.py` - Use schema validation
+- `src/solokit/work_items/creator.py` - Validate on work item creation
 - `pyproject.toml` - Add jsonschema dependency
 
 **Benefits:**
@@ -1615,7 +1615,7 @@ class SpecValidator:
 
 **Problem:**
 
-SDD currently supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). This creates limitations:
+Solokit currently supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). This creates limitations:
 
 1. **No project-specific types**: Different projects need different work item types (spike, research, documentation-task, data-migration, experiment, etc.)
 2. **No extensibility**: Users cannot define custom types for their workflow
@@ -1767,7 +1767,7 @@ Implement **custom work item type system** allowing users to define their own wo
 
 **Custom spec template example:**
 ```markdown
-# src/sdd/templates/spike_spec.md
+# src/solokit/templates/spike_spec.md
 ---
 type: spike
 ---
@@ -1829,7 +1829,7 @@ Based on findings, what should we do next?
 
 **Type manager:**
 ```python
-# src/sdd/work_items/type_manager.py
+# src/solokit/work_items/type_manager.py
 class WorkItemTypeManager:
     def __init__(self, config_path=".session/config.json"):
         self.config = self.load_config(config_path)
@@ -1856,7 +1856,7 @@ class WorkItemTypeManager:
                 raise ValueError(f"Custom type missing required field: {field}")
 
         # Validate template file exists
-        template_path = Path("src/sdd/templates") / type_config["template_file"]
+        template_path = Path("src/solokit/templates") / type_config["template_file"]
         if not template_path.exists():
             raise FileNotFoundError(f"Template not found: {template_path}")
 
@@ -1888,7 +1888,7 @@ class WorkItemTypeManager:
 
 **Enhanced work item creation:**
 ```python
-# src/sdd/work_items/creator.py (modified)
+# src/solokit/work_items/creator.py (modified)
 def create_work_item(self, work_item_id, work_item_type, **kwargs):
     """Create work item with support for custom types"""
     type_manager = WorkItemTypeManager()
@@ -1925,7 +1925,7 @@ def create_work_item(self, work_item_id, work_item_type, **kwargs):
 
 **Quality gates integration:**
 ```python
-# src/sdd/quality/gates.py (modified)
+# src/solokit/quality/gates.py (modified)
 def get_gates_for_work_item(self, work_item):
     """Get quality gates based on work item type"""
     type_manager = WorkItemTypeManager()
@@ -1944,29 +1944,29 @@ def get_gates_for_work_item(self, work_item):
 **Commands:**
 ```bash
 # List all available work item types (built-in + custom)
-/sdd:work-types
+/sk:work-types
 
 # Create custom work item type interactively
-/sdd:work-type-create
+/sk:work-type-create
 
 # Create custom work item type from file
-/sdd:work-type-create --from-file .sdd/custom_types/spike.yml
+/sk:work-type-create --from-file .solokit/custom_types/spike.yml
 
 # Validate custom type definition
-/sdd:work-type-validate --type spike
+/sk:work-type-validate --type spike
 
 # Show details of a work item type
-/sdd:work-type-show spike
+/sk:work-type-show spike
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/work_items/type_manager.py` - Custom type management (will be created)
-- `src/sdd/templates/spike_spec.md` - Spike spec template (will be created)
-- `src/sdd/templates/data_migration_spec.md` - Data migration template (will be created)
-- `src/sdd/templates/documentation_task_spec.md` - Documentation task template (will be created)
-- `src/sdd/templates/experiment_spec.md` - Experiment template (will be created)
+- `src/solokit/work_items/type_manager.py` - Custom type management (will be created)
+- `src/solokit/templates/spike_spec.md` - Spike spec template (will be created)
+- `src/solokit/templates/data_migration_spec.md` - Data migration template (will be created)
+- `src/solokit/templates/documentation_task_spec.md` - Documentation task template (will be created)
+- `src/solokit/templates/experiment_spec.md` - Experiment template (will be created)
 - `.claude/commands/work-types.md` - List types command (will be created)
 - `.claude/commands/work-type-create.md` - Create custom type command (will be created)
 - `.claude/commands/work-type-show.md` - Show type details command (will be created)
@@ -1974,15 +1974,15 @@ def get_gates_for_work_item(self, work_item):
 - `tests/e2e/test_custom_work_item_types.py` - Custom type E2E tests (will be created)
 
 **Modified:**
-- `src/sdd/work_items/creator.py` - Support custom types in creation
-- `src/sdd/work_items/spec_validator.py` - Validate against type-specific requirements
-- `src/sdd/quality/gates.py` - Type-specific quality gates
+- `src/solokit/work_items/creator.py` - Support custom types in creation
+- `src/solokit/work_items/spec_validator.py` - Validate against type-specific requirements
+- `src/solokit/quality/gates.py` - Type-specific quality gates
 - `.session/config.json` - Add custom_work_item_types section
 - `.claude/commands/work-new.md` - Document custom type support
 
 **Benefits:**
 
-1. **Project flexibility**: Adapt SDD to any project's workflow and terminology
+1. **Project flexibility**: Adapt Solokit to any project's workflow and terminology
 2. **Better semantics**: Use work item types that match the actual work being done
 3. **Workflow optimization**: Different quality gates for different work types
 4. **Common patterns**: Support common types like spike, research, experiment
@@ -2008,12 +2008,12 @@ def get_gates_for_work_item(self, work_item):
 
 **Problem:**
 
-Current SDD-Claude Code integration is via slash commands that execute CLI commands and return text output. This creates limitations:
+Current Solokit-Claude Code integration is via slash commands that execute CLI commands and return text output. This creates limitations:
 
-1. **Text-only output**: All SDD data must be formatted as text for stdout/stderr
-2. **No programmatic access**: Claude cannot query SDD state directly
-3. **Parsing overhead**: Claude must parse text output to understand SDD data
-4. **Limited interactivity**: Cannot have rich, interactive conversations about SDD state
+1. **Text-only output**: All Solokit data must be formatted as text for stdout/stderr
+2. **No programmatic access**: Claude cannot query Solokit state directly
+3. **Parsing overhead**: Claude must parse text output to understand Solokit data
+4. **Limited interactivity**: Cannot have rich, interactive conversations about Solokit state
 5. **No structured data**: JSON/structured data must be formatted as text then parsed
 6. **Foundation missing**: Cannot build advanced features like inline annotations without programmatic access
 
@@ -2029,7 +2029,7 @@ Current flow:
 4. Claude formats response to user
 
 Desired flow with MCP:
-1. Claude directly queries: sdd://learnings/search?query=authentication&limit=10
+1. Claude directly queries: solokit://learnings/search?query=authentication&limit=10
 2. Receives structured JSON response
 3. Claude analyzes and presents insights
 4. Can follow up with related queries programmatically
@@ -2037,16 +2037,16 @@ Desired flow with MCP:
 
 **Proposed Solution:**
 
-Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD operations as structured tools:
+Implement **MCP (Model Context Protocol) server for Solokit** that exposes Solokit operations as structured tools:
 
 1. **MCP Server Implementation**
    - Standalone MCP server process
-   - Exposes SDD operations as MCP tools
+   - Exposes Solokit operations as MCP tools
    - Returns structured data (JSON) instead of text
    - Handles concurrent requests
    - Maintains session state
 
-2. **MCP Tools for SDD Operations**
+2. **MCP Tools for Solokit Operations**
    - Work item operations (list, get, create, update, delete)
    - Learning operations (search, get, create, curate)
    - Session operations (status, start, end, validate)
@@ -2061,7 +2061,7 @@ Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD opera
    - Error handling with structured error objects
 
 4. **Real-Time State Access**
-   - Query SDD state anytime
+   - Query Solokit state anytime
    - No need to run CLI commands
    - Efficient data access
    - Caching for performance
@@ -2070,18 +2070,18 @@ Implement **MCP (Model Context Protocol) server for SDD** that exposes SDD opera
 
 **MCP Server:**
 ```python
-# src/sdd/mcp/server.py
+# src/solokit/mcp/server.py
 import asyncio
 from typing import Any, Dict, List
 from mcp import Server, Tool
 
 class SDDMCPServer:
     def __init__(self):
-        self.server = Server("sdd")
+        self.server = Server("solokit")
         self.register_tools()
 
     def register_tools(self):
-        """Register all SDD tools with MCP server"""
+        """Register all Solokit tools with MCP server"""
 
         # Work item tools
         self.server.add_tool(Tool(
@@ -2193,7 +2193,7 @@ class SDDMCPServer:
 
     async def list_work_items(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """List work items with filters"""
-        from sdd.work_items.repository import WorkItemRepository
+        from solokit.work_items.repository import WorkItemRepository
 
         repository = WorkItemRepository()
         work_items = repository.list_work_items(
@@ -2210,7 +2210,7 @@ class SDDMCPServer:
 
     async def get_work_item(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get detailed work item information"""
-        from sdd.work_items.repository import WorkItemRepository
+        from solokit.work_items.repository import WorkItemRepository
 
         repository = WorkItemRepository()
         work_item_id = params["work_item_id"]
@@ -2234,7 +2234,7 @@ class SDDMCPServer:
 
     async def search_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Search learnings"""
-        from sdd.learning.repository import LearningRepository
+        from solokit.learning.repository import LearningRepository
 
         repository = LearningRepository()
         query = params["query"]
@@ -2258,7 +2258,7 @@ class SDDMCPServer:
 
     async def get_relevant_learnings(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get learnings relevant to work item or topic"""
-        from sdd.session.briefing.learning_loader import get_relevant_learnings
+        from solokit.session.briefing.learning_loader import get_relevant_learnings
 
         work_item_id = params.get("work_item_id")
         topic = params.get("topic")
@@ -2283,7 +2283,7 @@ class SDDMCPServer:
 
     async def get_session_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get current session status"""
-        from sdd.session.status import get_session_status
+        from solokit.session.status import get_session_status
 
         status = get_session_status()
 
@@ -2291,7 +2291,7 @@ class SDDMCPServer:
 
     async def get_quality_gate_results(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get quality gate results"""
-        from sdd.quality.gates import QualityGateRunner
+        from solokit.quality.gates import QualityGateRunner
 
         runner = QualityGateRunner()
         session_id = params.get("session_id")
@@ -2307,7 +2307,7 @@ class SDDMCPServer:
 
     async def get_dependency_graph(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get dependency graph"""
-        from sdd.visualization.dependency_graph import DependencyGraph
+        from solokit.visualization.dependency_graph import DependencyGraph
 
         graph = DependencyGraph()
         format_type = params.get("format", "json")
@@ -2328,8 +2328,8 @@ class SDDMCPServer:
 
     async def get_project_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get project metrics"""
-        from sdd.improvement.dora_metrics import DORAMetrics
-        from sdd.improvement.velocity_tracker import VelocityTracker
+        from solokit.improvement.dora_metrics import DORAMetrics
+        from solokit.improvement.velocity_tracker import VelocityTracker
 
         metric_type = params.get("metric_type", "all")
 
@@ -2344,7 +2344,7 @@ class SDDMCPServer:
             metrics["dora"] = dora.get_metrics()
 
         if metric_type in ["learnings", "all"]:
-            from sdd.learning.curator import LearningCurator
+            from solokit.learning.curator import LearningCurator
             curator = LearningCurator()
             metrics["learnings"] = curator.get_statistics()
 
@@ -2371,8 +2371,8 @@ if __name__ == "__main__":
 // ~/.claude/config.json or project-specific config
 {
   "mcpServers": {
-    "sdd": {
-      "command": "sdd",
+    "solokit": {
+      "command": "solokit",
       "args": ["mcp", "serve"],
       "env": {}
     }
@@ -2383,7 +2383,7 @@ if __name__ == "__main__":
 **CLI command to start MCP server:**
 ```bash
 # Start MCP server
-sdd mcp serve
+solokit mcp serve
 
 # Or via Claude Code (auto-started)
 ```
@@ -2407,22 +2407,22 @@ Claude (to user): "We have 7 learnings about authentication:
 **Files Affected:**
 
 **New:**
-- `src/sdd/mcp/server.py` (will be created) - MCP server implementation
-- `src/sdd/mcp/tools.py` (will be created) - MCP tool definitions
-- `src/sdd/mcp/__init__.py` (will be created) - MCP module initialization
+- `src/solokit/mcp/server.py` (will be created) - MCP server implementation
+- `src/solokit/mcp/tools.py` (will be created) - MCP tool definitions
+- `src/solokit/mcp/__init__.py` (will be created) - MCP module initialization
 - `docs/mcp/README.md` (will be created) - MCP integration documentation
 - `docs/mcp/tools.md` (will be created) - MCP tools reference
 - `tests/unit/test_mcp_server.py` (will be created) - MCP server tests
 - `tests/integration/test_mcp_integration.py` (will be created) - Integration tests
 
 **Modified:**
-- `src/sdd/cli.py` - Add MCP server command
+- `src/solokit/cli.py` - Add MCP server command
 - `README.md` - Document MCP integration
 - `.claude/config.json` - MCP server configuration example
 
 **Benefits:**
 
-1. **Programmatic access**: Claude can query SDD state directly
+1. **Programmatic access**: Claude can query Solokit state directly
 2. **Structured data**: No text parsing, clean JSON responses
 3. **Rich interactions**: Contextual follow-up queries
 4. **Foundation for features**: Enables inline annotations, real-time updates
@@ -2479,13 +2479,13 @@ MCP (Model Context Protocol) servers provide valuable capabilities like accessin
 Implement **context-aware MCP server management** that automatically enables relevant servers based on work item context:
 
 1. **Project-Level Server Registry**
-   - Define available MCP servers during `sdd init`
+   - Define available MCP servers during `sk init`
    - Servers registered but not enabled by default (zero token cost)
    - Server metadata: name, purpose, tech stack, use cases
    - Template-based server recommendations
 
 2. **Context-Aware Enablement**
-   - `sdd start` analyzes work item and enables relevant servers
+   - `sk start` analyzes work item and enables relevant servers
    - Smart matching based on work item type, tags, tech stack, dependencies
    - Token budgeting: enable servers within context budget
    - Priority-based selection when budget is limited
@@ -2587,7 +2587,7 @@ Implement **context-aware MCP server management** that automatically enables rel
 
 **Server selection algorithm:**
 ```python
-# src/sdd/mcp/server_manager.py
+# src/solokit/mcp/server_manager.py
 from typing import List, Dict, Any
 from pathlib import Path
 import json
@@ -2809,12 +2809,12 @@ class MCPServerManager:
 
 **Integration with session start:**
 ```python
-# src/sdd/session/briefing/orchestrator.py (enhanced)
+# src/solokit/session/briefing/orchestrator.py (enhanced)
 def start_session(work_item_id: str, enable_servers: List[str] = None, disable_servers: List[str] = None):
     """Start development session with context-aware MCP server enablement"""
-    from sdd.work_items.repository import WorkItemRepository
-    from sdd.mcp.server_manager import MCPServerManager
-    from sdd.project.stack import detect_tech_stack
+    from solokit.work_items.repository import WorkItemRepository
+    from solokit.mcp.server_manager import MCPServerManager
+    from solokit.project.stack import detect_tech_stack
 
     # Get work item
     repository = WorkItemRepository()
@@ -2870,13 +2870,13 @@ def start_session(work_item_id: str, enable_servers: List[str] = None, disable_s
     return briefing
 ```
 
-**Integration with sdd init:**
+**Integration with sk init:**
 ```python
-# src/sdd/project/init.py (enhanced)
+# src/solokit/project/init.py (enhanced)
 def initialize_project(template: str = None):
-    """Initialize SDD project with MCP server recommendations"""
-    from sdd.mcp.server_manager import MCPServerManager
-    from sdd.project.stack import detect_tech_stack
+    """Initialize Solokit project with MCP server recommendations"""
+    from solokit.mcp.server_manager import MCPServerManager
+    from solokit.project.stack import detect_tech_stack
 
     # Create .session directory
     session_dir = Path(".session")
@@ -2897,7 +2897,7 @@ def initialize_project(template: str = None):
         print(f"  - {server['name']}: {server['description']}")
 
     print("\n  Servers are disabled by default to save context tokens.")
-    print("  They will be automatically enabled during 'sdd start' based on work item context.")
+    print("  They will be automatically enabled during 'sk start' based on work item context.")
 
     # ... rest of initialization
 ```
@@ -2905,25 +2905,25 @@ def initialize_project(template: str = None):
 **Commands:**
 ```bash
 # Start session with automatic server selection
-/sdd:start WI-001
+/sk:start WI-001
 
 # Start with manual server override
-/sdd:start WI-001 --enable-servers context7,playwright
+/sk:start WI-001 --enable-servers context7,playwright
 
 # Start with specific servers disabled
-/sdd:start WI-001 --disable-servers postgres
+/sk:start WI-001 --disable-servers postgres
 
 # List available MCP servers
-/sdd:mcp-list
+/sk:mcp-list
 
 # Add custom MCP server
-/sdd:mcp-add --id custom-server --command npx --args "-y,my-mcp-server" --priority high
+/sk:mcp-add --id custom-server --command npx --args "-y,my-mcp-server" --priority high
 
 # Test server relevance for work item
-/sdd:mcp-test WI-001
+/sk:mcp-test WI-001
 
 # Show currently enabled servers
-/sdd:status  # (includes MCP server section)
+/sk:status  # (includes MCP server section)
 ```
 
 **Configuration:**
@@ -2948,9 +2948,9 @@ def initialize_project(template: str = None):
 **Files Affected:**
 
 **New:**
-- `src/sdd/mcp/` (will be created) - New module
-- `src/sdd/mcp/__init__.py` (will be created) - Module init
-- `src/sdd/mcp/server_manager.py` (will be created) - MCP server management
+- `src/solokit/mcp/` (will be created) - New module
+- `src/solokit/mcp/__init__.py` (will be created) - Module init
+- `src/solokit/mcp/server_manager.py` (will be created) - MCP server management
 - `.session/mcp_servers.json` (will be created) - Server registry (created per project)
 - `tests/unit/test_mcp_server_manager.py` (will be created) - Unit tests
 - `tests/integration/test_mcp_integration.py` (will be created) - Integration tests
@@ -2959,10 +2959,10 @@ def initialize_project(template: str = None):
 - `.claude/commands/mcp-test.md` (will be created) - Test relevance command
 
 **Modified:**
-- `src/sdd/session/briefing/orchestrator.py` - Add MCP server selection
-- `src/sdd/session/briefing/formatter.py` - Include MCP server info in briefing
-- `src/sdd/project/init.py` - Initialize MCP server registry
-- `src/sdd/templates/config.schema.json` - Add MCP config schema
+- `src/solokit/session/briefing/orchestrator.py` - Add MCP server selection
+- `src/solokit/session/briefing/formatter.py` - Include MCP server info in briefing
+- `src/solokit/project/init.py` - Initialize MCP server registry
+- `src/solokit/templates/config.schema.json` - Add MCP config schema
 - `.claude/commands/start.md` - Document server flags
 - `.claude/commands/status.md` - Show enabled servers
 - `README.md` - Document MCP server management
@@ -2987,7 +2987,7 @@ def initialize_project(template: str = None):
 - Enhances developer experience with intelligent automation
 - Enables better use of MCP ecosystem
 - Foundation for advanced MCP integration features
-- Aligns with SDD's philosophy of intelligent automation
+- Aligns with Solokit's philosophy of intelligent automation
 
 **Notes:**
 - MCP servers are registered but disabled by default (zero cost)
@@ -2996,7 +2996,7 @@ def initialize_project(template: str = None):
 - Server relevance scoring can be enhanced with AI (future: use Enhancement #37's AI capabilities)
 - Works with Enhancement #13 (Template-Based Init) - templates include MCP server recommendations
 - Complements Enhancement #14 (Session Briefing Optimization) - reduces context usage
-- Related to Enhancement #33 (MCP Server Integration) - both use MCP but for different purposes (#33 makes SDD an MCP server, #38 manages other MCP servers)
+- Related to Enhancement #33 (MCP Server Integration) - both use MCP but for different purposes (#33 makes Solokit an MCP server, #38 manages other MCP servers)
 
 ---
 
@@ -3006,12 +3006,12 @@ def initialize_project(template: str = None):
 
 **Problem:**
 
-When working on a work item, developers have no real-time visibility of SDD state in their editor:
+When working on a work item, developers have no real-time visibility of Solokit state in their editor:
 
 1. **No work item status visibility**: Can't see if current file relates to an active work item
 2. **No learning hints**: Relevant learnings not shown in context
 3. **No quality gate indicators**: Must run `/validate` manually to see issues
-4. **Context switching**: Must switch to terminal to check SDD state
+4. **Context switching**: Must switch to terminal to check Solokit state
 5. **Lost context**: May forget which work item is active
 
 **Example scenario:**
@@ -3023,7 +3023,7 @@ Current experience:
 - No indication this relates to work_item_authentication
 - No reminder of relevant learnings about JWT
 - No warning about quality gate failures
-- Must run /status or /validate to see any SDD info
+- Must run /status or /validate to see any Solokit info
 
 Desired experience:
 Editor shows inline annotations:
@@ -3051,7 +3051,7 @@ Editor shows inline annotations:
 
 **Proposed Solution:**
 
-Implement **inline editor annotations** that display SDD state contextually in the editor:
+Implement **inline editor annotations** that display Solokit state contextually in the editor:
 
 1. **Work Item Status Annotations**
    - Show active work item in files being edited
@@ -3088,7 +3088,7 @@ Implement **inline editor annotations** that display SDD state contextually in t
 
 **MCP-based annotation provider:**
 ```python
-# src/sdd/mcp/annotations.py
+# src/solokit/mcp/annotations.py
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -3115,8 +3115,8 @@ class AnnotationProvider:
 
     def get_work_item_annotations(self, file_path: str) -> List[Dict[str, Any]]:
         """Get work item status annotations"""
-        from sdd.session.status import get_session_status
-        from sdd.work_items.repository import WorkItemRepository
+        from solokit.session.status import get_session_status
+        from solokit.work_items.repository import WorkItemRepository
 
         # Check if there's an active session
         status = get_session_status()
@@ -3142,14 +3142,14 @@ class AnnotationProvider:
                 "session": status.get("session_number")
             },
             "actions": [
-                {"label": "View Spec", "command": f"sdd:work-show {work_item_id}"},
-                {"label": "End Session", "command": "sdd:end"}
+                {"label": "View Spec", "command": f"solokit:work-show {work_item_id}"},
+                {"label": "End Session", "command": "solokit:end"}
             ]
         }]
 
     def get_learning_annotations(self, file_path: str) -> List[Dict[str, Any]]:
         """Get relevant learning annotations"""
-        from sdd.session.briefing.learning_loader import get_relevant_learnings
+        from solokit.session.briefing.learning_loader import get_relevant_learnings
 
         # Analyze file to determine topic
         topic = self.extract_topic_from_file(file_path)
@@ -3177,13 +3177,13 @@ class AnnotationProvider:
             },
             "hover_content": "\n".join(learning_texts),
             "actions": [
-                {"label": "View All", "command": f"sdd:learn-search {topic}"}
+                {"label": "View All", "command": f"solokit:learn-search {topic}"}
             ]
         }]
 
     def get_quality_gate_annotations(self, file_path: str) -> List[Dict[str, Any]]:
         """Get quality gate status annotations"""
-        from sdd.quality.gates import QualityGateRunner
+        from solokit.quality.gates import QualityGateRunner
 
         runner = QualityGateRunner()
 
@@ -3204,7 +3204,7 @@ class AnnotationProvider:
                     "message": f"⚠️ Lint: {issue['message']}",
                     "details": issue,
                     "actions": [
-                        {"label": "Fix", "command": f"sdd:validate --fix"}
+                        {"label": "Fix", "command": f"solokit:validate --fix"}
                     ] if issue.get("fixable") else []
                 })
 
@@ -3255,10 +3255,10 @@ async def get_file_annotations(params: Dict[str, Any]) -> Dict[str, Any]:
 
 **Claude Code MCP Tool Registration:**
 ```python
-# Add to src/sdd/mcp/server.py
+# Add to src/solokit/mcp/server.py
 self.server.add_tool(Tool(
     name="sdd_file_annotations",
-    description="Get SDD annotations for a file (work item status, learnings, quality gates)",
+    description="Get Solokit annotations for a file (work item status, learnings, quality gates)",
     parameters={
         "type": "object",
         "properties": {
@@ -3273,21 +3273,21 @@ self.server.add_tool(Tool(
 **Files Affected:**
 
 **New:**
-- `src/sdd/mcp/annotations.py` (will be created) - Annotation provider
+- `src/solokit/mcp/annotations.py` (will be created) - Annotation provider
 - `tests/unit/test_annotations.py` (will be created) - Annotation tests
 
 **Modified:**
-- `src/sdd/mcp/server.py` (will be created) - Add annotation MCP tool
+- `src/solokit/mcp/server.py` (will be created) - Add annotation MCP tool
 - `docs/mcp/tools.md` (will be created) - Document annotation tool
 
 **Benefits:**
 
-1. **Context awareness**: See SDD state without leaving editor
+1. **Context awareness**: See Solokit state without leaving editor
 2. **Learning reminders**: Relevant learnings shown in context
 3. **Proactive quality**: See issues as you code
 4. **Reduced context switching**: Less terminal usage
 5. **Better focus**: All info in one place
-6. **Discoverability**: Learn about SDD features through annotations
+6. **Discoverability**: Learn about Solokit features through annotations
 7. **Productivity**: Faster access to relevant information
 
 **Priority:** Medium - Nice to have, enhances developer experience
@@ -3360,7 +3360,7 @@ Implement **advanced testing types** that catch issues traditional tests miss:
 
 **Mutation testing:**
 ```python
-# src/sdd/testing/mutation_tester.py
+# src/solokit/testing/mutation_tester.py
 class MutationTester:
     def run_mutation_tests(self, test_suite):
         # Run Stryker or mutmut
@@ -3374,7 +3374,7 @@ class MutationTester:
 
 **Contract testing:**
 ```python
-# src/sdd/testing/contract_tester.py
+# src/solokit/testing/contract_tester.py
 class ContractTester:
     def define_contract(self, api_spec):
         # Create Pact contract from OpenAPI spec
@@ -3391,7 +3391,7 @@ class ContractTester:
 
 **Accessibility testing:**
 ```python
-# src/sdd/testing/accessibility_tester.py
+# src/solokit/testing/accessibility_tester.py
 class AccessibilityTester:
     def run_axe_audit(self, url):
         # Run axe-core accessibility audit
@@ -3404,7 +3404,7 @@ class AccessibilityTester:
 
 **Visual regression:**
 ```python
-# src/sdd/testing/visual_tester.py
+# src/solokit/testing/visual_tester.py
 class VisualTester:
     def capture_screenshots(self, urls):
         # Capture screenshots of pages
@@ -3446,16 +3446,16 @@ class VisualTester:
 **Files Affected:**
 
 **New:**
-- `src/sdd/testing/mutation_tester.py` - Mutation testing (will be created)
-- `src/sdd/testing/contract_tester.py` - Contract testing (will be created)
-- `src/sdd/testing/accessibility_tester.py` - Accessibility testing (will be created)
-- `src/sdd/testing/visual_tester.py` - Visual regression testing (will be created)
+- `src/solokit/testing/mutation_tester.py` - Mutation testing (will be created)
+- `src/solokit/testing/contract_tester.py` - Contract testing (will be created)
+- `src/solokit/testing/accessibility_tester.py` - Accessibility testing (will be created)
+- `src/solokit/testing/visual_tester.py` - Visual regression testing (will be created)
 - `tests/contracts/` - Contract definitions (will be created)
 - `tests/visual/baselines/` - Visual baseline images (will be created)
 - Tests for advanced testing modules
 
 **Modified:**
-- `src/sdd/quality/gates.py` - Add advanced testing gates
+- `src/solokit/quality/gates.py` - Add advanced testing gates
 - `.session/config.json` - Advanced testing configuration
 - CI/CD workflows - Add advanced testing jobs
 
@@ -3568,7 +3568,7 @@ Implement **frontend-specific quality gates** that enforce design system complia
 
 **Design token validation:**
 ```python
-# src/sdd/quality/frontend/design_tokens.py
+# src/solokit/quality/frontend/design_tokens.py
 from typing import Dict, List, Any
 import re
 from pathlib import Path
@@ -3710,7 +3710,7 @@ class ComponentLibraryValidator:
 
 **Bundle size monitoring:**
 ```python
-# src/sdd/quality/frontend/bundle_size.py
+# src/solokit/quality/frontend/bundle_size.py
 from typing import Dict, List, Any
 from pathlib import Path
 import json
@@ -3805,7 +3805,7 @@ class BundleSizeMonitor:
 
 **Accessibility validation:**
 ```python
-# src/sdd/quality/frontend/accessibility.py
+# src/solokit/quality/frontend/accessibility.py
 from typing import List, Dict, Any
 from pathlib import Path
 import subprocess
@@ -3879,7 +3879,7 @@ class AccessibilityValidator:
 
 **Frontend quality gate integration:**
 ```python
-# src/sdd/quality/gates.py (enhanced)
+# src/solokit/quality/gates.py (enhanced)
 class FrontendQualityGate:
     """Frontend-specific quality gate"""
 
@@ -4079,33 +4079,33 @@ class FrontendQualityGate:
 **Commands:**
 ```bash
 # Run frontend quality gates
-/sdd:validate --frontend
+/sk:validate --frontend
 
 # Run specific frontend checks
-/sdd:frontend-check --design-tokens
-/sdd:frontend-check --bundle-size
-/sdd:frontend-check --accessibility
+/sk:frontend-check --design-tokens
+/sk:frontend-check --bundle-size
+/sk:frontend-check --accessibility
 
 # Analyze bundle size
-/sdd:bundle-analyze
+/sk:bundle-analyze
 
 # Check design token compliance
-/sdd:design-tokens-check
+/sk:design-tokens-check
 
 # Auto-fix design token violations (where possible)
-/sdd:design-tokens-fix
+/sk:design-tokens-fix
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/quality/frontend/` - New module (will be created)
-- `src/sdd/quality/frontend/__init__.py` - Module init (will be created)
-- `src/sdd/quality/frontend/design_tokens.py` - Design token validation (will be created)
-- `src/sdd/quality/frontend/component_library.py` - Component library validation (will be created)
-- `src/sdd/quality/frontend/bundle_size.py` - Bundle size monitoring (will be created)
-- `src/sdd/quality/frontend/accessibility.py` - Accessibility validation (will be created)
-- `src/sdd/quality/frontend/responsive.py` - Responsive design validation (will be created)
+- `src/solokit/quality/frontend/` - New module (will be created)
+- `src/solokit/quality/frontend/__init__.py` - Module init (will be created)
+- `src/solokit/quality/frontend/design_tokens.py` - Design token validation (will be created)
+- `src/solokit/quality/frontend/component_library.py` - Component library validation (will be created)
+- `src/solokit/quality/frontend/bundle_size.py` - Bundle size monitoring (will be created)
+- `src/solokit/quality/frontend/accessibility.py` - Accessibility validation (will be created)
+- `src/solokit/quality/frontend/responsive.py` - Responsive design validation (will be created)
 - `.session/bundle_size_history.json` - Bundle size tracking (will be created)
 - `tests/unit/test_frontend_quality.py` - Unit tests (will be created)
 - `tests/integration/test_frontend_gates.py` - Integration tests (will be created)
@@ -4114,8 +4114,8 @@ class FrontendQualityGate:
 - `.claude/commands/design-tokens-check.md` - Design token check command (will be created)
 
 **Modified:**
-- `src/sdd/quality/gates.py` - Add frontend quality gate
-- `src/sdd/templates/config.schema.json` - Add frontend quality config schema
+- `src/solokit/quality/gates.py` - Add frontend quality gate
+- `src/solokit/templates/config.schema.json` - Add frontend quality config schema
 - `.claude/commands/validate.md` - Document frontend validation
 - `README.md` - Document frontend quality gates
 
@@ -4160,7 +4160,7 @@ class FrontendQualityGate:
 
 **Problem:**
 
-The AI-Augmented Solo Framework assumes developers start with Vision, PRD, and Architecture documents, but SDD currently has no workflow to:
+The AI-Augmented Solo Framework assumes developers start with Vision, PRD, and Architecture documents, but Solokit currently has no workflow to:
 
 1. **Parse project documentation**: Vision, PRD, Architecture docs exist but aren't used
 2. **Generate work items from docs**: Manual work item creation from 100+ page docs is tedious
@@ -4226,7 +4226,7 @@ Implement **documentation-driven development workflow** that parses project docs
 
 **Document parser:**
 ```python
-# src/sdd/docs/parser.py
+# src/solokit/docs/parser.py
 class DocumentParser:
     def parse_vision(self, vision_file):
         # Extract business goals, target users
@@ -4243,7 +4243,7 @@ class DocumentParser:
 
 **Work item generator:**
 ```python
-# src/sdd/work_items/generator.py
+# src/solokit/work_items/generator.py
 class WorkItemGenerator:
     def suggest_from_documents(self, docs):
         # Analyze docs, extract requirements
@@ -4257,7 +4257,7 @@ class WorkItemGenerator:
 
 **API documentation generator:**
 ```python
-# src/sdd/docs/api_doc_generator.py
+# src/solokit/docs/api_doc_generator.py
 class APIDocumentationGenerator:
     def generate_openapi_spec(self, codebase):
         # Scan code for API endpoints and annotations
@@ -4339,25 +4339,25 @@ components:
 **Commands:**
 ```bash
 # Parse docs and suggest work items
-/sdd:work-suggest --from-docs
+/sk:work-suggest --from-docs
 
 # Create ADR for architectural decision
-/sdd:adr-new --title "Use PostgreSQL for primary database"
+/sk:adr-new --title "Use PostgreSQL for primary database"
 
 # Validate work item against architecture
-/sdd:work-validate <work-item-id> --architecture
+/sk:work-validate <work-item-id> --architecture
 
 # Generate traceability matrix
-/sdd:trace --requirements docs/PRD.md
+/sk:trace --requirements docs/PRD.md
 
 # Generate API documentation
-/sdd:api-docs-generate [--output swagger|redoc|both]
+/sk:api-docs-generate [--output swagger|redoc|both]
 
 # Generate SDK from API spec
-/sdd:api-sdk-generate --language [python|typescript|go|java]
+/sk:api-sdk-generate --language [python|typescript|go|java]
 
 # Check for breaking API changes
-/sdd:api-breaking-changes --compare v1.0.0..v2.0.0
+/sk:api-breaking-changes --compare v1.0.0..v2.0.0
 ```
 
 **ADR template:**
@@ -4391,18 +4391,18 @@ What did we decide?
 **Files Affected:**
 
 **New:**
-- `src/sdd/docs/parser.py` (will be created) - Document parsing
-- `src/sdd/docs/vision_parser.py` (will be created) - Vision document parser
-- `src/sdd/docs/prd_parser.py` (will be created) - PRD parser
-- `src/sdd/docs/architecture_parser.py` (will be created) - Architecture parser
-- `src/sdd/docs/api_doc_generator.py` (will be created) - API documentation generator
-- `src/sdd/work_items/generator.py` (will be created) - Work item generator
-- `src/sdd/architecture/adr_manager.py` (will be created) - ADR management
-- `src/sdd/architecture/validator.py` (will be created) - Architecture validation
-- `src/sdd/traceability/tracker.py` (will be created) - Requirement traceability
-- `src/sdd/api/openapi_generator.py` (will be created) - OpenAPI specification generator
-- `src/sdd/api/sdk_generator.py` (will be created) - Multi-language SDK generator
-- `src/sdd/api/breaking_change_detector.py` (will be created) - API version comparator
+- `src/solokit/docs/parser.py` (will be created) - Document parsing
+- `src/solokit/docs/vision_parser.py` (will be created) - Vision document parser
+- `src/solokit/docs/prd_parser.py` (will be created) - PRD parser
+- `src/solokit/docs/architecture_parser.py` (will be created) - Architecture parser
+- `src/solokit/docs/api_doc_generator.py` (will be created) - API documentation generator
+- `src/solokit/work_items/generator.py` (will be created) - Work item generator
+- `src/solokit/architecture/adr_manager.py` (will be created) - ADR management
+- `src/solokit/architecture/validator.py` (will be created) - Architecture validation
+- `src/solokit/traceability/tracker.py` (will be created) - Requirement traceability
+- `src/solokit/api/openapi_generator.py` (will be created) - OpenAPI specification generator
+- `src/solokit/api/sdk_generator.py` (will be created) - Multi-language SDK generator
+- `src/solokit/api/breaking_change_detector.py` (will be created) - API version comparator
 - `.claude/commands/work-suggest.md` (will be created) - Work suggestion command
 - `.claude/commands/adr-new.md` (will be created) - ADR creation command
 - `.claude/commands/api-docs-generate.md` (will be created) - API docs generation command
@@ -4413,8 +4413,8 @@ What did we decide?
 - Tests for document parsing and generation (will be created)
 
 **Modified:**
-- `src/sdd/work_items/creator.py` - Support generated work items
-- `src/sdd/work_items/spec_parser.py` - Parse architecture constraints
+- `src/solokit/work_items/creator.py` - Support generated work items
+- `src/solokit/work_items/spec_parser.py` - Parse architecture constraints
 - `.session/tracking/work_items.json` - Add traceability fields
 
 **Benefits:**
@@ -4498,7 +4498,7 @@ Implement **AI-powered learning system** using Claude API for semantic understan
 
 **AI-powered learning curator:**
 ```python
-# src/sdd/learning/ai_curator.py
+# src/solokit/learning/ai_curator.py
 import anthropic
 from typing import List, Dict, Any, Tuple
 import json
@@ -4737,7 +4737,7 @@ Respond in JSON format:
 
 **Enhanced learning curator:**
 ```python
-# src/sdd/learning/curator.py (enhanced)
+# src/solokit/learning/curator.py (enhanced)
 class LearningCurator:
     def __init__(self):
         self.learnings_file = Path(".session/tracking/learnings.json")
@@ -4838,11 +4838,11 @@ class LearningCurator:
 
 **Enhanced session briefing:**
 ```python
-# src/sdd/session/briefing/learning_loader.py (enhanced)
+# src/solokit/session/briefing/learning_loader.py (enhanced)
 def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
     """Get relevant learnings using AI-powered scoring"""
-    from sdd.work_items.repository import WorkItemRepository
-    from sdd.learning.repository import LearningRepository
+    from solokit.work_items.repository import WorkItemRepository
+    from solokit.learning.repository import LearningRepository
 
     # Get work item
     repository = WorkItemRepository()
@@ -4899,26 +4899,26 @@ def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
 **Commands:**
 ```bash
 # Use AI curation
-/sdd:learn-curate --ai
+/sk:learn-curate --ai
 
 # Semantic search
-/sdd:learn-search "authentication" --semantic
+/sk:learn-search "authentication" --semantic
 
 # Find related learnings
-/sdd:learn-related <learning_id>
+/sk:learn-related <learning_id>
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/learning/ai_curator.py` (will be created) - AI-powered curation
+- `src/solokit/learning/ai_curator.py` (will be created) - AI-powered curation
 - `tests/unit/test_ai_curator.py` (will be created) - AI curator tests
 - `tests/fixtures/sample_learnings.json` (will be created) - Test learnings
 
 **Modified:**
-- `src/sdd/learning/curator.py` - Integrate AI curation
-- `src/sdd/learning/repository.py` - Integrate AI search
-- `src/sdd/session/briefing/learning_loader.py` - Use AI relevance scoring
+- `src/solokit/learning/curator.py` - Integrate AI curation
+- `src/solokit/learning/repository.py` - Integrate AI search
+- `src/solokit/session/briefing/learning_loader.py` - Use AI relevance scoring
 - `.session/config.json` - Add AI learning configuration
 - `pyproject.toml` - Add anthropic SDK dependency
 - `.claude/commands/learn-curate.md` - Document AI curation
@@ -4935,7 +4935,7 @@ def get_relevant_learnings_ai(work_item_id: str, limit: int = 10) -> List[Dict]:
 7. **Better context loading**: More relevant learnings in session briefings
 8. **Learning evolution**: Merge and refine learnings over time
 
-**Priority:** High - Enhances core SDD feature (learning system)
+**Priority:** High - Enhances core Solokit feature (learning system)
 
 **Notes:**
 - Requires Anthropic API key (set via ANTHROPIC_API_KEY env variable)
@@ -5006,7 +5006,7 @@ Implement **continuous improvement system** that tracks metrics and suggests opt
 
 **Retrospective generator:**
 ```python
-# src/sdd/improvement/retrospective.py
+# src/solokit/improvement/retrospective.py
 class RetrospectiveGenerator:
     def generate_retrospective(self, work_item):
         # Analyze work item history
@@ -5021,7 +5021,7 @@ class RetrospectiveGenerator:
 
 **Technical debt tracker:**
 ```python
-# src/sdd/improvement/debt_tracker.py
+# src/solokit/improvement/debt_tracker.py
 class TechnicalDebtTracker:
     def identify_debt(self, codebase):
         # Detect code smells
@@ -5035,7 +5035,7 @@ class TechnicalDebtTracker:
 
 **DORA metrics:**
 ```python
-# src/sdd/improvement/dora_metrics.py
+# src/solokit/improvement/dora_metrics.py
 class DORAMetrics:
     def deployment_frequency(self):
         # Count deployments per day/week
@@ -5052,7 +5052,7 @@ class DORAMetrics:
 
 **Dashboard:**
 ```markdown
-# /sdd:status --project
+# /sk:status --project
 
 ## DORA Metrics
 - Deployment Frequency: 3.2/week (↑ from 2.5)
@@ -5109,17 +5109,17 @@ class DORAMetrics:
 **Files Affected:**
 
 **New:**
-- `src/sdd/improvement/retrospective.py` (will be created) - Retrospective generation
-- `src/sdd/improvement/debt_tracker.py` (will be created) - Technical debt tracking
-- `src/sdd/improvement/dora_metrics.py` (will be created) - DORA metrics calculation
-- `src/sdd/improvement/velocity_tracker.py` (will be created) - Velocity tracking
-- `src/sdd/improvement/bottleneck_analyzer.py` (will be created) - Bottleneck detection
+- `src/solokit/improvement/retrospective.py` (will be created) - Retrospective generation
+- `src/solokit/improvement/debt_tracker.py` (will be created) - Technical debt tracking
+- `src/solokit/improvement/dora_metrics.py` (will be created) - DORA metrics calculation
+- `src/solokit/improvement/velocity_tracker.py` (will be created) - Velocity tracking
+- `src/solokit/improvement/bottleneck_analyzer.py` (will be created) - Bottleneck detection
 - `.session/tracking/retrospectives/` (will be created) - Retrospective storage
 - `.session/tracking/metrics.json` (will be created) - Metrics history
 - Tests for improvement modules (will be created)
 
 **Modified:**
-- `src/sdd/session/complete.py` - Generate retrospective on work item completion
+- `src/solokit/session/complete.py` - Generate retrospective on work item completion
 - `.claude/commands/status.md` - Add project-level status command
 - `.session/tracking/work_items.json` - Add cycle time tracking
 
@@ -5208,7 +5208,7 @@ Implement **comprehensive performance testing framework**:
 
 **Load testing:**
 ```python
-# src/sdd/testing/load_tester.py (will be created)
+# src/solokit/testing/load_tester.py (will be created)
 class LoadTester:
     def run_load_test(self, work_item):
         # Extract performance requirements
@@ -5265,17 +5265,17 @@ export default function() {
 **Files Affected:**
 
 **New:**
-- `src/sdd/testing/load_tester.py` (will be created) - Load testing orchestration
-- `src/sdd/testing/baseline_manager.py` (will be created) - Baseline tracking
-- `src/sdd/testing/regression_detector.py` (will be created) - Regression detection
-- `src/sdd/testing/profiler.py` (will be created) - Performance profiling
+- `src/solokit/testing/load_tester.py` (will be created) - Load testing orchestration
+- `src/solokit/testing/baseline_manager.py` (will be created) - Baseline tracking
+- `src/solokit/testing/regression_detector.py` (will be created) - Regression detection
+- `src/solokit/testing/profiler.py` (will be created) - Performance profiling
 - `tests/performance/` (will be created) - Generated load tests
 - `.session/tracking/performance_baselines.json` (will be created) - Baseline storage
 - Tests for performance framework (will be created)
 
 **Modified:**
-- `src/sdd/quality/gates.py` - Add performance gates
-- `src/sdd/work_items/spec_parser.py` - Parse performance requirements
+- `src/solokit/quality/gates.py` - Add performance gates
+- `src/solokit/work_items/spec_parser.py` - Parse performance requirements
 - `.session/config.json` - Performance testing configuration
 - CI/CD workflows - Add performance testing job
 
@@ -5353,7 +5353,7 @@ Implement **comprehensive operations and observability infrastructure**:
 
 **Health monitoring:**
 ```python
-# src/sdd/operations/health_monitor.py
+# src/solokit/operations/health_monitor.py
 class HealthMonitor:
     def setup_monitoring(self, endpoints):
         # Configure health check monitoring
@@ -5367,7 +5367,7 @@ class HealthMonitor:
 
 **Incident management:**
 ```python
-# src/sdd/operations/incident_manager.py
+# src/solokit/operations/incident_manager.py
 class IncidentManager:
     def create_incident(self, alert):
         # Create incident from alert
@@ -5418,11 +5418,11 @@ alerts:
 **Files Affected:**
 
 **New:**
-- `src/sdd/operations/health_monitor.py` (will be created) - Health monitoring
-- `src/sdd/operations/incident_manager.py` (will be created) - Incident management
-- `src/sdd/operations/metrics_collector.py` (will be created) - Metrics collection
-- `src/sdd/operations/capacity_planner.py` (will be created) - Capacity planning
-- `src/sdd/operations/alert_manager.py` (will be created) - Alert management
+- `src/solokit/operations/health_monitor.py` (will be created) - Health monitoring
+- `src/solokit/operations/incident_manager.py` (will be created) - Incident management
+- `src/solokit/operations/metrics_collector.py` (will be created) - Metrics collection
+- `src/solokit/operations/capacity_planner.py` (will be created) - Capacity planning
+- `src/solokit/operations/alert_manager.py` (will be created) - Alert management
 - `monitoring/dashboards/` (will be created) - Dashboard configurations
 - `monitoring/alerts/` (will be created) - Alert configurations
 - `docs/runbooks/` (will be created) - Incident runbooks
@@ -5430,7 +5430,7 @@ alerts:
 
 **Modified:**
 - `.session/config.json` - Monitoring configuration
-- `src/sdd/quality/gates.py` - Verify monitoring setup
+- `src/solokit/quality/gates.py` - Verify monitoring setup
 - CI/CD workflows (will be created) - Deploy monitoring configs
 
 **Benefits:**
@@ -5480,12 +5480,12 @@ Implement **project progress dashboard** showing overall status:
 
 **Dashboard command:**
 ```bash
-/sdd:status --project
+/sk:status --project
 ```
 
 **Dashboard generator:**
 ```python
-# src/sdd/visualization/dashboard.py (will be created)
+# src/solokit/visualization/dashboard.py (will be created)
 class ProgressDashboard:
     def generate_dashboard(self):
         # Aggregate work item data from repository
@@ -5496,12 +5496,12 @@ class ProgressDashboard:
 **Files Affected:**
 
 **New:**
-- `src/sdd/visualization/dashboard.py` (will be created) - Dashboard generation
+- `src/solokit/visualization/dashboard.py` (will be created) - Dashboard generation
 - Tests for dashboard (will be created)
 
 **Modified:**
 - `.claude/commands/status.md` - Add project dashboard
-- `src/sdd/work_items/repository.py` - Query work items for dashboard data
+- `src/solokit/work_items/repository.py` - Query work items for dashboard data
 
 **Benefits:**
 
@@ -5584,7 +5584,7 @@ Implement **compliance and regulatory framework** for automated compliance track
 
 **Compliance checker:**
 ```python
-# src/sdd/compliance/compliance_checker.py (will be created)
+# src/solokit/compliance/compliance_checker.py (will be created)
 class ComplianceChecker:
     def check_gdpr_compliance(self, codebase):
         # Verify GDPR requirements
@@ -5618,7 +5618,7 @@ class ComplianceChecker:
 
 **GDPR automation:**
 ```python
-# src/sdd/compliance/gdpr_automation.py (will be created)
+# src/solokit/compliance/gdpr_automation.py (will be created)
 class GDPRAutomation:
     def track_consent(self, user_id, consent_type):
         # Record user consent with timestamp
@@ -5695,7 +5695,7 @@ compliance:
 
 **Compliance dashboard:**
 ```markdown
-# /sdd:compliance-status
+# /sk:compliance-status
 
 ## Compliance Overview
 - GDPR: ✅ Compliant (98% - 1 minor issue)
@@ -5729,31 +5729,31 @@ compliance:
 **Commands:**
 ```bash
 # Check compliance status
-/sdd:compliance-status [--regulation gdpr|hipaa|soc2|pci-dss]
+/sk:compliance-status [--regulation gdpr|hipaa|soc2|pci-dss]
 
 # Generate compliance report
-/sdd:compliance-report --regulation gdpr --output pdf
+/sk:compliance-report --regulation gdpr --output pdf
 
 # Run compliance checks
-/sdd:compliance-check --fix
+/sk:compliance-check --fix
 
 # Generate privacy impact assessment
-/sdd:compliance-pia --feature "user-analytics"
+/sk:compliance-pia --feature "user-analytics"
 
 # Export evidence for audit
-/sdd:compliance-evidence-export --period "2025-01-01..2025-12-31"
+/sk:compliance-evidence-export --period "2025-01-01..2025-12-31"
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/compliance/compliance_checker.py` (will be created) - Compliance validation
-- `src/sdd/compliance/gdpr_automation.py` (will be created) - GDPR automation
-- `src/sdd/compliance/hipaa_checker.py` (will be created) - HIPAA compliance
-- `src/sdd/compliance/soc2_monitor.py` (will be created) - SOC 2 monitoring
-- `src/sdd/compliance/pci_dss_validator.py` (will be created) - PCI-DSS validation
-- `src/sdd/compliance/audit_trail.py` (will be created) - Audit logging
-- `src/sdd/compliance/evidence_collector.py` (will be created) - Evidence management
+- `src/solokit/compliance/compliance_checker.py` (will be created) - Compliance validation
+- `src/solokit/compliance/gdpr_automation.py` (will be created) - GDPR automation
+- `src/solokit/compliance/hipaa_checker.py` (will be created) - HIPAA compliance
+- `src/solokit/compliance/soc2_monitor.py` (will be created) - SOC 2 monitoring
+- `src/solokit/compliance/pci_dss_validator.py` (will be created) - PCI-DSS validation
+- `src/solokit/compliance/audit_trail.py` (will be created) - Audit logging
+- `src/solokit/compliance/evidence_collector.py` (will be created) - Evidence management
 - `.claude/commands/compliance-status.md` (will be created) - Compliance status command
 - `.claude/commands/compliance-report.md` (will be created) - Report generation command
 - `.claude/commands/compliance-check.md` (will be created) - Compliance validation command
@@ -5762,8 +5762,8 @@ compliance:
 - Tests for compliance modules (will be created)
 
 **Modified:**
-- `src/sdd/project/init.py` - Add compliance setup to project initialization
-- `src/sdd/quality/gates.py` - Add compliance gates
+- `src/solokit/project/init.py` - Add compliance setup to project initialization
+- `src/solokit/quality/gates.py` - Add compliance gates
 - `.session/config.json` - Add compliance configuration
 - CI/CD workflows (will be created) - Add compliance check jobs
 
@@ -5841,7 +5841,7 @@ Implement **UAT and stakeholder workflow** for feedback and approvals:
 
 **Demo environment:**
 ```python
-# src/sdd/uat/demo_environment.py (will be created)
+# src/solokit/uat/demo_environment.py (will be created)
 class DemoEnvironmentManager:
     def create_preview(self, work_item_id, branch):
         # Deploy branch to preview environment
@@ -5854,7 +5854,7 @@ class DemoEnvironmentManager:
 
 **Feedback collection:**
 ```python
-# src/sdd/uat/feedback_collector.py (will be created)
+# src/solokit/uat/feedback_collector.py (will be created)
 class FeedbackCollector:
     def create_feedback_form(self, work_item):
         # Generate feedback form
@@ -5871,7 +5871,7 @@ class FeedbackCollector:
 
 **UAT test case generator:**
 ```python
-# src/sdd/uat/test_case_generator.py (will be created)
+# src/solokit/uat/test_case_generator.py (will be created)
 class UATTestCaseGenerator:
     def generate_from_acceptance_criteria(self, work_item):
         # Parse acceptance criteria
@@ -5910,7 +5910,7 @@ class UATTestCaseGenerator:
 
 **Approval workflow:**
 ```python
-# src/sdd/uat/approval_workflow.py (will be created)
+# src/solokit/uat/approval_workflow.py (will be created)
 class ApprovalWorkflow:
     def request_approval(self, work_item_id, stakeholders):
         # Send approval request
@@ -5928,17 +5928,17 @@ class ApprovalWorkflow:
 **Files Affected:**
 
 **New:**
-- `src/sdd/uat/demo_environment.py` (will be created) - Demo environment management
-- `src/sdd/uat/feedback_collector.py` (will be created) - Feedback collection
-- `src/sdd/uat/test_case_generator.py` (will be created) - UAT test case generation
-- `src/sdd/uat/approval_workflow.py` (will be created) - Approval management
+- `src/solokit/uat/demo_environment.py` (will be created) - Demo environment management
+- `src/solokit/uat/feedback_collector.py` (will be created) - Feedback collection
+- `src/solokit/uat/test_case_generator.py` (will be created) - UAT test case generation
+- `src/solokit/uat/approval_workflow.py` (will be created) - Approval management
 - `.session/tracking/feedback/` (will be created) - Feedback storage
 - `.session/tracking/approvals/` (will be created) - Approval records
 - Tests for UAT modules (will be created)
 
 **Modified:**
-- `src/sdd/session/complete.py` - Request approval before production deployment
-- `src/sdd/quality/gates.py` - Block deployment without approval
+- `src/solokit/session/complete.py` - Request approval before production deployment
+- `src/solokit/quality/gates.py` - Block deployment without approval
 - `.session/config.json` - UAT and approval configuration
 
 **Benefits:**
@@ -6023,7 +6023,7 @@ Implement **cost and resource optimization framework** for monitoring and reduci
 
 **Cost monitor:**
 ```python
-# src/sdd/cost/cost_monitor.py (will be created)
+# src/solokit/cost/cost_monitor.py (will be created)
 class CostMonitor:
     def track_current_costs(self):
         # Query cloud provider billing APIs
@@ -6043,7 +6043,7 @@ class CostMonitor:
 
 **Resource optimizer:**
 ```python
-# src/sdd/cost/resource_optimizer.py (will be created)
+# src/solokit/cost/resource_optimizer.py (will be created)
 class ResourceOptimizer:
     def identify_underutilized_resources(self):
         # Analyze CPU, memory, disk usage
@@ -6068,7 +6068,7 @@ class ResourceOptimizer:
 
 **Cost optimization engine:**
 ```python
-# src/sdd/cost/optimization_engine.py (will be created)
+# src/solokit/cost/optimization_engine.py (will be created)
 class CostOptimizationEngine:
     def recommend_spot_instances(self):
         # Identify workloads suitable for spot instances
@@ -6134,7 +6134,7 @@ cost_optimization:
 
 **Cost dashboard:**
 ```markdown
-# /sdd:cost-status
+# /sk:cost-status
 
 ## Monthly Cost Summary
 - **Current Month**: $1,247 / $2,000 budget (62%)
@@ -6177,29 +6177,29 @@ cost_optimization:
 **Commands:**
 ```bash
 # View cost status
-/sdd:cost-status [--environment prod|staging|dev]
+/sk:cost-status [--environment prod|staging|dev]
 
 # Analyze optimization opportunities
-/sdd:cost-optimize --analyze
+/sk:cost-optimize --analyze
 
 # Generate cost report
-/sdd:cost-report --period "2025-01-01..2025-12-31" --output pdf
+/sk:cost-report --period "2025-01-01..2025-12-31" --output pdf
 
 # Set budget alert
-/sdd:cost-budget-set --environment prod --limit 2000 --currency USD
+/sk:cost-budget-set --environment prod --limit 2000 --currency USD
 
 # Forecast costs
-/sdd:cost-forecast --months 6
+/sk:cost-forecast --months 6
 ```
 
 **Files Affected:**
 
 **New:**
-- `src/sdd/cost/cost_monitor.py` (will be created) - Cost tracking and monitoring
-- `src/sdd/cost/resource_optimizer.py` (will be created) - Resource utilization analysis
-- `src/sdd/cost/optimization_engine.py` (will be created) - Cost optimization recommendations
-- `src/sdd/cost/budget_manager.py` (will be created) - Budget tracking and alerts
-- `src/sdd/cost/cloud_provider_integrations/` (will be created) - AWS, GCP, Azure integrations
+- `src/solokit/cost/cost_monitor.py` (will be created) - Cost tracking and monitoring
+- `src/solokit/cost/resource_optimizer.py` (will be created) - Resource utilization analysis
+- `src/solokit/cost/optimization_engine.py` (will be created) - Cost optimization recommendations
+- `src/solokit/cost/budget_manager.py` (will be created) - Budget tracking and alerts
+- `src/solokit/cost/cloud_provider_integrations/` (will be created) - AWS, GCP, Azure integrations
 - `.claude/commands/cost-status.md` (will be created) - Cost status command
 - `.claude/commands/cost-optimize.md` (will be created) - Optimization command
 - `.claude/commands/cost-report.md` (will be created) - Cost reporting command
@@ -6208,7 +6208,7 @@ cost_optimization:
 - Tests for cost monitoring modules (will be created)
 
 **Modified:**
-- `src/sdd/project/init.py` - Add cost monitoring setup
+- `src/solokit/project/init.py` - Add cost monitoring setup
 - `.session/config.json` - Add cost optimization configuration
 - CI/CD workflows (will be created) - Add cost check jobs
 
@@ -6275,7 +6275,7 @@ Implement **AI-powered automated code review** that provides suggestions:
 
 **Code reviewer:**
 ```python
-# src/sdd/review/code_reviewer.py (will be created)
+# src/solokit/review/code_reviewer.py (will be created)
 class AutomatedCodeReviewer:
     def review_changes(self, file_changes):
         # Analyze code changes
@@ -6291,14 +6291,14 @@ class AutomatedCodeReviewer:
 **Files Affected:**
 
 **New:**
-- `src/sdd/review/code_reviewer.py` (will be created) - Automated review
-- `src/sdd/review/pattern_detector.py` (will be created) - Anti-pattern detection
-- `src/sdd/review/security_analyzer.py` (will be created) - Security vulnerability detection
+- `src/solokit/review/code_reviewer.py` (will be created) - Automated review
+- `src/solokit/review/pattern_detector.py` (will be created) - Anti-pattern detection
+- `src/solokit/review/security_analyzer.py` (will be created) - Security vulnerability detection
 - Tests for code review modules (will be created)
 
 **Modified:**
-- `src/sdd/session/complete.py` - Run automated review before completion
-- `src/sdd/quality/gates.py` - Add code review quality gate
+- `src/solokit/session/complete.py` - Run automated review before completion
+- `src/solokit/quality/gates.py` - Add code review quality gate
 - `.session/config.json` - Add code review configuration
 
 **Benefits:**

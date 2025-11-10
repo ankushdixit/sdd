@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.work_items.get_next_recommendations import get_ready_work_items
+from solokit.work_items.get_next_recommendations import get_ready_work_items
 
 
 @pytest.fixture
@@ -335,7 +335,7 @@ def test_get_ready_work_items_output_format(setup_work_items):
 
 def test_main_with_custom_limit(setup_work_items):
     """Test main function with custom limit."""
-    from sdd.work_items.get_next_recommendations import main
+    from solokit.work_items.get_next_recommendations import main
 
     with patch("sys.argv", ["get_next_recommendations.py", "--limit", "2"]):
         result = main()
@@ -345,7 +345,7 @@ def test_main_with_custom_limit(setup_work_items):
 
 def test_main_no_ready_items(tmp_path, monkeypatch):
     """Test main function when no ready items exist."""
-    from sdd.work_items.get_next_recommendations import main
+    from solokit.work_items.get_next_recommendations import main
 
     monkeypatch.chdir(tmp_path)
 

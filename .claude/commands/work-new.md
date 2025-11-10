@@ -49,7 +49,7 @@ Create a new work item using rich interactive UI components.
    - Header: "Dependencies"
    - Multi-select: true
    - Options:
-     - **Use optimized script**: Run `python -m sdd.work_items.get_dependencies --title "<title_from_question_2>" --max 3`
+     - **Use optimized script**: Run `python -m solokit.work_items.get_dependencies --title "<title_from_question_2>" --max 3`
      - This script automatically:
        - Excludes completed items (shows only: not_started, in_progress, blocked)
        - Filters by relevance based on the title
@@ -69,17 +69,17 @@ Create a new work item using rich interactive UI components.
 3. **Create the work item** by running:
 
 ```bash
-sdd work-new --type <type> --title "<title>" --priority <priority> --dependencies "<dep1,dep2>"
+sk work-new --type <type> --title "<title>" --priority <priority> --dependencies "<dep1,dep2>"
 ```
 
 Example:
 ```bash
-sdd work-new --type feature --title "Add user authentication" --priority high --dependencies "feature_database_setup,bug_session_timeout"
+sk work-new --type feature --title "Add user authentication" --priority high --dependencies "feature_database_setup,bug_session_timeout"
 ```
 
 If no dependencies:
 ```bash
-sdd work-new --type feature --title "Add user authentication" --priority high --dependencies ""
+sk work-new --type feature --title "Add user authentication" --priority high --dependencies ""
 ```
 
 4. **Show the output** to the user, which includes:
@@ -111,4 +111,4 @@ The spec file is the **single source of truth** for work item content. All imple
 For guidance on writing effective specs, see:
 - `docs/guides/writing-specs.md` - Best practices and examples
 - `docs/reference/spec-template-structure.md` - Template structure reference
-- `src/sdd/templates/{type}_spec.md` - Template examples for each work item type
+- `src/solokit/templates/{type}_spec.md` - Template examples for each work item type

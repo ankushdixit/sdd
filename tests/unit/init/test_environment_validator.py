@@ -7,7 +7,7 @@ Run tests:
     pytest tests/unit/init/test_environment_validator.py -v
 
 Run with coverage:
-    pytest tests/unit/init/test_environment_validator.py --cov=sdd.init.environment_validator --cov-report=term-missing
+    pytest tests/unit/init/test_environment_validator.py --cov=solokit.init.environment_validator --cov-report=term-missing
 
 Target: 90%+ coverage
 """
@@ -16,8 +16,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import ErrorCode, ValidationError
-from sdd.init.environment_validator import (
+from solokit.core.exceptions import ErrorCode, ValidationError
+from solokit.init.environment_validator import (
     attempt_node_install_with_nvm,
     attempt_python_install_with_pyenv,
     check_node_version,
@@ -70,7 +70,7 @@ class TestCheckNodeVersion:
 
     def test_node_not_installed(self):
         """Test when Node.js is not installed."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value=None):
+        with patch("solokit.init.environment_validator.shutil.which", return_value=None):
             meets_req, version = check_node_version()
 
             assert meets_req is False
@@ -78,8 +78,8 @@ class TestCheckNodeVersion:
 
     def test_node_meets_requirement(self):
         """Test when Node.js meets version requirement."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="v20.0.0")
@@ -91,8 +91,8 @@ class TestCheckNodeVersion:
 
     def test_node_below_requirement(self):
         """Test when Node.js is below version requirement."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="v16.0.0")
@@ -104,8 +104,8 @@ class TestCheckNodeVersion:
 
     def test_node_command_fails(self):
         """Test when node --version command fails."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=False, stdout="")
@@ -117,8 +117,8 @@ class TestCheckNodeVersion:
 
     def test_node_version_parse_error(self):
         """Test when version string cannot be parsed."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.shutil.which", return_value="/usr/bin/node"):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="invalid")
@@ -134,7 +134,7 @@ class TestCheckPythonVersion:
 
     def test_python_not_installed(self):
         """Test when Python is not installed."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value=None):
+        with patch("solokit.init.environment_validator.shutil.which", return_value=None):
             meets_req, version, binary = check_python_version()
 
             assert meets_req is False
@@ -143,8 +143,10 @@ class TestCheckPythonVersion:
 
     def test_python_meets_requirement(self):
         """Test when Python meets version requirement."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python3"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/python3"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="Python 3.11.7")
@@ -157,8 +159,10 @@ class TestCheckPythonVersion:
 
     def test_python_below_requirement(self):
         """Test when Python is below version requirement."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python3"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/python3"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="Python 3.9.0")
@@ -171,9 +175,9 @@ class TestCheckPythonVersion:
     def test_python_specific_binary(self):
         """Test checking specific Python binary."""
         with patch(
-            "sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python3.11"
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/python3.11"
         ):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="Python 3.11.0")
@@ -186,8 +190,10 @@ class TestCheckPythonVersion:
 
     def test_python_version_in_stderr(self):
         """Test when Python version is in stderr (Python 2.x behavior)."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/python"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/python"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="", stderr="Python 3.11.0")
@@ -203,7 +209,7 @@ class TestAttemptNodeInstallWithNvm:
 
     def test_nvm_not_installed(self, tmp_path):
         """Test when nvm is not installed."""
-        with patch("sdd.init.environment_validator.Path.home", return_value=tmp_path):
+        with patch("solokit.init.environment_validator.Path.home", return_value=tmp_path):
             success, message = attempt_node_install_with_nvm()
 
             assert success is False
@@ -215,8 +221,8 @@ class TestAttemptNodeInstallWithNvm:
         nvm_dir = tmp_path / ".nvm"
         nvm_dir.mkdir()
 
-        with patch("sdd.init.environment_validator.Path.home", return_value=tmp_path):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.Path.home", return_value=tmp_path):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="", stderr="")
@@ -231,8 +237,8 @@ class TestAttemptNodeInstallWithNvm:
         nvm_dir = tmp_path / ".nvm"
         nvm_dir.mkdir()
 
-        with patch("sdd.init.environment_validator.Path.home", return_value=tmp_path):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.environment_validator.Path.home", return_value=tmp_path):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=False, stderr="Install failed")
@@ -248,7 +254,7 @@ class TestAttemptPythonInstallWithPyenv:
 
     def test_pyenv_not_installed(self):
         """Test when pyenv is not installed."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value=None):
+        with patch("solokit.init.environment_validator.shutil.which", return_value=None):
             success, message = attempt_python_install_with_pyenv()
 
             assert success is False
@@ -257,8 +263,10 @@ class TestAttemptPythonInstallWithPyenv:
 
     def test_pyenv_install_success(self):
         """Test successful Python installation via pyenv."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True, stdout="", stderr="")
@@ -270,8 +278,10 @@ class TestAttemptPythonInstallWithPyenv:
 
     def test_pyenv_install_failure(self):
         """Test failed Python installation via pyenv."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=False, stderr="Install failed")
@@ -283,8 +293,10 @@ class TestAttemptPythonInstallWithPyenv:
 
     def test_pyenv_custom_version(self):
         """Test installing specific Python version."""
-        with patch("sdd.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"):
-            with patch("sdd.init.environment_validator.CommandRunner") as mock_runner_class:
+        with patch(
+            "solokit.init.environment_validator.shutil.which", return_value="/usr/bin/pyenv"
+        ):
+            with patch("solokit.init.environment_validator.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(success=True)
@@ -303,7 +315,7 @@ class TestValidateEnvironment:
     def test_saas_t3_node_ok(self):
         """Test validation for saas_t3 stack with valid Node.js."""
         with patch(
-            "sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
+            "solokit.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
         ):
             result = validate_environment("saas_t3", auto_update=False)
 
@@ -313,7 +325,9 @@ class TestValidateEnvironment:
 
     def test_saas_t3_node_missing_no_auto_update(self):
         """Test validation for saas_t3 with missing Node.js, no auto-update."""
-        with patch("sdd.init.environment_validator.check_node_version", return_value=(False, None)):
+        with patch(
+            "solokit.init.environment_validator.check_node_version", return_value=(False, None)
+        ):
             with pytest.raises(ValidationError) as exc:
                 validate_environment("saas_t3", auto_update=False)
 
@@ -322,12 +336,12 @@ class TestValidateEnvironment:
 
     def test_saas_t3_node_auto_update_success(self):
         """Test auto-update successfully installs Node.js."""
-        with patch("sdd.init.environment_validator.check_node_version") as mock_check:
+        with patch("solokit.init.environment_validator.check_node_version") as mock_check:
             # First call: not installed, second call after install: installed
             mock_check.side_effect = [(False, None), (True, "v20.0.0")]
 
             with patch(
-                "sdd.init.environment_validator.attempt_node_install_with_nvm",
+                "solokit.init.environment_validator.attempt_node_install_with_nvm",
                 return_value=(True, "Success"),
             ):
                 result = validate_environment("saas_t3", auto_update=True)
@@ -338,7 +352,7 @@ class TestValidateEnvironment:
     def test_ml_ai_fastapi_python_ok(self):
         """Test validation for ml_ai_fastapi with valid Python."""
         with patch(
-            "sdd.init.environment_validator.check_python_version",
+            "solokit.init.environment_validator.check_python_version",
             return_value=(True, "3.11.7", "/usr/bin/python3"),
         ):
             result = validate_environment("ml_ai_fastapi", auto_update=False)
@@ -350,11 +364,12 @@ class TestValidateEnvironment:
     def test_ml_ai_fastapi_python_missing_no_auto_update(self):
         """Test validation for ml_ai_fastapi with missing Python, no auto-update."""
         with patch(
-            "sdd.init.environment_validator.check_python_version", return_value=(False, None, None)
+            "solokit.init.environment_validator.check_python_version",
+            return_value=(False, None, None),
         ):
             # Check for python3.11 specifically also fails
             with patch(
-                "sdd.init.environment_validator.check_python_version",
+                "solokit.init.environment_validator.check_python_version",
                 return_value=(False, None, None),
             ):
                 with pytest.raises(ValidationError) as exc:
@@ -364,7 +379,7 @@ class TestValidateEnvironment:
 
     def test_ml_ai_fastapi_finds_python311_specifically(self):
         """Test that it checks for python3.11 specifically if default fails."""
-        with patch("sdd.init.environment_validator.check_python_version") as mock_check:
+        with patch("solokit.init.environment_validator.check_python_version") as mock_check:
             # First call with no args: fails
             # Second call with "python3.11": succeeds
             mock_check.side_effect = [
@@ -380,7 +395,7 @@ class TestValidateEnvironment:
     def test_dashboard_refine_requires_node(self):
         """Test validation for dashboard_refine stack."""
         with patch(
-            "sdd.init.environment_validator.check_node_version", return_value=(True, "v18.0.0")
+            "solokit.init.environment_validator.check_node_version", return_value=(True, "v18.0.0")
         ):
             result = validate_environment("dashboard_refine", auto_update=False)
 
@@ -389,7 +404,7 @@ class TestValidateEnvironment:
     def test_fullstack_nextjs_requires_node(self):
         """Test validation for fullstack_nextjs stack."""
         with patch(
-            "sdd.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
+            "solokit.init.environment_validator.check_node_version", return_value=(True, "v20.0.0")
         ):
             result = validate_environment("fullstack_nextjs", auto_update=False)
 
@@ -397,7 +412,9 @@ class TestValidateEnvironment:
 
     def test_error_context_includes_stack_info(self):
         """Test that validation error includes stack context."""
-        with patch("sdd.init.environment_validator.check_node_version", return_value=(False, None)):
+        with patch(
+            "solokit.init.environment_validator.check_node_version", return_value=(False, None)
+        ):
             with pytest.raises(ValidationError) as exc:
                 validate_environment("saas_t3", auto_update=False)
 

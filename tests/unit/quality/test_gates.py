@@ -12,9 +12,9 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.core.exceptions import SpecValidationError
-from sdd.quality.gates import QualityGates
+from solokit.core.command_runner import CommandResult
+from solokit.core.exceptions import SpecValidationError
+from solokit.quality.gates import QualityGates
 
 
 class TestQualityGatesInit:
@@ -212,7 +212,7 @@ class TestQualityGatesLanguageDetection:
 class TestQualityGatesTestExecution:
     """Tests for test execution and coverage validation."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_success_with_coverage(self, mock_run):
         """Test running tests successfully with coverage above threshold."""
         # Arrange
@@ -241,7 +241,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "passed"
         assert results["coverage"] == 85.5
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_failure(self, mock_run):
         """Test running tests that fail."""
         # Arrange
@@ -269,7 +269,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert results["returncode"] == 1
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_coverage_below_threshold(self, mock_run):
         """Test running tests with coverage below threshold."""
         # Arrange
@@ -296,7 +296,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert "Coverage 60.0% below threshold 80%" in results["reason"]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_no_tests_collected(self, mock_run):
         """Test running tests when no tests are collected (exit code 5)."""
         # Arrange
@@ -319,7 +319,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "skipped"
         assert results["reason"] == "no tests collected"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_timeout(self, mock_run):
         """Test running tests that timeout."""
         # Arrange
@@ -347,7 +347,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "failed"
         assert results["reason"] == "timeout"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_pytest_not_available(self, mock_run):
         """Test running tests when pytest is not available."""
         # Arrange
@@ -406,7 +406,7 @@ class TestQualityGatesTestExecution:
         assert results["status"] == "skipped"
         assert "no command for ruby" in results["reason"]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_auto_detect_language(self, mock_run):
         """Test running tests with auto-detected language."""
         # Arrange
@@ -435,7 +435,7 @@ class TestQualityGatesCoverageParsing:
     def test_parse_coverage_python_valid_json(self, temp_dir):
         """Test parsing Python coverage from valid JSON file."""
         # Arrange
-        from sdd.quality.checkers.tests import ExecutionChecker
+        from solokit.quality.checkers.tests import ExecutionChecker
 
         coverage_data = {"totals": {"percent_covered": 92.5}}
         coverage_file = temp_dir / "coverage.json"
@@ -452,7 +452,7 @@ class TestQualityGatesCoverageParsing:
     def test_parse_coverage_python_file_not_found(self, temp_dir):
         """Test parsing Python coverage when file doesn't exist."""
         # Arrange
-        from sdd.quality.checkers.tests import ExecutionChecker
+        from solokit.quality.checkers.tests import ExecutionChecker
 
         # Act - no coverage.json file exists
         test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
@@ -465,7 +465,7 @@ class TestQualityGatesCoverageParsing:
     def test_parse_coverage_javascript_valid_json(self, temp_dir):
         """Test parsing JavaScript coverage from valid JSON file."""
         # Arrange
-        from sdd.quality.checkers.tests import ExecutionChecker
+        from solokit.quality.checkers.tests import ExecutionChecker
 
         coverage_data = {"total": {"lines": {"pct": 88.3}}}
         coverage_dir = temp_dir / "coverage"
@@ -484,7 +484,7 @@ class TestQualityGatesCoverageParsing:
     def test_parse_coverage_typescript(self, temp_dir):
         """Test parsing TypeScript coverage (uses same format as JavaScript)."""
         # Arrange
-        from sdd.quality.checkers.tests import ExecutionChecker
+        from solokit.quality.checkers.tests import ExecutionChecker
 
         coverage_data = {"total": {"lines": {"pct": 95.0}}}
         coverage_dir = temp_dir / "coverage"
@@ -503,7 +503,7 @@ class TestQualityGatesCoverageParsing:
     def test_parse_coverage_unsupported_language(self, temp_dir):
         """Test parsing coverage for unsupported language returns None."""
         # Arrange
-        from sdd.quality.checkers.tests import ExecutionChecker
+        from solokit.quality.checkers.tests import ExecutionChecker
 
         # Act
         test_config = {"enabled": True, "commands": {}, "coverage_threshold": 80}
@@ -517,7 +517,7 @@ class TestQualityGatesCoverageParsing:
 class TestQualityGatesSecurityScan:
     """Tests for security vulnerability scanning."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_bandit_no_issues(self, mock_close, mock_run, temp_dir):
         """Test running security scan with bandit finding no issues."""
@@ -546,7 +546,7 @@ class TestQualityGatesSecurityScan:
         assert results["status"] == "passed"
         mock_close.assert_called_once_with(999)
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_bandit_high_severity(self, mock_close, mock_run, temp_dir):
         """Test running security scan with high severity issues."""
@@ -575,7 +575,7 @@ class TestQualityGatesSecurityScan:
         assert "HIGH" in results["by_severity"]
         assert results["by_severity"]["HIGH"] == 1
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_python_low_severity_passes(self, mock_close, mock_run, temp_dir):
         """Test running security scan with low severity issues passes."""
@@ -603,7 +603,7 @@ class TestQualityGatesSecurityScan:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_security_scan_bandit_not_available(self, mock_run):
         """Test running security scan when bandit is not available."""
         # Arrange
@@ -628,7 +628,7 @@ class TestQualityGatesSecurityScan:
         # Assert
         assert passed is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_security_scan_javascript_npm_audit(self, mock_run, temp_dir):
         """Test running security scan for JavaScript with npm audit."""
         # Arrange
@@ -676,7 +676,7 @@ class TestQualityGatesSecurityScan:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_custom_fail_threshold_medium(self, mock_close, mock_run, temp_dir):
         """Test security scan with custom fail threshold at medium."""
@@ -711,7 +711,7 @@ class TestQualityGatesSecurityScan:
 class TestQualityGatesLinting:
     """Tests for code linting validation."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_success(self, mock_run):
         """Test running linting successfully with no issues."""
         # Arrange
@@ -737,7 +737,7 @@ class TestQualityGatesLinting:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_with_issues(self, mock_run):
         """Test running linting with issues found."""
         # Arrange
@@ -764,7 +764,7 @@ class TestQualityGatesLinting:
         assert results["status"] == "failed"
         assert results["issues_found"] == 1
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_with_auto_fix(self, mock_run):
         """Test running linting with auto-fix enabled."""
         # Arrange
@@ -788,7 +788,7 @@ class TestQualityGatesLinting:
         mock_runner.run.assert_called_once()
         assert "--fix" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_javascript_with_auto_fix(self, mock_run):
         """Test running linting for JavaScript with auto-fix."""
         # Arrange
@@ -825,7 +825,7 @@ class TestQualityGatesLinting:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_tool_not_found_required(self, mock_run):
         """Test running linting when tool not found and gate is required."""
         # Arrange
@@ -853,7 +853,7 @@ class TestQualityGatesLinting:
         assert results["status"] == "failed"
         assert results["reason"] == "tool not found"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_tool_not_found_optional(self, mock_run):
         """Test running linting when tool not found and gate is optional."""
         # Arrange
@@ -884,7 +884,7 @@ class TestQualityGatesLinting:
 class TestQualityGatesFormatting:
     """Tests for code formatting validation."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_success(self, mock_run):
         """Test running formatting check successfully."""
         # Arrange
@@ -910,7 +910,7 @@ class TestQualityGatesFormatting:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_python_check_mode(self, mock_run):
         """Test running Python formatting in check mode (no auto-fix)."""
         # Arrange
@@ -933,7 +933,7 @@ class TestQualityGatesFormatting:
         mock_runner.run.assert_called_once()
         assert "--check" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_python_auto_fix(self, mock_run):
         """Test running Python formatting with auto-fix."""
         # Arrange
@@ -957,7 +957,7 @@ class TestQualityGatesFormatting:
         # Should not have --check flag when auto_fix is True
         assert "--check" not in str(mock_runner.run.call_args)
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_javascript_auto_fix(self, mock_run):
         """Test running JavaScript formatting with auto-fix."""
         # Arrange
@@ -980,7 +980,7 @@ class TestQualityGatesFormatting:
         mock_runner.run.assert_called_once()
         assert "--write" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_javascript_check_mode(self, mock_run):
         """Test running JavaScript formatting in check mode."""
         # Arrange
@@ -1003,7 +1003,7 @@ class TestQualityGatesFormatting:
         mock_runner.run.assert_called_once()
         assert "--check" in mock_runner.run.call_args[0][0]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_unformatted_files(self, mock_run):
         """Test running formatting when files are not formatted."""
         # Arrange
@@ -1045,7 +1045,7 @@ class TestQualityGatesFormatting:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_tool_not_found_required(self, mock_run):
         """Test running formatting when tool not found and gate is required."""
         # Arrange
@@ -1078,7 +1078,7 @@ class TestQualityGatesFormatting:
 class TestQualityGatesDocumentation:
     """Tests for documentation validation."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_validate_documentation_all_checks_pass(self, mock_run):
         """Test validating documentation when all checks pass."""
         # Arrange
@@ -1130,11 +1130,11 @@ class TestQualityGatesDocumentation:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_changelog_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG updated on feature branch."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
         mock_runner.run.side_effect = [
@@ -1167,11 +1167,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_changelog_not_updated_on_feature_branch(self, mock_run):
         """Test checking CHANGELOG not updated on feature branch."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
         mock_runner.run.side_effect = [
@@ -1204,11 +1204,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_changelog_on_main_branch_skipped(self, mock_run):
         """Test checking CHANGELOG on main branch is skipped."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1230,11 +1230,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_python_docstrings_pass(self, mock_run):
         """Test checking Python docstrings when all present."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1256,11 +1256,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_python_docstrings_missing(self, mock_run):
         """Test checking Python docstrings when some are missing."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1286,11 +1286,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is False
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_python_docstrings_tool_not_available(self, mock_run):
         """Test checking Python docstrings when pydocstyle not available."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1316,11 +1316,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True  # Skip check if tool not available
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_readme_current_updated(self, mock_run):
         """Test checking README was updated."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1346,11 +1346,11 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_check_readme_current_not_updated(self, mock_run):
         """Test checking README was not updated."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
 
@@ -1390,7 +1390,7 @@ class TestQualityGatesSpecCompleteness:
 
         # Act
         with patch(
-            "sdd.quality.checkers.spec_completeness.validate_spec_file", return_value=(True, [])
+            "solokit.quality.checkers.spec_completeness.validate_spec_file", return_value=(True, [])
         ):
             passed, results = gates.validate_spec_completeness(work_item)
 
@@ -1409,7 +1409,9 @@ class TestQualityGatesSpecCompleteness:
 
         # Act
         # Mock validate_spec_file to raise SpecValidationError
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file") as mock_validate:
+        with patch(
+            "solokit.quality.checkers.spec_completeness.validate_spec_file"
+        ) as mock_validate:
             mock_validate.side_effect = SpecValidationError(work_item_id="WI-001", errors=errors)
             passed, results = gates.validate_spec_completeness(work_item)
 
@@ -1447,7 +1449,7 @@ class TestQualityGatesSpecCompleteness:
         # Act
         # Simulate validator raising an OSError (caught by checker)
         with patch(
-            "sdd.quality.checkers.spec_completeness.validate_spec_file",
+            "solokit.quality.checkers.spec_completeness.validate_spec_file",
             side_effect=OSError("Validator not available"),
         ):
             passed, results = gates.validate_spec_completeness(work_item)
@@ -1478,7 +1480,7 @@ class TestQualityGatesSpecCompleteness:
 class TestQualityGatesCustomValidations:
     """Tests for custom validation rules."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_custom_validations_command_success(self, mock_run):
         """Test running custom command validation successfully."""
         # Arrange
@@ -1505,7 +1507,7 @@ class TestQualityGatesCustomValidations:
         assert passed is True
         assert results["status"] == "passed"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_custom_validations_command_failure(self, mock_run):
         """Test running custom command validation that fails."""
         # Arrange
@@ -1553,7 +1555,7 @@ class TestQualityGatesCustomValidations:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
+        with patch("solokit.quality.gates.Path") as mock_path:
             mock_path.return_value.exists.return_value = True
             passed, results = gates.run_custom_validations(work_item)
 
@@ -1578,14 +1580,14 @@ class TestQualityGatesCustomValidations:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
+        with patch("solokit.quality.gates.Path") as mock_path:
             mock_path.return_value.exists.return_value = False
             passed, results = gates.run_custom_validations(work_item)
 
         # Assert
         assert passed is False
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_custom_validations_grep_pattern_found(self, mock_run):
         """Test grep validation when pattern is found."""
         # Arrange
@@ -1616,7 +1618,7 @@ class TestQualityGatesCustomValidations:
         # Assert
         assert passed is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_custom_validations_grep_pattern_not_found(self, mock_run):
         """Test grep validation when pattern is not found."""
         # Arrange
@@ -1666,7 +1668,7 @@ class TestQualityGatesCustomValidations:
             gates = QualityGates()
 
         # Act
-        with patch("sdd.quality.gates.Path") as mock_path:
+        with patch("solokit.quality.gates.Path") as mock_path:
             mock_path.return_value.exists.return_value = False
             passed, results = gates.run_custom_validations(work_item)
 
@@ -1873,7 +1875,7 @@ class TestQualityGatesContext7:
     def test_verify_context7_libraries_no_stack_file(self, temp_dir):
         """Test Context7 verification when stack.txt doesn't exist."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         config = {"enabled": True}
         checker = Context7Checker(config=config, project_root=temp_dir)
@@ -1889,7 +1891,7 @@ class TestQualityGatesContext7:
     def test_parse_libraries_from_stack(self, temp_dir):
         """Test parsing libraries from stack.txt file."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         stack_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1911,7 +1913,7 @@ class TestQualityGatesContext7:
     def test_should_verify_library_with_important_list(self):
         """Test checking if library should be verified with important list."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "pytest", "version": "7.4.0"}
         config = {"enabled": True, "important_libraries": ["pytest", "ruff"]}
@@ -1926,7 +1928,7 @@ class TestQualityGatesContext7:
     def test_should_verify_library_not_in_important_list(self):
         """Test library not in important list is not verified."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "other-lib", "version": "1.0.0"}
         config = {"enabled": True, "important_libraries": ["pytest", "ruff"]}
@@ -1941,7 +1943,7 @@ class TestQualityGatesContext7:
     def test_should_verify_library_no_important_list(self):
         """Test all libraries verified when no important list configured."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "any-lib", "version": "1.0.0"}
         config = {"enabled": True}
@@ -1956,7 +1958,7 @@ class TestQualityGatesContext7:
     def test_query_context7_stub_returns_true(self):
         """Test Context7 query stub returns True."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         lib = {"name": "pytest", "version": "7.4.0"}
         config = {"enabled": True}
@@ -2041,7 +2043,7 @@ class TestQualityGatesIntegration:
         assert results["docker_available"] is True
         assert results["docker_compose_available"] is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_validate_integration_environment_docker_not_available(self, mock_run):
         """Test validating integration environment without Docker."""
         # Arrange
@@ -2073,7 +2075,7 @@ class TestQualityGatesIntegration:
         assert passed is False
         assert results["docker_available"] is False
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_validate_integration_environment_missing_config_files(self, mock_run):
         """Test validating integration environment with missing config files."""
         # Arrange
@@ -2143,8 +2145,10 @@ class TestQualityGatesIntegration:
 
             # Act - Patch for the IntegrationChecker's config file read
             with (
-                patch("sdd.quality.checkers.integration.Path") as mock_path_class,
-                patch("sdd.quality.checkers.integration.open", mock_open(read_data=config_data)),
+                patch("solokit.quality.checkers.integration.Path") as mock_path_class,
+                patch(
+                    "solokit.quality.checkers.integration.open", mock_open(read_data=config_data)
+                ),
             ):
                 mock_config_path = Mock()
                 mock_config_path.exists.return_value = True
@@ -2178,8 +2182,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_all_pass(self):
         """Test running deployment gates when all pass."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2213,8 +2217,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_integration_fails(self):
         """Test running deployment gates when integration tests fail."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2248,8 +2252,8 @@ class TestQualityGatesDeployment:
     def test_run_deployment_gates_security_fails(self):
         """Test running deployment gates when security scan fails."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -2283,7 +2287,7 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_environment_success(self):
         """Test validating deployment environment fallback returns True."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"specification": "environment: staging"}
         config = {"enabled": True}
@@ -2300,7 +2304,7 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_environment_validator_not_available(self):
         """Test deployment environment validation when validator not available."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"specification": "environment: staging"}
         config = {"enabled": True}
@@ -2315,7 +2319,7 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_documentation_all_sections_present(self):
         """Test deployment documentation validation with all sections."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {
             "specification": """
@@ -2345,7 +2349,7 @@ class TestQualityGatesDeployment:
     def test_validate_deployment_documentation_missing_sections(self):
         """Test deployment documentation validation with missing sections."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {
             "specification": """
@@ -2366,7 +2370,7 @@ class TestQualityGatesDeployment:
     def test_check_rollback_tested_stub(self):
         """Test rollback tested check (stub implementation)."""
         # Arrange
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
         config = {"enabled": True}
@@ -2385,7 +2389,7 @@ class TestQualityGatesHelperMethods:
     def test_run_command_validation_success(self, temp_dir):
         """Test running command validation successfully."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2404,7 +2408,7 @@ class TestQualityGatesHelperMethods:
     def test_run_command_validation_failure(self, temp_dir):
         """Test running command validation that fails."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2423,7 +2427,7 @@ class TestQualityGatesHelperMethods:
     def test_run_command_validation_exception(self, temp_dir):
         """Test running command validation with exception."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2445,7 +2449,7 @@ class TestQualityGatesHelperMethods:
     def test_run_command_validation_no_command(self, temp_dir):
         """Test running command validation with no command specified."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         rule = {}
 
@@ -2459,7 +2463,7 @@ class TestQualityGatesHelperMethods:
     def test_check_file_exists_file_present(self, temp_dir):
         """Test checking file exists when file is present."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         test_file = temp_dir / "test.txt"
         test_file.touch()
@@ -2475,7 +2479,7 @@ class TestQualityGatesHelperMethods:
     def test_check_file_exists_file_missing(self, temp_dir):
         """Test checking file exists when file is missing."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         rule = {"path": "nonexistent/file.txt"}
 
@@ -2489,7 +2493,7 @@ class TestQualityGatesHelperMethods:
     def test_check_file_exists_no_path(self, temp_dir):
         """Test checking file exists with no path specified."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         rule = {}
 
@@ -2503,7 +2507,7 @@ class TestQualityGatesHelperMethods:
     def test_run_grep_validation_pattern_found(self, temp_dir):
         """Test running grep validation when pattern is found."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2522,7 +2526,7 @@ class TestQualityGatesHelperMethods:
     def test_run_grep_validation_pattern_not_found(self, temp_dir):
         """Test running grep validation when pattern is not found."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2541,7 +2545,7 @@ class TestQualityGatesHelperMethods:
     def test_run_grep_validation_exception(self, temp_dir):
         """Test running grep validation with exception."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2559,7 +2563,7 @@ class TestQualityGatesHelperMethods:
     def test_run_grep_validation_no_pattern(self, temp_dir):
         """Test running grep validation with no pattern specified."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         rule = {"files": "."}
 
@@ -2574,7 +2578,7 @@ class TestQualityGatesHelperMethods:
 class TestQualityGatesAdditionalCoverage:
     """Additional tests to increase coverage for quality_gates.py."""
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_tests_general_exception(self, mock_run):
         """Test running tests with general exception."""
         # Arrange
@@ -2599,7 +2603,7 @@ class TestQualityGatesAdditionalCoverage:
         assert results["status"] == "failed"
         assert "Unexpected error" in results["errors"]
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_bandit_invalid_json(self, mock_close, mock_run, temp_dir):
         """Test security scan with invalid JSON in bandit output."""
@@ -2625,7 +2629,7 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert passed is True  # Should pass since invalid JSON is skipped
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_bandit_empty_file(self, mock_close, mock_run, temp_dir):
         """Test security scan with empty bandit output file."""
@@ -2651,7 +2655,7 @@ class TestQualityGatesAdditionalCoverage:
         # Assert
         assert passed is True  # Should pass since empty file is skipped
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     @patch("os.close")
     def test_run_security_scan_with_safety_results(self, mock_close, mock_run, temp_dir):
         """Test security scan with both bandit and safety results."""
@@ -2689,7 +2693,7 @@ class TestQualityGatesAdditionalCoverage:
         assert results["status"] == "passed"  # No high severity issues trigger failure
         assert len(results["vulnerabilities"]) > 0
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_security_scan_invalid_fail_on_threshold(self, mock_run):
         """Test security scan with invalid fail_on threshold."""
         # Arrange
@@ -2716,7 +2720,7 @@ class TestQualityGatesAdditionalCoverage:
         # Should default to "HIGH" when invalid threshold specified
         assert passed is True
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_linting_timeout(self, mock_run):
         """Test linting with timeout exception."""
         # Arrange
@@ -2744,7 +2748,7 @@ class TestQualityGatesAdditionalCoverage:
         assert passed is True
         assert results["status"] == "skipped"
 
-    @patch("sdd.quality.gates.CommandRunner")
+    @patch("solokit.quality.gates.CommandRunner")
     def test_run_formatting_timeout(self, mock_run):
         """Test formatting with timeout exception."""
         # Arrange
@@ -2777,7 +2781,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_check_changelog_git_exception(self, temp_dir):
         """Test CHANGELOG check with git exception."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2794,7 +2798,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_check_python_docstrings_timeout(self, temp_dir):
         """Test Python docstring check with timeout."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2816,7 +2820,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_check_readme_current_exception(self, temp_dir):
         """Test README check with exception."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -2833,7 +2837,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_validate_documentation_with_work_item(self, temp_dir):
         """Test documentation validation with work item parameter."""
         # Arrange
-        from sdd.quality.checkers.documentation import DocumentationChecker
+        from solokit.quality.checkers.documentation import DocumentationChecker
 
         work_item = {"id": "WI-001", "type": "feature"}
 
@@ -2892,7 +2896,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_verify_context7_libraries_with_libraries(self, temp_dir):
         """Test Context7 verification with actual libraries."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         stack_file.parent.mkdir(parents=True, exist_ok=True)
@@ -2913,7 +2917,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_verify_context7_libraries_with_failures(self, temp_dir):
         """Test Context7 verification with failed verifications."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         stack_file.parent.mkdir(parents=True, exist_ok=True)
@@ -2934,7 +2938,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_parse_libraries_from_stack_with_comments(self, temp_dir):
         """Test parsing libraries with comments and empty lines."""
         # Arrange
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.quality.checkers.context7 import Context7Checker
 
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         stack_file.parent.mkdir(parents=True, exist_ok=True)
@@ -2954,8 +2958,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_parse_libraries_from_stack_exception(self, temp_dir):
         """Test parsing libraries with file read exception raises FileOperationError."""
         # Arrange
-        from sdd.core.exceptions import FileOperationError
-        from sdd.quality.checkers.context7 import Context7Checker
+        from solokit.core.exceptions import FileOperationError
+        from solokit.quality.checkers.context7 import Context7Checker
 
         stack_file = temp_dir / ".session" / "tracking" / "stack.txt"
         config = {"enabled": True}
@@ -3001,7 +3005,7 @@ class TestQualityGatesAdditionalCoverage:
                 }
             },
         ):
-            with patch("sdd.quality.gates.Path") as mock_path:
+            with patch("solokit.quality.gates.Path") as mock_path:
                 mock_path.return_value.exists.return_value = True
                 passed, results = gates.run_custom_validations(work_item)
 
@@ -3012,7 +3016,7 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_command_validation_timeout(self, temp_dir):
         """Test command validation with timeout."""
         # Arrange
-        from sdd.quality.checkers.custom import CustomValidationChecker
+        from solokit.quality.checkers.custom import CustomValidationChecker
 
         mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
@@ -3107,8 +3111,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_environment_fails(self):
         """Test deployment gates when environment validation fails."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -3149,8 +3153,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_documentation_fails(self):
         """Test deployment gates when documentation validation fails."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 
@@ -3189,8 +3193,8 @@ class TestQualityGatesAdditionalCoverage:
     def test_run_deployment_gates_rollback_fails(self):
         """Test deployment gates when rollback test fails."""
         # Arrange
-        from sdd.quality.checkers.base import CheckResult
-        from sdd.quality.checkers.deployment import DeploymentChecker
+        from solokit.quality.checkers.base import CheckResult
+        from solokit.quality.checkers.deployment import DeploymentChecker
 
         work_item = {"type": "deployment"}
 

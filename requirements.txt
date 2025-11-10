@@ -1,4 +1,4 @@
-# SDD (Session-Driven Development) - Python Dependencies
+# Solokit (Session-Driven Development) - Python Dependencies
 # Generated: 2025-10-18
 
 # ============================================================================

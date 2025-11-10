@@ -5,8 +5,8 @@ Tests for the ResultAggregator class which combines results from multiple checke
 
 import pytest
 
-from sdd.quality.checkers.base import CheckResult
-from sdd.quality.results import ResultAggregator
+from solokit.quality.checkers.base import CheckResult
+from solokit.quality.results import ResultAggregator
 
 
 @pytest.fixture

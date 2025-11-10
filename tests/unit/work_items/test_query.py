@@ -8,8 +8,8 @@ import json
 
 import pytest
 
-from sdd.work_items.query import WorkItemQuery
-from sdd.work_items.repository import WorkItemRepository
+from solokit.work_items.query import WorkItemQuery
+from solokit.work_items.repository import WorkItemRepository
 
 
 @pytest.fixture

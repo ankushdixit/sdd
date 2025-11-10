@@ -1,6 +1,6 @@
 # Init Command
 
-**Usage:** `sdd init [OPTIONS]`
+**Usage:** `sk init [OPTIONS]`
 
 **Description:** Initialize a new Session-Driven Development project with template-based structure.
 
@@ -23,7 +23,7 @@ Run without arguments for guided setup:
 
 ```bash
 cd your-project-directory
-sdd init
+sk init
 ```
 
 You'll be prompted to select:
@@ -37,7 +37,7 @@ You'll be prompted to select:
 Specify all options at once:
 
 ```bash
-sdd init \
+sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
@@ -86,7 +86,7 @@ Select the quality tier for your project.
 Set test coverage target percentage (60, 70, 80, or 90).
 
 ```bash
-sdd init --coverage=80  # Require 80% code coverage
+sk init --coverage=80  # Require 80% code coverage
 ```
 
 This configures:
@@ -106,7 +106,7 @@ Comma-separated list of additional features to include.
 - `env_templates` - Environment variable templates for all environments
 
 ```bash
-sdd init --options=ci_cd,docker
+sk init --options=ci_cd,docker
 ```
 
 ## Installation Process
@@ -160,7 +160,7 @@ The init command performs these steps:
 
 ```bash
 cd my-saas-app
-sdd init \
+sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
@@ -183,7 +183,7 @@ sdd init \
 
 ```bash
 cd my-prototype
-sdd init \
+sk init \
   --template=fullstack_nextjs \
   --tier=tier-1-essential \
   --coverage=60
@@ -201,7 +201,7 @@ sdd init \
 
 ```bash
 cd admin-panel
-sdd init \
+sk init \
   --template=dashboard_refine \
   --tier=tier-3-comprehensive \
   --coverage=80 \
@@ -222,7 +222,7 @@ sdd init \
 
 ```bash
 cd ml-api
-sdd init \
+sk init \
   --template=ml_ai_fastapi \
   --tier=tier-2-standard \
   --coverage=70 \
@@ -243,7 +243,7 @@ sdd init \
 Once initialization completes, you'll see:
 
 ```
-✅ SDD Template Initialization Complete!
+✅ Solokit Template Initialization Complete!
 
 📦 Template: SaaS Application (T3 Stack)
 🎯 Quality Tier: tier-4-production
@@ -258,8 +258,8 @@ Once initialization completes, you'll see:
 
 🚀 Next Steps:
    1. Review README.md for getting started guide
-   2. Create your first work item: /sdd:work-new
-   3. Start working: /sdd:start
+   2. Create your first work item: /sk:work-new
+   3. Start working: /sk:start
 ```
 
 ### Next Steps
@@ -302,12 +302,12 @@ Once initialization completes, you'll see:
 
 5. **Create work items:**
    ```bash
-   /sdd:work-new
+   /sk:work-new
    ```
 
 6. **Start session:**
    ```bash
-   /sdd:start
+   /sk:start
    ```
 
 ## Troubleshooting
@@ -394,7 +394,7 @@ By default, the project name is the directory name:
 ```bash
 mkdir my-awesome-app
 cd my-awesome-app
-sdd init  # Project name will be "my-awesome-app"
+sk init  # Project name will be "my-awesome-app"
 ```
 
 ### Reinitializing
@@ -409,7 +409,7 @@ To change tier or add options:
 
 2. **Reinitialize with new settings:**
    ```bash
-   sdd init --template=saas_t3 --tier=tier-3-comprehensive
+   sk init --template=saas_t3 --tier=tier-3-comprehensive
    ```
 
 3. **Review changes:**
@@ -424,7 +424,7 @@ To change tier or add options:
 To initialize without optional features:
 
 ```bash
-sdd init --template=saas_t3 --tier=tier-2-standard --coverage=70
+sk init --template=saas_t3 --tier=tier-2-standard --coverage=70
 # No --options specified = no optional features
 ```
 
@@ -452,7 +452,7 @@ Init creates these key configuration files:
 - `.editorconfig` - Editor configuration
 - `.env.example` - Environment variable template
 - `README.md` - Project documentation
-- `.session/config.json` - SDD configuration
+- `.session/config.json` - Solokit configuration
 
 ## See Also
 

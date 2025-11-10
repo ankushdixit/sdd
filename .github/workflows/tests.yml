@@ -67,11 +67,11 @@ jobs:
 
     - name: Run ruff check
       run: |
-        ruff check src/sdd/ tests/
+        ruff check src/solokit/ tests/
 
     - name: Run ruff format check
       run: |
-        ruff format --check src/sdd/ tests/
+        ruff format --check src/solokit/ tests/
 
   type-check:
     name: Type Checking with mypy
@@ -95,8 +95,8 @@ jobs:
 
     - name: Run mypy type checking
       run: |
-        # mypy uses pyproject.toml config which ignores sdd.templates.*
-        mypy src/sdd
+        # mypy uses pyproject.toml config which ignores solokit.templates.*
+        mypy src/solokit
 
   security:
     name: Security Scanning
@@ -119,8 +119,8 @@ jobs:
 
     - name: Run bandit security scan
       run: |
-        bandit -r src/sdd/ -c .bandit -f json -o bandit-report.json || true
-        bandit -r src/sdd/ -c .bandit || true
+        bandit -r src/solokit/ -c .bandit -f json -o bandit-report.json || true
+        bandit -r src/solokit/ -c .bandit || true
 
     - name: Run safety check
       run: |

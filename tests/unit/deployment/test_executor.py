@@ -17,14 +17,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     DeploymentStepError,
     PreDeploymentCheckError,
     RollbackError,
     SmokeTestError,
     ValidationError,
 )
-from sdd.deployment.executor import DeploymentExecutor
+from solokit.deployment.executor import DeploymentExecutor
 
 
 @pytest.fixture
@@ -669,7 +669,7 @@ class TestRollbackFailures:
 class TestMainCLI:
     """Tests for main CLI function."""
 
-    @patch("sdd.deployment.executor.DeploymentExecutor")
+    @patch("solokit.deployment.executor.DeploymentExecutor")
     def test_main_executes_full_workflow(self, mock_executor_class):
         """Test that main executes the full deployment workflow."""
         # Arrange
@@ -681,7 +681,7 @@ class TestMainCLI:
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
             # Act
-            from sdd.deployment.executor import main
+            from solokit.deployment.executor import main
 
             result = main()
 
@@ -691,7 +691,7 @@ class TestMainCLI:
         mock_executor.execute_deployment.assert_called_once()
         mock_executor.run_smoke_tests.assert_called_once()
 
-    @patch("sdd.deployment.executor.DeploymentExecutor")
+    @patch("solokit.deployment.executor.DeploymentExecutor")
     def test_main_exits_when_pre_deployment_fails(self, mock_executor_class):
         """Test that main raises exception when pre-deployment validation fails."""
         # Arrange
@@ -703,12 +703,12 @@ class TestMainCLI:
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
             # Act & Assert
-            from sdd.deployment.executor import main
+            from solokit.deployment.executor import main
 
             with pytest.raises(PreDeploymentCheckError):
                 main()
 
-    @patch("sdd.deployment.executor.DeploymentExecutor")
+    @patch("solokit.deployment.executor.DeploymentExecutor")
     def test_main_rolls_back_when_deployment_fails(self, mock_executor_class):
         """Test that main initiates rollback when deployment fails."""
         # Arrange
@@ -722,14 +722,14 @@ class TestMainCLI:
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
             # Act & Assert
-            from sdd.deployment.executor import main
+            from solokit.deployment.executor import main
 
             with pytest.raises(DeploymentStepError):
                 main()
 
             mock_executor.rollback.assert_called_once()
 
-    @patch("sdd.deployment.executor.DeploymentExecutor")
+    @patch("solokit.deployment.executor.DeploymentExecutor")
     def test_main_rolls_back_when_smoke_tests_fail(self, mock_executor_class):
         """Test that main initiates rollback when smoke tests fail."""
         # Arrange
@@ -744,7 +744,7 @@ class TestMainCLI:
 
         with patch("sys.argv", ["deployment_executor.py", "WORK-001"]):
             # Act & Assert
-            from sdd.deployment.executor import main
+            from solokit.deployment.executor import main
 
             with pytest.raises(SmokeTestError):
                 main()
@@ -755,7 +755,7 @@ class TestMainCLI:
         """Test that main raises exception when no work item ID provided."""
         # Arrange & Act
         with patch("sys.argv", ["deployment_executor.py"]):
-            from sdd.deployment.executor import main
+            from solokit.deployment.executor import main
 
             with pytest.raises(ValidationError) as exc_info:
                 main()

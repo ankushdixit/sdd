@@ -1,6 +1,6 @@
 """Unit tests for sync_plugin module.
 
-Tests plugin sync operations between main SDD repo and claude-plugins marketplace.
+Tests plugin sync operations between main Solokit repo and claude-plugins marketplace.
 """
 
 import json
@@ -8,14 +8,14 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+from solokit.core.exceptions import (
+    FileNotFoundError as SolokitFileNotFoundError,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     FileOperationError,
     ValidationError,
 )
-from sdd.project.sync_plugin import PluginSyncer
+from solokit.project.sync_plugin import PluginSyncer
 
 
 class TestPluginSyncerInit:
@@ -63,14 +63,14 @@ class TestValidateRepos:
         plugin_repo = tmp_path / "plugin"
 
         # Create main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").touch()
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").touch()
         (main_repo / "pyproject.toml").touch()
         (main_repo / ".claude/commands").mkdir(parents=True)
 
         # Create plugin repo structure
-        (plugin_repo / "sdd/.claude-plugin").mkdir(parents=True)
-        (plugin_repo / "sdd/.claude-plugin/plugin.json").touch()
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        (plugin_repo / "solokit/.claude-plugin/plugin.json").touch()
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
@@ -87,7 +87,7 @@ class TestValidateRepos:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.validate_repos()
 
         assert str(main_repo) in exc_info.value.context["file_path"]
@@ -101,15 +101,15 @@ class TestValidateRepos:
         main_repo.mkdir()
 
         # Create main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").touch()
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").touch()
         (main_repo / "pyproject.toml").touch()
         (main_repo / ".claude/commands").mkdir(parents=True)
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.validate_repos()
 
         assert str(plugin_repo) in exc_info.value.context["file_path"]
@@ -123,12 +123,12 @@ class TestValidateRepos:
         main_repo.mkdir()
 
         # Create incomplete main repo structure (missing cli.py)
-        (main_repo / "src/sdd").mkdir(parents=True)
+        (main_repo / "src/solokit").mkdir(parents=True)
         (main_repo / "pyproject.toml").touch()
         (main_repo / ".claude/commands").mkdir(parents=True)
 
-        (plugin_repo / "sdd/.claude-plugin").mkdir(parents=True)
-        (plugin_repo / "sdd/.claude-plugin/plugin.json").touch()
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        (plugin_repo / "solokit/.claude-plugin/plugin.json").touch()
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
@@ -136,8 +136,8 @@ class TestValidateRepos:
         with pytest.raises(ValidationError) as exc_info:
             syncer.validate_repos()
 
-        assert "src/sdd/cli.py" in exc_info.value.message
-        assert exc_info.value.context["missing_marker"] == "src/sdd/cli.py"
+        assert "src/solokit/cli.py" in exc_info.value.message
+        assert exc_info.value.context["missing_marker"] == "src/solokit/cli.py"
         assert str(main_repo) in exc_info.value.context["repository"]
 
     def test_validate_repos_missing_plugin_marker(self, tmp_path):
@@ -147,13 +147,13 @@ class TestValidateRepos:
         plugin_repo = tmp_path / "plugin"
 
         # Create complete main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").touch()
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").touch()
         (main_repo / "pyproject.toml").touch()
         (main_repo / ".claude/commands").mkdir(parents=True)
 
         # Create incomplete plugin repo structure (missing plugin.json)
-        (plugin_repo / "sdd").mkdir(parents=True)
+        (plugin_repo / "solokit").mkdir(parents=True)
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
@@ -161,8 +161,8 @@ class TestValidateRepos:
         with pytest.raises(ValidationError) as exc_info:
             syncer.validate_repos()
 
-        assert "sdd/.claude-plugin/plugin.json" in exc_info.value.message
-        assert exc_info.value.context["missing_marker"] == "sdd/.claude-plugin/plugin.json"
+        assert "solokit/.claude-plugin/plugin.json" in exc_info.value.message
+        assert exc_info.value.context["missing_marker"] == "solokit/.claude-plugin/plugin.json"
         assert str(plugin_repo) in exc_info.value.context["repository"]
 
 
@@ -178,7 +178,7 @@ class TestGetVersionFromMain:
         plugin_repo.mkdir()
 
         pyproject = main_repo / "pyproject.toml"
-        pyproject.write_text('[tool.poetry]\nname = "sdd"\nversion = "0.5.7"\n')
+        pyproject.write_text('[tool.poetry]\nname = "solokit"\nversion = "0.5.7"\n')
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
@@ -199,7 +199,7 @@ class TestGetVersionFromMain:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             syncer.get_version_from_main()
 
         assert "pyproject.toml" in exc_info.value.context["file_path"]
@@ -214,7 +214,7 @@ class TestGetVersionFromMain:
         plugin_repo.mkdir()
 
         pyproject = main_repo / "pyproject.toml"
-        pyproject.write_text('[tool.poetry]\nname = "sdd"\n')
+        pyproject.write_text('[tool.poetry]\nname = "solokit"\n')
 
         syncer = PluginSyncer(main_repo, plugin_repo)
 
@@ -257,11 +257,11 @@ class TestUpdatePluginVersion:
         plugin_repo = tmp_path / "plugin"
         main_repo.mkdir()
 
-        plugin_json_dir = plugin_repo / "sdd/.claude-plugin"
+        plugin_json_dir = plugin_repo / "solokit/.claude-plugin"
         plugin_json_dir.mkdir(parents=True)
         plugin_json_path = plugin_json_dir / "plugin.json"
 
-        initial_data = {"name": "sdd", "version": "0.5.0"}
+        initial_data = {"name": "solokit", "version": "0.5.0"}
         plugin_json_path.write_text(json.dumps(initial_data, indent=2))
 
         syncer = PluginSyncer(main_repo, plugin_repo)
@@ -272,7 +272,7 @@ class TestUpdatePluginVersion:
         # Assert
         updated_data = json.loads(plugin_json_path.read_text())
         assert updated_data["version"] == "0.5.7"
-        assert updated_data["name"] == "sdd"
+        assert updated_data["name"] == "solokit"
         assert "0.5.0 → 0.5.7" in syncer.changes[0]
 
     def test_update_version_dry_run(self, tmp_path):
@@ -282,11 +282,11 @@ class TestUpdatePluginVersion:
         plugin_repo = tmp_path / "plugin"
         main_repo.mkdir()
 
-        plugin_json_dir = plugin_repo / "sdd/.claude-plugin"
+        plugin_json_dir = plugin_repo / "solokit/.claude-plugin"
         plugin_json_dir.mkdir(parents=True)
         plugin_json_path = plugin_json_dir / "plugin.json"
 
-        initial_data = {"name": "sdd", "version": "0.5.0"}
+        initial_data = {"name": "solokit", "version": "0.5.0"}
         plugin_json_path.write_text(json.dumps(initial_data, indent=2))
 
         syncer = PluginSyncer(main_repo, plugin_repo, dry_run=True)
@@ -309,7 +309,7 @@ class TestUpdatePluginVersion:
         plugin_repo = tmp_path / "plugin"
         main_repo.mkdir()
 
-        plugin_json_dir = plugin_repo / "sdd/.claude-plugin"
+        plugin_json_dir = plugin_repo / "solokit/.claude-plugin"
         plugin_json_dir.mkdir(parents=True)
         plugin_json_path = plugin_json_dir / "plugin.json"
 
@@ -332,11 +332,11 @@ class TestUpdatePluginVersion:
         plugin_repo = tmp_path / "plugin"
         main_repo.mkdir()
 
-        plugin_json_dir = plugin_repo / "sdd/.claude-plugin"
+        plugin_json_dir = plugin_repo / "solokit/.claude-plugin"
         plugin_json_dir.mkdir(parents=True)
         plugin_json_path = plugin_json_dir / "plugin.json"
 
-        initial_data = {"name": "sdd", "version": "0.5.0"}
+        initial_data = {"name": "solokit", "version": "0.5.0"}
         plugin_json_path.write_text(json.dumps(initial_data, indent=2))
 
         syncer = PluginSyncer(main_repo, plugin_repo)
@@ -565,8 +565,8 @@ class TestSyncAllFiles:
         plugin_repo = tmp_path / "plugin"
 
         # Create main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").write_text("cli code")
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
         (main_repo / ".claude/commands").mkdir(parents=True)
         (main_repo / ".claude/commands/cmd.py").write_text("command code")
         (main_repo / "pyproject.toml").write_text("project config")
@@ -579,9 +579,9 @@ class TestSyncAllFiles:
         syncer.sync_all_files()
 
         # Assert
-        assert (plugin_repo / "sdd/src/sdd/cli.py").exists()
-        assert (plugin_repo / "sdd/commands/cmd.py").exists()
-        assert (plugin_repo / "sdd/pyproject.toml").exists()
+        assert (plugin_repo / "solokit/src/solokit/cli.py").exists()
+        assert (plugin_repo / "solokit/commands/cmd.py").exists()
+        assert (plugin_repo / "solokit/pyproject.toml").exists()
         assert len(syncer.changes) == 3
 
     def test_sync_all_files_skips_missing(self, tmp_path, caplog):
@@ -602,7 +602,7 @@ class TestSyncAllFiles:
         syncer.sync_all_files()
 
         # Assert
-        assert (plugin_repo / "sdd/pyproject.toml").exists()
+        assert (plugin_repo / "solokit/pyproject.toml").exists()
         # Only one file should be synced
         assert len(syncer.changes) == 1
 
@@ -675,14 +675,14 @@ class TestSync:
         plugin_repo = tmp_path / "plugin"
 
         # Create complete main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").write_text("cli code")
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
         (main_repo / ".claude/commands").mkdir(parents=True)
         (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
 
         # Create plugin repo structure
-        (plugin_repo / "sdd/.claude-plugin").mkdir(parents=True)
-        plugin_json = plugin_repo / "sdd/.claude-plugin/plugin.json"
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
         plugin_json.write_text(json.dumps({"version": "0.5.0"}))
 
         syncer = PluginSyncer(main_repo, plugin_repo)
@@ -696,7 +696,7 @@ class TestSync:
         assert updated_data["version"] == "0.5.7"
 
         # Files should be synced
-        assert (plugin_repo / "sdd/src/sdd/cli.py").exists()
+        assert (plugin_repo / "solokit/src/solokit/cli.py").exists()
 
     def test_sync_validation_error(self, tmp_path):
         """Test sync fails with validation error."""
@@ -710,7 +710,7 @@ class TestSync:
         syncer = PluginSyncer(main_repo, plugin_repo)
 
         # Act & Assert
-        with pytest.raises((SDDFileNotFoundError, ValidationError)):
+        with pytest.raises((SolokitFileNotFoundError, ValidationError)):
             syncer.sync()
 
     def test_sync_dry_run(self, tmp_path):
@@ -720,14 +720,14 @@ class TestSync:
         plugin_repo = tmp_path / "plugin"
 
         # Create complete main repo structure
-        (main_repo / "src/sdd").mkdir(parents=True)
-        (main_repo / "src/sdd/cli.py").write_text("cli code")
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
         (main_repo / ".claude/commands").mkdir(parents=True)
         (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
 
         # Create plugin repo structure
-        (plugin_repo / "sdd/.claude-plugin").mkdir(parents=True)
-        plugin_json = plugin_repo / "sdd/.claude-plugin/plugin.json"
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
         plugin_json.write_text(json.dumps({"version": "0.5.0"}))
 
         syncer = PluginSyncer(main_repo, plugin_repo, dry_run=True)
@@ -741,7 +741,7 @@ class TestSync:
         assert updated_data["version"] == "0.5.0"
 
         # Files should NOT be synced
-        assert not (plugin_repo / "sdd/src/sdd/cli.py").exists()
+        assert not (plugin_repo / "solokit/src/solokit/cli.py").exists()
 
         # But changes should be recorded
         assert len(syncer.changes) > 0

@@ -1,6 +1,6 @@
-# SDD Templates Guide
+# Solokit Templates Guide
 
-SDD provides production-ready project templates with tier-based quality gates. This guide helps you choose the right template and tier for your project.
+Solokit provides production-ready project templates with tier-based quality gates. This guide helps you choose the right template and tier for your project.
 
 ## Available Templates
 
@@ -222,7 +222,7 @@ Environment variable templates:
 ### Interactive Mode
 ```bash
 cd your-project-directory
-sdd init
+sk init
 ```
 
 Follow the prompts to select:
@@ -233,7 +233,7 @@ Follow the prompts to select:
 
 ### Command Line Mode
 ```bash
-sdd init \
+sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
@@ -293,7 +293,7 @@ sdd init \
 You can upgrade to a higher tier later by re-running initialization:
 
 ```bash
-sdd init --template=saas_t3 --tier=tier-3-comprehensive
+sk init --template=saas_t3 --tier=tier-3-comprehensive
 ```
 
 **Note:** This will overwrite your configuration files. Commit your changes first!
@@ -329,7 +329,7 @@ All templates use the latest stable versions:
 - Pydantic 2.12.4
 - SQLModel 0.0.25
 
-For complete version information, see [stack-versions.yaml](../../src/sdd/templates/stack-versions.yaml).
+For complete version information, see [stack-versions.yaml](../../src/solokit/templates/stack-versions.yaml).
 
 ---
 
@@ -339,8 +339,8 @@ After initialization:
 
 1. **Review the README.md** in your project for specific getting started instructions
 2. **Set up environment variables** from `.env.example`
-3. **Create your first work item:** `/sdd:work-new`
-4. **Start a development session:** `/sdd:start`
+3. **Create your first work item:** `/sk:work-new`
+4. **Start a development session:** `/sk:start`
 
 ---
 
@@ -391,6 +391,6 @@ pip install -e ".[dev]"
 ## Further Reading
 
 - [Creating Custom Templates](CREATING_TEMPLATES.md)
-- [Stack Versions Reference](../../src/sdd/templates/stack-versions.yaml)
-- [Template Registry](../../src/sdd/templates/template-registry.json)
+- [Stack Versions Reference](../../src/solokit/templates/stack-versions.yaml)
+- [Template Registry](../../src/solokit/templates/template-registry.json)
 - [Init Command Reference](../commands/init.md)

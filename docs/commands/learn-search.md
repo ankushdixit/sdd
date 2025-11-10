@@ -1,6 +1,6 @@
 # Learn Search Command
 
-**Usage:** `/sdd:learn-search <query>`
+**Usage:** `/sk:learn-search <query>`
 
 **Description:** Full-text search across all learning content, tags, and context with relevance ranking.
 
@@ -91,7 +91,7 @@ Total: 5 learnings found
 ### Example 1: Single Word Search
 
 ```bash
-/sdd:learn-search pytest
+/sk:learn-search pytest
 ```
 
 **Output:**
@@ -140,7 +140,7 @@ Total: 7 learnings found
 ### Example 2: Multi-Word Search
 
 ```bash
-/sdd:learn-search fastapi middleware
+/sk:learn-search fastapi middleware
 ```
 
 **Output:**
@@ -187,7 +187,7 @@ Total: 3 learnings found
 ### Example 3: Phrase Search
 
 ```bash
-/sdd:learn-search "order matters"
+/sk:learn-search "order matters"
 ```
 
 **Output:**
@@ -224,7 +224,7 @@ Total: 2 learnings found
 ### Example 4: No Results
 
 ```bash
-/sdd:learn-search kubernetes
+/sk:learn-search kubernetes
 ```
 
 **Output:**
@@ -235,15 +235,15 @@ No learnings found matching "kubernetes"
 
 Suggestions:
   - Try broader search terms (e.g., "container", "deployment")
-  - Browse by category: /sdd:learn-show --category architecture_patterns
-  - View all learnings: /sdd:learn-show
-  - Capture this as a new learning: /sdd:learn
+  - Browse by category: /sk:learn-show --category architecture_patterns
+  - View all learnings: /sk:learn-show
+  - Capture this as a new learning: /sk:learn
 ```
 
 ### Example 5: Category-Specific Search
 
 ```bash
-/sdd:learn-search security
+/sk:learn-search security
 ```
 
 **Output:**
@@ -293,7 +293,7 @@ Total: 8 learnings found across 3 categories
 ### Example 6: Technology Stack Search
 
 ```bash
-/sdd:learn-search react hooks
+/sk:learn-search react hooks
 ```
 
 **Output:**
@@ -350,8 +350,8 @@ When presenting results, helpful tips are included:
 - Use specific keywords for better results (e.g., "pytest fixtures" instead of "testing")
 - Try tag names to find related learnings (e.g., "fastapi", "security")
 - Use category names to narrow scope (e.g., "gotchas", "best_practices")
-- Combine with filters: /sdd:learn-show --category gotchas --tag fastapi
-- Add quotes for exact phrases: /sdd:learn-search "order matters"
+- Combine with filters: /sk:learn-show --category gotchas --tag fastapi
+- Add quotes for exact phrases: /sk:learn-search "order matters"
 ```
 
 ## Search Statistics
@@ -381,52 +381,52 @@ Most relevant tag combinations:
 
 ```bash
 # Remember something about CORS
-/sdd:learn-search CORS
+/sk:learn-search CORS
 
 # Find pytest-related insights
-/sdd:learn-search pytest
+/sk:learn-search pytest
 
 # Search for performance tips
-/sdd:learn-search performance
+/sk:learn-search performance
 ```
 
 ### Problem-Specific Search
 
 ```bash
 # Debugging middleware issues
-/sdd:learn-search middleware
+/sk:learn-search middleware
 
 # Authentication problems
-/sdd:learn-search authentication
+/sk:learn-search authentication
 
 # Database optimization
-/sdd:learn-search database optimization
+/sk:learn-search database optimization
 ```
 
 ### Technology Review
 
 ```bash
 # Before working with FastAPI
-/sdd:learn-search FastAPI
+/sk:learn-search FastAPI
 
 # React development
-/sdd:learn-search React
+/sk:learn-search React
 
 # TypeScript patterns
-/sdd:learn-search TypeScript
+/sk:learn-search TypeScript
 ```
 
 ### Pattern Discovery
 
 ```bash
 # Find architectural patterns
-/sdd:learn-search pattern
+/sk:learn-search pattern
 
 # Security best practices
-/sdd:learn-search security
+/sk:learn-search security
 
 # Performance optimization
-/sdd:learn-search optimization
+/sk:learn-search optimization
 ```
 
 ## Integration with Other Commands
@@ -435,37 +435,37 @@ Most relevant tag combinations:
 
 ```bash
 # Broad search
-/sdd:learn-search middleware
+/sk:learn-search middleware
 
 # Focused browsing based on search results
-/sdd:learn-show --tag middleware
-/sdd:learn-show --category gotchas --tag middleware
+/sk:learn-show --tag middleware
+/sk:learn-show --category gotchas --tag middleware
 ```
 
 ### Search Before Starting Work
 
 ```bash
 # Search for relevant insights
-/sdd:learn-search authentication
+/sk:learn-search authentication
 
 # Review filtered results
-/sdd:learn-show --tag auth
+/sk:learn-show --tag auth
 
 # Start work with context
-/sdd:start feature_auth
+/sk:start feature_auth
 ```
 
 ### Search After Learning
 
 ```bash
 # Capture new learning
-/sdd:learn
+/sk:learn
 
 # Verify it's searchable
-/sdd:learn-search "middleware order"
+/sk:learn-search "middleware order"
 
 # See related learnings
-/sdd:learn-show --category gotchas
+/sk:learn-show --category gotchas
 ```
 
 ## Advanced Search Patterns
@@ -474,29 +474,29 @@ Most relevant tag combinations:
 
 ```bash
 # First broad search
-/sdd:learn-search testing
+/sk:learn-search testing
 
 # Then narrow down
-/sdd:learn-search pytest fixtures
+/sk:learn-search pytest fixtures
 
 # Then very specific
-/sdd:learn-search "pytest fixture scope"
+/sk:learn-search "pytest fixture scope"
 ```
 
 ### Technology + Concept
 
 ```bash
-/sdd:learn-search "FastAPI dependencies"
-/sdd:learn-search "React state management"
-/sdd:learn-search "Python async patterns"
+/sk:learn-search "FastAPI dependencies"
+/sk:learn-search "React state management"
+/sk:learn-search "Python async patterns"
 ```
 
 ### Problem-Solution Searches
 
 ```bash
-/sdd:learn-search "CORS error"
-/sdd:learn-search "slow query"
-/sdd:learn-search "memory leak"
+/sk:learn-search "CORS error"
+/sk:learn-search "slow query"
+/sk:learn-search "memory leak"
 ```
 
 ## Search Quality

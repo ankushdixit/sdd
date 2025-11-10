@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from sdd.core.exceptions import SpecValidationError
-from sdd.work_items.manager import WorkItemManager
+from solokit.core.exceptions import SpecValidationError
+from solokit.work_items.manager import WorkItemManager
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ class TestIntegrationTestTemplate:
         The template file should be present at templates/integration_test_spec.md.
         """
         # Arrange
-        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "integration_test_spec.md"
 
         # Assert
         assert template_path.exists(), "integration_test_spec.md template not found"
@@ -107,7 +107,7 @@ class TestIntegrationTestTemplate:
         - Acceptance Criteria
         """
         # Arrange
-        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "integration_test_spec.md"
         required_sections = [
             "## Scope",
             "## Test Scenarios",
@@ -143,7 +143,7 @@ class TestIntegrationTestTemplate:
         Parametrized test to verify each required section individually.
         """
         # Arrange
-        template_path = project_root / "src" / "sdd" / "templates" / "integration_test_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "integration_test_spec.md"
 
         # Act
         template_content = template_path.read_text()

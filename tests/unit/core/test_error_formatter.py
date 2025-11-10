@@ -2,7 +2,7 @@
 
 from io import StringIO
 
-from sdd.core.error_formatter import (
+from solokit.core.error_formatter import (
     ErrorFormatter,
     format_info_message,
     format_progress_message,
@@ -10,7 +10,7 @@ from sdd.core.error_formatter import (
     format_validation_errors,
     format_warning_message,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ConfigValidationError,
     ErrorCategory,
     ErrorCode,
@@ -23,16 +23,16 @@ from sdd.core.exceptions import (
 class TestErrorFormatter:
     """Test ErrorFormatter class"""
 
-    def test_format_sdd_error_basic(self):
-        """Test formatting basic SDDError"""
+    def test_format_solokit_error_basic(self):
+        """Test formatting basic SolokitError"""
         error = WorkItemNotFoundError("my_feature")
         formatted = ErrorFormatter.format_error(error, verbose=False)
 
         assert "🔍" in formatted  # Not found symbol
         assert "my_feature" in formatted
-        assert "sdd work-list" in formatted  # Remediation
+        assert "sk work-list" in formatted  # Remediation
 
-    def test_format_sdd_error_verbose(self):
+    def test_format_solokit_error_verbose(self):
         """Test verbose formatting includes context and error code"""
         error = ValidationError(
             message="Test error",
@@ -126,8 +126,8 @@ class TestErrorFormatter:
         assert "my_feature" in result
         assert "🔍" in result
 
-    def test_get_exit_code_sdd_error(self):
-        """Test exit code extraction from SDDError"""
+    def test_get_exit_code_solokit_error(self):
+        """Test exit code extraction from SolokitError"""
         validation_error = ValidationError("test")
         assert ErrorFormatter.get_exit_code(validation_error) == 2
 

@@ -6,7 +6,7 @@ This module tests the user output functionality including:
 - Output formatting
 """
 
-from sdd.core.output import OutputHandler, get_output, set_quiet
+from solokit.core.output import OutputHandler, get_output, set_quiet
 
 
 class TestOutputHandler:

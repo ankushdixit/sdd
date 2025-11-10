@@ -33,34 +33,34 @@ Run the appropriate command based on user input:
 
 **Basic usage:**
 ```bash
-sdd work-graph
+sk work-graph
 ```
 
 **With format:**
 ```bash
-sdd work-graph --format dot
-sdd work-graph --format svg --output graph.svg
+sk work-graph --format dot
+sk work-graph --format svg --output graph.svg
 ```
 
 **With filters:**
 ```bash
-sdd work-graph --status not_started
-sdd work-graph --milestone "Phase 3"
-sdd work-graph --type feature
-sdd work-graph --include-completed
+sk work-graph --status not_started
+sk work-graph --milestone "Phase 3"
+sk work-graph --type feature
+sk work-graph --include-completed
 ```
 
 **Special views:**
 ```bash
-sdd work-graph --critical-path
-sdd work-graph --bottlenecks
-sdd work-graph --stats
-sdd work-graph --focus feature_add_authentication
+sk work-graph --critical-path
+sk work-graph --bottlenecks
+sk work-graph --stats
+sk work-graph --focus feature_add_authentication
 ```
 
 **Combined filters:**
 ```bash
-sdd work-graph --status not_started --milestone "Phase 3" --format svg --output phase3.svg
+sk work-graph --status not_started --milestone "Phase 3" --format svg --output phase3.svg
 ```
 
 ## Output
@@ -82,37 +82,37 @@ Display the output to the user and explain key insights:
 
 ### Example 1: Basic ASCII Graph
 ```bash
-sdd work-graph
+sk work-graph
 ```
 Shows all incomplete work items with dependencies in terminal-friendly format.
 
 ### Example 2: Critical Path Only
 ```bash
-sdd work-graph --critical-path
+sk work-graph --critical-path
 ```
 Shows only items on the critical path (longest dependency chain).
 
 ### Example 3: Bottleneck Analysis
 ```bash
-sdd work-graph --bottlenecks
+sk work-graph --bottlenecks
 ```
 Lists items that block 2+ other items, sorted by impact.
 
 ### Example 4: Milestone Planning
 ```bash
-sdd work-graph --milestone "Phase 3" --format svg --output phase3_dependencies.svg
+sk work-graph --milestone "Phase 3" --format svg --output phase3_dependencies.svg
 ```
 Generate visual graph of Phase 3 dependencies for documentation.
 
 ### Example 5: Focus on Specific Item
 ```bash
-sdd work-graph --focus feature_oauth
+sk work-graph --focus feature_oauth
 ```
 Show only feature_oauth and its dependency neighborhood (dependencies + dependents).
 
 ### Example 6: Statistics
 ```bash
-sdd work-graph --stats
+sk work-graph --stats
 ```
 Show completion statistics and critical path length without rendering full graph.
 

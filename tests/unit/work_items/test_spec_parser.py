@@ -6,8 +6,8 @@ from work item specification markdown files.
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError, ValidationError
-from sdd.work_items import spec_parser
+from solokit.core.exceptions import FileNotFoundError, ValidationError
+from solokit.work_items import spec_parser
 
 
 class TestStripHtmlComments:

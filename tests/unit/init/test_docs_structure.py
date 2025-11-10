@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError
-from sdd.init.docs_structure import create_docs_structure
+from solokit.core.exceptions import FileOperationError
+from solokit.init.docs_structure import create_docs_structure
 
 
 class TestCreateDocsStructure:

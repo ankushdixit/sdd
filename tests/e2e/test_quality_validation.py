@@ -24,8 +24,8 @@ import pytest
 
 
 @pytest.fixture
-def sdd_project_for_validation():
-    """Create a temp SDD project with active session for validation testing.
+def solokit_project_for_validation():
+    """Create a temp Solokit project with active session for validation testing.
 
     Returns:
         Path: Project directory with session and work items.
@@ -148,14 +148,14 @@ Testing the validation system.
 
 
 class TestValidationCommand:
-    """Tests for sdd validate command execution."""
+    """Tests for sk validate command execution."""
 
-    def test_validate_command_exists(self, sdd_project_for_validation):
-        """Test that sdd validate command executes."""
+    def test_validate_command_exists(self, solokit_project_for_validation):
+        """Test that sk validate command executes."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -164,12 +164,12 @@ class TestValidationCommand:
         output = result.stdout + result.stderr
         assert len(output) > 0, "Validation should provide output"
 
-    def test_validate_runs_multiple_checks(self, sdd_project_for_validation):
+    def test_validate_runs_multiple_checks(self, solokit_project_for_validation):
         """Test that validation runs multiple quality checks."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -192,12 +192,12 @@ class TestValidationCommand:
 class TestQualityGates:
     """Tests for quality gates validation."""
 
-    def test_quality_gates_structure(self, sdd_project_for_validation):
+    def test_quality_gates_structure(self, solokit_project_for_validation):
         """Test that quality gates are reported with structure."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -217,12 +217,12 @@ class TestQualityGates:
 class TestGitValidation:
     """Tests for git status validation."""
 
-    def test_validate_checks_git_status(self, sdd_project_for_validation):
+    def test_validate_checks_git_status(self, solokit_project_for_validation):
         """Test that validation checks git status."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -233,15 +233,15 @@ class TestGitValidation:
         has_git_check = "git" in output.lower() or "status" in output.lower()
         assert has_git_check or result.returncode in [0, 1], "Validation should check git status"
 
-    def test_validation_handles_uncommitted_changes(self, sdd_project_for_validation):
+    def test_validation_handles_uncommitted_changes(self, solokit_project_for_validation):
         """Test validation behavior with uncommitted changes."""
         # Arrange - Create new file
-        (sdd_project_for_validation / "new_file.py").write_text("# New file\n")
+        (solokit_project_for_validation / "new_file.py").write_text("# New file\n")
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -258,18 +258,18 @@ class TestGitValidation:
 class TestWorkItemValidation:
     """Tests for work item acceptance criteria validation."""
 
-    def test_validate_with_no_active_work_item(self, sdd_project_for_validation):
+    def test_validate_with_no_active_work_item(self, solokit_project_for_validation):
         """Test validation when no work item is active."""
         # Arrange - Clear current work item
-        status_file = sdd_project_for_validation / ".session/tracking/status_update.json"
+        status_file = solokit_project_for_validation / ".session/tracking/status_update.json"
         status = json.loads(status_file.read_text())
         status["current_work_item"] = None
         status_file.write_text(json.dumps(status, indent=2))
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -279,12 +279,12 @@ class TestWorkItemValidation:
         # Should indicate no active work item or fail validation
         assert result.returncode == 1 or "no" in output.lower(), "Should detect missing work item"
 
-    def test_validate_checks_spec_file(self, sdd_project_for_validation):
+    def test_validate_checks_spec_file(self, solokit_project_for_validation):
         """Test that validation checks spec file existence."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -293,16 +293,16 @@ class TestWorkItemValidation:
         output = result.stdout + result.stderr
         assert len(output) > 0, "Validation should check spec file"
 
-    def test_validate_with_missing_spec_file(self, sdd_project_for_validation):
+    def test_validate_with_missing_spec_file(self, solokit_project_for_validation):
         """Test validation behavior when spec file is missing."""
         # Arrange - Remove spec file
-        spec_file = sdd_project_for_validation / ".session/specs/1.md"
+        spec_file = solokit_project_for_validation / ".session/specs/1.md"
         spec_file.unlink()
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -320,12 +320,12 @@ class TestWorkItemValidation:
 class TestValidationReporting:
     """Tests for validation reporting and error messages."""
 
-    def test_validation_provides_clear_output(self, sdd_project_for_validation):
+    def test_validation_provides_clear_output(self, solokit_project_for_validation):
         """Test that validation provides clear, structured output."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -339,19 +339,19 @@ class TestValidationReporting:
             "Validation should have structured output"
         )
 
-    def test_validation_exit_codes_consistent(self, sdd_project_for_validation):
+    def test_validation_exit_codes_consistent(self, solokit_project_for_validation):
         """Test that validation exit codes are consistent."""
         # Arrange & Act - Run validation twice
         result1 = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
 
         result2 = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )
@@ -368,14 +368,14 @@ class TestValidationReporting:
 class TestValidationIntegration:
     """Integration tests for the complete validation workflow."""
 
-    def test_validation_complete_workflow(self, sdd_project_for_validation):
+    def test_validation_complete_workflow(self, solokit_project_for_validation):
         """Test complete validation workflow from start to finish."""
         # Arrange - Project already set up with active session
 
         # Act - Run validation
         result = subprocess.run(
-            ["sdd", "validate"],
-            cwd=sdd_project_for_validation,
+            ["sk", "validate"],
+            cwd=solokit_project_for_validation,
             capture_output=True,
             text=True,
         )

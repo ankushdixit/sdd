@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError, SpecValidationError
-from sdd.quality.gates import QualityGates
-from sdd.work_items.spec_validator import (
+from solokit.core.exceptions import FileNotFoundError, SpecValidationError
+from solokit.quality.gates import QualityGates
+from solokit.work_items.spec_validator import (
     check_acceptance_criteria,
     check_deployment_subsections,
     check_required_sections,

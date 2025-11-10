@@ -8,8 +8,8 @@ import json
 
 import pytest
 
-from sdd.work_items.milestones import MilestoneManager
-from sdd.work_items.repository import WorkItemRepository
+from solokit.work_items.milestones import MilestoneManager
+from solokit.work_items.repository import WorkItemRepository
 
 
 @pytest.fixture

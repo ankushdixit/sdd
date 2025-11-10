@@ -1,6 +1,6 @@
 # Work List Command
 
-**Usage:** `/sdd:work-list [--status STATUS] [--type TYPE] [--milestone MILESTONE]`
+**Usage:** `/sk:work-list [--status STATUS] [--type TYPE] [--milestone MILESTONE]`
 
 **Description:** List all work items with optional filtering and color-coded status indicators.
 
@@ -17,7 +17,7 @@ The `work-list` command displays all work items with:
 ### List All Work Items
 
 ```bash
-/sdd:work-list
+/sk:work-list
 ```
 
 Shows all work items regardless of status.
@@ -25,10 +25,10 @@ Shows all work items regardless of status.
 ### Filter by Status
 
 ```bash
-/sdd:work-list --status not_started
-/sdd:work-list --status in_progress
-/sdd:work-list --status blocked
-/sdd:work-list --status completed
+/sk:work-list --status not_started
+/sk:work-list --status in_progress
+/sk:work-list --status blocked
+/sk:work-list --status completed
 ```
 
 **Available status values:**
@@ -40,9 +40,9 @@ Shows all work items regardless of status.
 ### Filter by Type
 
 ```bash
-/sdd:work-list --type feature
-/sdd:work-list --type bug
-/sdd:work-list --type refactor
+/sk:work-list --type feature
+/sk:work-list --type bug
+/sk:work-list --type refactor
 ```
 
 **Available type values:**
@@ -56,8 +56,8 @@ Shows all work items regardless of status.
 ### Filter by Milestone
 
 ```bash
-/sdd:work-list --milestone sprint_1
-/sdd:work-list --milestone phase_2_mvp
+/sk:work-list --milestone sprint_1
+/sk:work-list --milestone phase_2_mvp
 ```
 
 Shows only work items assigned to the specified milestone.
@@ -65,8 +65,8 @@ Shows only work items assigned to the specified milestone.
 ### Combine Filters
 
 ```bash
-/sdd:work-list --status not_started --type feature
-/sdd:work-list --type bug --milestone sprint_1
+/sk:work-list --status not_started --type feature
+/sk:work-list --type bug --milestone sprint_1
 ```
 
 ## Output Format
@@ -115,7 +115,7 @@ WORK ITEMS
 ### View All Work Items
 
 ```bash
-/sdd:work-list
+/sk:work-list
 ```
 
 **Output:**
@@ -155,20 +155,20 @@ WORK ITEMS (5 total)
 ### View Only Incomplete Work
 
 ```bash
-/sdd:work-list --status not_started
-/sdd:work-list --status in_progress
-/sdd:work-list --status blocked
+/sk:work-list --status not_started
+/sk:work-list --status in_progress
+/sk:work-list --status blocked
 ```
 
 Or use bash to exclude completed:
 ```bash
-/sdd:work-list | grep -v "completed"
+/sk:work-list | grep -v "completed"
 ```
 
 ### View Specific Types
 
 ```bash
-/sdd:work-list --type feature
+/sk:work-list --type feature
 ```
 
 **Output:**
@@ -191,7 +191,7 @@ WORK ITEMS (features only)
 ### View Milestone Progress
 
 ```bash
-/sdd:work-list --milestone sprint_1
+/sk:work-list --milestone sprint_1
 ```
 
 **Output:**
@@ -213,7 +213,7 @@ Summary: 2 items (1 not_started, 1 in_progress, 0 completed)
 ### Find Blocked Work Items
 
 ```bash
-/sdd:work-list --status blocked
+/sk:work-list --status blocked
 ```
 
 **Output:**
@@ -246,7 +246,7 @@ Each work item displays:
 If no work items match the filters:
 
 ```bash
-/sdd:work-list --status completed
+/sk:work-list --status completed
 ```
 
 **Output:**
@@ -256,8 +256,8 @@ WORK ITEMS (status: completed)
 
 No completed work items found.
 
-Create a work item: /sdd:work-new
-View all work items: /sdd:work-list
+Create a work item: /sk:work-new
+View all work items: /sk:work-list
 ```
 
 ## Sorting
@@ -270,11 +270,11 @@ Work items are sorted by:
 ## Command Options
 
 ```bash
-/sdd:work-list                      # All work items
-/sdd:work-list --status STATUS      # Filter by status
-/sdd:work-list --type TYPE          # Filter by type
-/sdd:work-list --milestone NAME     # Filter by milestone
-/sdd:work-list --status STATUS --type TYPE  # Multiple filters
+/sk:work-list                      # All work items
+/sk:work-list --status STATUS      # Filter by status
+/sk:work-list --type TYPE          # Filter by type
+/sk:work-list --milestone NAME     # Filter by milestone
+/sk:work-list --status STATUS --type TYPE  # Multiple filters
 ```
 
 ## Understanding Dependencies
@@ -304,24 +304,24 @@ Use `work-list` to:
 
 **Find work to start:**
 ```bash
-/sdd:work-list --status not_started
-/sdd:start feature_auth
+/sk:work-list --status not_started
+/sk:start feature_auth
 ```
 
 **Check milestone progress:**
 ```bash
-/sdd:work-list --milestone sprint_1
+/sk:work-list --milestone sprint_1
 ```
 
 **View completed work:**
 ```bash
-/sdd:work-list --status completed
+/sk:work-list --status completed
 ```
 
 **Update work item:**
 ```bash
-/sdd:work-list
-/sdd:work-update feature_auth priority
+/sk:work-list
+/sk:work-update feature_auth priority
 ```
 
 ## See Also

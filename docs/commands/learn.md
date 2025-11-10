@@ -1,6 +1,6 @@
 # Learn Command
 
-**Usage:** `/sdd:learn`
+**Usage:** `/sk:learn`
 
 **Description:** Capture insights, gotchas, and best practices discovered during development with intelligent suggestions.
 
@@ -82,7 +82,7 @@ Good learnings are:
 
 **User runs:**
 ```bash
-/sdd:learn
+/sk:learn
 ```
 
 **Claude analyzes and presents:**
@@ -116,7 +116,7 @@ All learnings will be auto-curated and made available in future sessions.
 
 **User runs:**
 ```bash
-/sdd:learn
+/sk:learn
 ```
 
 **Claude presents:**
@@ -153,7 +153,7 @@ All learnings will be auto-curated and made available in future sessions.
 
 **User runs:**
 ```bash
-/sdd:learn
+/sk:learn
 ```
 
 **Claude responds:**
@@ -185,7 +185,7 @@ Learning will be auto-curated and made available in future sessions.
 
 ### During Sessions
 
-When you start a work item with `/sdd:start`, relevant learnings are automatically surfaced in the briefing:
+When you start a work item with `/sk:start`, relevant learnings are automatically surfaced in the briefing:
 
 ```
 === RELEVANT LEARNINGS ===
@@ -200,17 +200,17 @@ From previous sessions:
 
 Browse all learnings anytime:
 ```bash
-/sdd:learn-show                    # All learnings
-/sdd:learn-show --category gotchas # Only gotchas
-/sdd:learn-show --tag fastapi      # FastAPI-related
+/sk:learn-show                    # All learnings
+/sk:learn-show --category gotchas # Only gotchas
+/sk:learn-show --tag fastapi      # FastAPI-related
 ```
 
 ### Search
 
 Search across all learnings:
 ```bash
-/sdd:learn-search "CORS"
-/sdd:learn-search "middleware order"
+/sk:learn-search "CORS"
+/sk:learn-search "middleware order"
 ```
 
 ### Auto-Curation
@@ -228,7 +228,7 @@ When you select learnings, the command:
 1. Gets current session number from `.session/tracking/status_update.json`
 2. For each learning, runs:
 ```bash
-sdd learn add-learning \
+sk learn add-learning \
   --content "{{content}}" \
   --category "{{category}}" \
   --session "{{current_session}}" \
@@ -246,13 +246,13 @@ sdd learn add-learning \
 Capture learnings while they're fresh:
 ```bash
 # After solving a tricky bug
-/sdd:learn
+/sk:learn
 
 # After discovering a better pattern
-/sdd:learn
+/sk:learn
 
 # Before ending session
-/sdd:learn
+/sk:learn
 ```
 
 ### 2. Be Specific
@@ -277,7 +277,7 @@ Add context when it helps:
 The AI suggestions make it easy - just select what resonates. You can always:
 - Add custom learnings
 - Skip suggestions that aren't useful
-- Come back later with `/sdd:learn`
+- Come back later with `/sk:learn`
 
 ## When to Capture Learnings
 
@@ -298,22 +298,22 @@ The AI suggestions make it easy - just select what resonates. You can always:
 ### Session Workflow
 
 ```bash
-/sdd:start feature_auth    # Relevant learnings shown in briefing
+/sk:start feature_auth    # Relevant learnings shown in briefing
 # ... work on feature ...
-/sdd:learn                 # Capture new insights
+/sk:learn                 # Capture new insights
 # ... more work ...
-/sdd:learn                 # Capture more insights
-/sdd:end                   # Session complete
+/sk:learn                 # Capture more insights
+/sk:end                   # Session complete
 ```
 
 ### Learning Management
 
 ```bash
-/sdd:learn                           # Capture learnings
-/sdd:learn-show                      # Browse all
-/sdd:learn-show --category gotchas   # Filter by category
-/sdd:learn-search "FastAPI"          # Search
-/sdd:learn-curate                    # Manual curation
+/sk:learn                           # Capture learnings
+/sk:learn-show                      # Browse all
+/sk:learn-show --category gotchas   # Filter by category
+/sk:learn-search "FastAPI"          # Search
+/sk:learn-curate                    # Manual curation
 ```
 
 ## See Also

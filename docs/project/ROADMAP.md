@@ -1,4 +1,4 @@
-# SDD Roadmap
+# Solokit Roadmap
 
 **Current Version:** v0.6.0 (Production-Ready)
 **Status:** Core features complete, PyPI publishing next
@@ -9,7 +9,7 @@
 
 ### Completed Phases (v0.0 → v0.6.0)
 
-SDD has achieved all core functionality through a series of focused development phases:
+Solokit has achieved all core functionality through a series of focused development phases:
 
 #### **Phase 0-1: Foundation (v0.0 - v0.1)**
 ✅ **Core session workflow** with `/init`, `/start`, `/end`, `/validate`
@@ -41,9 +41,9 @@ SDD has achieved all core functionality through a series of focused development 
 
 #### **Phase 5.8-5.9: Distribution & Structure (v0.5.8 - v0.6.0)**
 ✅ **Marketplace plugin support** - Works from Claude Code marketplace with `pip install -e`
-✅ **Unified CLI** - All commands use `sdd` executable
+✅ **Unified CLI** - All commands use `solokit` executable
 ✅ **Standard Python structure** - src/ layout following PEP 517/518
-✅ **Zero sys.path manipulation** - Clean imports with `from sdd.* import`
+✅ **Zero sys.path manipulation** - Clean imports with `from solokit.* import`
 ✅ **Production-ready packaging** - Ready for PyPI distribution
 
 ### Test Coverage & Quality
@@ -86,7 +86,7 @@ SDD has achieved all core functionality through a series of focused development 
 - Deployment validation and rollback automation
 
 **Developer Experience:**
-- Clean CLI with `sdd` command
+- Clean CLI with `solokit` command
 - 15+ slash commands for Claude Code
 - Comprehensive documentation and guides
 - Template-driven workflow
@@ -96,13 +96,13 @@ SDD has achieved all core functionality through a series of focused development 
 **Method 1: Claude Code Marketplace**
 ```bash
 # After installing from marketplace:
-pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+pip install -e ~/.claude/plugins/marketplaces/claude-plugins/solokit
 ```
 
 **Method 2: Direct Installation**
 ```bash
-git clone https://github.com/ankushdixit/sdd.git
-cd sdd
+git clone https://github.com/ankushdixit/solokit.git
+cd solokit
 pip install -e .
 ```
 
@@ -112,7 +112,7 @@ pip install -e .
 
 ### v0.7.0: PyPI Publishing (Next)
 
-**Goal:** Make SDD publicly available via PyPI for simple installation
+**Goal:** Make Solokit publicly available via PyPI for simple installation
 
 **Status:** 📅 PLANNED
 
@@ -120,15 +120,15 @@ pip install -e .
 - [ ] Prepare package metadata for PyPI
 - [ ] Create PyPI account and verify email
 - [ ] Test upload to TestPyPI
-- [ ] Publish to PyPI: `pip install sdd`
+- [ ] Publish to PyPI: `pip install solokit`
 - [ ] Update marketplace plugin to be lightweight (commands only)
 - [ ] Update documentation with PyPI installation instructions
 - [ ] Announcement and release notes
 
 **Benefits:**
-- ✅ Simple installation: `pip install sdd`
+- ✅ Simple installation: `pip install solokit`
 - ✅ Version management through PyPI
-- ✅ Automatic updates via `pip install --upgrade sdd`
+- ✅ Automatic updates via `pip install --upgrade solokit`
 - ✅ Wider adoption and discoverability
 - ✅ Professional distribution channel
 
@@ -188,7 +188,7 @@ The following features are **intentionally excluded** from the roadmap:
 - Our templates and validation are battle-tested
 
 ❌ **Team Collaboration Features**
-- SDD is focused on solo development workflow
+- Solokit is focused on solo development workflow
 - Multi-developer support adds significant complexity
 - May reconsider based on community demand
 
@@ -247,7 +247,7 @@ The following features are **intentionally excluded** from the roadmap:
 **v0.7.0 Goals:**
 - Published on PyPI
 - 100+ PyPI downloads
-- Installation via `pip install sdd`
+- Installation via `pip install solokit`
 
 **v0.8.0+ Goals:**
 - Custom work item types working
@@ -269,7 +269,7 @@ For bugs and enhancements, see:
 ## Related Documentation
 
 - [README.md](../../README.md) - Quick start and installation
-- [Session-Driven Development Methodology](../guides/session-driven-development.md) - Complete methodology
+- [Solokit Methodology](../guides/solokit-methodology.md) - Complete methodology
 - [Writing Effective Specifications](../guides/writing-specs.md) - Spec writing guide
 - [Configuration Guide](../guides/configuration.md) - Quality gates and settings
 - [Learning System](../guides/learning-system.md) - Knowledge capture guide

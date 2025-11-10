@@ -1,6 +1,6 @@
 # End Command
 
-**Usage:** `/sdd:end`
+**Usage:** `/sk:end`
 
 **Description:** Complete the current development session with quality gates, commit validation, and learning capture.
 
@@ -93,7 +93,7 @@ The command asks you about work item completion:
 - **No - Keep as in-progress**
   - Work is ongoing
   - Status stays "in_progress"
-  - Will auto-resume when you run `/sdd:start` in the next session
+  - Will auto-resume when you run `/sk:start` in the next session
   - Preserves all session context for continuation
 
 - **Cancel**
@@ -135,7 +135,7 @@ The command displays:
 ### Completing a Work Item
 
 ```bash
-/sdd:end
+/sk:end
 ```
 
 **Interactive flow:**
@@ -203,15 +203,15 @@ QUALITY GATES:
 SESSION DURATION: 45 minutes
 
 NEXT STEPS:
-- Start next work item: /sdd:start
-- Review work items: /sdd:work-list
-- View learnings: /sdd:learn-show
+- Start next work item: /sk:start
+- Review work items: /sk:work-list
+- View learnings: /sk:learn-show
 ```
 
 ### Keeping Work In Progress
 
 ```bash
-/sdd:end
+/sk:end
 ```
 
 **Interactive flow:**
@@ -235,7 +235,7 @@ Running quality gates...
 
 Session ended. Work item remains in-progress.
 
-When you run /sdd:start next time, this work item will auto-resume
+When you run /sk:start next time, this work item will auto-resume
 with full context from this session.
 ```
 
@@ -290,8 +290,8 @@ Fix linting errors:
 The command internally uses these options based on your interactive selection:
 
 ```bash
-sdd end --complete --learnings-file .session/temp_learnings.txt
-sdd end --incomplete --learnings-file .session/temp_learnings.txt
+sk end --complete --learnings-file .session/temp_learnings.txt
+sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
 But you don't need to specify these - the interactive flow handles it.
@@ -309,7 +309,7 @@ Learnings are automatically:
 - Associated with work item
 - Categorized (if category keywords detected)
 - Added to `.session/tracking/learnings.json`
-- Available for future sessions via `/sdd:learn-show` and `/sdd:learn-search`
+- Available for future sessions via `/sk:learn-show` and `/sk:learn-search`
 
 ## Multi-Session Work Items
 
@@ -317,16 +317,16 @@ For work items spanning multiple sessions:
 
 **Session 1:**
 ```bash
-/sdd:start feature_complex
+/sk:start feature_complex
 # ... work on feature ...
-/sdd:end  → Select "No - Keep as in-progress"
+/sk:end  → Select "No - Keep as in-progress"
 ```
 
 **Session 2:**
 ```bash
-/sdd:start  → Auto-resumes feature_complex with full context
+/sk:start  → Auto-resumes feature_complex with full context
 # ... continue work ...
-/sdd:end  → Select "Yes - Mark as completed"
+/sk:end  → Select "Yes - Mark as completed"
 ```
 
 The briefing in Session 2 includes:
@@ -343,7 +343,7 @@ Once the session ends successfully:
 2. **History recorded** - Session added to `.session/history/`
 3. **Context updated** - stack.txt and tree.txt refreshed
 4. **Learnings saved** - Available for future reference
-5. **Ready for next session** - Run `/sdd:start` to begin next work item
+5. **Ready for next session** - Run `/sk:start` to begin next work item
 
 ## Error Recovery
 
@@ -366,7 +366,7 @@ If quality gates fail and you can't fix immediately:
    ```
 3. **Try ending again:**
    ```bash
-   /sdd:end
+   /sk:end
    ```
 
 ### Accidentally Cancelled?
@@ -374,7 +374,7 @@ If quality gates fail and you can't fix immediately:
 If you cancelled the session but meant to end it:
 - Your work is preserved in commits
 - Work item status is unchanged
-- Simply run `/sdd:end` again
+- Simply run `/sk:end` again
 
 ## See Also
 

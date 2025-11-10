@@ -7,7 +7,7 @@ Run tests:
     pytest tests/unit/init/test_template_installer.py -v
 
 Run with coverage:
-    pytest tests/unit/init/test_template_installer.py --cov=sdd.init.template_installer --cov-report=term-missing
+    pytest tests/unit/init/test_template_installer.py --cov=solokit.init.template_installer --cov-report=term-missing
 
 Target: 90%+ coverage
 """
@@ -18,8 +18,8 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError, TemplateNotFoundError
-from sdd.init.template_installer import (
+from solokit.core.exceptions import FileOperationError, TemplateNotFoundError
+from solokit.init.template_installer import (
     copy_directory_tree,
     get_template_directory,
     get_template_info,
@@ -39,7 +39,7 @@ class TestLoadTemplateRegistry:
         """Test successful registry loading."""
         registry_json = json.dumps(mock_template_registry)
 
-        with patch("sdd.init.template_installer.Path") as mock_path:
+        with patch("solokit.init.template_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
             mock_path.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
@@ -52,10 +52,10 @@ class TestLoadTemplateRegistry:
 
     def test_registry_not_found(self):
         """Test error when registry file doesn't exist."""
-        import sdd.init.template_installer as installer_module
+        import solokit.init.template_installer as installer_module
 
         # Mock __file__ to point to a location where template-registry.json doesn't exist
-        with patch.object(installer_module, "__file__", "/fake/sdd/init/template_installer.py"):
+        with patch.object(installer_module, "__file__", "/fake/solokit/init/template_installer.py"):
             with pytest.raises(TemplateNotFoundError) as exc:
                 load_template_registry()
 
@@ -63,7 +63,7 @@ class TestLoadTemplateRegistry:
 
     def test_registry_invalid_json(self):
         """Test error when registry has invalid JSON."""
-        with patch("sdd.init.template_installer.Path") as mock_path:
+        with patch("solokit.init.template_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
             mock_path.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
@@ -82,7 +82,7 @@ class TestGetTemplateInfo:
     def test_get_valid_template(self, mock_template_registry):
         """Test getting info for valid template."""
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             info = get_template_info("saas_t3")
@@ -93,7 +93,7 @@ class TestGetTemplateInfo:
     def test_get_invalid_template(self, mock_template_registry):
         """Test error for invalid template ID."""
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             with pytest.raises(TemplateNotFoundError) as exc:
@@ -114,7 +114,7 @@ class TestGetTemplateDirectory:
         saas_dir = templates_root / "saas_t3"
         saas_dir.mkdir()
 
-        with patch("sdd.init.template_installer.Path") as mock_path:
+        with patch("solokit.init.template_installer.Path") as mock_path:
             mock_path.return_value.__truediv__.return_value.__truediv__.return_value = (
                 templates_root
             )
@@ -128,10 +128,10 @@ class TestGetTemplateDirectory:
 
     def test_template_directory_not_found(self):
         """Test error when template directory doesn't exist."""
-        import sdd.init.template_installer as installer_module
+        import solokit.init.template_installer as installer_module
 
         # Mock __file__ to point to a location where the template doesn't exist
-        with patch.object(installer_module, "__file__", "/fake/sdd/init/template_installer.py"):
+        with patch.object(installer_module, "__file__", "/fake/solokit/init/template_installer.py"):
             with pytest.raises(TemplateNotFoundError):
                 get_template_directory("nonexistent")
 
@@ -265,7 +265,7 @@ class TestInstallBaseTemplate:
         project_root.mkdir()
 
         with patch(
-            "sdd.init.template_installer.get_template_directory",
+            "solokit.init.template_installer.get_template_directory",
             return_value=template_base_dir.parent,
         ):
             count = install_base_template(
@@ -277,7 +277,7 @@ class TestInstallBaseTemplate:
 
     def test_base_template_not_found(self, tmp_path):
         """Test error when base template directory doesn't exist."""
-        with patch("sdd.init.template_installer.get_template_directory", return_value=tmp_path):
+        with patch("solokit.init.template_installer.get_template_directory", return_value=tmp_path):
             with pytest.raises(TemplateNotFoundError):
                 install_base_template("saas_t3", tmp_path, {})
 
@@ -291,7 +291,9 @@ class TestInstallBaseTemplate:
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
+        with patch(
+            "solokit.init.template_installer.get_template_directory", return_value=template_dir
+        ):
             install_base_template("saas_t3", project_root, {"project_name": "my-app"})
 
             assert (project_root / "config.json").exists()
@@ -308,7 +310,7 @@ class TestInstallTierFiles:
         project_root.mkdir()
 
         with patch(
-            "sdd.init.template_installer.get_template_directory",
+            "solokit.init.template_installer.get_template_directory",
             return_value=template_tier_dir.parent,
         ):
             count = install_tier_files(
@@ -319,7 +321,7 @@ class TestInstallTierFiles:
 
     def test_tier_directory_not_found(self, tmp_path):
         """Test when tier directory doesn't exist (should not raise)."""
-        with patch("sdd.init.template_installer.get_template_directory", return_value=tmp_path):
+        with patch("solokit.init.template_installer.get_template_directory", return_value=tmp_path):
             count = install_tier_files("saas_t3", "tier-99", tmp_path, {})
 
             assert count == 0
@@ -338,14 +340,16 @@ class TestInstallAdditionalOption:
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        with patch("sdd.init.template_installer.get_template_directory", return_value=template_dir):
+        with patch(
+            "solokit.init.template_installer.get_template_directory", return_value=template_dir
+        ):
             count = install_additional_option("saas_t3", "ci-cd", project_root, {})
 
             assert count >= 1
 
     def test_option_not_found(self, tmp_path):
         """Test when option directory doesn't exist (should not raise)."""
-        with patch("sdd.init.template_installer.get_template_directory", return_value=tmp_path):
+        with patch("solokit.init.template_installer.get_template_directory", return_value=tmp_path):
             count = install_additional_option("saas_t3", "nonexistent", tmp_path, {})
 
             assert count == 0
@@ -370,11 +374,11 @@ class TestInstallTemplate:
         (tier1 / "test.ts").write_text("test")
 
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             with patch(
-                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+                "solokit.init.template_installer.get_template_directory", return_value=template_dir
             ):
                 result = install_template("saas_t3", "tier-1-essential", [], project_root)
 
@@ -401,11 +405,11 @@ class TestInstallTemplate:
         (tier2 / "tier2.txt").write_text("tier2")
 
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             with patch(
-                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+                "solokit.init.template_installer.get_template_directory", return_value=template_dir
             ):
                 install_template("saas_t3", "tier-2-standard", [], project_root)
 
@@ -429,11 +433,11 @@ class TestInstallTemplate:
         (ci_cd / "workflow.yml").write_text("ci")
 
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             with patch(
-                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+                "solokit.init.template_installer.get_template_directory", return_value=template_dir
             ):
                 result = install_template("saas_t3", "tier-1-essential", ["ci_cd"], project_root)
 
@@ -452,11 +456,11 @@ class TestInstallTemplate:
         (base / "README.md.template").write_text("# {project_name}")
 
         with patch(
-            "sdd.init.template_installer.load_template_registry",
+            "solokit.init.template_installer.load_template_registry",
             return_value=mock_template_registry,
         ):
             with patch(
-                "sdd.init.template_installer.get_template_directory", return_value=template_dir
+                "solokit.init.template_installer.get_template_directory", return_value=template_dir
             ):
                 install_template("saas_t3", "tier-1-essential", [], project_root)
 

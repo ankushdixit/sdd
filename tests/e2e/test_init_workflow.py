@@ -1,5 +1,5 @@
 """
-End-to-end tests for SDD project initialization workflow.
+End-to-end tests for Solokit project initialization workflow.
 
 Tests the init_project.py module and overall project setup including:
 - Project directory structure creation
@@ -66,14 +66,14 @@ def initialized_git_repo(temp_project):
 
 
 @pytest.fixture
-def sdd_initialized_project(initialized_git_repo):
-    """Create a fully initialized SDD project for testing.
+def solokit_initialized_project(initialized_git_repo):
+    """Create a fully initialized Solokit project for testing.
 
     Args:
         initialized_git_repo: Git repository fixture.
 
     Returns:
-        Path: Project directory with SDD initialized.
+        Path: Project directory with Solokit initialized.
     """
     # Create minimal required docs directory
     docs_dir = initialized_git_repo / "docs"
@@ -159,10 +159,10 @@ def sdd_initialized_project(initialized_git_repo):
 
 
 class TestProjectStructure:
-    """Test SDD project directory structure creation."""
+    """Test Solokit project directory structure creation."""
 
-    def test_session_directory_structure_created(self, sdd_initialized_project):
-        """Test that sdd init creates all required .session subdirectories.
+    def test_session_directory_structure_created(self, solokit_initialized_project):
+        """Test that sk init creates all required .session subdirectories.
 
         The .session directory should contain:
         - tracking/ for work items and learnings
@@ -171,17 +171,17 @@ class TestProjectStructure:
         - history/ for session history
         """
         # Assert
-        assert (sdd_initialized_project / ".session").exists(), ".session directory not created"
-        assert (sdd_initialized_project / ".session" / "tracking").exists(), (
+        assert (solokit_initialized_project / ".session").exists(), ".session directory not created"
+        assert (solokit_initialized_project / ".session" / "tracking").exists(), (
             ".session/tracking directory missing"
         )
-        assert (sdd_initialized_project / ".session" / "specs").exists(), (
+        assert (solokit_initialized_project / ".session" / "specs").exists(), (
             ".session/specs directory missing"
         )
-        assert (sdd_initialized_project / ".session" / "briefings").exists(), (
+        assert (solokit_initialized_project / ".session" / "briefings").exists(), (
             ".session/briefings directory missing"
         )
-        assert (sdd_initialized_project / ".session" / "history").exists(), (
+        assert (solokit_initialized_project / ".session" / "history").exists(), (
             ".session/history directory missing"
         )
 
@@ -189,7 +189,7 @@ class TestProjectStructure:
     def test_session_directory_accessible_on_real_project(self):
         """Test that current project has .session directory structure.
 
-        This validates that the real SDD project is properly initialized.
+        This validates that the real Solokit project is properly initialized.
         """
         # Assert - Test on actual project
         assert Path(".session/tracking").exists(), ".session/tracking directory missing"
@@ -206,7 +206,7 @@ class TestProjectStructure:
 class TestTrackingFiles:
     """Test tracking file initialization and structure."""
 
-    def test_work_items_file_created_with_valid_structure(self, sdd_initialized_project):
+    def test_work_items_file_created_with_valid_structure(self, solokit_initialized_project):
         """Test that work_items.json is created with proper structure.
 
         The work_items.json file should contain:
@@ -214,7 +214,7 @@ class TestTrackingFiles:
         - work_items section (empty initially)
         """
         # Arrange
-        work_items_file = sdd_initialized_project / ".session" / "tracking" / "work_items.json"
+        work_items_file = solokit_initialized_project / ".session" / "tracking" / "work_items.json"
 
         # Assert
         assert work_items_file.exists(), "work_items.json not created"
@@ -227,14 +227,14 @@ class TestTrackingFiles:
         assert "metadata" in data, "work_items.json missing metadata section"
         assert "work_items" in data, "work_items.json missing work_items section"
 
-    def test_learnings_file_created_with_valid_structure(self, sdd_initialized_project):
+    def test_learnings_file_created_with_valid_structure(self, solokit_initialized_project):
         """Test that learnings.json is created with proper structure.
 
         The learnings.json file should contain:
         - categories section for learning organization
         """
         # Arrange
-        learnings_file = sdd_initialized_project / ".session" / "tracking" / "learnings.json"
+        learnings_file = solokit_initialized_project / ".session" / "tracking" / "learnings.json"
 
         # Assert
         assert learnings_file.exists(), "learnings.json not created"
@@ -250,7 +250,7 @@ class TestTrackingFiles:
     def test_tracking_files_accessible_on_real_project(self):
         """Test that current project has valid tracking files.
 
-        Validates that the real SDD project has properly structured tracking files.
+        Validates that the real Solokit project has properly structured tracking files.
         """
         # Arrange & Act
         work_items_file = Path(".session/tracking/work_items.json")
@@ -279,7 +279,7 @@ class TestTrackingFiles:
 class TestSessionConfiguration:
     """Test session configuration file creation and validation."""
 
-    def test_config_file_created_with_valid_structure(self, sdd_initialized_project):
+    def test_config_file_created_with_valid_structure(self, solokit_initialized_project):
         """Test that config.json is created with proper configuration sections.
 
         The config.json file should contain:
@@ -287,7 +287,7 @@ class TestSessionConfiguration:
         - curation configuration
         """
         # Arrange
-        config_file = sdd_initialized_project / ".session" / "config.json"
+        config_file = solokit_initialized_project / ".session" / "config.json"
 
         # Assert
         assert config_file.exists(), "config.json not created"
@@ -304,7 +304,7 @@ class TestSessionConfiguration:
     def test_config_file_accessible_on_real_project(self):
         """Test that current project has valid configuration file.
 
-        Validates that the real SDD project has properly structured config.
+        Validates that the real Solokit project has properly structured config.
         """
         # Arrange & Act
         config_file = Path(".session/config.json")

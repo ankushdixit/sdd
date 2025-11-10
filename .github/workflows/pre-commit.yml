@@ -21,9 +21,9 @@ jobs:
     - name: Check for secrets
       run: |
         # Check for common secret patterns
-        ! grep -r "password\s*=\s*['\"].*['\"]" src/sdd/ tests/ || (echo "Found hardcoded password" && exit 1)
-        ! grep -r "api_key\s*=\s*['\"].*['\"]" src/sdd/ tests/ || (echo "Found hardcoded API key" && exit 1)
-        ! grep -r "secret\s*=\s*['\"].*['\"]" src/sdd/ tests/ || (echo "Found hardcoded secret" && exit 1)
+        ! grep -r "password\s*=\s*['\"].*['\"]" src/solokit/ tests/ || (echo "Found hardcoded password" && exit 1)
+        ! grep -r "api_key\s*=\s*['\"].*['\"]" src/solokit/ tests/ || (echo "Found hardcoded API key" && exit 1)
+        ! grep -r "secret\s*=\s*['\"].*['\"]" src/solokit/ tests/ || (echo "Found hardcoded secret" && exit 1)
 
     - name: Check file sizes
       run: |
@@ -33,8 +33,8 @@ jobs:
     - name: Check for debug statements
       run: |
         # Warn about debug statements (don't fail)
-        grep -rn "import pdb\|pdb.set_trace()\|breakpoint()" src/sdd/ tests/ || true
+        grep -rn "import pdb\|pdb.set_trace()\|breakpoint()" src/solokit/ tests/ || true
 
     - name: Check Python syntax
       run: |
-        python -m py_compile src/sdd/**/*.py
+        python -m py_compile src/solokit/**/*.py

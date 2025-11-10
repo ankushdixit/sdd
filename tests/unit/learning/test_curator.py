@@ -13,15 +13,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.learning.curator import LearningsCurator, main
-from sdd.learning.validator import LEARNING_SCHEMA
+from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
+from solokit.learning.curator import LearningsCurator, main
+from solokit.learning.validator import LEARNING_SCHEMA
 
 
 @pytest.fixture(autouse=True)
 def reset_config_manager():
     """Reset ConfigManager singleton before each test."""
-    from sdd.core.config import ConfigManager
+    from solokit.core.config import ConfigManager
 
     ConfigManager._instance = None
     ConfigManager._config = None
@@ -2096,13 +2096,13 @@ class TestMainFunctionErrorHandling:
     """Tests for main() function error handling."""
 
     def test_main_raises_file_not_found_when_session_dir_missing(self, tmp_path):
-        """Test that main() raises SDDFileNotFoundError when .session dir doesn't exist."""
+        """Test that main() raises SolokitFileNotFoundError when .session dir doesn't exist."""
         # Arrange
 
         with patch("sys.argv", ["curator.py", "curate"]):
             with patch("pathlib.Path.cwd", return_value=tmp_path):
                 # Act & Assert
-                with pytest.raises(SDDFileNotFoundError) as exc_info:
+                with pytest.raises(SolokitFileNotFoundError) as exc_info:
                     main()
 
                 # Verify exception details

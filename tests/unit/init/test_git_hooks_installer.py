@@ -14,8 +14,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import NotAGitRepoError, TemplateNotFoundError
-from sdd.init.git_hooks_installer import install_git_hooks
+from solokit.core.exceptions import NotAGitRepoError, TemplateNotFoundError
+from solokit.init.git_hooks_installer import install_git_hooks
 
 
 class TestInstallGitHooks:
@@ -28,7 +28,7 @@ class TestInstallGitHooks:
         hook_template = template_dir / "prepare-commit-msg"
         hook_template.write_text("#!/bin/sh\necho 'hook'")
 
-        with patch("sdd.init.git_hooks_installer.Path") as mock_path:
+        with patch("solokit.init.git_hooks_installer.Path") as mock_path:
             mock_path.return_value.parent.parent.__truediv__.return_value.__truediv__.return_value = template_dir
 
             hooks = install_git_hooks(mock_git_repo)
@@ -42,7 +42,7 @@ class TestInstallGitHooks:
 
     def test_hook_template_not_found(self, mock_git_repo):
         """Test error when hook template is missing."""
-        with patch("sdd.init.git_hooks_installer.Path") as mock_path:
+        with patch("solokit.init.git_hooks_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = False
             mock_path.return_value.parent.parent.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
@@ -57,7 +57,7 @@ class TestInstallGitHooks:
         hook_template = template_dir / "prepare-commit-msg"
         hook_template.write_text("#!/bin/sh\necho 'hook'")
 
-        with patch("sdd.init.git_hooks_installer.Path") as mock_path:
+        with patch("solokit.init.git_hooks_installer.Path") as mock_path:
             mock_path.return_value.parent.parent.__truediv__.return_value.__truediv__.return_value = template_dir
 
             install_git_hooks(mock_git_repo)

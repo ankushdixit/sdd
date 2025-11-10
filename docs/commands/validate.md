@@ -1,25 +1,25 @@
 # Validate Command
 
-**Usage:** `/sdd:validate [--fix]`
+**Usage:** `/sk:validate [--fix]`
 
 **Description:** Check quality gates and session readiness without ending the session.
 
 ## Overview
 
-The `validate` command runs pre-flight checks to ensure your work meets quality standards before completing the session. It's like a dry-run of `/sdd:end` without actually ending the session.
+The `validate` command runs pre-flight checks to ensure your work meets quality standards before completing the session. It's like a dry-run of `/sk:end` without actually ending the session.
 
 **Key benefits:**
 - Catch issues early during development
 - Avoid failed session completion
 - Auto-fix linting and formatting issues
-- Verify readiness before `/sdd:end`
+- Verify readiness before `/sk:end`
 
 ## Usage
 
 ### Basic Validation
 
 ```bash
-/sdd:validate
+/sk:validate
 ```
 
 Runs all checks and reports results.
@@ -27,7 +27,7 @@ Runs all checks and reports results.
 ### Auto-Fix Mode
 
 ```bash
-/sdd:validate --fix
+/sk:validate --fix
 ```
 
 Automatically fixes linting and formatting issues where possible.
@@ -69,7 +69,7 @@ Automatically fixes linting and formatting issues where possible.
 ### Successful Validation
 
 ```bash
-/sdd:validate
+/sk:validate
 ```
 
 **Output:**
@@ -90,15 +90,15 @@ Running session validation...
 All quality gates passed. Your work meets the standards.
 
 Next steps:
-  - Complete session:  /sdd:end
+  - Complete session:  /sk:end
   - Continue working:  (make more changes)
-  - View status:       /sdd:status
+  - View status:       /sk:status
 ```
 
 ### Validation with Issues
 
 ```bash
-/sdd:validate
+/sk:validate
 ```
 
 **Output:**
@@ -129,15 +129,15 @@ Running session validation...
 Fix the issues above before completing the session.
 
 Quick fixes:
-  - Auto-fix linting:      /sdd:validate --fix
-  - Auto-fix formatting:   /sdd:validate --fix
+  - Auto-fix linting:      /sk:validate --fix
+  - Auto-fix formatting:   /sk:validate --fix
   - Manual fixes needed:   src/auth/jwt.ts:12 (undefined variable)
 ```
 
 ### Auto-Fix Mode
 
 ```bash
-/sdd:validate --fix
+/sk:validate --fix
 ```
 
 **Output:**
@@ -166,14 +166,14 @@ Auto-fixed 4 issues. 1 manual fix still needed:
   src/auth/jwt.ts:12:5 - 'token' is not defined
 
 After fixing:
-  - Run /sdd:validate again to verify
-  - Then /sdd:end to complete session
+  - Run /sk:validate again to verify
+  - Then /sk:end to complete session
 ```
 
 ### Test Failures
 
 ```bash
-/sdd:validate
+/sk:validate
 ```
 
 **Output:**
@@ -209,14 +209,14 @@ Debug failing tests:
   npm test -- tests/api/auth.test.ts
 
 After fixing:
-  - Run /sdd:validate to verify
-  - Then /sdd:end when ready
+  - Run /sk:validate to verify
+  - Then /sk:end when ready
 ```
 
 ### Coverage Below Threshold
 
 ```bash
-/sdd:validate
+/sk:validate
 ```
 
 **Output:**
@@ -246,8 +246,8 @@ Focus on:
   2. src/middleware/auth.ts - needs 12% more
 
 After adding tests:
-  - Run /sdd:validate to check progress
-  - Then /sdd:end when threshold met
+  - Run /sk:validate to check progress
+  - Then /sk:end when threshold met
 ```
 
 ## Auto-Fix Capabilities
@@ -382,7 +382,7 @@ After adding tests:
 
 ```bash
 # Write some code
-/sdd:validate
+/sk:validate
 # See if tests still pass
 # Fix any issues
 # Continue coding
@@ -392,17 +392,17 @@ After adding tests:
 
 ```bash
 # Finishing for the day
-/sdd:validate
+/sk:validate
 # Ensure everything passes
 # Leave work in good state
-/sdd:end
+/sk:end
 ```
 
 ### After Major Changes
 
 ```bash
 # Refactored large section
-/sdd:validate
+/sk:validate
 # Verify nothing broke
 # Check coverage maintained
 ```
@@ -411,7 +411,7 @@ After adding tests:
 
 ```bash
 # Before pushing
-/sdd:validate
+/sk:validate
 # See what CI will check
 # Fix issues locally
 # Push with confidence
@@ -422,29 +422,29 @@ After adding tests:
 ### Standard Workflow
 
 ```bash
-/sdd:start feature_auth    # Begin work
+/sk:start feature_auth    # Begin work
 # ... make changes ...
-/sdd:validate              # Check quality (repeat as needed)
+/sk:validate              # Check quality (repeat as needed)
 # ... fix issues ...
-/sdd:validate              # Verify fixes
-/sdd:end                   # Complete session
+/sk:validate              # Verify fixes
+/sk:end                   # Complete session
 ```
 
 ### Fix-Validate Loop
 
 ```bash
-/sdd:validate              # Find issues
+/sk:validate              # Find issues
 # ... fix manually ...
-/sdd:validate --fix        # Auto-fix remaining
-/sdd:validate              # Final verification
-/sdd:end                   # Complete
+/sk:validate --fix        # Auto-fix remaining
+/sk:validate              # Final verification
+/sk:end                   # Complete
 ```
 
 ### Quick Status Check
 
 ```bash
-/sdd:status                # See progress
-/sdd:validate              # Check quality
+/sk:status                # See progress
+/sk:validate              # Check quality
 # Decide: continue or complete
 ```
 
@@ -453,7 +453,7 @@ After adding tests:
 When run directly (not through Claude):
 
 ```bash
-sdd validate
+sk validate
 echo $?
 ```
 
@@ -478,7 +478,7 @@ Quality gates configured in project files:
 - `pytest.ini` - Test configuration
 - `ruff.toml` - Linting rules
 
-**Coverage thresholds** set during `sdd init`:
+**Coverage thresholds** set during `sk init`:
 - tier-1: 60%
 - tier-2: 70%
 - tier-3: 80%
@@ -489,9 +489,9 @@ Quality gates configured in project files:
 ### 1. Validate Frequently
 
 ```bash
-# Not just before /sdd:end
+# Not just before /sk:end
 # Run during development
-/sdd:validate
+/sk:validate
 ```
 
 Catches issues early when they're easier to fix.
@@ -500,7 +500,7 @@ Catches issues early when they're easier to fix.
 
 ```bash
 # Let tool fix what it can
-/sdd:validate --fix
+/sk:validate --fix
 # Then fix remaining manually
 ```
 
@@ -524,9 +524,9 @@ Don't just make errors go away:
 
 Major code changes:
 ```bash
-/sdd:validate  # Before refactor
+/sk:validate  # Before refactor
 # ... refactor ...
-/sdd:validate  # After refactor
+/sk:validate  # After refactor
 ```
 
 Ensure refactoring didn't break anything.

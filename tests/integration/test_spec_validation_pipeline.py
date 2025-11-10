@@ -6,9 +6,9 @@ including validation of integration tests and deployments.
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError, SpecValidationError
-from sdd.testing.integration_runner import IntegrationTestRunner
-from sdd.work_items.manager import WorkItemManager
+from solokit.core.exceptions import FileNotFoundError, SpecValidationError
+from solokit.testing.integration_runner import IntegrationTestRunner
+from solokit.work_items.manager import WorkItemManager
 
 
 class TestValidateIntegrationTest:

@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from sdd.core.config import (
+from solokit.core.config import (
     ConfigManager,
     CurationConfig,
     DocumentationConfig,
@@ -13,12 +13,12 @@ from sdd.core.config import (
     GitWorkflowConfig,
     LintingConfig,
     QualityGatesConfig,
-    SDDConfig,
     SecurityConfig,
+    SolokitConfig,
     SpecCompletenessConfig,
     get_config_manager,
 )
-from sdd.core.exceptions import ConfigurationError
+from solokit.core.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ class TestConfigManager:
         manager = ConfigManager()
         config = manager.get_config()
 
-        assert isinstance(config, SDDConfig)
+        assert isinstance(config, SolokitConfig)
         assert isinstance(config.quality_gates, QualityGatesConfig)
         assert isinstance(config.git_workflow, GitWorkflowConfig)
         assert isinstance(config.curation, CurationConfig)
@@ -461,9 +461,9 @@ class TestDataclassDefaults:
         assert config.dry_run is False
         assert config.similarity_threshold == 0.7
 
-    def test_sdd_config_defaults(self):
-        """Test SDDConfig creates nested configs with defaults."""
-        config = SDDConfig()
+    def test_solokit_config_defaults(self):
+        """Test SolokitConfig creates nested configs with defaults."""
+        config = SolokitConfig()
         assert isinstance(config.quality_gates, QualityGatesConfig)
         assert isinstance(config.git_workflow, GitWorkflowConfig)
         assert isinstance(config.curation, CurationConfig)

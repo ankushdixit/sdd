@@ -1,6 +1,6 @@
 # Learn Curate Command
 
-**Usage:** `/sdd:learn-curate [--dry-run]`
+**Usage:** `/sk:learn-curate [--dry-run]`
 
 **Description:** Run automatic categorization, similarity detection, and merging of learnings to maintain database quality.
 
@@ -73,14 +73,14 @@ Updates learning database metadata:
 
 Runs full curation and saves changes:
 ```bash
-/sdd:learn-curate
+/sk:learn-curate
 ```
 
 ### `--dry-run` (Preview Mode)
 
 Shows what would be done without saving changes:
 ```bash
-/sdd:learn-curate --dry-run
+/sk:learn-curate --dry-run
 ```
 
 ## Output Format
@@ -166,7 +166,7 @@ Phase 4: Archiving
 
 Would change: 45 → 42 learnings (3 merged, 2 archived)
 
-To apply these changes, run: /sdd:learn-curate (without --dry-run)
+To apply these changes, run: /sk:learn-curate (without --dry-run)
 ```
 
 ## Examples
@@ -174,7 +174,7 @@ To apply these changes, run: /sdd:learn-curate (without --dry-run)
 ### Example 1: Normal Curation
 
 ```bash
-/sdd:learn-curate
+/sk:learn-curate
 ```
 
 **Output:**
@@ -216,7 +216,7 @@ After:  27 learnings (1 merged, 0 archived)
 ### Example 2: Dry-Run Preview
 
 ```bash
-/sdd:learn-curate --dry-run
+/sk:learn-curate --dry-run
 ```
 
 **Output:**
@@ -249,13 +249,13 @@ Phase 4: Archiving
 
 Would change: 28 → 27 learnings (1 merged, 0 archived)
 
-To apply these changes, run: /sdd:learn-curate (without --dry-run)
+To apply these changes, run: /sk:learn-curate (without --dry-run)
 ```
 
 ### Example 3: No Changes Needed
 
 ```bash
-/sdd:learn-curate
+/sk:learn-curate
 ```
 
 **Output:**
@@ -289,7 +289,7 @@ Total: 15 learnings across 4 categories
 ### Example 4: Heavy Curation Needed
 
 ```bash
-/sdd:learn-curate
+/sk:learn-curate
 ```
 
 **Output:**
@@ -454,35 +454,35 @@ Result: [fastapi, cors, middleware]
 
 ```bash
 # Every few weeks, review and clean up
-/sdd:learn-curate --dry-run     # Preview changes
-/sdd:learn-curate                # Apply changes
+/sk:learn-curate --dry-run     # Preview changes
+/sk:learn-curate                # Apply changes
 ```
 
 ### Before Important Milestones
 
 ```bash
 # Before releasing or demo
-/sdd:learn-curate
-/sdd:learn-show                  # Verify clean state
+/sk:learn-curate
+/sk:learn-show                  # Verify clean state
 ```
 
 ### After Bulk Learning Capture
 
 ```bash
 # After capturing many learnings
-/sdd:learn                       # Capture 10 learnings
-/sdd:learn                       # Capture more
-/sdd:learn-curate               # Organize everything
+/sk:learn                       # Capture 10 learnings
+/sk:learn                       # Capture more
+/sk:learn-curate               # Organize everything
 ```
 
 ### Testing Similarity Thresholds
 
 ```bash
 # Test different thresholds
-/sdd:learn-curate --dry-run     # See what would merge
+/sk:learn-curate --dry-run     # See what would merge
 # Adjust thresholds in config
-/sdd:learn-curate --dry-run     # See new results
-/sdd:learn-curate                # Apply when satisfied
+/sk:learn-curate --dry-run     # See new results
+/sk:learn-curate                # Apply when satisfied
 ```
 
 ## Integration with Other Commands
@@ -490,27 +490,27 @@ Result: [fastapi, cors, middleware]
 ### Capture → Curate Workflow
 
 ```bash
-/sdd:learn                       # Capture learnings during session
+/sk:learn                       # Capture learnings during session
 # ... more work ...
-/sdd:learn                       # Capture more learnings
-/sdd:learn-curate               # Clean up at end of day
+/sk:learn                       # Capture more learnings
+/sk:learn-curate               # Clean up at end of day
 ```
 
 ### Browse → Curate → Browse
 
 ```bash
-/sdd:learn-show                  # See current state
-/sdd:learn-curate --dry-run     # Preview cleanup
-/sdd:learn-curate                # Apply changes
-/sdd:learn-show                  # Verify improved organization
+/sk:learn-show                  # See current state
+/sk:learn-curate --dry-run     # Preview cleanup
+/sk:learn-curate                # Apply changes
+/sk:learn-show                  # Verify improved organization
 ```
 
 ### Search Quality Improvement
 
 ```bash
-/sdd:learn-search "middleware"   # Search before curation
-/sdd:learn-curate                # Merge duplicates, improve categorization
-/sdd:learn-search "middleware"   # Cleaner, better results
+/sk:learn-search "middleware"   # Search before curation
+/sk:learn-curate                # Merge duplicates, improve categorization
+/sk:learn-search "middleware"   # Cleaner, better results
 ```
 
 ## Configuration
@@ -552,8 +552,8 @@ Curation settings in `.session/config.json`:
 
 Always check dry-run first for significant changes:
 ```bash
-/sdd:learn-curate --dry-run     # Review what will happen
-/sdd:learn-curate                # Apply if looks good
+/sk:learn-curate --dry-run     # Review what will happen
+/sk:learn-curate                # Apply if looks good
 ```
 
 ### 2. Run Periodically
@@ -561,14 +561,14 @@ Always check dry-run first for significant changes:
 Don't let learnings accumulate too long:
 ```bash
 # Every 5-10 sessions
-/sdd:learn-curate
+/sk:learn-curate
 ```
 
 ### 3. Review Merge Decisions
 
 Check merged learnings occasionally:
 ```bash
-/sdd:learn-show                  # Look for merged learnings
+/sk:learn-show                  # Look for merged learnings
 # Review merge_history field in learnings.json if needed
 ```
 
@@ -589,9 +589,9 @@ Start conservative, then tune:
 
 **Solution:**
 ```bash
-/sdd:learn-curate --dry-run     # Preview merges
-/sdd:learn-curate                # Apply merges
-/sdd:learn-search "middleware"   # Verify cleaner results
+/sk:learn-curate --dry-run     # Preview merges
+/sk:learn-curate                # Apply merges
+/sk:learn-search "middleware"   # Verify cleaner results
 ```
 
 ### Scenario 2: Uncategorized Learnings
@@ -600,8 +600,8 @@ Start conservative, then tune:
 
 **Solution:**
 ```bash
-/sdd:learn-curate                # Auto-categorize
-/sdd:learn-show                  # Verify categories assigned
+/sk:learn-curate                # Auto-categorize
+/sk:learn-show                  # Verify categories assigned
 ```
 
 ### Scenario 3: Old Learnings Cluttering
@@ -610,7 +610,7 @@ Start conservative, then tune:
 
 **Solution:**
 ```bash
-/sdd:learn-curate                # Archive old learnings
+/sk:learn-curate                # Archive old learnings
 # Or adjust archive_threshold_sessions in config
 ```
 

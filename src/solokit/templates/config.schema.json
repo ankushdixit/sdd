@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ankushdixit/solokit/schemas/config.json",
+  "title": "Solokit Configuration",
+  "description": "Configuration for Session-Driven Development workflows",
+  "type": "object",
+  "properties": {
+    "quality_gates": {
+      "type": "object",
+      "description": "Quality gate configuration",
+      "properties": {
+        "test": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"},
+            "command": {"type": "string"},
+            "timeout": {"type": "integer", "minimum": 1}
+          },
+          "required": ["required"]
+        },
+        "lint": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"},
+            "command": {"type": "string"},
+            "timeout": {"type": "integer", "minimum": 1}
+          },
+          "required": ["required"]
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"},
+            "severity": {
+              "type": "string",
+              "enum": ["critical", "high", "medium", "low"]
+            },
+            "timeout": {"type": "integer", "minimum": 1}
+          },
+          "required": ["required"]
+        },
+        "format": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"},
+            "auto_fix": {"type": "boolean"},
+            "command": {"type": "string"},
+            "timeout": {"type": "integer", "minimum": 1}
+          }
+        },
+        "documentation": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"},
+            "check_changelog": {"type": "boolean"},
+            "check_docstrings": {"type": "boolean"}
+          }
+        },
+        "spec_completeness": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "learning": {
+      "type": "object",
+      "description": "Learning system configuration",
+      "properties": {
+        "auto_curate_frequency": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Auto-curate every N sessions"
+        },
+        "similarity_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Threshold for duplicate detection (Jaccard similarity)"
+        },
+        "containment_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Threshold for containment-based duplicate detection"
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "description": "Session management configuration",
+      "properties": {
+        "auto_commit": {
+          "type": "boolean",
+          "description": "Automatically commit changes on session end"
+        },
+        "require_work_item": {
+          "type": "boolean",
+          "description": "Require work item for session start"
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "description": "Deployment configuration",
+      "properties": {
+        "pre_deployment_checks": {
+          "type": "object",
+          "properties": {
+            "integration_tests": {"type": "boolean"},
+            "security_scans": {"type": "boolean"},
+            "environment_validation": {"type": "boolean"}
+          }
+        },
+        "smoke_tests": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "timeout": {"type": "integer", "minimum": 1},
+            "retry_count": {"type": "integer", "minimum": 0}
+          }
+        },
+        "rollback": {
+          "type": "object",
+          "properties": {
+            "automatic": {"type": "boolean"},
+            "on_smoke_test_failure": {"type": "boolean"},
+            "on_error_threshold": {"type": "boolean"},
+            "error_threshold_percent": {"type": "integer", "minimum": 0, "maximum": 100}
+          }
+        },
+        "environments": {
+          "type": "object",
+          "description": "Per-environment deployment configuration",
+          "patternProperties": {
+            ".*": {
+              "type": "object",
+              "properties": {
+                "auto_deploy": {"type": "boolean"},
+                "require_approval": {"type": "boolean"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

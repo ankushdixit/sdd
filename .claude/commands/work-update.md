@@ -41,7 +41,7 @@ Update a specific field of an existing work item using interactive UI.
    - Exit
 
 2. **Load and display current work item details** (optimized - fast metadata-only lookup):
-   - Use `python -m sdd.work_items.get_metadata <work_item_id>` for fast metadata retrieval
+   - Use `python -m solokit.work_items.get_metadata <work_item_id>` for fast metadata retrieval
    - This script reads ONLY the work item metadata from JSON, not the full spec file (much faster!)
    - If work item doesn't exist: Show error and suggest using `/work-list` to see available items
    - Display current values concisely:
@@ -86,7 +86,7 @@ Update a specific field of an existing work item using interactive UI.
    - Note: User can select "Type something" to manually enter comma-separated IDs
 
    **If field = "remove-dependency":**
-   - Use `python -m sdd.work_items.get_metadata <work_item_id> --with-deps` to get dependency details
+   - Use `python -m solokit.work_items.get_metadata <work_item_id> --with-deps` to get dependency details
    - This returns dependency IDs WITH their type and title in ONE efficient call!
    - If no dependencies: Show error "Work item has no dependencies to remove"
    - Question: "Select dependencies to remove from {work_item_id}: (Select multiple)"
@@ -99,22 +99,22 @@ Update a specific field of an existing work item using interactive UI.
 
    **For all fields:**
    ```bash
-   sdd work-update <work_item_id> --<field> <value>
+   sk work-update <work_item_id> --<field> <value>
    ```
 
    **For dependencies** (if multiple selected, join with commas):
    ```bash
-   sdd work-update <work_item_id> --add-dependency "dep1,dep2,dep3"
-   sdd work-update <work_item_id> --remove-dependency "dep1,dep2"
+   sk work-update <work_item_id> --add-dependency "dep1,dep2,dep3"
+   sk work-update <work_item_id> --remove-dependency "dep1,dep2"
    ```
 
    Examples:
    ```bash
-   sdd work-update bug_timeout --priority critical
-   sdd work-update feature_search --milestone "Sprint 2"
-   sdd work-update integration_test_api --add-dependency feature_api_client
-   sdd work-update integration_test_api --add-dependency "feature_api,feature_db,bug_auth"
-   sdd work-update feature_dashboard --remove-dependency "bug_css_layout,feature_old"
+   sk work-update bug_timeout --priority critical
+   sk work-update feature_search --milestone "Sprint 2"
+   sk work-update integration_test_api --add-dependency feature_api_client
+   sk work-update integration_test_api --add-dependency "feature_api,feature_db,bug_auth"
+   sk work-update feature_dashboard --remove-dependency "bug_css_layout,feature_old"
    ```
 
 5. **Show the output** to the user, which includes:

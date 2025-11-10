@@ -1,6 +1,6 @@
 # Learn Show Command
 
-**Usage:** `/sdd:learn-show [--category CATEGORY] [--tag TAG] [--session SESSION]`
+**Usage:** `/sk:learn-show [--category CATEGORY] [--tag TAG] [--session SESSION]`
 
 **Description:** Browse and filter captured learnings with optional filters.
 
@@ -45,9 +45,9 @@ Show only learnings captured in a specific session number.
 
 You can combine multiple filters:
 ```bash
-/sdd:learn-show --category gotchas --tag fastapi
-/sdd:learn-show --category gotchas --session 5
-/sdd:learn-show --tag python --session 8
+/sk:learn-show --category gotchas --tag fastapi
+/sk:learn-show --category gotchas --session 5
+/sk:learn-show --tag python --session 8
 ```
 
 ## Output Format
@@ -93,7 +93,7 @@ Total: 12 learnings across 4 categories
 ### Example 1: Show All Learnings
 
 ```bash
-/sdd:learn-show
+/sk:learn-show
 ```
 
 **Output:**
@@ -140,7 +140,7 @@ Total: 25 learnings across 3 categories
 ### Example 2: Filter by Category
 
 ```bash
-/sdd:learn-show --category gotchas
+/sk:learn-show --category gotchas
 ```
 
 **Output:**
@@ -179,7 +179,7 @@ Total: 8 gotchas
 ### Example 3: Filter by Tag
 
 ```bash
-/sdd:learn-show --tag fastapi
+/sk:learn-show --tag fastapi
 ```
 
 **Output:**
@@ -220,7 +220,7 @@ Total: 5 learnings with tag "fastapi"
 ### Example 4: Filter by Session
 
 ```bash
-/sdd:learn-show --session 5
+/sk:learn-show --session 5
 ```
 
 **Output:**
@@ -256,7 +256,7 @@ Total: 3 learnings from session 5
 ### Example 5: Combine Filters
 
 ```bash
-/sdd:learn-show --category gotchas --tag fastapi
+/sk:learn-show --category gotchas --tag fastapi
 ```
 
 **Output:**
@@ -284,7 +284,7 @@ Total: 2 gotchas with tag "fastapi"
 ### Example 6: No Results
 
 ```bash
-/sdd:learn-show --category gotchas --tag kubernetes
+/sk:learn-show --category gotchas --tag kubernetes
 ```
 
 **Output:**
@@ -297,10 +297,10 @@ Applied filters:
 
 Suggestions:
   - Remove a filter to see more results
-  - Try /sdd:learn-show --tag kubernetes (all categories)
-  - Try /sdd:learn-show --category gotchas (all tags)
-  - Try /sdd:learn-search kubernetes (full-text search)
-  - Capture a new learning: /sdd:learn
+  - Try /sk:learn-show --tag kubernetes (all categories)
+  - Try /sk:learn-show --category gotchas (all tags)
+  - Try /sk:learn-search kubernetes (full-text search)
+  - Capture a new learning: /sk:learn
 ```
 
 ## Learning Statistics
@@ -308,7 +308,7 @@ Suggestions:
 When showing all learnings (no filters), statistics are displayed:
 
 ```bash
-/sdd:learn-show
+/sk:learn-show
 ```
 
 **Output:**
@@ -352,45 +352,45 @@ Last Curation: 2025-10-13 09:15:22 (2 sessions ago)
 
 ```bash
 # After several sessions, review insights
-/sdd:learn-show
+/sk:learn-show
 ```
 
 ### Find Category-Specific Insights
 
 ```bash
 # Before refactoring, review technical debt
-/sdd:learn-show --category technical_debt
+/sk:learn-show --category technical_debt
 
 # Before optimizing, review performance insights
-/sdd:learn-show --category performance_insights
+/sk:learn-show --category performance_insights
 
 # Before deploying, review security learnings
-/sdd:learn-show --category security
+/sk:learn-show --category security
 ```
 
 ### Technology-Specific Review
 
 ```bash
 # Before working on FastAPI feature
-/sdd:learn-show --tag fastapi
+/sk:learn-show --tag fastapi
 
 # Before writing tests
-/sdd:learn-show --tag testing
+/sk:learn-show --tag testing
 
 # Before database changes
-/sdd:learn-show --tag database
+/sk:learn-show --tag database
 ```
 
 ### Session Retrospective
 
 ```bash
 # Review what was learned in a specific session
-/sdd:learn-show --session 12
+/sk:learn-show --session 12
 
 # Compare learnings from recent sessions
-/sdd:learn-show --session 20
-/sdd:learn-show --session 21
-/sdd:learn-show --session 22
+/sk:learn-show --session 20
+/sk:learn-show --session 21
+/sk:learn-show --session 22
 ```
 
 ## Integration with Other Commands
@@ -399,34 +399,34 @@ Last Curation: 2025-10-13 09:15:22 (2 sessions ago)
 
 ```bash
 # Review relevant learnings before starting
-/sdd:learn-show --tag authentication
-/sdd:start feature_auth
+/sk:learn-show --tag authentication
+/sk:start feature_auth
 ```
 
 ### After Capturing Learnings
 
 ```bash
-/sdd:learn                          # Capture learnings
-/sdd:learn-show --session 15        # Verify they were captured
-/sdd:learn-show --category gotchas  # See in context
+/sk:learn                          # Capture learnings
+/sk:learn-show --session 15        # Verify they were captured
+/sk:learn-show --category gotchas  # See in context
 ```
 
 ### With Search
 
 ```bash
 # Broad search, then focused browsing
-/sdd:learn-search "middleware"
-/sdd:learn-show --tag middleware    # More structured view
+/sk:learn-search "middleware"
+/sk:learn-show --tag middleware    # More structured view
 ```
 
 ### Before Curation
 
 ```bash
 # Check current state before curating
-/sdd:learn-show
-/sdd:learn-curate --dry-run
-/sdd:learn-curate
-/sdd:learn-show                     # Verify curation results
+/sk:learn-show
+/sk:learn-curate --dry-run
+/sk:learn-curate
+/sk:learn-show                     # Verify curation results
 ```
 
 ## Quick Actions
@@ -435,18 +435,18 @@ Common browsing patterns:
 
 ```bash
 # Quick category views
-/sdd:learn-show --category gotchas
-/sdd:learn-show --category best_practices
-/sdd:learn-show --category security
+/sk:learn-show --category gotchas
+/sk:learn-show --category best_practices
+/sk:learn-show --category security
 
 # Recent learnings
-/sdd:learn-show --session $(cat .session/tracking/status_update.json | jq -r '.session_number')
+/sk:learn-show --session $(cat .session/tracking/status_update.json | jq -r '.session_number')
 
 # Technology reviews
-/sdd:learn-show --tag python
-/sdd:learn-show --tag fastapi
-/sdd:learn-show --tag react
-/sdd:learn-show --tag typescript
+/sk:learn-show --tag python
+/sk:learn-show --tag fastapi
+/sk:learn-show --tag react
+/sk:learn-show --tag typescript
 ```
 
 ## Performance

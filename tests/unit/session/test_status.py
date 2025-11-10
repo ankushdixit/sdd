@@ -18,15 +18,15 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.core.exceptions import (
+from solokit.core.command_runner import CommandResult
+from solokit.core.exceptions import (
     FileNotFoundError,
     FileOperationError,
     SessionNotFoundError,
     ValidationError,
     WorkItemNotFoundError,
 )
-from sdd.session.status import get_session_status
+from solokit.session.status import get_session_status
 
 
 class TestGetSessionStatusNoStatusFile:
@@ -40,7 +40,7 @@ class TestGetSessionStatusNoStatusFile:
         Act: Call get_session_status()
         Assert: Raises SessionNotFoundError
         """
-        with patch("sdd.session.status.Path") as mock_path:
+        with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False
@@ -63,7 +63,7 @@ class TestGetSessionStatusNoStatusFile:
         Act: Call get_session_status()
         Assert: Exception has remediation message
         """
-        with patch("sdd.session.status.Path") as mock_path:
+        with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False
@@ -75,7 +75,7 @@ class TestGetSessionStatusNoStatusFile:
             with pytest.raises(SessionNotFoundError) as exc_info:
                 get_session_status()
 
-            assert "sdd start" in exc_info.value.remediation
+            assert "sk start" in exc_info.value.remediation
 
 
 class TestGetSessionStatusNoWorkItem:
@@ -89,7 +89,7 @@ class TestGetSessionStatusNoWorkItem:
         Act: Call get_session_status()
         Assert: Raises ValidationError
         """
-        with patch("sdd.session.status.Path") as mock_path:
+        with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             status_data = {}  # No current_work_item
             mock_status_file = MagicMock()
@@ -114,7 +114,7 @@ class TestGetSessionStatusNoWorkItem:
         Act: Call get_session_status()
         Assert: Raises ValidationError
         """
-        with patch("sdd.session.status.Path") as mock_path:
+        with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             status_data = {"current_work_item": ""}
             mock_status_file = MagicMock()
@@ -129,7 +129,7 @@ class TestGetSessionStatusNoWorkItem:
                 get_session_status()
 
             assert "No active work item in this session" in str(exc_info.value)
-            assert "sdd start" in exc_info.value.remediation
+            assert "sk start" in exc_info.value.remediation
 
 
 class TestGetSessionStatusWorkItemNotFound:
@@ -307,7 +307,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     # Mock git diff to return no changes
                     mock_runner = Mock()
                     mock_runner.run.return_value = CommandResult(
@@ -354,7 +354,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -397,7 +397,7 @@ class TestGetSessionStatusSuccess:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -449,7 +449,7 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -458,7 +458,7 @@ class TestGetSessionStatusWithTime:
 
                     mock_run_class.return_value = mock_runner
 
-                    with patch("sdd.session.status.datetime") as mock_datetime:
+                    with patch("solokit.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
                         mock_datetime.fromisoformat = datetime.fromisoformat
 
@@ -501,7 +501,7 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -510,7 +510,7 @@ class TestGetSessionStatusWithTime:
 
                     mock_run_class.return_value = mock_runner
 
-                    with patch("sdd.session.status.datetime") as mock_datetime:
+                    with patch("solokit.session.status.datetime") as mock_datetime:
                         mock_datetime.now.return_value = now
                         mock_datetime.fromisoformat = datetime.fromisoformat
 
@@ -548,7 +548,7 @@ class TestGetSessionStatusWithTime:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -597,7 +597,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
                     mock_runner.run.return_value = CommandResult(
                         returncode=0,
@@ -648,7 +648,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
                     mock_runner.run.return_value = CommandResult(
                         returncode=0,
@@ -697,7 +697,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
                     mock_runner.run.return_value = CommandResult(
                         returncode=124,
@@ -743,7 +743,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -786,7 +786,7 @@ class TestGetSessionStatusWithGitChanges:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -841,7 +841,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -886,7 +886,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -930,7 +930,7 @@ class TestGetSessionStatusWithGitInfo:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -998,7 +998,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1051,7 +1051,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1103,7 +1103,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1147,7 +1147,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1192,7 +1192,7 @@ class TestGetSessionStatusWithMilestone:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1252,7 +1252,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1303,7 +1303,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1364,7 +1364,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1431,7 +1431,7 @@ class TestGetSessionStatusWithNextItems:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1480,7 +1480,7 @@ class TestGetSessionStatusQuickActions:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1530,7 +1530,7 @@ class TestGetSessionStatusMainEntry:
                 "read_text",
                 side_effect=[json.dumps(status_data), json.dumps(work_items_data)],
             ):
-                with patch("sdd.session.status.CommandRunner") as mock_run_class:
+                with patch("solokit.session.status.CommandRunner") as mock_run_class:
                     mock_runner = Mock()
 
                     mock_runner.run.return_value = CommandResult(
@@ -1553,7 +1553,7 @@ class TestGetSessionStatusMainEntry:
         Act: Execute module as main
         Assert: Raises SessionNotFoundError
         """
-        with patch("sdd.session.status.Path") as mock_path:
+        with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = False

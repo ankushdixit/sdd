@@ -8,13 +8,13 @@ import json
 
 import pytest
 
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+from solokit.core.exceptions import (
+    FileNotFoundError as SolokitFileNotFoundError,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     WorkItemNotFoundError,
 )
-from sdd.work_items.delete import delete_work_item, find_dependents
+from solokit.work_items.delete import delete_work_item, find_dependents
 
 
 @pytest.fixture
@@ -250,7 +250,7 @@ class TestDeleteWorkItem:
         project_root = tmp_path / "project"
         project_root.mkdir()
 
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             delete_work_item("any_item", delete_spec=False, project_root=project_root)
 
         assert "work_items.json" in exc_info.value.context["file_path"]

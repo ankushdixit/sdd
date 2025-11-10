@@ -1,6 +1,6 @@
 # Work Next Command
 
-**Usage:** `/sdd:work-next`
+**Usage:** `/sk:work-next`
 
 **Description:** Get intelligent recommendations for the next work item to start based on dependencies and priority.
 
@@ -15,7 +15,7 @@ The `work-next` command analyzes your work items and recommends the most importa
 ## Usage
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 No arguments needed - the command automatically analyzes all work items.
@@ -70,7 +70,7 @@ In Progress (1 item):
   🔴 bug_timeout: Fix database timeout
 
 QUICK START:
-  /sdd:start feature_auth
+  /sk:start feature_auth
 ```
 
 ## Examples
@@ -78,7 +78,7 @@ QUICK START:
 ### Standard Recommendation
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -105,13 +105,13 @@ Ready to Start (4 items):
 Blocked (0 items)
 
 QUICK START:
-  /sdd:start bug_session_timeout
+  /sk:start bug_session_timeout
 ```
 
 ### Multiple High-Priority Items
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -143,13 +143,13 @@ NOTE: feature_auth blocks 3 other items. Completing it will
       unblock significant downstream work.
 
 QUICK START:
-  /sdd:start feature_auth
+  /sk:start feature_auth
 ```
 
 ### No Ready Items
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -169,14 +169,14 @@ In Progress (1 item):
 
 NEXT STEPS:
 1. Complete feature_auth to unblock 3 dependent items
-2. Use /sdd:end to complete current work
-3. Create new work items: /sdd:work-new
+2. Use /sk:end to complete current work
+3. Create new work items: /sk:work-new
 ```
 
 ### All Work Completed
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -191,9 +191,9 @@ Summary:
   ✓ 0 work items remaining
 
 NEXT STEPS:
-- Create new work items: /sdd:work-new
-- Review completed work: /sdd:work-list --status completed
-- Plan next milestone: /sdd:work-list --milestone next_phase
+- Create new work items: /sk:work-new
+- Review completed work: /sk:work-list --status completed
+- Plan next milestone: /sk:work-list --milestone next_phase
 ```
 
 ## Understanding the Context Section
@@ -251,33 +251,33 @@ NOTE: This item is required for milestone "Phase 1 MVP" (due soon).
 ### After Getting Recommendation
 
 ```bash
-/sdd:work-next
+/sk:work-next
 # See recommendation: feature_auth
 
-/sdd:start feature_auth
+/sk:start feature_auth
 # Start working on recommended item
 ```
 
 ### Compare with Manual Selection
 
 ```bash
-/sdd:work-next
+/sk:work-next
 # Algorithm recommendation
 
-/sdd:work-list --status not_started
+/sk:work-list --status not_started
 # See all available items
 
-/sdd:start <chosen_item>
+/sk:start <chosen_item>
 # Start your choice
 ```
 
 ### Check After Completing Work
 
 ```bash
-/sdd:end
+/sk:end
 # Complete current work item
 
-/sdd:work-next
+/sk:work-next
 # Get next recommendation automatically
 ```
 
@@ -297,7 +297,7 @@ Consider both priority and downstream impact
 
 ### Strategy 3: Milestone-Driven
 Focus on items in current milestone
-- Use `/sdd:work-list --milestone current_sprint`
+- Use `/sk:work-list --milestone current_sprint`
 - Filter by milestone first
 - Then apply priority sorting
 
@@ -326,7 +326,7 @@ Consider starting a different item when:
 ### No Work Items Exist
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -337,13 +337,13 @@ NO RECOMMENDATION
 No work items found.
 
 Create your first work item:
-  /sdd:work-new
+  /sk:work-new
 ```
 
 ### All Items In Progress
 
 ```bash
-/sdd:work-next
+/sk:work-next
 ```
 
 **Output:**
@@ -358,7 +358,7 @@ In Progress (2 items):
   🔴 bug_timeout
 
 Complete current work before starting new items:
-  /sdd:end
+  /sk:end
 ```
 
 ## Best Practices
@@ -366,12 +366,12 @@ Complete current work before starting new items:
 ### 1. Check Regularly
 ```bash
 # After completing work
-/sdd:end
-/sdd:work-next
+/sk:end
+/sk:work-next
 
 # Before starting new work
-/sdd:work-next
-/sdd:start
+/sk:work-next
+/sk:start
 ```
 
 ### 2. Review Context
@@ -382,17 +382,17 @@ Complete current work before starting new items:
 ### 3. Update Priorities
 ```bash
 # If recommendation doesn't match needs
-/sdd:work-update <item_id> priority
+/sk:work-update <item_id> priority
 # Then check again
-/sdd:work-next
+/sk:work-next
 ```
 
 ### 4. Break Down Large Items
 If recommended item is too large:
 ```bash
 # Create smaller sub-items
-/sdd:work-new  # Create smaller task
-/sdd:work-update <new_item> add-dependency
+/sk:work-new  # Create smaller task
+/sk:work-update <new_item> add-dependency
 # Add large item as dependency
 ```
 

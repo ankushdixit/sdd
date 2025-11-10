@@ -19,8 +19,8 @@ from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.session.complete import (
+from solokit.core.command_runner import CommandResult
+from solokit.session.complete import (
     auto_extract_learnings,
     check_uncommitted_changes,
     complete_git_workflow,
@@ -76,7 +76,7 @@ class TestLoadStatus:
     def test_load_status_invalid_json(self, tmp_path, monkeypatch):
         """Test load_status raises error for invalid JSON."""
         # Arrange
-        from sdd.core.exceptions import FileOperationError
+        from solokit.core.exceptions import FileOperationError
 
         monkeypatch.chdir(tmp_path)
         session_dir = tmp_path / ".session" / "tracking"
@@ -118,7 +118,7 @@ class TestLoadWorkItems:
     def test_load_work_items_file_not_found(self, tmp_path, monkeypatch):
         """Test load_work_items raises error when file doesn't exist."""
         # Arrange
-        from sdd.core.exceptions import FileOperationError
+        from solokit.core.exceptions import FileOperationError
 
         monkeypatch.chdir(tmp_path)
 
@@ -129,7 +129,7 @@ class TestLoadWorkItems:
     def test_load_work_items_invalid_json(self, tmp_path, monkeypatch):
         """Test load_work_items raises error for invalid JSON."""
         # Arrange
-        from sdd.core.exceptions import FileOperationError
+        from solokit.core.exceptions import FileOperationError
 
         monkeypatch.chdir(tmp_path)
         session_dir = tmp_path / ".session" / "tracking"
@@ -145,7 +145,7 @@ class TestLoadWorkItems:
 class TestRunQualityGates:
     """Tests for run_quality_gates function."""
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_all_pass(self, mock_gates_class):
         """Test run_quality_gates when all gates pass."""
         # Arrange
@@ -180,11 +180,11 @@ class TestRunQualityGates:
         assert mock_gates.run_tests.called
         assert mock_gates.run_security_scan.called
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_test_failure(self, mock_gates_class):
         """Test run_quality_gates when tests fail."""
         # Arrange
-        from sdd.core.config import QualityGatesConfig
+        from solokit.core.config import QualityGatesConfig
 
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
@@ -207,11 +207,11 @@ class TestRunQualityGates:
         assert "tests" in failed_gates
         assert mock_gates.get_remediation_guidance.called
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_security_failure(self, mock_gates_class):
         """Test run_quality_gates when security scan fails."""
         # Arrange
-        from sdd.core.config import QualityGatesConfig
+        from solokit.core.config import QualityGatesConfig
 
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
@@ -234,13 +234,13 @@ class TestRunQualityGates:
         assert "security" in failed_gates
         assert results["security"]["issues"] == 3
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_multiple_failures(self, mock_gates_class):
         """Test run_quality_gates with multiple gate failures."""
         # Arrange
         from dataclasses import replace
 
-        from sdd.core.config import QualityGatesConfig
+        from solokit.core.config import QualityGatesConfig
 
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
@@ -272,7 +272,7 @@ class TestRunQualityGates:
         assert "linting" in failed_gates
         assert "formatting" in failed_gates
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_with_work_item(self, mock_gates_class):
         """Test run_quality_gates with work item for custom validations."""
         # Arrange
@@ -306,13 +306,13 @@ class TestRunQualityGates:
         assert "custom" in results
         mock_gates.run_custom_validations.assert_called_once_with(work_item)
 
-    @patch("sdd.session.complete.QualityGates")
+    @patch("solokit.session.complete.QualityGates")
     def test_run_quality_gates_non_required_gate_failure(self, mock_gates_class):
         """Test run_quality_gates when non-required gate fails."""
         # Arrange
         from dataclasses import replace
 
-        from sdd.core.config import QualityGatesConfig
+        from solokit.core.config import QualityGatesConfig
 
         mock_gates = MagicMock()
         mock_gates_class.return_value = mock_gates
@@ -343,8 +343,8 @@ class TestRunQualityGates:
 class TestUpdateAllTracking:
     """Tests for update_all_tracking function."""
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.session.complete.Path")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.session.complete.Path")
     def test_update_tracking_success(self, mock_path, mock_run):
         """Test successful tracking update."""
         # Arrange
@@ -369,8 +369,8 @@ class TestUpdateAllTracking:
         assert result is True
         assert mock_runner.run.call_count == 2  # stack and tree
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.session.complete.Path")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.session.complete.Path")
     def test_update_tracking_stack_failure(self, mock_path, mock_run):
         """Test tracking update when stack update fails."""
         # Arrange
@@ -408,8 +408,8 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True  # Function returns True even on failure
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.session.complete.Path")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.session.complete.Path")
     def test_update_tracking_tree_failure(self, mock_path, mock_run):
         """Test tracking update when tree update fails."""
         # Arrange
@@ -447,8 +447,8 @@ class TestUpdateAllTracking:
         # Assert
         assert result is True
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.session.complete.Path")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.session.complete.Path")
     def test_update_tracking_timeout(self, mock_path, mock_run):
         """Test tracking update handles timeout exception."""
         # Arrange
@@ -476,11 +476,11 @@ class TestUpdateAllTracking:
 class TestTriggerCurationIfNeeded:
     """Tests for trigger_curation_if_needed function."""
 
-    @patch("sdd.core.config.get_config_manager")
+    @patch("solokit.core.config.get_config_manager")
     def test_trigger_curation_disabled(self, mock_get_config_manager):
         """Test trigger_curation_if_needed when auto_curate is disabled."""
         # Arrange
-        from sdd.core.config import CurationConfig
+        from solokit.core.config import CurationConfig
 
         mock_config_manager = MagicMock()
         mock_config_manager.curation = CurationConfig(auto_curate=False)
@@ -492,12 +492,12 @@ class TestTriggerCurationIfNeeded:
         # Assert - should return early, no subprocess call
         mock_config_manager.load_config.assert_called_once()
 
-    @patch("sdd.learning.curator.LearningsCurator")
-    @patch("sdd.core.config.get_config_manager")
+    @patch("solokit.learning.curator.LearningsCurator")
+    @patch("solokit.core.config.get_config_manager")
     def test_trigger_curation_triggered(self, mock_get_config_manager, mock_curator_class):
         """Test trigger_curation_if_needed triggers curation."""
         # Arrange
-        from sdd.core.config import CurationConfig
+        from solokit.core.config import CurationConfig
 
         mock_config_manager = MagicMock()
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
@@ -513,12 +513,12 @@ class TestTriggerCurationIfNeeded:
         mock_curator_class.assert_called_once()
         mock_curator.curate.assert_called_once_with(dry_run=False)
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.core.config.get_config_manager")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.core.config.get_config_manager")
     def test_trigger_curation_not_time_yet(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed when not time to curate."""
         # Arrange
-        from sdd.core.config import CurationConfig
+        from solokit.core.config import CurationConfig
 
         mock_config_manager = MagicMock()
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
@@ -533,12 +533,12 @@ class TestTriggerCurationIfNeeded:
         # Assert
         mock_runner.run.assert_not_called()
 
-    @patch("sdd.learning.curator.LearningsCurator")
-    @patch("sdd.core.config.get_config_manager")
+    @patch("solokit.learning.curator.LearningsCurator")
+    @patch("solokit.core.config.get_config_manager")
     def test_trigger_curation_failure(self, mock_get_config_manager, mock_curator_class):
         """Test trigger_curation_if_needed handles curation failure."""
         # Arrange
-        from sdd.core.config import CurationConfig
+        from solokit.core.config import CurationConfig
 
         mock_config_manager = MagicMock()
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
@@ -555,12 +555,12 @@ class TestTriggerCurationIfNeeded:
         mock_curator_class.assert_called_once()
         mock_curator.curate.assert_called_once_with(dry_run=False)
 
-    @patch("sdd.session.complete.CommandRunner")
-    @patch("sdd.core.config.get_config_manager")
+    @patch("solokit.session.complete.CommandRunner")
+    @patch("solokit.core.config.get_config_manager")
     def test_trigger_curation_exception(self, mock_get_config_manager, mock_run):
         """Test trigger_curation_if_needed handles exceptions gracefully."""
         # Arrange
-        from sdd.core.config import CurationConfig
+        from solokit.core.config import CurationConfig
 
         mock_config_manager = MagicMock()
         mock_config_manager.curation = CurationConfig(auto_curate=True, frequency=5)
@@ -606,7 +606,7 @@ class TestAutoExtractLearnings:
         mock_curator.extract_from_code_comments.return_value = []
 
         # Mock the LearningsCurator class
-        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
+        with patch("solokit.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -625,7 +625,7 @@ class TestAutoExtractLearnings:
         mock_curator.extract_from_code_comments.return_value = []
 
         # Mock the LearningsCurator class
-        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
+        with patch("solokit.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -646,7 +646,7 @@ class TestAutoExtractLearnings:
         mock_curator.add_learning_if_new.return_value = True
 
         # Mock the LearningsCurator class
-        with patch("sdd.learning.curator.LearningsCurator", return_value=mock_curator):
+        with patch("solokit.learning.curator.LearningsCurator", return_value=mock_curator):
             # Act
             result = auto_extract_learnings(5)
 
@@ -798,7 +798,7 @@ class TestCompleteGitWorkflow:
         new_callable=mock_open,
         read_data='{"work_items": {"feature-001": {"status": "completed"}}}',
     )
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_complete_git_workflow_success(self, mock_git_workflow_class, mock_file, tmp_path):
         """Test successful git workflow completion."""
         # Arrange
@@ -815,7 +815,7 @@ class TestCompleteGitWorkflow:
         # Assert
         assert result["success"] is True
 
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_complete_git_workflow_module_not_found(self, mock_git_workflow_class):
         """Test git workflow when import fails."""
         # Arrange
@@ -833,7 +833,7 @@ class TestCompleteGitWorkflow:
         new_callable=mock_open,
         read_data='{"work_items": {"feature-001": {"status": "completed"}}}',
     )
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_complete_git_workflow_with_merge(self, mock_git_workflow_class, mock_file, tmp_path):
         """Test git workflow with merge when work item completed."""
         # Arrange
@@ -849,7 +849,7 @@ class TestCompleteGitWorkflow:
         call_args = mock_workflow.complete_work_item.call_args
         assert call_args[1]["merge"] is True
 
-    @patch("sdd.session.complete.Path")
+    @patch("solokit.session.complete.Path")
     def test_complete_git_workflow_exception(self, mock_path_class):
         """Test git workflow handles exceptions."""
         # Arrange
@@ -866,7 +866,7 @@ class TestCompleteGitWorkflow:
 class TestRecordSessionCommits:
     """Tests for record_session_commits function."""
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_record_commits_success(self, mock_run, tmp_path, monkeypatch):
         """Test successful recording of session commits."""
         # Arrange
@@ -900,7 +900,7 @@ class TestRecordSessionCommits:
         assert "commits" in updated_data["work_items"]["feature-001"]["git"]
         assert len(updated_data["work_items"]["feature-001"]["git"]["commits"]) == 1
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_record_commits_no_branch(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits when work item has no git branch."""
         # Arrange
@@ -927,7 +927,7 @@ class TestRecordSessionCommits:
         # Assert - should return silently without calling git
         mock_runner.run.assert_not_called()
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_record_commits_git_error(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits handles git errors silently."""
         # Arrange
@@ -956,7 +956,7 @@ class TestRecordSessionCommits:
 
         # Assert - should not raise exception
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_record_commits_parsing(self, mock_run, tmp_path, monkeypatch):
         """Test record_session_commits parses multiple commits correctly."""
         # Arrange
@@ -998,7 +998,7 @@ class TestRecordSessionCommits:
 class TestGenerateCommitMessage:
     """Tests for generate_commit_message function."""
 
-    @patch("sdd.session.complete.parse_spec_file")
+    @patch("solokit.session.complete.parse_spec_file")
     def test_generate_commit_message_completed(self, mock_parse):
         """Test commit message generation for completed work item."""
         # Arrange
@@ -1015,7 +1015,7 @@ class TestGenerateCommitMessage:
         assert "Users need secure login" in result
         assert "Claude Code" in result
 
-    @patch("sdd.session.complete.parse_spec_file")
+    @patch("solokit.session.complete.parse_spec_file")
     def test_generate_commit_message_in_progress(self, mock_parse):
         """Test commit message generation for in-progress work item."""
         # Arrange
@@ -1031,7 +1031,7 @@ class TestGenerateCommitMessage:
         assert "🚧 Work in progress" in result
         assert "Login fails on mobile" in result
 
-    @patch("sdd.session.complete.parse_spec_file")
+    @patch("solokit.session.complete.parse_spec_file")
     def test_generate_commit_message_with_long_rationale(self, mock_parse):
         """Test commit message truncates long rationale."""
         # Arrange
@@ -1047,7 +1047,7 @@ class TestGenerateCommitMessage:
         assert "..." in result  # Should be truncated
         assert len(result.split("\n\n")[1]) < 210  # Should be trimmed
 
-    @patch("sdd.session.complete.parse_spec_file")
+    @patch("solokit.session.complete.parse_spec_file")
     def test_generate_commit_message_no_spec(self, mock_parse):
         """Test commit message when spec file not found."""
         # Arrange
@@ -1142,7 +1142,7 @@ class TestGenerateSummary:
         # Assert
         assert "Linting: ⊘ SKIPPED" in result
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_generate_summary_with_commits(self, mock_run):
         """Test summary includes commit details (Enhancement #11)."""
         # Arrange
@@ -1187,7 +1187,7 @@ class TestGenerateSummary:
         assert "Files changed:" in result
         assert "file1.py" in result
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_generate_summary_with_multiline_commit(self, mock_run):
         """Test summary preserves multi-line commit messages (Enhancement #11)."""
         # Arrange
@@ -1241,7 +1241,7 @@ class TestGenerateSummary:
         assert "Commits Made" not in result
         assert "Session 1 Summary" in result  # Summary still generated
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_generate_summary_git_diff_fails_gracefully(self, mock_run):
         """Test summary handles git diff failure gracefully (Enhancement #11)."""
         # Arrange
@@ -1420,7 +1420,7 @@ class TestGenerateDeploymentSummary:
 class TestCheckUncommittedChanges:
     """Tests for check_uncommitted_changes function."""
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_no_uncommitted_changes(self, mock_run):
         """Test check_uncommitted_changes returns True when no changes."""
         # Arrange
@@ -1440,7 +1440,7 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="y")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_uncommitted_changes_user_override(self, mock_run, mock_isatty, mock_input):
         """Test user can override uncommitted changes check."""
         # Arrange
@@ -1460,7 +1460,7 @@ class TestCheckUncommittedChanges:
 
     @patch("builtins.input", return_value="n")
     @patch("sys.stdin.isatty", return_value=True)
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_uncommitted_changes_user_abort(self, mock_run, mock_isatty, mock_input):
         """Test user can abort on uncommitted changes."""
         # Arrange
@@ -1479,7 +1479,7 @@ class TestCheckUncommittedChanges:
         assert result is False
 
     @patch("sys.stdin.isatty", return_value=False)
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_uncommitted_changes_non_interactive(self, mock_run, mock_isatty):
         """Test non-interactive mode returns False on uncommitted changes."""
         # Arrange
@@ -1497,7 +1497,7 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is False
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_uncommitted_changes_only_session_tracking(self, mock_run):
         """Test check passes when only session tracking files changed."""
         # Arrange
@@ -1517,7 +1517,7 @@ class TestCheckUncommittedChanges:
         # Assert
         assert result is True
 
-    @patch("sdd.session.complete.CommandRunner")
+    @patch("solokit.session.complete.CommandRunner")
     def test_uncommitted_changes_exception(self, mock_run):
         """Test check returns True on exception."""
         # Arrange
@@ -1549,7 +1549,7 @@ class TestCheckUncommittedChanges:
 class TestMain:
     """Tests for main function."""
 
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.load_status")
     def test_main_no_active_session(self, mock_load_status):
         """Test main exits when no active session."""
         # Arrange
@@ -1562,17 +1562,17 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("sdd.session.complete.auto_extract_learnings")
-    @patch("sdd.session.complete.record_session_commits")
-    @patch("sdd.session.complete.complete_git_workflow")
-    @patch("sdd.session.complete.generate_commit_message")
-    @patch("sdd.session.complete.extract_learnings_from_session")
-    @patch("sdd.session.complete.trigger_curation_if_needed")
-    @patch("sdd.session.complete.update_all_tracking")
-    @patch("sdd.session.complete.run_quality_gates")
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.auto_extract_learnings")
+    @patch("solokit.session.complete.record_session_commits")
+    @patch("solokit.session.complete.complete_git_workflow")
+    @patch("solokit.session.complete.generate_commit_message")
+    @patch("solokit.session.complete.extract_learnings_from_session")
+    @patch("solokit.session.complete.trigger_curation_if_needed")
+    @patch("solokit.session.complete.update_all_tracking")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     @patch("builtins.input", return_value="1")  # Changed from "y" to "1" for new prompt
     @patch("sys.stdin.isatty", return_value=True)
     def test_main_success_complete(
@@ -1635,9 +1635,9 @@ class TestMain:
         assert mock_run_gates.called
         assert mock_update_tracking.called
 
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     def test_main_uncommitted_changes_abort(
         self, mock_load_status, mock_load_work_items, mock_check_changes
     ):
@@ -1656,10 +1656,10 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("sdd.session.complete.run_quality_gates")
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     def test_main_quality_gates_fail(
         self, mock_load_status, mock_load_work_items, mock_check_changes, mock_run_gates
     ):
@@ -1681,17 +1681,17 @@ class TestMain:
         # Assert
         assert result == 1
 
-    @patch("sdd.session.complete.auto_extract_learnings")
-    @patch("sdd.session.complete.record_session_commits")
-    @patch("sdd.session.complete.complete_git_workflow")
-    @patch("sdd.session.complete.generate_commit_message")
-    @patch("sdd.session.complete.extract_learnings_from_session")
-    @patch("sdd.session.complete.trigger_curation_if_needed")
-    @patch("sdd.session.complete.update_all_tracking")
-    @patch("sdd.session.complete.run_quality_gates")
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.auto_extract_learnings")
+    @patch("solokit.session.complete.record_session_commits")
+    @patch("solokit.session.complete.complete_git_workflow")
+    @patch("solokit.session.complete.generate_commit_message")
+    @patch("solokit.session.complete.extract_learnings_from_session")
+    @patch("solokit.session.complete.trigger_curation_if_needed")
+    @patch("solokit.session.complete.update_all_tracking")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     def test_main_with_learnings_file(
         self,
         mock_load_status,
@@ -1767,10 +1767,10 @@ class TestMain:
         assert result == 0
         mock_extract_learnings.assert_called_once_with(str(learnings_file))
 
-    @patch("sdd.session.complete.run_quality_gates")
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     def test_main_missing_completion_flag(
         self,
         mock_load_status,
@@ -1810,17 +1810,17 @@ class TestMain:
         # Assert - should return error code 1
         assert result == 1
 
-    @patch("sdd.session.complete.auto_extract_learnings")
-    @patch("sdd.session.complete.record_session_commits")
-    @patch("sdd.session.complete.complete_git_workflow")
-    @patch("sdd.session.complete.generate_commit_message")
-    @patch("sdd.session.complete.extract_learnings_from_session")
-    @patch("sdd.session.complete.trigger_curation_if_needed")
-    @patch("sdd.session.complete.update_all_tracking")
-    @patch("sdd.session.complete.run_quality_gates")
-    @patch("sdd.session.complete.check_uncommitted_changes")
-    @patch("sdd.session.complete.load_work_items")
-    @patch("sdd.session.complete.load_status")
+    @patch("solokit.session.complete.auto_extract_learnings")
+    @patch("solokit.session.complete.record_session_commits")
+    @patch("solokit.session.complete.complete_git_workflow")
+    @patch("solokit.session.complete.generate_commit_message")
+    @patch("solokit.session.complete.extract_learnings_from_session")
+    @patch("solokit.session.complete.trigger_curation_if_needed")
+    @patch("solokit.session.complete.update_all_tracking")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
     def test_main_complete_flag(
         self,
         mock_load_status,

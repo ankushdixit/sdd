@@ -10,7 +10,7 @@ List all work items, optionally filtered by status, type, or milestone.
 Run the following command:
 
 ```bash
-sdd work-list "$@"
+sk work-list "$@"
 ```
 
 The CLI will automatically parse and handle filters from `$ARGUMENTS`:

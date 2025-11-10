@@ -1,7 +1,7 @@
 .PHONY: help install test lint format typecheck clean build
 
 help:
-	@echo "SDD - Session-Driven Development"
+	@echo "Solokit - Session-Driven Development"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  help      - Show this help message"
@@ -25,7 +25,7 @@ lint:
 	bandit -r scripts/ sdd_cli.py
 
 typecheck:
-	mypy src/sdd
+	mypy src/solokit
 
 format:
 	ruff check --fix .

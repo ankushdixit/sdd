@@ -15,12 +15,12 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.session.briefing import (
+from solokit.session.briefing import (
     check_command_exists,
     generate_integration_test_briefing,
     main,
 )
-from sdd.session.complete import generate_integration_test_summary
+from solokit.session.complete import generate_integration_test_summary
 
 
 @pytest.fixture
@@ -137,7 +137,7 @@ class TestBriefingGeneratorArgumentParsing:
         2. Error message should indicate the work item was not found
         """
         # Arrange
-        from sdd.core.exceptions import WorkItemNotFoundError
+        from solokit.core.exceptions import WorkItemNotFoundError
 
         monkeypatch.chdir(mock_session_env)
 
@@ -159,7 +159,7 @@ class TestBriefingGeneratorArgumentParsing:
         2. Error message should indicate the in-progress item
         """
         # Arrange
-        from sdd.core.exceptions import SessionAlreadyActiveError
+        from solokit.core.exceptions import SessionAlreadyActiveError
 
         monkeypatch.chdir(mock_session_env)
 
@@ -180,7 +180,7 @@ class TestBriefingGeneratorArgumentParsing:
         2. Error message should indicate the unmet dependency
         """
         # Arrange
-        from sdd.core.exceptions import UnmetDependencyError
+        from solokit.core.exceptions import UnmetDependencyError
 
         monkeypatch.chdir(mock_session_env)
 
@@ -550,7 +550,7 @@ class TestBriefingGeneratorFileStructure:
         The module should export generate_integration_test_briefing function.
         """
         # Arrange
-        briefing_file = Path("src/sdd/session/briefing/formatter.py")
+        briefing_file = Path("src/solokit/session/briefing/formatter.py")
 
         # Act
         content = briefing_file.read_text()
@@ -567,7 +567,7 @@ class TestBriefingGeneratorFileStructure:
         if required commands are available.
         """
         # Arrange
-        briefing_file = Path("src/sdd/session/briefing/formatter.py")
+        briefing_file = Path("src/solokit/session/briefing/formatter.py")
 
         # Act
         content = briefing_file.read_text()
@@ -582,7 +582,7 @@ class TestBriefingGeneratorFileStructure:
         defined and importable from the briefing_generator module.
         """
         # Arrange & Act - Already imported at module level
-        from sdd.session.briefing import generate_integration_test_briefing
+        from solokit.session.briefing import generate_integration_test_briefing
 
         # Assert - Function is callable
         assert callable(generate_integration_test_briefing)
@@ -597,7 +597,7 @@ class TestSessionCompleteFileStructure:
         The module should export generate_integration_test_summary function.
         """
         # Arrange
-        session_file = Path("src/sdd/session/complete.py")
+        session_file = Path("src/solokit/session/complete.py")
 
         # Act
         assert session_file.exists()
@@ -613,7 +613,7 @@ class TestSessionCompleteFileStructure:
         summary function when appropriate.
         """
         # Arrange
-        session_file = Path("src/sdd/session/complete.py")
+        session_file = Path("src/solokit/session/complete.py")
 
         # Act
         content = session_file.read_text()

@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.core.exceptions import SpecValidationError
-from sdd.quality.checkers.spec_completeness import SpecCompletenessChecker
+from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
+from solokit.core.exceptions import SpecValidationError
+from solokit.quality.checkers.spec_completeness import SpecCompletenessChecker
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ class TestSpecCompletenessCheckerRun:
         work_item = {"id": "WI-001", "type": "feature"}
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
+        with patch("solokit.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()
 
         assert result.passed is True
@@ -127,7 +127,7 @@ class TestSpecCompletenessCheckerRun:
         )
 
         with patch(
-            "sdd.quality.checkers.spec_completeness.validate_spec_file",
+            "solokit.quality.checkers.spec_completeness.validate_spec_file",
             side_effect=validation_error,
         ):
             result = checker.run()
@@ -142,10 +142,12 @@ class TestSpecCompletenessCheckerRun:
         work_item = {"id": "WI-001", "type": "feature"}
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        file_error = SDDFileNotFoundError(file_path=".session/specs/WI-001.md", file_type="spec")
+        file_error = SolokitFileNotFoundError(
+            file_path=".session/specs/WI-001.md", file_type="spec"
+        )
 
         with patch(
-            "sdd.quality.checkers.spec_completeness.validate_spec_file",
+            "solokit.quality.checkers.spec_completeness.validate_spec_file",
             side_effect=file_error,
         ):
             result = checker.run()
@@ -161,7 +163,7 @@ class TestSpecCompletenessCheckerRun:
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
         with patch(
-            "sdd.quality.checkers.spec_completeness.validate_spec_file",
+            "solokit.quality.checkers.spec_completeness.validate_spec_file",
             side_effect=ValueError("Parse error"),
         ):
             result = checker.run()
@@ -175,7 +177,7 @@ class TestSpecCompletenessCheckerRun:
         work_item = {"id": "WI-001", "type": "feature"}
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
+        with patch("solokit.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()
 
         assert result.execution_time > 0
@@ -185,7 +187,7 @@ class TestSpecCompletenessCheckerRun:
         work_item = {"id": "WI-001", "type": "feature"}
         checker = SpecCompletenessChecker(spec_config, temp_project_dir, work_item=work_item)
 
-        with patch("sdd.quality.checkers.spec_completeness.validate_spec_file"):
+        with patch("solokit.quality.checkers.spec_completeness.validate_spec_file"):
             result = checker.run()
 
         assert "WI-001" in result.info["message"]

@@ -21,7 +21,7 @@ The curation process:
 ### Normal Curation (Save Changes)
 
 ```bash
-sdd learn-curate
+sk learn-curate
 ```
 
 This will:
@@ -32,7 +32,7 @@ This will:
 ### Dry-Run Mode (Preview Only)
 
 ```bash
-sdd learn-curate --dry-run
+sk learn-curate --dry-run
 ```
 
 This will:

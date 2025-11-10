@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Transform `/sdd:init` into a guided template-based initialization system that sets up production-ready projects in <1 minute with complete tooling, quality gates, and CI/CD from day one.
+Transform `/sk:init` into a guided template-based initialization system that sets up production-ready projects in <1 minute with complete tooling, quality gates, and CI/CD from day one.
 
 **Stack Selection**: Four carefully chosen stacks cover the most common development scenarios: SaaS applications (T3 Stack for type-safe APIs), ML/AI tooling (FastAPI for Python's ML ecosystem), internal dashboards (Refine for rapid CRUD), and general full-stack products (Next.js for maximum flexibility). Each stack provides strong typing for AI assistant effectiveness and proven production-readiness.
 
@@ -14,7 +14,7 @@ Transform `/sdd:init` into a guided template-based initialization system that se
 
 1. **Check if already initialized**
    - Verify `.session/` directory does NOT exist
-   - If exists: Error message "Project already initialized with SDD" and exit
+   - If exists: Error message "Project already initialized with Solokit" and exit
 
 2. **Check if project is blank**
    - Verify no configuration files exist (package.json, tsconfig.json, pyproject.toml, etc.)
@@ -45,7 +45,7 @@ Transform `/sdd:init` into a guided template-based initialization system that se
 ERROR: Project already initialized
 Found existing .session/ directory.
 
-This project has already been initialized with SDD.
+This project has already been initialized with Solokit.
 
 Solutions:
   1. Use existing .session/ structure
@@ -58,7 +58,7 @@ Found existing project files:
   - package.json (Node.js project detected)
   - src/ directory
 
-SDD initialization must be run in a blank project directory.
+Solokit initialization must be run in a blank project directory.
 
 Solutions:
   1. Create a new directory: mkdir my-project && cd my-project
@@ -392,7 +392,7 @@ def check_blank_project_or_exit() -> None:
         if (project_root / "pyproject.toml").exists():
             existing_files.append("pyproject.toml (Python project detected)")
         if (project_root / ".session").exists():
-            existing_files.append(".session (SDD already initialized)")
+            existing_files.append(".session (Solokit already initialized)")
         if (project_root / "src").exists():
             existing_files.append("src/ directory")
         
@@ -401,7 +401,7 @@ def check_blank_project_or_exit() -> None:
             "Found existing project files:\n"
             + "\n".join(f"  - {f}" for f in existing_files)
             + "\n\n"
-            "SDD initialization must be run in a blank project directory to avoid conflicts.\n\n"
+            "Solokit initialization must be run in a blank project directory to avoid conflicts.\n\n"
             "Solutions:\n"
             "  1. Create a new directory: mkdir my-project && cd my-project\n"
             "  2. Clone an empty repo: git clone <repo-url> && cd <repo>\n"
@@ -422,7 +422,7 @@ def check_blank_project_or_exit() -> None:
 
 ### 4.1 Deterministic Installation with Python Scripts
 
-All installation steps are executed via deterministic Python scripts located in `src/sdd/init/`:
+All installation steps are executed via deterministic Python scripts located in `src/solokit/init/`:
 
 | Script | Purpose | Responsibilities |
 |--------|---------|------------------|
@@ -442,11 +442,11 @@ All installation steps are executed via deterministic Python scripts located in 
 | `gitignore_updater.py` | .gitignore updates | Add stack-specific entries |
 | `initial_commit.py` | Initial commit creation | Commit all files |
 
-**Master Orchestrator**: `src/sdd/project/init.py` (updated to use AskUserQuestion and call all scripts)
+**Master Orchestrator**: `src/solokit/project/init.py` (updated to use AskUserQuestion and call all scripts)
 
 ### 4.2 Installation Commands (Exact Commands from Fresh Build Testing)
 
-**All commands tested and validated on 2025-11-07**. See `src/sdd/templates/stack-versions.yaml` for exact versions.
+**All commands tested and validated on 2025-11-07**. See `src/solokit/templates/stack-versions.yaml` for exact versions.
 
 #### SaaS T3 Stack Installation
 
@@ -640,7 +640,7 @@ npm install @sentry/nextjs@latest @vercel/analytics@latest
 ### 5.1 Directory Layout
 
 ```
-src/sdd/templates/
+src/solokit/templates/
 ├── template-registry.json          # Master registry of all templates
 │
 ├── saas-t3/                        # T3 Stack Template
@@ -905,7 +905,7 @@ src/sdd/templates/
 
 **Example structure** (showing saas-t3 template, other templates follow same pattern).
 
-**Note**: The version numbers shown below are for illustrative purposes only. All actual version details are stored in `src/sdd/templates/stack-versions.yaml` as the single source of truth.
+**Note**: The version numbers shown below are for illustrative purposes only. All actual version details are stored in `src/solokit/templates/stack-versions.yaml` as the single source of truth.
 
 ```json
 {
@@ -1108,7 +1108,7 @@ sqlmodel==0.0.25
 A future enhancement (#14 extension) will add a command to check library compatibility before adding new dependencies:
 
 ```bash
-/sdd:add-package react-query
+/sk:add-package react-query
 
 # Checks:
 # 1. Is react-query compatible with current React version?
@@ -1178,7 +1178,7 @@ This would integrate with:
 **Date**: 2025-11-07
 **Status**: ✅ COMPLETE (4 of 4 validated)
 
-All four stacks have been validated through fresh installation testing. Exact versions and installation commands are documented in `src/sdd/templates/stack-versions.yaml`.
+All four stacks have been validated through fresh installation testing. Exact versions and installation commands are documented in `src/solokit/templates/stack-versions.yaml`.
 
 ### 10.2 Validation Results Summary
 
@@ -1204,7 +1204,7 @@ All four stacks have been validated through fresh installation testing. Exact ve
 - **React**: 19.2.0 (latest stable)
 - **Next.js**: 16.0.1 (latest stable, fully compatible with tRPC 11.7.1)
 
-All validated versions and installation commands are stored in `src/sdd/templates/stack-versions.yaml`.
+All validated versions and installation commands are stored in `src/solokit/templates/stack-versions.yaml`.
 
 ---
 
@@ -1213,12 +1213,12 @@ All validated versions and installation commands are stored in `src/sdd/template
 ### 11.1 Time to First Work Item
 - **Current**: 10-20 minutes of manual setup
 - **Target**: <1 minute with template initialization
-- **Measurement**: Time from `sdd init` to `/sdd:work-new`
+- **Measurement**: Time from `sk init` to `/sk:work-new`
 
 ### 11.2 Quality Gate Failures
 - **Current**: 40-60% of new projects have initial quality gate failures
 - **Target**: <5% quality gate failures after init
-- **Measurement**: `/sdd:validate` success rate on first run
+- **Measurement**: `/sk:validate` success rate on first run
 
 ### 11.3 Developer Satisfaction
 - **Current**: N/A (no templates)
@@ -1270,7 +1270,7 @@ All validated versions and installation commands are stored in `src/sdd/template
 
 ### 13.1 For Existing Projects
 
-Existing projects already initialized with old `/sdd:init` will continue working. No breaking changes to .session structure or workflow.
+Existing projects already initialized with old `/sk:init` will continue working. No breaking changes to .session structure or workflow.
 
 ### 13.2 For New Projects
 
@@ -1278,10 +1278,10 @@ All new projects must use template-based init. Old init path will be deprecated 
 
 ```bash
 # New default (template-based)
-sdd init
+sk init
 
 # Old behavior (deprecated, requires flag)
-sdd init --legacy
+sk init --legacy
 ```
 
 Deprecation timeline:
@@ -1576,7 +1576,7 @@ After all files are generated, an initial commit is created automatically:
 
 **Commit Message Template**:
 ```
-chore: Initialize project with SDD template system
+chore: Initialize project with Solokit template system
 
 Template: [category] ([template_id])
 Quality Tier: [tier]
@@ -1600,7 +1600,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Example**:
 ```
-chore: Initialize project with SDD template system
+chore: Initialize project with Solokit template system
 
 Template: SaaS Application (saas-t3)
 Quality Tier: Standard
@@ -1633,7 +1633,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### 17.1 stack-versions.yaml Structure
 
-**Location**: `src/sdd/templates/stack-versions.yaml`
+**Location**: `src/solokit/templates/stack-versions.yaml`
 
 This file serves as the single source of truth for all validated dependency versions across all stacks.
 
@@ -1792,7 +1792,7 @@ All design decisions have been finalized through stakeholder input and technical
    - **Options**: 60% (Basic), 80% (Standard), 90% (Strict), Custom
 
 7. **Terminal Support**: Claude Code only
-   - **Rationale**: Aligns with SDD vision, simpler implementation
+   - **Rationale**: Aligns with Solokit vision, simpler implementation
    - **No fallback**: Requires Claude Code environment
 
 ### Additional Template Files

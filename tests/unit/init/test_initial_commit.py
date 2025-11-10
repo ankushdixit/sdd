@@ -11,7 +11,7 @@ Target: 90%+ coverage
 
 from unittest.mock import Mock, patch
 
-from sdd.init.initial_commit import create_commit_message, create_initial_commit
+from solokit.init.initial_commit import create_commit_message, create_initial_commit
 
 
 class TestCreateCommitMessage:
@@ -60,7 +60,7 @@ class TestCreateInitialCommit:
 
     def test_create_commit_success(self, tmp_path):
         """Test successful initial commit creation."""
-        with patch("sdd.init.initial_commit.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_commit.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.side_effect = [
@@ -78,7 +78,7 @@ class TestCreateInitialCommit:
 
     def test_skip_if_commits_exist(self, tmp_path):
         """Test skipping commit if repository already has commits."""
-        with patch("sdd.init.initial_commit.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_commit.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=True, stdout="5")  # 5 commits exist
@@ -93,7 +93,7 @@ class TestCreateInitialCommit:
 
     def test_git_add_fails(self, tmp_path):
         """Test handling when git add fails."""
-        with patch("sdd.init.initial_commit.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_commit.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.side_effect = [
@@ -109,7 +109,7 @@ class TestCreateInitialCommit:
 
     def test_git_commit_fails(self, tmp_path):
         """Test handling when git commit fails."""
-        with patch("sdd.init.initial_commit.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_commit.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.side_effect = [
@@ -126,7 +126,7 @@ class TestCreateInitialCommit:
 
     def test_commit_message_format(self, tmp_path):
         """Test that commit message is properly formatted."""
-        with patch("sdd.init.initial_commit.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_commit.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.side_effect = [

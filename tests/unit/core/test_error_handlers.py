@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from sdd.core.error_handlers import (
+from solokit.core.error_handlers import (
     ErrorContext,
     convert_file_errors,
     convert_subprocess_errors,
@@ -14,15 +14,15 @@ from sdd.core.error_handlers import (
     with_retry,
     with_timeout,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ErrorCode,
     GitError,
     SubprocessError,
     SystemError,
     ValidationError,
 )
-from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.core.exceptions import TimeoutError as SDDTimeoutError
+from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
+from solokit.core.exceptions import TimeoutError as SolokitTimeoutError
 
 
 class TestWithRetryDecorator:
@@ -129,7 +129,7 @@ class TestWithTimeoutDecorator:
             time.sleep(3)
             return "should not reach here"
 
-        with pytest.raises(SDDTimeoutError) as exc_info:
+        with pytest.raises(SolokitTimeoutError) as exc_info:
             slow_function()
 
         assert "slow_operation" in str(exc_info.value)
@@ -139,11 +139,11 @@ class TestWithTimeoutDecorator:
 class TestLogErrorsDecorator:
     """Test log errors decorator"""
 
-    def test_logs_sdd_error(self, caplog):
-        """Test logging of SDDError"""
+    def test_logs_solokit_error(self, caplog):
+        """Test logging of SolokitError"""
 
         @log_errors()
-        def raises_sdd_error():
+        def raises_solokit_error():
             raise ValidationError(
                 message="Test error",
                 code=ErrorCode.INVALID_WORK_ITEM_ID,
@@ -151,9 +151,9 @@ class TestLogErrorsDecorator:
             )
 
         with pytest.raises(ValidationError):
-            raises_sdd_error()
+            raises_solokit_error()
 
-        assert "raises_sdd_error failed" in caplog.text
+        assert "raises_solokit_error failed" in caplog.text
         assert "Test error" in caplog.text
 
     def test_logs_generic_error(self, caplog):
@@ -184,7 +184,7 @@ class TestConvertSubprocessErrors:
     """Test subprocess error conversion"""
 
     def test_converts_timeout_expired(self):
-        """Test TimeoutExpired converted to SDDTimeoutError"""
+        """Test TimeoutExpired converted to SolokitTimeoutError"""
 
         @convert_subprocess_errors
         def timeout_command():
@@ -192,7 +192,7 @@ class TestConvertSubprocessErrors:
                 cmd=["git", "fetch"], timeout=30, output=b"output", stderr=b"error"
             )
 
-        with pytest.raises(SDDTimeoutError) as exc_info:
+        with pytest.raises(SolokitTimeoutError) as exc_info:
             timeout_command()
 
         assert exc_info.value.code == ErrorCode.OPERATION_TIMEOUT
@@ -254,13 +254,13 @@ class TestConvertFileErrors:
         assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
     def test_converts_file_not_found(self):
-        """Test FileNotFoundError converted to SDDFileNotFoundError"""
+        """Test FileNotFoundError converted to SolokitFileNotFoundError"""
 
         @convert_file_errors
         def missing_file():
             raise FileNotFoundError(2, "No such file", "/path/to/file")
 
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             missing_file()
 
         assert exc_info.value.code == ErrorCode.FILE_NOT_FOUND
@@ -296,8 +296,8 @@ class TestErrorContext:
 
         assert cleanup_called
 
-    def test_context_adds_data_to_sdd_error(self):
-        """Test context data added to SDDError"""
+    def test_context_adds_data_to_solokit_error(self):
+        """Test context data added to SolokitError"""
         try:
             with ErrorContext("test operation", work_item_id="123", file="test.py"):
                 raise ValidationError("Test error")

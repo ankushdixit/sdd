@@ -1,0 +1,24 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# Only run for regular commits (not merges, amends, etc.)
+if [ -z "$COMMIT_SOURCE" ]; then
+    cat >> "$COMMIT_MSG_FILE" << 'EOF'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# REMINDERS:
+#
+# 📝 CHANGELOG: Update CHANGELOG.md for notable changes
+#    (features, fixes, breaking changes)
+#
+# 💡 LEARNINGS: Add insights that will be auto-extracted during /sk:end
+#    LEARNING: <your learning here>
+#
+# Examples:
+#    LEARNING: JWT refresh tokens should expire faster than access tokens
+#    LEARNING: Always use parameterized queries to prevent SQL injection
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+fi

@@ -11,8 +11,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import BenchmarkFailedError, PerformanceRegressionError
-from sdd.testing.performance import PerformanceBenchmark
+from solokit.core.exceptions import BenchmarkFailedError, PerformanceRegressionError
+from solokit.testing.performance import PerformanceBenchmark
 
 
 class TestPerformanceBenchmarkInit:
@@ -516,7 +516,7 @@ class TestFileStructure:
     def test_performance_benchmark_file_exists(self):
         """Test that performance_benchmark.py file exists."""
         # Arrange & Act
-        file_path = Path("src/sdd/testing/performance.py")
+        file_path = Path("src/solokit/testing/performance.py")
 
         # Assert
         assert file_path.exists()
@@ -524,7 +524,7 @@ class TestFileStructure:
     def test_performance_benchmark_class_defined(self):
         """Test that PerformanceBenchmark class is defined."""
         # Arrange
-        file_path = Path("src/sdd/testing/performance.py")
+        file_path = Path("src/solokit/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -557,14 +557,14 @@ class TestFileStructure:
     def test_performance_benchmark_has_required_imports(self):
         """Test that performance_benchmark.py has required imports."""
         # Arrange
-        file_path = Path("src/sdd/testing/performance.py")
+        file_path = Path("src/solokit/testing/performance.py")
         content = file_path.read_text()
 
         required_imports = [
-            "from sdd.core.command_runner import CommandRunner",
+            "from solokit.core.command_runner import CommandRunner",
             "from pathlib import Path",
             "from datetime import datetime",
-            "from sdd.core.file_ops import",
+            "from solokit.core.file_ops import",
         ]
 
         # Act & Assert
@@ -574,7 +574,7 @@ class TestFileStructure:
     def test_performance_benchmark_has_main_function(self):
         """Test that performance_benchmark.py has main function."""
         # Arrange
-        file_path = Path("src/sdd/testing/performance.py")
+        file_path = Path("src/solokit/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -583,7 +583,7 @@ class TestFileStructure:
     def test_regression_threshold_is_ten_percent(self):
         """Test that regression threshold is set to 10% (1.1)."""
         # Arrange
-        file_path = Path("src/sdd/testing/performance.py")
+        file_path = Path("src/solokit/testing/performance.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -591,7 +591,7 @@ class TestFileStructure:
         assert "PERFORMANCE_REGRESSION_THRESHOLD" in content
 
         # Also verify the constant has the correct value
-        from sdd.core.constants import PERFORMANCE_REGRESSION_THRESHOLD
+        from solokit.core.constants import PERFORMANCE_REGRESSION_THRESHOLD
 
         assert PERFORMANCE_REGRESSION_THRESHOLD == 1.1
 

@@ -7,7 +7,7 @@ description: Get the next recommended work item to start based on dependencies a
 Get an intelligent recommendation for the next work item to start:
 
 ```bash
-sdd work-next
+sk work-next
 ```
 
 The recommendation algorithm analyzes:

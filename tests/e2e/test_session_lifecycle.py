@@ -14,11 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from sdd.core.exceptions import SpecValidationError
-from sdd.quality.gates import QualityGates
-from sdd.session.briefing import generate_briefing, load_work_item_spec
-from sdd.work_items.spec_parser import parse_spec_file
-from sdd.work_items.spec_validator import validate_spec_file
+from solokit.core.exceptions import SpecValidationError
+from solokit.quality.gates import QualityGates
+from solokit.session.briefing import generate_briefing, load_work_item_spec
+from solokit.work_items.spec_parser import parse_spec_file
+from solokit.work_items.spec_validator import validate_spec_file
 
 
 class TestPhase5_7Complete:

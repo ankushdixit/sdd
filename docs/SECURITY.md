@@ -11,7 +11,7 @@ We release patches for security vulnerabilities. Currently supported versions:
 
 ## Reporting a Vulnerability
 
-We take the security of SDD seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of Solokit seriously. If you discover a security vulnerability, please follow these steps:
 
 ### 1. **Do Not** Open a Public Issue
 
@@ -21,7 +21,7 @@ Security vulnerabilities should not be disclosed publicly until a fix is availab
 
 Please report security vulnerabilities by emailing the maintainer or using GitHub's private vulnerability reporting feature:
 
-- **GitHub Private Reporting:** Go to the [Security tab](https://github.com/ankushdixit/sdd/security/advisories/new) and click "Report a vulnerability"
+- **GitHub Private Reporting:** Go to the [Security tab](https://github.com/ankushdixit/solokit/security/advisories/new) and click "Report a vulnerability"
 - **Email:** Create a new issue with the tag `[SECURITY]` and we'll handle it privately
 
 ### 3. Include Details
@@ -48,7 +48,7 @@ When reporting a vulnerability, please include:
 
 ### Quality Gates
 
-SDD includes security scanning via quality gates:
+Solokit includes security scanning via quality gates:
 - **bandit** - Python security linting
 - **safety** - Dependency vulnerability scanning
 - **npm audit** - JavaScript/TypeScript security
@@ -69,7 +69,7 @@ Enable these in `.session/config.json`:
 
 ### Safe Practices
 
-When using SDD:
+When using Solokit:
 
 1. **Review Generated Commands:** Always review git commands before execution
 2. **Protect Secrets:** Never commit sensitive data (API keys, passwords, tokens)
@@ -79,19 +79,19 @@ When using SDD:
 
 ### Data Storage
 
-SDD stores data locally in your project:
+Solokit stores data locally in your project:
 - `.session/` directory contains project state
 - No data is transmitted to external servers
 - All operations are local to your machine
 
 ### Permissions
 
-SDD requires:
+Solokit requires:
 - **Read/Write:** Project files and `.session/` directory
 - **Git Operations:** Commit, push, branch management
 - **Shell Execution:** Running quality gate tools (pytest, ruff, etc.)
 
-Review the Python modules in `src/sdd/` directory to understand what operations are performed.
+Review the Python modules in `src/solokit/` directory to understand what operations are performed.
 
 ## Security Updates
 
@@ -104,7 +104,7 @@ Security updates will be announced via:
 
 ### In Scope
 
-- Vulnerabilities in SDD's Python scripts
+- Vulnerabilities in Solokit's Python scripts
 - Security issues in command execution
 - Git workflow security concerns
 - Data leakage risks
@@ -124,4 +124,4 @@ We appreciate security researchers and users who responsibly disclose vulnerabil
 - Release notes
 - Project credits
 
-Thank you for helping keep SDD and its users safe!
+Thank you for helping keep Solokit and its users safe!

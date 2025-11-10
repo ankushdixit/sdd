@@ -66,12 +66,12 @@ Based on the user's selection:
 
 **If "Yes - Mark as completed" selected:**
 ```bash
-sdd end --complete --learnings-file .session/temp_learnings.txt
+sk end --complete --learnings-file .session/temp_learnings.txt
 ```
 
 **If "No - Keep as in-progress" selected:**
 ```bash
-sdd end --incomplete --learnings-file .session/temp_learnings.txt
+sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
 **If "Cancel" selected:**

@@ -7,7 +7,7 @@ Run tests:
     pytest tests/unit/init/test_dependency_installer.py -v
 
 Run with coverage:
-    pytest tests/unit/init/test_dependency_installer.py --cov=sdd.init.dependency_installer --cov-report=term-missing
+    pytest tests/unit/init/test_dependency_installer.py --cov=solokit.init.dependency_installer --cov-report=term-missing
 
 Target: 90%+ coverage
 """
@@ -17,8 +17,8 @@ from unittest.mock import Mock, mock_open, patch
 import pytest
 import yaml
 
-from sdd.core.exceptions import CommandExecutionError, FileOperationError
-from sdd.init.dependency_installer import (
+from solokit.core.exceptions import CommandExecutionError, FileOperationError
+from solokit.init.dependency_installer import (
     get_installation_commands,
     install_dependencies,
     install_npm_dependencies,
@@ -34,7 +34,7 @@ class TestLoadStackVersions:
         """Test successful loading of stack versions."""
         versions_yaml = yaml.dump(mock_stack_versions)
 
-        with patch("sdd.init.dependency_installer.Path") as mock_path:
+        with patch("solokit.init.dependency_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
             mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
@@ -47,7 +47,7 @@ class TestLoadStackVersions:
 
     def test_file_not_found(self):
         """Test error when stack-versions.yaml doesn't exist."""
-        import sdd.init.dependency_installer as dep_module
+        import solokit.init.dependency_installer as dep_module
 
         # Mock __file__ to point to a location where stack-versions.yaml doesn't exist
         fake_file = "/fake/path/dependency_installer.py"
@@ -61,7 +61,7 @@ class TestLoadStackVersions:
 
     def test_invalid_yaml(self):
         """Test error when YAML is invalid."""
-        with patch("sdd.init.dependency_installer.Path") as mock_path:
+        with patch("solokit.init.dependency_installer.Path") as mock_path:
             mock_file = Mock()
             mock_file.exists.return_value = True
             mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value = mock_file
@@ -80,7 +80,8 @@ class TestGetInstallationCommands:
     def test_get_commands_for_valid_stack(self, mock_stack_versions):
         """Test getting installation commands for valid stack."""
         with patch(
-            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+            "solokit.init.dependency_installer.load_stack_versions",
+            return_value=mock_stack_versions,
         ):
             commands = get_installation_commands("saas_t3", "tier-1")
 
@@ -90,7 +91,8 @@ class TestGetInstallationCommands:
     def test_stack_not_found(self, mock_stack_versions):
         """Test error when stack not found."""
         with patch(
-            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+            "solokit.init.dependency_installer.load_stack_versions",
+            return_value=mock_stack_versions,
         ):
             with pytest.raises(FileOperationError) as exc:
                 get_installation_commands("invalid_stack", "tier-1")
@@ -102,7 +104,8 @@ class TestGetInstallationCommands:
         mock_stack_versions["stacks"]["saas_t3"].pop("installation")
 
         with patch(
-            "sdd.init.dependency_installer.load_stack_versions", return_value=mock_stack_versions
+            "solokit.init.dependency_installer.load_stack_versions",
+            return_value=mock_stack_versions,
         ):
             with pytest.raises(FileOperationError) as exc:
                 get_installation_commands("saas_t3", "tier-1")
@@ -115,10 +118,10 @@ class TestInstallNpmDependencies:
 
     def test_install_tier1_dependencies(self, tmp_path, mock_stack_versions):
         """Test installing tier-1 dependencies."""
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["saas_t3"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -133,10 +136,10 @@ class TestInstallNpmDependencies:
 
     def test_install_tier4_dependencies(self, tmp_path, mock_stack_versions):
         """Test installing tier-4 dependencies (includes all tiers)."""
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["saas_t3"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -151,10 +154,10 @@ class TestInstallNpmDependencies:
 
     def test_install_fails(self, tmp_path, mock_stack_versions):
         """Test error when npm install fails."""
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["saas_t3"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -179,10 +182,10 @@ class TestInstallPythonDependencies:
 
     def test_create_venv(self, tmp_path, mock_stack_versions):
         """Test creating virtual environment."""
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["ml_ai_fastapi"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -203,10 +206,10 @@ class TestInstallPythonDependencies:
         (venv / "bin").mkdir()
         (venv / "bin" / "pip").write_text("#!/usr/bin/env python")
 
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["ml_ai_fastapi"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -224,10 +227,10 @@ class TestInstallPythonDependencies:
         (venv / "bin").mkdir()
         (venv / "bin" / "pip").write_text("#!/usr/bin/env python")
 
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["ml_ai_fastapi"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -242,10 +245,10 @@ class TestInstallPythonDependencies:
 
     def test_venv_creation_fails(self, tmp_path, mock_stack_versions):
         """Test error when venv creation fails."""
-        with patch("sdd.init.dependency_installer.get_installation_commands") as mock_get:
+        with patch("solokit.init.dependency_installer.get_installation_commands") as mock_get:
             mock_get.return_value = mock_stack_versions["stacks"]["ml_ai_fastapi"]["installation"]
 
-            with patch("sdd.init.dependency_installer.CommandRunner") as mock_runner_class:
+            with patch("solokit.init.dependency_installer.CommandRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner_class.return_value = mock_runner
                 mock_runner.run.return_value = Mock(
@@ -261,7 +264,7 @@ class TestInstallDependencies:
 
     def test_install_for_nodejs_template(self, tmp_path):
         """Test routing to npm installer for Node.js templates."""
-        with patch("sdd.init.dependency_installer.install_npm_dependencies") as mock_npm:
+        with patch("solokit.init.dependency_installer.install_npm_dependencies") as mock_npm:
             mock_npm.return_value = True
 
             result = install_dependencies("saas_t3", "tier-1-essential", None, tmp_path)
@@ -271,7 +274,7 @@ class TestInstallDependencies:
 
     def test_install_for_python_template(self, tmp_path):
         """Test routing to pip installer for Python templates."""
-        with patch("sdd.init.dependency_installer.install_python_dependencies") as mock_pip:
+        with patch("solokit.init.dependency_installer.install_python_dependencies") as mock_pip:
             mock_pip.return_value = True
 
             result = install_dependencies("ml_ai_fastapi", "tier-1-essential", None, tmp_path)
@@ -281,7 +284,7 @@ class TestInstallDependencies:
 
     def test_passes_python_binary(self, tmp_path):
         """Test that python_binary is passed through."""
-        with patch("sdd.init.dependency_installer.install_python_dependencies") as mock_pip:
+        with patch("solokit.init.dependency_installer.install_python_dependencies") as mock_pip:
             mock_pip.return_value = True
 
             install_dependencies(

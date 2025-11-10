@@ -4,7 +4,7 @@ This module tests configuration validation functionality including:
 - JSON schema validation
 - Config file loading and validation
 - Error handling for invalid configs
-- SDD-specific configuration validation
+- Solokit-specific configuration validation
 """
 
 import json
@@ -13,18 +13,18 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.config_validator import (
+from solokit.core.config_validator import (
     _format_validation_error,
     load_and_validate_config,
     validate_config,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ConfigurationError,
     ConfigValidationError,
     ValidationError,
 )
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+from solokit.core.exceptions import (
+    FileNotFoundError as SolokitFileNotFoundError,
 )
 
 
@@ -47,13 +47,13 @@ def minimal_schema(tmp_path):
 
 
 @pytest.fixture
-def full_sdd_schema(tmp_path):
-    """Create full SDD config schema for comprehensive testing.
+def full_solokit_schema(tmp_path):
+    """Create full Solokit config schema for comprehensive testing.
 
     Returns:
-        Path: Path to full SDD schema, or skips test if schema not found.
+        Path: Path to full Solokit schema, or skips test if schema not found.
     """
-    repo_schema = Path("src/sdd/templates/config.schema.json")
+    repo_schema = Path("src/solokit/templates/config.schema.json")
     if repo_schema.exists():
         schema_content = repo_schema.read_text()
         path = tmp_path / "config.schema.json"
@@ -80,7 +80,7 @@ class TestImportHandling:
             # Force reload to trigger ImportError path
             import importlib
 
-            import sdd.core.config_validator as cv
+            import solokit.core.config_validator as cv
 
             importlib.reload(cv)
             result = cv.validate_config(config_path, schema_path)
@@ -138,7 +138,7 @@ class TestValidateConfig:
         config_path = tmp_path / "nonexistent.json"
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             validate_config(config_path, minimal_schema)
 
         assert str(config_path) in exc_info.value.message
@@ -285,11 +285,13 @@ class TestLoadAndValidateConfig:
         assert result == config
 
 
-class TestSDDConfigValidation:
-    """Test suite for SDD-specific configuration validation."""
+class TestSolokitConfigValidation:
+    """Test suite for Solokit-specific configuration validation."""
 
-    def test_sdd_config_accepts_complete_valid_configuration(self, tmp_path, full_sdd_schema):
-        """Test that full SDD configuration with all valid fields passes validation."""
+    def test_solokit_config_accepts_complete_valid_configuration(
+        self, tmp_path, full_solokit_schema
+    ):
+        """Test that full Solokit configuration with all valid fields passes validation."""
         # Arrange
         config = {
             "quality_gates": {
@@ -308,13 +310,13 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        result = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_solokit_schema)
 
         # Assert
         assert result == config
 
-    def test_sdd_config_rejects_invalid_severity_value(self, tmp_path, full_sdd_schema):
-        """Test that SDD config raises ConfigValidationError for invalid security severity value."""
+    def test_solokit_config_rejects_invalid_severity_value(self, tmp_path, full_solokit_schema):
+        """Test that Solokit config raises ConfigValidationError for invalid security severity value."""
         # Arrange
         config = {
             "quality_gates": {"security": {"required": True, "severity": "invalid", "timeout": 120}}
@@ -324,12 +326,12 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "severity" in str(exc_info.value.context)
 
-    def test_sdd_config_rejects_out_of_range_threshold(self, tmp_path, full_sdd_schema):
-        """Test that SDD config raises ConfigValidationError for threshold outside valid range."""
+    def test_solokit_config_rejects_out_of_range_threshold(self, tmp_path, full_solokit_schema):
+        """Test that Solokit config raises ConfigValidationError for threshold outside valid range."""
         # Arrange
         config = {
             "learning": {
@@ -342,14 +344,14 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "similarity_threshold" in str(exc_info.value.context) or "maximum" in str(
             exc_info.value.context
         )
 
-    def test_sdd_config_rejects_invalid_timeout_value(self, tmp_path, full_sdd_schema):
-        """Test that SDD config raises ConfigValidationError for timeout value less than minimum."""
+    def test_solokit_config_rejects_invalid_timeout_value(self, tmp_path, full_solokit_schema):
+        """Test that Solokit config raises ConfigValidationError for timeout value less than minimum."""
         # Arrange
         config = {
             "quality_gates": {"test": {"required": True, "timeout": 0}}  # Min is 1
@@ -359,12 +361,12 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "timeout" in str(exc_info.value.context) or "minimum" in str(exc_info.value.context)
 
-    def test_sdd_config_rejects_missing_required_field(self, tmp_path, full_sdd_schema):
-        """Test that SDD config raises ConfigValidationError for quality gate missing required field."""
+    def test_solokit_config_rejects_missing_required_field(self, tmp_path, full_solokit_schema):
+        """Test that Solokit config raises ConfigValidationError for quality gate missing required field."""
         # Arrange
         config = {
             "quality_gates": {
@@ -380,12 +382,12 @@ class TestSDDConfigValidation:
 
         # Act & Assert
         with pytest.raises(ConfigValidationError) as exc_info:
-            validate_config(config_path, full_sdd_schema)
+            validate_config(config_path, full_solokit_schema)
 
         assert "required" in str(exc_info.value.context)
 
-    def test_sdd_config_allows_additional_properties(self, tmp_path, full_sdd_schema):
-        """Test that SDD config schema allows additional custom properties."""
+    def test_solokit_config_allows_additional_properties(self, tmp_path, full_solokit_schema):
+        """Test that Solokit config schema allows additional custom properties."""
         # Arrange
         config = {
             "quality_gates": {"test": {"required": True}},
@@ -395,7 +397,7 @@ class TestSDDConfigValidation:
         config_path.write_text(json.dumps(config))
 
         # Act
-        result = validate_config(config_path, full_sdd_schema)
+        result = validate_config(config_path, full_solokit_schema)
 
         # Assert
         assert result == config  # Should be valid (additionalProperties: true in schema)
@@ -409,7 +411,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from sdd.core.config_validator import main
+        from solokit.core.config_validator import main
 
         # Act & Assert
         with patch.object(sys, "argv", ["config_validator.py"]):
@@ -426,7 +428,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from sdd.core.config_validator import main
+        from solokit.core.config_validator import main
 
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -448,7 +450,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from sdd.core.config_validator import main
+        from solokit.core.config_validator import main
 
         config = {"test_field": 123}  # Wrong type
         config_path = tmp_path / "config.json"
@@ -471,7 +473,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from sdd.core.config_validator import main
+        from solokit.core.config_validator import main
 
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -501,7 +503,7 @@ class TestMain:
         # Arrange
         import sys
 
-        from sdd.core.config_validator import main
+        from solokit.core.config_validator import main
 
         config_path = tmp_path / "nonexistent.json"
         schema_path = tmp_path / "schema.json"

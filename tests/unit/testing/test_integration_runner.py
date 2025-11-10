@@ -10,18 +10,18 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     EnvironmentSetupError,
     IntegrationExecutionError,
     ValidationError,
 )
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+from solokit.core.exceptions import (
+    FileNotFoundError as SolokitFileNotFoundError,
 )
-from sdd.core.exceptions import (
-    TimeoutError as SDDTimeoutError,
+from solokit.core.exceptions import (
+    TimeoutError as SolokitTimeoutError,
 )
-from sdd.testing.integration_runner import IntegrationTestRunner
+from solokit.testing.integration_runner import IntegrationTestRunner
 
 
 class TestIntegrationTestRunnerInit:
@@ -44,7 +44,7 @@ class TestIntegrationTestRunnerInit:
             "environment_requirements": "postgresql\nredis\ndocker-compose.integration.yml",
         }
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -74,14 +74,14 @@ class TestIntegrationTestRunnerInit:
         # Arrange
         work_item = {"id": "INTEG-002", "type": "integration_test"}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
-            # Use the SDD FileNotFoundError exception
-            mock_parser.parse_spec_file.side_effect = SDDFileNotFoundError(
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
+            # Use the Solokit FileNotFoundError exception
+            mock_parser.parse_spec_file.side_effect = SolokitFileNotFoundError(
                 file_path=".session/specs/INTEG-002.md", file_type="spec file"
             )
 
             # Act & Assert - FileNotFoundError is re-raised directly, not wrapped
-            with pytest.raises(SDDFileNotFoundError):
+            with pytest.raises(SolokitFileNotFoundError):
                 IntegrationTestRunner(work_item)
 
     def test_init_with_invalid_spec_file_raises_error(self):
@@ -89,7 +89,7 @@ class TestIntegrationTestRunnerInit:
         # Arrange
         work_item = {"id": "INTEG-003", "type": "integration_test"}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.side_effect = Exception("Invalid YAML")
 
             # Act & Assert - ValidationError wraps other exceptions
@@ -102,7 +102,7 @@ class TestIntegrationTestRunnerInit:
         work_item = {"id": "INTEG-004"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -133,7 +133,7 @@ class TestEnvironmentRequirementsParsing:
         work_item = {"id": "INTEG-005"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -152,7 +152,7 @@ class TestEnvironmentRequirementsParsing:
             "environment_requirements": "PostgreSQL database\nRedis cache",
         }
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -169,7 +169,7 @@ class TestEnvironmentRequirementsParsing:
         env_text = "MongoDB database\nUse `docker-compose.custom.yml` for orchestration"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -189,7 +189,7 @@ nginx reverse proxy
 kafka message broker"""
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -215,7 +215,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-009"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -234,7 +234,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-010"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -253,7 +253,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-011"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -273,7 +273,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-012"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -291,7 +291,7 @@ class TestLanguageDetection:
         work_item = {"id": "INTEG-013"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -311,7 +311,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-014", "title": "API Integration Tests"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -341,7 +341,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-015", "title": "Database Integration Tests"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -368,7 +368,7 @@ class TestReportGeneration:
         work_item = {"id": "INTEG-016"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -387,7 +387,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_exists(self):
         """Test that integration_test_runner.py file exists."""
         # Arrange & Act
-        file_path = Path("src/sdd/testing/integration_runner.py")
+        file_path = Path("src/solokit/testing/integration_runner.py")
 
         # Assert
         assert file_path.exists()
@@ -411,7 +411,7 @@ class TestIntegrationTestRunnerStructure:
             "_parse_environment_requirements",
         ]
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -424,7 +424,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_has_main_function(self):
         """Test that integration_test_runner.py has main function."""
         # Arrange
-        file_path = Path("src/sdd/testing/integration_runner.py")
+        file_path = Path("src/solokit/testing/integration_runner.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -433,11 +433,11 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_file_has_required_imports(self):
         """Test that integration_test_runner.py has required imports."""
         # Arrange
-        file_path = Path("src/sdd/testing/integration_runner.py")
+        file_path = Path("src/solokit/testing/integration_runner.py")
         content = file_path.read_text()
 
         required_imports = [
-            "from sdd.core.command_runner import CommandRunner",
+            "from solokit.core.command_runner import CommandRunner",
             "import json",
             "import time",
             "from pathlib import Path",
@@ -451,7 +451,7 @@ class TestIntegrationTestRunnerStructure:
     def test_integration_test_runner_class_defined(self):
         """Test that IntegrationTestRunner class is defined."""
         # Arrange
-        file_path = Path("src/sdd/testing/integration_runner.py")
+        file_path = Path("src/solokit/testing/integration_runner.py")
         content = file_path.read_text()
 
         # Act & Assert
@@ -468,7 +468,7 @@ class TestDockerComposeSupport:
         env_text = "Services defined in custom-compose.yml for orchestration"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -486,7 +486,7 @@ redis cache
 nginx API gateway"""
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -507,7 +507,7 @@ nginx API gateway"""
             "environment_requirements": "",
         }
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -524,7 +524,7 @@ nginx API gateway"""
         work_item = {"id": "INTEG-021", "title": "Integration Test", "type": "integration_test"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
 
             # Act
@@ -549,7 +549,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-022"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -567,12 +567,12 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-023"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
             # Act & Assert
-            with pytest.raises(SDDFileNotFoundError) as exc_info:
+            with pytest.raises(SolokitFileNotFoundError) as exc_info:
                 runner.setup_environment()
 
             assert "docker-compose.integration.yml" in str(exc_info.value)
@@ -587,7 +587,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-024"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -612,7 +612,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-025"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -620,7 +620,7 @@ class TestEnvironmentSetup:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner.setup_environment()
 
                 assert exc_info.value.context["timeout_seconds"] == 180
@@ -636,7 +636,7 @@ class TestEnvironmentSetup:
         env_text = "postgresql database\nredis cache"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -661,7 +661,7 @@ class TestEnvironmentSetup:
         env_text = "postgresql database"
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": env_text}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -670,13 +670,13 @@ class TestEnvironmentSetup:
                 with patch.object(
                     runner,
                     "_wait_for_service",
-                    side_effect=SDDTimeoutError(
+                    side_effect=SolokitTimeoutError(
                         operation="waiting for service 'postgresql' to become healthy",
                         timeout_seconds=60,
                     ),
                 ):
                     # Act & Assert
-                    with pytest.raises(SDDTimeoutError) as exc_info:
+                    with pytest.raises(SolokitTimeoutError) as exc_info:
                         runner.setup_environment()
 
                     assert "postgresql" in str(exc_info.value)
@@ -691,7 +691,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-028"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -720,7 +720,7 @@ class TestEnvironmentSetup:
         work_item = {"id": "INTEG-052"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -745,7 +745,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-029"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -765,7 +765,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-030"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -782,7 +782,7 @@ class TestWaitForService:
 
                 with patch("time.sleep"):  # Speed up test
                     # Act & Assert
-                    with pytest.raises(SDDTimeoutError) as exc_info:
+                    with pytest.raises(SolokitTimeoutError) as exc_info:
                         runner._wait_for_service("test-service", timeout=1)
 
                     assert "test-service" in str(exc_info.value)
@@ -793,7 +793,7 @@ class TestWaitForService:
         work_item = {"id": "INTEG-031"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -819,7 +819,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-032"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -837,7 +837,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-033"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture1), str(fixture2)]
@@ -860,7 +860,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-034"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(fixture)]
@@ -880,7 +880,7 @@ class TestLoadTestData:
         work_item = {"id": "INTEG-035"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
             runner.env_requirements["test_data_fixtures"] = [str(tmp_path / "nonexistent.py")]
@@ -898,7 +898,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-036"}
         mock_parsed_spec = {"test_scenarios": [{"name": "Test 1"}], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -917,7 +917,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-037"}
         mock_parsed_spec = {"test_scenarios": [{"name": "Test 1"}], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -937,7 +937,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-038"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -954,7 +954,7 @@ class TestRunTests:
         work_item = {"id": "INTEG-039"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -981,7 +981,7 @@ class TestRunPytest:
         }
         results_file.write_text(json.dumps(results_data))
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1009,7 +1009,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-041"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1028,7 +1028,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-042"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1036,7 +1036,7 @@ class TestRunPytest:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner._run_pytest()
 
                 assert exc_info.value.context["timeout_seconds"] == 600
@@ -1047,7 +1047,7 @@ class TestRunPytest:
         work_item = {"id": "INTEG-051"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1081,7 +1081,7 @@ class TestRunJest:
         }
         results_file.write_text(json.dumps(results_data))
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1110,7 +1110,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-047"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1129,7 +1129,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-048"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1137,7 +1137,7 @@ class TestRunJest:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner._run_jest()
 
                 assert exc_info.value.context["timeout_seconds"] == 600
@@ -1148,7 +1148,7 @@ class TestRunJest:
         work_item = {"id": "INTEG-049"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1174,7 +1174,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-043"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1190,7 +1190,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-044"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1211,7 +1211,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-045"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 
@@ -1219,7 +1219,7 @@ class TestTeardownEnvironment:
                 mock_run.return_value = Mock(success=False, timed_out=True, stderr="")
 
                 # Act & Assert
-                with pytest.raises(SDDTimeoutError) as exc_info:
+                with pytest.raises(SolokitTimeoutError) as exc_info:
                     runner.teardown_environment()
 
                 assert exc_info.value.context["timeout_seconds"] == 60
@@ -1230,7 +1230,7 @@ class TestTeardownEnvironment:
         work_item = {"id": "INTEG-050"}
         mock_parsed_spec = {"test_scenarios": [], "environment_requirements": ""}
 
-        with patch("sdd.testing.integration_runner.spec_parser") as mock_parser:
+        with patch("solokit.testing.integration_runner.spec_parser") as mock_parser:
             mock_parser.parse_spec_file.return_value = mock_parsed_spec
             runner = IntegrationTestRunner(work_item)
 

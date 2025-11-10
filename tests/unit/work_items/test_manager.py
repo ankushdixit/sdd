@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ErrorCode,
     FileOperationError,
     SpecValidationError,
@@ -18,7 +18,7 @@ from sdd.core.exceptions import (
     WorkItemAlreadyExistsError,
     WorkItemNotFoundError,
 )
-from sdd.work_items.manager import WorkItemManager
+from solokit.work_items.manager import WorkItemManager
 
 
 @pytest.fixture
@@ -639,7 +639,7 @@ class TestGetNextWorkItem:
 class TestValidateIntegrationTest:
     """Tests for integration test validation."""
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -653,7 +653,7 @@ class TestValidateIntegrationTest:
         assert "not found" in str(exc_info.value).lower()
         assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_invalid_spec(self, mock_parse, work_item_manager):
         """Test validation fails with invalid spec file."""
         # Arrange
@@ -667,7 +667,7 @@ class TestValidateIntegrationTest:
         assert "Invalid spec" in str(exc_info.value)
         assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_missing_required_sections(
         self, mock_parse, work_item_manager
     ):
@@ -689,7 +689,7 @@ class TestValidateIntegrationTest:
         assert len(exc_info.value.context["validation_errors"]) > 0
         assert exc_info.value.code == ErrorCode.SPEC_VALIDATION_FAILED
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_no_dependencies(self, mock_parse, work_item_manager):
         """Test validation fails when no dependencies provided."""
         # Arrange
@@ -709,7 +709,7 @@ class TestValidateIntegrationTest:
         errors = exc_info.value.context["validation_errors"]
         assert any("dependencies" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid integration test."""
         # Arrange
@@ -729,7 +729,7 @@ class TestValidateIntegrationTest:
         work_item_manager.validate_integration_test(work_item)
         # Assert - if we get here, validation passed
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_integration_test_insufficient_acceptance_criteria(
         self, mock_parse, work_item_manager
     ):
@@ -755,7 +755,7 @@ class TestValidateIntegrationTest:
 class TestValidateDeployment:
     """Tests for deployment validation."""
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_spec(self, mock_parse, work_item_manager):
         """Test validation fails when spec file is missing."""
         # Arrange
@@ -769,7 +769,7 @@ class TestValidateDeployment:
         assert "not found" in str(exc_info.value).lower()
         assert exc_info.value.code == ErrorCode.FILE_OPERATION_FAILED
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_required_sections(self, mock_parse, work_item_manager):
         """Test validation fails when required sections are missing."""
         # Arrange
@@ -790,7 +790,7 @@ class TestValidateDeployment:
         errors = exc_info.value.context["validation_errors"]
         assert len(errors) > 0
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_deployment_subsections(
         self, mock_parse, work_item_manager
     ):
@@ -818,7 +818,7 @@ class TestValidateDeployment:
         assert any("pre-deployment" in err.lower() for err in errors)
         assert any("post-deployment" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_missing_rollback_subsections(self, mock_parse, work_item_manager):
         """Test validation fails when rollback procedure subsections are missing."""
         # Arrange
@@ -844,7 +844,7 @@ class TestValidateDeployment:
         assert any("rollback triggers" in err.lower() for err in errors)
         assert any("rollback steps" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_no_smoke_tests(self, mock_parse, work_item_manager):
         """Test validation fails when no smoke tests provided."""
         # Arrange
@@ -869,7 +869,7 @@ class TestValidateDeployment:
         errors = exc_info.value.context["validation_errors"]
         assert any("smoke test" in err.lower() for err in errors)
 
-    @patch("sdd.work_items.validator.spec_parser.parse_spec_file")
+    @patch("solokit.work_items.validator.spec_parser.parse_spec_file")
     def test_validate_deployment_valid(self, mock_parse, work_item_manager):
         """Test validation passes with valid deployment."""
         # Arrange

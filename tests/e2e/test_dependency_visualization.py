@@ -26,8 +26,8 @@ import pytest
 
 
 @pytest.fixture
-def sdd_project_with_dependencies():
-    """Create a temp SDD project with work items that have dependencies.
+def solokit_project_with_dependencies():
+    """Create a temp Solokit project with work items that have dependencies.
 
     Returns:
         Path: Project directory with complex dependency structure.
@@ -190,12 +190,12 @@ def sdd_project_with_dependencies():
 class TestBasicGraphGeneration:
     """Tests for basic dependency graph generation."""
 
-    def test_generate_ascii_graph(self, sdd_project_with_dependencies):
+    def test_generate_ascii_graph(self, solokit_project_with_dependencies):
         """Test generating dependency graph in ASCII format."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -207,12 +207,12 @@ class TestBasicGraphGeneration:
             "Graph should show hierarchical structure"
         )
 
-    def test_graph_excludes_completed_items_by_default(self, sdd_project_with_dependencies):
+    def test_graph_excludes_completed_items_by_default(self, solokit_project_with_dependencies):
         """Test that completed items are excluded from default graph view."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -231,12 +231,12 @@ class TestBasicGraphGeneration:
 class TestCriticalPathAnalysis:
     """Tests for critical path identification."""
 
-    def test_critical_path_flag(self, sdd_project_with_dependencies):
+    def test_critical_path_flag(self, solokit_project_with_dependencies):
         """Test --critical-path flag shows only critical path items."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--critical-path"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--critical-path"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -254,12 +254,12 @@ class TestCriticalPathAnalysis:
 class TestBottleneckDetection:
     """Tests for bottleneck detection in dependency graph."""
 
-    def test_bottleneck_analysis(self, sdd_project_with_dependencies):
+    def test_bottleneck_analysis(self, solokit_project_with_dependencies):
         """Test --bottlenecks flag identifies blocking work items."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--bottlenecks"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--bottlenecks"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -277,12 +277,12 @@ class TestBottleneckDetection:
 class TestGraphFiltering:
     """Tests for filtering dependency graph by various criteria."""
 
-    def test_filter_by_status(self, sdd_project_with_dependencies):
+    def test_filter_by_status(self, solokit_project_with_dependencies):
         """Test filtering graph by work item status."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--status", "not_started"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--status", "not_started"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -290,12 +290,12 @@ class TestGraphFiltering:
         # Assert
         assert result.returncode == 0, "Status filtering failed"
 
-    def test_filter_by_type(self, sdd_project_with_dependencies):
+    def test_filter_by_type(self, solokit_project_with_dependencies):
         """Test filtering graph by work item type."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--type", "feature"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--type", "feature"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -303,12 +303,12 @@ class TestGraphFiltering:
         # Assert
         assert result.returncode == 0, "Type filtering failed"
 
-    def test_filter_by_milestone(self, sdd_project_with_dependencies):
+    def test_filter_by_milestone(self, solokit_project_with_dependencies):
         """Test filtering graph by milestone."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--milestone", "MVP v1.0"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--milestone", "MVP v1.0"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -316,12 +316,12 @@ class TestGraphFiltering:
         # Assert
         assert result.returncode == 0, "Milestone filtering failed"
 
-    def test_combined_filters(self, sdd_project_with_dependencies):
+    def test_combined_filters(self, solokit_project_with_dependencies):
         """Test combining multiple filters."""
         # Arrange & Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-graph",
                 "--status",
                 "not_started",
@@ -330,7 +330,7 @@ class TestGraphFiltering:
                 "--milestone",
                 "MVP v1.0",
             ],
-            cwd=sdd_project_with_dependencies,
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -347,12 +347,12 @@ class TestGraphFiltering:
 class TestFocusMode:
     """Tests for focus mode on specific work items."""
 
-    def test_focus_on_work_item(self, sdd_project_with_dependencies):
+    def test_focus_on_work_item(self, solokit_project_with_dependencies):
         """Test --focus flag shows specific work item and its neighborhood."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--focus", "2"],  # Focus on User Authentication
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--focus", "2"],  # Focus on User Authentication
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -369,12 +369,12 @@ class TestFocusMode:
 class TestGraphStatistics:
     """Tests for graph statistics and metrics."""
 
-    def test_statistics_output(self, sdd_project_with_dependencies):
+    def test_statistics_output(self, solokit_project_with_dependencies):
         """Test --stats flag shows graph statistics."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--stats"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--stats"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -392,20 +392,20 @@ class TestGraphStatistics:
 class TestIncludeCompleted:
     """Tests for including completed items in graph."""
 
-    def test_include_completed_flag(self, sdd_project_with_dependencies):
+    def test_include_completed_flag(self, solokit_project_with_dependencies):
         """Test --include-completed flag shows completed items."""
         # Arrange & Act - Without flag
         _result_default = subprocess.run(
-            ["sdd", "work-graph"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
 
         # Act - With flag
         result_with_completed = subprocess.run(
-            ["sdd", "work-graph", "--include-completed"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--include-completed"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )
@@ -424,12 +424,12 @@ class TestIncludeCompleted:
 class TestDOTFormat:
     """Tests for DOT format graph generation."""
 
-    def test_generate_dot_format(self, sdd_project_with_dependencies):
+    def test_generate_dot_format(self, solokit_project_with_dependencies):
         """Test generating dependency graph in DOT format for Graphviz."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--format", "dot"],
-            cwd=sdd_project_with_dependencies,
+            ["sk", "work-graph", "--format", "dot"],
+            cwd=solokit_project_with_dependencies,
             capture_output=True,
             text=True,
         )

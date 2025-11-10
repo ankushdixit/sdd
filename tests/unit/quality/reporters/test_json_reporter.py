@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from sdd.quality.reporters.json_reporter import JSONReporter
+from solokit.quality.reporters.json_reporter import JSONReporter
 
 
 @pytest.fixture

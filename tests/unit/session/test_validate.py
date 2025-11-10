@@ -13,18 +13,18 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.core.exceptions import (
-    FileNotFoundError as SDDFileNotFoundError,
+from solokit.core.command_runner import CommandResult
+from solokit.core.exceptions import (
+    FileNotFoundError as SolokitFileNotFoundError,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     GitError,
     NotAGitRepoError,
     SessionNotFoundError,
     SpecValidationError,
     ValidationError,
 )
-from sdd.session.validate import SessionValidator
+from solokit.session.validate import SessionValidator
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ def mock_quality_gates():
     Returns:
         Mock: Mock QualityGates instance with basic methods.
     """
-    from sdd.core.config import QualityGatesConfig
+    from solokit.core.config import QualityGatesConfig
 
     mock_qg = Mock()
     mock_qg.config = QualityGatesConfig()  # Uses default values
@@ -78,8 +78,8 @@ class TestSessionValidatorInit:
     def test_init_with_default_project_root(self, temp_session_dir):
         """Test SessionValidator initializes with current directory as default project root."""
         # Arrange & Act
-        with patch("sdd.session.validate.Path.cwd", return_value=temp_session_dir.parent):
-            with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.Path.cwd", return_value=temp_session_dir.parent):
+            with patch("solokit.session.validate.QualityGates"):
                 validator = SessionValidator()
 
         # Assert
@@ -92,7 +92,7 @@ class TestSessionValidatorInit:
         project_root = temp_session_dir.parent
 
         # Act
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Assert
@@ -105,7 +105,7 @@ class TestSessionValidatorInit:
         project_root = temp_session_dir.parent
 
         # Act
-        with patch("sdd.session.validate.QualityGates") as mock_qg_class:
+        with patch("solokit.session.validate.QualityGates") as mock_qg_class:
             _validator = SessionValidator(project_root=project_root)
 
         # Assert
@@ -120,7 +120,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=True for clean working directory."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_status = CommandResult(
@@ -149,7 +149,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=True when changes don't include tracking files."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_status = CommandResult(
@@ -181,7 +181,7 @@ class TestCheckGitStatus:
         """Test check_git_status returns passed=False when tracking files are uncommitted."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_status = CommandResult(
@@ -205,7 +205,7 @@ class TestCheckGitStatus:
         """Test check_git_status raises NotAGitRepoError when directory is not a git repo."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_status = CommandResult(
@@ -228,7 +228,7 @@ class TestCheckGitStatus:
         """Test check_git_status raises GitError when branch command fails."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         mock_status = CommandResult(
@@ -259,7 +259,7 @@ class TestPreviewQualityGates:
         """Test preview_quality_gates returns passed=True when all gates pass."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -280,7 +280,7 @@ class TestPreviewQualityGates:
             {"status": "failed", "reason": "2 tests failed"},
         )
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -298,7 +298,7 @@ class TestPreviewQualityGates:
         """Test preview_quality_gates skips tests when auto_fix=True."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -323,7 +323,7 @@ class TestPreviewQualityGates:
         )
         mock_quality_gates.run_tests.return_value = (False, {"status": "failed"})
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -347,7 +347,7 @@ class TestPreviewQualityGates:
             test_execution=replace(mock_quality_gates.config.test_execution, enabled=False),
         )
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -370,7 +370,7 @@ class TestPreviewQualityGates:
         )
         mock_quality_gates.run_linting.return_value = (True, {"status": "passed", "fixed": True})
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -396,7 +396,7 @@ class TestPreviewQualityGates:
             {"status": "passed", "formatted": True},
         )
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -414,7 +414,7 @@ class TestValidateWorkItemCriteria:
         """Test validate_work_item_criteria raises SessionNotFoundError when status file doesn't exist."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act & Assert
@@ -431,7 +431,7 @@ class TestValidateWorkItemCriteria:
         status_file = temp_session_dir / "tracking" / "status_update.json"
         status_file.write_text(json.dumps({"current_work_item": None}))
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act & Assert
@@ -462,11 +462,11 @@ class TestValidateWorkItemCriteria:
         }
         work_items_file.write_text(json.dumps(work_items))
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act & Assert
-        with pytest.raises(SDDFileNotFoundError) as exc_info:
+        with pytest.raises(SolokitFileNotFoundError) as exc_info:
             validator.validate_work_item_criteria()
 
         # Verify exception
@@ -498,12 +498,12 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("Invalid spec content")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act & Assert
         with patch(
-            "sdd.work_items.spec_parser.parse_spec_file", side_effect=Exception("Parse error")
+            "solokit.work_items.spec_parser.parse_spec_file", side_effect=Exception("Parse error")
         ):
             with pytest.raises(SpecValidationError) as exc_info:
                 validator.validate_work_item_criteria()
@@ -539,12 +539,12 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         with patch(
-            "sdd.work_items.spec_parser.parse_spec_file",
+            "solokit.work_items.spec_parser.parse_spec_file",
             return_value={"acceptance_criteria": ["AC1", "AC2"]},
         ):
             result = validator.validate_work_item_criteria()
@@ -579,14 +579,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing overview and implementation_details
-        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -619,14 +619,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "BUG-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing description and fix_approach
-        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -661,14 +661,14 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "TEST-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
         parsed_spec = {
             "acceptance_criteria": ["AC1", "AC2", "AC3"]
         }  # Missing scope and test_scenarios
-        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -701,7 +701,7 @@ class TestValidateWorkItemCriteria:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -710,7 +710,7 @@ class TestValidateWorkItemCriteria:
             "overview": "Feature overview",
             "implementation_details": "Details",
         }
-        with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+        with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
             result = validator.validate_work_item_criteria()
 
         # Assert
@@ -725,7 +725,7 @@ class TestCheckTrackingUpdates:
         """Test check_tracking_updates returns passed=True with no changes message."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -741,7 +741,7 @@ class TestCheckTrackingUpdates:
         """Test check_tracking_updates detects changes when stack or tree modified."""
         # Arrange
         project_root = temp_session_dir.parent
-        with patch("sdd.session.validate.QualityGates"):
+        with patch("solokit.session.validate.QualityGates"):
             validator = SessionValidator(project_root=project_root)
 
         # Act
@@ -785,7 +785,7 @@ class TestValidate:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock all checks to pass
@@ -809,7 +809,7 @@ class TestValidate:
 
         # Act
         with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
-            with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+            with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 result = validator.validate()
 
         # Assert
@@ -825,7 +825,7 @@ class TestValidate:
         # Arrange
         project_root = temp_session_dir.parent
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock git check to fail
@@ -862,7 +862,7 @@ class TestValidate:
         spec_file = temp_session_dir / "specs" / "WORK-001.md"
         spec_file.write_text("# Spec")
 
-        with patch("sdd.session.validate.QualityGates", return_value=mock_quality_gates):
+        with patch("solokit.session.validate.QualityGates", return_value=mock_quality_gates):
             validator = SessionValidator(project_root=project_root)
 
         # Mock git
@@ -886,7 +886,7 @@ class TestValidate:
 
         # Act
         with patch.object(validator.runner, "run", side_effect=[mock_status, mock_branch]):
-            with patch("sdd.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
+            with patch("solokit.work_items.spec_parser.parse_spec_file", return_value=parsed_spec):
                 validator.validate(auto_fix=True)
 
         # Assert

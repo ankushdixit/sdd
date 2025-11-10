@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError, SpecValidationError
-from sdd.work_items.manager import WorkItemManager
+from solokit.core.exceptions import FileNotFoundError, SpecValidationError
+from solokit.work_items.manager import WorkItemManager
 
 
 class TestDeploymentTemplate:
@@ -23,7 +23,7 @@ class TestDeploymentTemplate:
         """Test that deployment template file exists."""
         # Arrange
         project_root = Path(__file__).parent.parent.parent.parent
-        template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "deployment_spec.md"
 
         # Act & Assert
         assert template_path.exists(), "Deployment template file should exist"
@@ -32,7 +32,7 @@ class TestDeploymentTemplate:
         """Test that deployment template contains all required sections."""
         # Arrange
         project_root = Path(__file__).parent.parent.parent.parent
-        template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
         required_sections = [
@@ -55,7 +55,7 @@ class TestDeploymentTemplate:
         """Test that deployment template includes environment configuration section."""
         # Arrange
         project_root = Path(__file__).parent.parent.parent.parent
-        template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
         # Act & Assert
@@ -65,7 +65,7 @@ class TestDeploymentTemplate:
         """Test that deployment template includes monitoring and alerting section."""
         # Arrange
         project_root = Path(__file__).parent.parent.parent.parent
-        template_path = project_root / "src" / "sdd" / "templates" / "deployment_spec.md"
+        template_path = project_root / "src" / "solokit" / "templates" / "deployment_spec.md"
         template_content = template_path.read_text()
 
         # Act & Assert

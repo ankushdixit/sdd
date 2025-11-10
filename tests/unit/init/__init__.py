@@ -1,1 +1,1 @@
-"""Unit tests for SDD initialization system."""
+"""Unit tests for Solokit initialization system."""

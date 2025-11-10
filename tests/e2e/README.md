@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains end-to-end tests that validate the complete SDD system integration by executing actual CLI commands and verifying full workflows.
+This directory contains end-to-end tests that validate the complete Solokit system integration by executing actual CLI commands and verifying full workflows.
 
 ## Test Coverage
 
@@ -24,9 +24,9 @@ E2E tests run **80x slower** than unit tests due to:
 ### Primary Performance Bottlenecks
 
 1. **Subprocess CLI Execution** (70% of time)
-   - 110+ `subprocess.run()` calls executing actual `sdd` CLI commands
+   - 110+ `subprocess.run()` calls executing actual `solokit` CLI commands
    - Each CLI command takes 200-500ms
-   - Commands include: `sdd init`, `sdd start`, `sdd work-new`, `sdd learn`, `sdd validate`
+   - Commands include: `sk init`, `sk start`, `sk work-new`, `sk learn`, `sk validate`
 
 2. **Git Operations** (20% of time)
    - 44 git subprocess calls per test setup
@@ -57,7 +57,7 @@ E2E tests are **intentionally skipped in GitHub workflows** because:
 
 1. **Long Runtime**: 4-8 minutes for 88 tests adds significant CI time
 2. **Redundant Validation**: Unit (1,122) and integration (168) tests provide 85% coverage
-3. **Local Validation Sufficient**: Developers run full test suite locally via `sdd validate`
+3. **Local Validation Sufficient**: Developers run full test suite locally via `sk validate`
 4. **Fast Feedback**: CI runs complete in 1-2 minutes without E2E tests
 
 ### GitHub Workflow Configuration
@@ -98,7 +98,7 @@ pytest tests/e2e/test_init_workflow.py -v
 
 E2E tests should be run:
 - Before committing major changes
-- During `sdd validate` (automatic)
+- During `sk validate` (automatic)
 - When testing CLI functionality
 - When verifying complete workflows
 
@@ -122,12 +122,12 @@ E2E tests use fixtures to create isolated test environments:
 
 ```python
 @pytest.fixture
-def temp_sdd_project():
-    """Create a temporary SDD project with git and basic files."""
+def temp_solokit_project():
+    """Create a temporary Solokit project with git and basic files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         # Initialize git repository
         # Create basic project files
-        # Run sdd init
+        # Run sk init
         yield project_dir
 ```
 
@@ -136,13 +136,13 @@ def temp_sdd_project():
 Tests follow the Arrange-Act-Assert pattern:
 
 ```python
-def test_create_work_item(temp_sdd_project):
+def test_create_work_item(temp_solokit_project):
     # Arrange - project already initialized by fixture
 
     # Act - run actual CLI command
     result = subprocess.run(
-        ["sdd", "work-new", "--type", "feature", "--title", "Test"],
-        cwd=temp_sdd_project,
+        ["solokit", "work-new", "--type", "feature", "--title", "Test"],
+        cwd=temp_solokit_project,
         capture_output=True
     )
 

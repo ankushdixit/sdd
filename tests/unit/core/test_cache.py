@@ -3,7 +3,7 @@
 import time
 from unittest.mock import Mock
 
-from sdd.core.cache import Cache, FileCache, get_cache
+from solokit.core.cache import Cache, FileCache, get_cache
 
 
 class TestCache:

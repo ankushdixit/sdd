@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the SDD (Session-Driven Development) project will be documented in this file.
+All notable changes to the Solokit (Session-Driven Development) project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Deleted `TestCompleteInitWorkflow` test (1 test) from `test_init_workflow.py`
   - Fixed E2E test fixtures to avoid legacy init (25 tests un-skipped):
     - Updated fixtures in `test_core_session_workflow.py`, `test_learning_system.py`, `test_work_item_system.py`
-    - Fixtures now manually create `.session` directory structure instead of calling deprecated `sdd init`
+    - Fixtures now manually create `.session` directory structure instead of calling deprecated `sk init`
     - Added all required tracking files with proper structure (work_items.json, learnings.json, status_update.json, stack.txt, tree.txt)
   - Test suite results: **2,391 tests passing, 0 failed, 0 skipped** (previously 2,368 passing, 35 skipped)
   - Quality checks: All ruff linting passed, all 247 files formatted, all mypy checks passed (106 source files)
@@ -55,30 +55,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Benefits: Rich interactive UI for Claude Code users, better UX with multi-select options, AI-generated suggestions, optimized performance
 
 ### Changed
-- **Session Completion: `/sdd:end` now defaults to marking work items as completed**
+- **Session Completion: `/sk:end` now defaults to marking work items as completed**
   - Non-interactive mode (e.g., when run by Claude Code) now defaults to marking work items as "completed" instead of "in-progress"
   - This aligns with the most common use case where developers end sessions after completing their work
   - Use the `--incomplete` flag explicitly to keep work items as "in-progress" for multi-session work
   - Interactive mode behavior unchanged (still defaults to completed as choice 1)
-  - Updated `src/sdd/session/complete.py:943` to return `True` in non-interactive mode
+  - Updated `src/solokit/session/complete.py:943` to return `True` in non-interactive mode
   - Updated documentation in `.claude/commands/end.md` to reflect new default behavior
   - Updated test `test_prompt_non_interactive_defaults_true` in `tests/unit/session/test_complete.py`
 
 ### Added
 - **Performance: Comprehensive optimization for session operations**
-  - Created `src/sdd/core/cache.py` with thread-safe TTL-based caching:
+  - Created `src/solokit/core/cache.py` with thread-safe TTL-based caching:
     - `Cache` class with get/set/invalidate/clear operations
     - `FileCache` class with automatic modification time tracking
     - Global cache instance accessible via `get_cache()`
-  - Created `src/sdd/core/performance.py` for performance monitoring:
+  - Created `src/solokit/core/performance.py` for performance monitoring:
     - `@measure_time()` decorator for automatic function timing
     - `Timer` context manager for code block timing
     - Automatic logging for operations >100ms (info) and >1s (warning)
-  - Enhanced `src/sdd/learning/similarity.py` with caching optimizations:
+  - Enhanced `src/solokit/learning/similarity.py` with caching optimizations:
     - Added `_word_cache` to cache word sets during merge operations
     - Pre-compute word sets once per category (O(n) instead of O(n²))
     - Reduced similarity checking from 4,950 operations to ~100 for 100 learnings
-  - Enhanced `src/sdd/work_items/repository.py` with file caching:
+  - Enhanced `src/solokit/work_items/repository.py` with file caching:
     - `load_all()` uses `FileCache` with modification tracking
     - Eliminates 11+ repeated file loads per operation
     - `save_all()` automatically invalidates cache
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Refactor: Extract constants and remove magic values - Complete centralization**
-  - Created comprehensive `src/sdd/core/constants.py` module with 31 constants organized into 9 categories
+  - Created comprehensive `src/solokit/core/constants.py` module with 31 constants organized into 9 categories
   - Replaced 50+ magic timeout values and hardcoded path strings across 27 files with named constants
   - Added 8 helper functions for type-safe path construction (e.g., `get_session_dir()`, `get_work_items_file()`)
   - Organized constants into logical categories:
@@ -120,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Refactor: Complete logging consistency refactor - 100% migration to structured logging**
   - Migrated all 502 print() statements across 30 files to new structured logging/output system
   - Separated user-facing output from diagnostic logging for better maintainability:
-    - Created `OutputHandler` class in `src/sdd/core/output.py` for user-facing messages (stdout/stderr)
+    - Created `OutputHandler` class in `src/solokit/core/output.py` for user-facing messages (stdout/stderr)
     - Enhanced `logging_config.py` with structured logging, JSON formatting, and context management
   - Migrated 21 additional files across 4 batches in Session 29:
     - Batch 1 (100 statements): `reporter.py`, `dependency_graph.py`, `tree.py`
@@ -192,7 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Benefits: Single responsibility principle, easy to test, pluggable architecture, clear separation of concerns, type-safe, highly maintainable
 
 - **Refactor: Extract learning similarity engine into dedicated module**
-  - Created new `src/sdd/learning/similarity.py` module with reusable similarity detection algorithms
+  - Created new `src/solokit/learning/similarity.py` module with reusable similarity detection algorithms
   - Implemented `JaccardContainmentSimilarity` class with configurable thresholds and stopword filtering
   - Implemented `LearningSimilarityEngine` with caching, pluggable algorithms, and Protocol-based design
   - Added comprehensive test suite (35 tests) covering similarity algorithms, caching, merging, and edge cases
@@ -349,7 +349,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation in `.claude/commands/start.md` and `.claude/commands/end.md`
 
 - **Work item deletion** - Safe deletion of work items with dependency checking
-  - New `sdd work-delete <work_item_id>` command
+  - New `sk work-delete <work_item_id>` command
   - Interactive mode with 3 options: keep spec, delete spec, or cancel
   - Non-interactive mode with `--keep-spec` and `--delete-spec` flags
   - Dependency checking warns about dependent work items
@@ -363,12 +363,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **BREAKING: Package structure migrated to standard Python src/ layout (Phase 5.9)**
-  - Moved all Python modules from flat directory to organized `src/sdd/` package structure
+  - Moved all Python modules from flat directory to organized `src/solokit/` package structure
   - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
-  - Updated all imports from `scripts.X` to `sdd.X` pattern (43 files)
+  - Updated all imports from `scripts.X` to `solokit.X` pattern (43 files)
   - Removed all `sys.path.insert()` hacks (38 instances)
   - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
-  - CLI command remains `sdd` (no user-facing changes)
+  - CLI command remains `solokit` (no user-facing changes)
   - All 1408 tests pass, PyPI-ready structure, better IDE support
 - **Simplified git branch naming** - Branch names now use work item ID directly
   - Format: `feature_oauth` instead of `session-001-feature_oauth`
@@ -388,10 +388,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 85% code coverage (up from 30%)
   - Unit/integration/e2e structure across 35 test files
   - 4 modules at 100% coverage, 20 modules at 75%+ coverage
-- **Auto git initialization** - `sdd init` now automatically initializes git repository and creates initial commit
-- **Pre-flight commit check** - `sdd end` validates all changes are committed before running quality gates
+- **Auto git initialization** - `sk init` now automatically initializes git repository and creates initial commit
+- **Pre-flight commit check** - `sk end` validates all changes are committed before running quality gates
 - **CHANGELOG workflow improvements** - Git hooks with reminders + smarter branch-level detection
-- **OS-specific .gitignore patterns** - macOS, Windows, and Linux patterns automatically added during `sdd init`
+- **OS-specific .gitignore patterns** - macOS, Windows, and Linux patterns automatically added during `sk init`
 
 ### Fixed
 - **Quality gates test timeout** - Increased from 5 to 10 minutes (1408 tests take ~6 minutes)
@@ -414,15 +414,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.8] - 2025-10-21
 
 ### Added
-- **Marketplace Plugin Support**: SDD now works as a Claude Code marketplace plugin
-- One-time setup command for plugin users: `pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd`
+- **Marketplace Plugin Support**: Solokit now works as a Claude Code marketplace plugin
+- One-time setup command for plugin users: `pip install -e ~/.claude/plugins/marketplaces/claude-plugins/solokit`
 - Simplified installation documentation with clear paths for both marketplace and direct installation
 
 ### Changed
-- **Unified CLI**: All 15 slash command files now use `sdd` command instead of relative paths
+- **Unified CLI**: All 15 slash command files now use `solokit` command instead of relative paths
 - Updated command files: `init.md`, `start.md`, `end.md`, `status.md`, `validate.md`, `learn*.md`, `work-*.md`
 - Simplified README installation section with two clear options (marketplace vs. direct)
-- Updated all CLI examples throughout documentation to use `sdd` command
+- Updated all CLI examples throughout documentation to use `solokit` command
 - Updated marketplace README (`claude-plugins/README.md`) with v0.5.8 installation instructions
 - Updated Architecture Notes to reflect v0.5.8 changes
 
@@ -432,27 +432,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 1 main README (`README.md`)
   - 1 marketplace README (in separate repo)
   - 1 pyproject.toml (version bump)
-- **Breaking Changes**: Command files no longer use relative Python paths - now use `sdd` CLI
+- **Breaking Changes**: Command files no longer use relative Python paths - now use `solokit` CLI
 - **Migration**: Users must run `pip install -e .` if not already done
 
 ### Migration Guide
 
 **For marketplace plugin users:**
 ```bash
-pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd
+pip install -e ~/.claude/plugins/marketplaces/claude-plugins/solokit
 ```
 
 **For existing direct installations:**
 ```bash
-cd /path/to/sdd
+cd /path/to/solokit
 pip install -e .
 ```
 
-All slash commands will now work via the `sdd` CLI.
+All slash commands will now work via the `solokit` CLI.
 
 ### Benefits
 - ✅ Plugin works from marketplace installation
-- ✅ No need to clone SDD into every project
+- ✅ No need to clone Solokit into every project
 - ✅ Cleaner, more standard approach
 - ✅ Works identically whether installed directly or via marketplace
 - ✅ Aligns with Python package best practices
@@ -702,7 +702,7 @@ See [ROADMAP.md Phase 1](./ROADMAP.md#phase-1-core-plugin-foundation-v01---essen
 - Learning curation system (`learning_curator.py`) - complete and production-ready
 - Dependency graph visualization (`dependency_graph.py`) - complete and production-ready
 - File operation utilities (`file_ops.py`)
-- Comprehensive methodology documentation (`docs/session-driven-development.md`)
+- Comprehensive methodology documentation (`docs/solokit-methodology.md`)
 - Implementation insights documentation (`docs/implementation-insights.md`)
 - AI-augmented framework reference (`docs/ai-augmented-solo-framework.md`)
 
@@ -744,4 +744,4 @@ Phase mapping to versions:
 - [Roadmap](./docs/project/ROADMAP.md) - Detailed development history and technical implementation
 - [Contributing](./CONTRIBUTING.md) - How to contribute (if available)
 - [Documentation](./docs/README.md) - Full documentation index
-- [Session-Driven Development Methodology](./docs/architecture/session-driven-development.md) - Complete methodology specification
+- [Solokit Methodology](./docs/architecture/solokit-methodology.md) - Complete methodology specification

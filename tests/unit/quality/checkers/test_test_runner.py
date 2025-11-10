@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult, CommandRunner
-from sdd.quality.checkers.tests import ExecutionChecker
+from solokit.core.command_runner import CommandResult, CommandRunner
+from solokit.quality.checkers.tests import ExecutionChecker
 
 
 @pytest.fixture

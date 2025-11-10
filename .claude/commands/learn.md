@@ -62,7 +62,7 @@ For each learning selected/entered by the user:
 2. Run the add-learning command:
 
 ```bash
-sdd learn add-learning \
+sk learn add-learning \
   --content "{{content}}" \
   --category "{{category}}" \
   --session "{{current_session}}"
@@ -113,13 +113,13 @@ User selects first two options.
 
 **Step 4:** Claude runs commands:
 ```bash
-sdd learn add-learning \
+sk learn add-learning \
   --content "FastAPI middleware order matters for CORS - app.add_middleware() calls must be in reverse order of execution" \
   --category "gotchas" \
   --tags "fastapi,cors,middleware" \
   --session "5"
 
-sdd learn add-learning \
+sk learn add-learning \
   --content "CORSMiddleware must be added after other middleware to work correctly" \
   --category "best_practices" \
   --tags "fastapi,cors,middleware" \

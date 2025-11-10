@@ -1,6 +1,6 @@
 # Status Command
 
-**Usage:** `/sdd:status`
+**Usage:** `/sk:status`
 
 **Description:** Display current session status with progress overview, time tracking, and next steps.
 
@@ -18,7 +18,7 @@ The `status` command provides a quick snapshot of:
 ## Usage
 
 ```bash
-/sdd:status
+/sk:status
 ```
 
 No arguments needed - shows status for current session.
@@ -64,7 +64,7 @@ No arguments needed - shows status for current session.
 ### Active Session
 
 ```bash
-/sdd:status
+/sk:status
 ```
 
 **Output:**
@@ -108,16 +108,16 @@ NEXT WORK ITEMS:
     🟡 integration_test_api: Waiting on feature_auth
 
 QUICK ACTIONS:
-  Validate session:   /sdd:validate
-  Complete session:   /sdd:end
-  View work item:     /sdd:work-show feature_auth
-  List all items:     /sdd:work-list
+  Validate session:   /sk:validate
+  Complete session:   /sk:end
+  View work item:     /sk:work-show feature_auth
+  List all items:     /sk:work-list
 ```
 
 ### Multi-Session Work Item
 
 ```bash
-/sdd:status
+/sk:status
 ```
 
 **Output:**
@@ -172,16 +172,16 @@ NEXT WORK ITEMS:
   Blocked (0)
 
 QUICK ACTIONS:
-  Validate session:   /sdd:validate
-  Complete session:   /sdd:end
-  View milestone:     /sdd:work-list --milestone sprint_1
-  View work item:     /sdd:work-show feature_dashboard
+  Validate session:   /sk:validate
+  Complete session:   /sk:end
+  View milestone:     /sk:work-list --milestone sprint_1
+  View work item:     /sk:work-show feature_dashboard
 ```
 
 ### No Active Session
 
 ```bash
-/sdd:status
+/sk:status
 ```
 
 **Output:**
@@ -213,10 +213,10 @@ NEXT WORK ITEMS:
     🟢 feature_dashboard: Add admin dashboard
 
 QUICK ACTIONS:
-  Get recommendation: /sdd:work-next
-  Start work:         /sdd:start
-  Create work item:   /sdd:work-new
-  View all items:     /sdd:work-list
+  Get recommendation: /sk:work-next
+  Start work:         /sk:start
+  Create work item:   /sk:work-new
+  View all items:     /sk:work-list
 ```
 
 ## Time Tracking Details
@@ -309,14 +309,14 @@ Context-aware suggestions:
 
 ```bash
 # While working
-/sdd:status
+/sk:status
 # See time elapsed, files changed, commits made
 ```
 
 ### Before Taking a Break
 
 ```bash
-/sdd:status
+/sk:status
 # Review current state
 # Decide if good stopping point
 ```
@@ -324,7 +324,7 @@ Context-aware suggestions:
 ### After Resuming
 
 ```bash
-/sdd:status
+/sk:status
 # See where you left off
 # Review previous session work
 # Continue from context
@@ -333,7 +333,7 @@ Context-aware suggestions:
 ### Planning Next Work
 
 ```bash
-/sdd:status
+/sk:status
 # See what's ready to start
 # Check milestone progress
 # Decide next priority
@@ -344,25 +344,25 @@ Context-aware suggestions:
 ### During Development
 
 ```bash
-/sdd:status          # Quick overview
-/sdd:validate        # Check quality gates
-/sdd:end             # Complete when done
+/sk:status          # Quick overview
+/sk:validate        # Check quality gates
+/sk:end             # Complete when done
 ```
 
 ### Between Sessions
 
 ```bash
-/sdd:status          # See project state
-/sdd:work-next       # Get recommendation
-/sdd:start           # Begin new work
+/sk:status          # See project state
+/sk:work-next       # Get recommendation
+/sk:start           # Begin new work
 ```
 
 ### Milestone Tracking
 
 ```bash
-/sdd:status                        # See milestone progress
-/sdd:work-list --milestone sprint_1  # Detailed view
-/sdd:work-graph --milestone sprint_1 # Visualize
+/sk:status                        # See milestone progress
+/sk:work-list --milestone sprint_1  # Detailed view
+/sk:work-graph --milestone sprint_1 # Visualize
 ```
 
 ## Performance
