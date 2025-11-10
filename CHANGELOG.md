@@ -461,10 +461,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created comprehensive API reference documentation in `docs/reference/file-operations-api.md`
   - Updated architecture documentation
 
-## [0.7.0] - 2025-10-26
+## [0.1.0] - 2025-10-26
+
+> **Note:** Versions 0.6.0 and 0.7.0 were development versions that have been consolidated into the 0.1.x public release series.
 
 ### Added
-- **Enhanced session briefings with context continuity (Enhancement #11)**
+- **Enhanced session briefings with context continuity**
   - Previous Work section for in-progress items showing commits, file stats, and quality gates from prior sessions
   - Enriched session summaries with full commit messages and file change statistics
   - Enhanced learning relevance scoring using multi-factor algorithm (keywords, type, recency, category bonuses)
@@ -484,32 +486,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 19 comprehensive unit tests
   - Full documentation in `.claude/commands/work-delete.md` and `docs/commands/work-delete.md`
 
-- **PyPI Publishing Workflow** - Automated package publishing to PyPI on GitHub releases
-
-## [0.6.0] - 2025-10-26
-
-### Changed
-- **BREAKING: Package structure migrated to standard Python src/ layout (Phase 5.9)**
-  - Moved all Python modules from flat directory to organized `src/solokit/` package structure
-  - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
-  - Updated all imports from `scripts.X` to `solokit.X` pattern (43 files)
-  - Removed all `sys.path.insert()` hacks (38 instances)
-  - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
-  - CLI command remains `solokit` (no user-facing changes)
-  - All 1408 tests pass, PyPI-ready structure, better IDE support
-- **Simplified git branch naming** - Branch names now use work item ID directly
-  - Format: `feature_oauth` instead of `session-001-feature_oauth`
-  - Clearer intent, shorter names, backward compatible
-- **Standardized spec validation** - All work item types now use "Acceptance Criteria" section consistently
-  - Updated refactor specs to use "Acceptance Criteria" (was "Success Criteria")
-- **Makefile clean target** - Now removes coverage artifacts (`htmlcov/`, `coverage.xml`, `coverage.json`)
-
-### Added
 - **Work item completion status control** - Explicit control over work item completion during session end
   - Interactive 3-choice prompt: "Mark completed", "Keep in-progress", "Cancel"
   - Command-line flags: `--complete` and `--incomplete`
   - Supports multi-session workflows
   - 8 unit tests added
+- **PyPI Publishing Workflow** - Automated package publishing to PyPI on GitHub releases
 - **Comprehensive test infrastructure** - Test suite reorganization and expansion
   - 1,408 comprehensive tests (up from 183, 765% increase)
   - 85% code coverage (up from 30%)
@@ -519,6 +501,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pre-flight commit check** - `sk end` validates all changes are committed before running quality gates
 - **CHANGELOG workflow improvements** - Git hooks with reminders + smarter branch-level detection
 - **OS-specific .gitignore patterns** - macOS, Windows, and Linux patterns automatically added during `sk init`
+
+### Changed
+- **BREAKING: Package structure migrated to standard Python src/ layout**
+  - Moved all Python modules from flat directory to organized `src/solokit/` package structure
+  - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
+  - Updated all imports from `scripts.X` to `solokit.X` pattern (43 files)
+  - Removed all `sys.path.insert()` hacks (38 instances)
+  - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
+  - CLI command remains `solokit` (no user-facing changes)
+  - All tests pass, PyPI-ready structure, better IDE support
+- **Simplified git branch naming** - Branch names now use work item ID directly
+  - Format: `feature_oauth` instead of `session-001-feature_oauth`
+  - Clearer intent, shorter names, backward compatible
+- **Standardized spec validation** - All work item types now use "Acceptance Criteria" section consistently
+  - Updated refactor specs to use "Acceptance Criteria" (was "Success Criteria")
+- **Makefile clean target** - Now removes coverage artifacts (`htmlcov/`, `coverage.xml`, `coverage.json`)
 
 ### Fixed
 - **Quality gates test timeout** - Increased from 5 to 10 minutes (1408 tests take ~6 minutes)
@@ -850,21 +848,22 @@ Versions follow semantic versioning (MAJOR.MINOR.PATCH):
 - **MINOR**: New functionality (backward compatible)
 - **PATCH**: Bug fixes (backward compatible)
 
-Phase mapping to versions:
-- Phase 0 = v0.0 (Foundation & documentation)
-- Phase 1 = v0.1 (Core session workflow)
-- Phase 2 = v0.2 (Work item system)
-- Phase 3 = v0.3 (Dependency graphs)
-- Phase 4 = v0.4 (Learning management)
-- Phase 5 = v0.5 (Quality gates)
-- Phase 5.5 = v0.5.5 (Integration testing)
-- Phase 5.6 = v0.5.6 (Deployment support)
-- Phase 5.7 = v0.5.7 (Spec-first architecture)
-- Phase 5.8 = v0.5.8 (Marketplace plugin support)
-- Phase 5.9 = v0.6.0 (Standard Python src/ layout) ✅ **Current**
-- v0.7.0 = PyPI publishing (planned)
-- v0.8.0+ = Advanced features (planned)
-- v1.0.0 = Production-ready public release
+Phase mapping to public release versions:
+- Phases 0-5.9 (Development phases) → **v0.1.0** (Initial Public Release)
+  - Phase 0: Foundation & documentation
+  - Phase 1: Core session workflow
+  - Phase 2: Work item system
+  - Phase 3: Dependency graphs
+  - Phase 4: Learning management
+  - Phase 5: Quality gates
+  - Phase 5.5: Integration testing
+  - Phase 5.6: Deployment support
+  - Phase 5.7: Spec-first architecture
+  - Phase 5.8: Marketplace plugin support
+  - Phase 5.9: Standard Python src/ layout & PyPI publishing
+- **v0.1.1** = Current release (UX improvements & bug fixes) ✅ **Current**
+- v0.2.0+ = Future enhancements (planned)
+- v1.0.0 = Stable API release (planned)
 
 ## Links
 

@@ -204,8 +204,12 @@ Configure in `.session/config.json`:
 
 **Perfect context continuity** across all AI interactions:
 
-```bash
-sk start feature_xyz
+> 💡 **Recommended: Use Claude Code for the best experience**
+
+**Start a session** in Claude Code:
+
+```
+/start feature_xyz
 ```
 
 Claude receives:
@@ -219,10 +223,10 @@ Claude receives:
 8. **Milestone Progress** - Where this fits in the roadmap
 9. **Previous Work Context** - For in-progress items: commits made, files changed, quality results
 
-**Session completion** enforces quality:
+**Complete session** with automatic quality enforcement:
 
-```bash
-sk end
+```
+/end
 ```
 
 Automatically:
@@ -234,31 +238,55 @@ Automatically:
 - ✅ Updates work item status
 - ✅ Generates session summary
 
+<details>
+<summary><strong>Alternative: Terminal Usage</strong> (without AI assistance)</summary>
+
+```bash
+sk start feature_xyz  # Start session
+sk end                # Complete session
+```
+
+</details>
+
 ### 🎯 Work Item Management
 
 **Dependency-driven, spec-first workflow:**
 
-```bash
-# Create work items interactively
-sk work-new
+> 💡 **Recommended: Use Claude Code for interactive work item creation and management**
 
-# List with filters
-sk work-list
+**Create and manage work items** in Claude Code:
+
+```
+/work-new                              # Create work items interactively
+/work-list                             # List all work items
+/work-list --status not_started        # Filter by status
+/work-list --milestone "v1.0"          # Filter by milestone
+
+/work-next                             # Get smart recommendations (dependencies completed)
+
+/work-graph --critical-path            # Show longest dependency chain
+/work-graph --bottlenecks              # Identify blockers
+/work-graph --format svg               # Export visual graph
+
+/work-update feature_xyz --status in_progress
+/work-update feature_xyz --priority high
+```
+
+<details>
+<summary><strong>Alternative: Terminal Usage</strong> (without AI assistance)</summary>
+
+```bash
+sk work-new                        # Create work items interactively
+sk work-list                       # List all work items
 sk work-list --status not_started
 sk work-list --milestone "v1.0"
 
-# Get smart recommendations
-sk work-next  # Returns ready items (dependencies completed)
-
-# Visualize dependencies
-sk work-graph --critical-path    # Show longest dependency chain
-sk work-graph --bottlenecks      # Identify blockers
-sk work-graph --format svg       # Export visual graph
-
-# Update work items
+sk work-next                       # Get recommendations
+sk work-graph --critical-path      # Visualize dependencies
 sk work-update feature_xyz --status in_progress
-sk work-update feature_xyz --priority high
 ```
+
+</details>
 
 **Spec-First Architecture:**
 
@@ -291,20 +319,32 @@ Each template includes:
 
 **AI-powered knowledge capture and curation:**
 
-```bash
-# Capture learnings during development
-sk learn
+> 💡 **Recommended: Use Claude Code for AI-assisted learning capture**
 
-# Browse all learnings
-sk learn-show
-sk learn-show --category gotchas --tag fastapi
+**Capture and browse learnings** in Claude Code:
 
-# Search by keyword
-sk learn-search "CORS"
-
-# Auto-curate (categorize, deduplicate, merge)
-sk learn-curate
 ```
+/learn                                # Capture learnings during development (AI-assisted)
+
+/learn-show                           # Browse all learnings
+/learn-show --category gotchas --tag fastapi
+
+/learn-search "CORS"                  # Search by keyword
+
+/learn-curate                         # Auto-curate (categorize, deduplicate, merge)
+```
+
+<details>
+<summary><strong>Alternative: Terminal Usage</strong> (without AI assistance)</summary>
+
+```bash
+sk learn                       # Capture learnings manually
+sk learn-show                  # Browse all learnings
+sk learn-search "CORS"         # Search by keyword
+sk learn-curate                # Run curation
+```
+
+</details>
 
 **6 Learning Categories** (auto-categorized):
 - **Architecture** - Design decisions, patterns
@@ -326,61 +366,71 @@ sk learn-curate
 
 ## Commands Reference
 
-### Session Commands
+> 💡 **Best Experience: Use these commands in Claude Code for AI-assisted development**
 
+### Session Commands (Claude Code)
+
+```
+/init                 # Initialize project with template selection
+/start [item_id]      # Start session with comprehensive briefing
+/end                  # Complete session with quality gates
+/status               # Quick session overview
+/validate             # Pre-flight check (run gates without ending)
+```
+
+### Work Item Commands (Claude Code)
+
+```
+/work-new             # Create work item interactively (AI-assisted)
+/work-list            # List all work items
+/work-show <id>       # Show work item details
+/work-update <id>     # Update work item fields
+/work-next            # Get next recommended work item
+/work-graph           # Visualize dependency graph
+/work-delete <id>     # Delete work item (with safety checks)
+```
+
+### Learning Commands (Claude Code)
+
+```
+/learn                # Capture learning interactively (AI-assisted)
+/learn-show           # Browse all learnings
+/learn-search <q>     # Search learnings by keyword
+/learn-curate         # Run curation (categorize, deduplicate)
+```
+
+<details>
+<summary><strong>Alternative: Terminal Commands</strong> (without AI assistance)</summary>
+
+### Session Commands
 ```bash
-sk init               # Initialize project with template selection
-sk start [item_id]    # Start session with comprehensive briefing
-sk end                # Complete session with quality gates
-sk status             # Quick session overview
-sk validate           # Pre-flight check (run gates without ending)
+sk init               # Initialize project
+sk start [item_id]    # Start session
+sk end                # Complete session
+sk status             # Session status
+sk validate           # Validate readiness
 ```
 
 ### Work Item Commands
-
 ```bash
-sk work-new           # Create work item interactively
-sk work-list          # List all work items
-sk work-show <id>     # Show work item details
-sk work-update <id>   # Update work item fields
-sk work-next          # Get next recommended work item
-sk work-graph         # Visualize dependency graph
-sk work-delete <id>   # Delete work item (with safety checks)
+sk work-new           # Create work item
+sk work-list          # List work items
+sk work-show <id>     # Show work item
+sk work-update <id>   # Update work item
+sk work-next          # Get recommendation
+sk work-graph         # Visualize dependencies
+sk work-delete <id>   # Delete work item
 ```
 
 ### Learning Commands
-
 ```bash
-sk learn              # Capture learning interactively
-sk learn-show         # Browse all learnings
-sk learn-search <q>   # Search learnings by keyword
-sk learn-curate       # Run curation (categorize, deduplicate)
+sk learn              # Capture learning
+sk learn-show         # Browse learnings
+sk learn-search <q>   # Search learnings
+sk learn-curate       # Run curation
 ```
 
-### Claude Code Slash Commands
-
-For use within Claude Code conversations:
-
-```bash
-/sk:init              # Initialize project
-/sk:start [item_id]   # Start session
-/sk:end               # Complete session
-/sk:status            # Session status
-/sk:validate          # Validate readiness
-
-/sk:work-new          # Create work item
-/sk:work-list         # List work items
-/sk:work-show <id>    # Show work item
-/sk:work-update <id>  # Update work item
-/sk:work-next         # Get recommendation
-/sk:work-graph        # Visualize dependencies
-/sk:work-delete <id>  # Delete work item
-
-/sk:learn             # Capture learning
-/sk:learn-show        # Browse learnings
-/sk:learn-search <q>  # Search learnings
-/sk:learn-curate      # Run curation
-```
+</details>
 
 ## Typical Workflow
 
@@ -578,7 +628,7 @@ While Claude Code is excellent for code generation and exploration, Solokit adds
 
 ## Development Status
 
-**Current Version:** v0.1.0 (Production-Ready)
+**Current Version:** v0.1.1 (Production-Ready)
 
 **Test Coverage:** 2,391 tests passing (100%)
 
