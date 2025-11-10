@@ -1,258 +1,225 @@
 # Solokit Roadmap
 
-**Current Version:** v0.6.0 (Production-Ready)
-**Status:** Core features complete, PyPI publishing next
+**Current Release:** v0.1.0 (Initial Public Release)
+**Status:** Production-ready, feature-complete framework
 
 ---
 
-## Project Journey
+## What is Solokit?
 
-### Completed Phases (v0.0 → v0.6.0)
-
-Solokit has achieved all core functionality through a series of focused development phases:
-
-#### **Phase 0-1: Foundation (v0.0 - v0.1)**
-✅ **Core session workflow** with `/init`, `/start`, `/end`, `/validate`
-✅ **Stack & tree tracking** - Automatic technology and structure detection
-✅ **Git integration** - Branch management, commit automation, merge handling
-✅ **Comprehensive context loading** - Project docs, stack, tree in briefings
-
-#### **Phase 2-3: Work Item System (v0.2 - v0.3)**
-✅ **Full work item management** - Create, list, show, update, track
-✅ **6 work item types** - Feature, bug, refactor, security, integration_test, deployment
-✅ **Dependency resolution** - Smart work item ordering, critical path analysis
-✅ **Milestone tracking** - Group and track progress across work items
-✅ **Dependency graph visualization** - ASCII, DOT, SVG formats with bottleneck detection
-
-#### **Phase 4: Learning System (v0.4)**
-✅ **Learning capture** - Record insights during sessions
-✅ **Auto-categorization** - 6 categories (architecture, gotchas, best practices, etc.)
-✅ **Similarity detection** - Automatic duplicate merging (Jaccard + containment)
-✅ **Multi-source extraction** - From session summaries, git commits, inline comments
-✅ **Browsing & search** - Filter by category, tag, date, with statistics
-
-#### **Phase 5: Quality & Validation (v0.5 - v0.5.7)**
-✅ **Quality gates** - Test execution, coverage, security scanning, linting, formatting
-✅ **Multi-language support** - Python, JavaScript, TypeScript throughout
-✅ **Integration testing support** - Docker orchestration, performance benchmarks, API validation
-✅ **Deployment support** - Environment validation, rollback automation, smoke tests
-✅ **Spec-first architecture** - Spec files as single source of truth, full context in briefings
-✅ **Documentation validation** - CHANGELOG checks, docstring validation, architecture diagrams
-
-#### **Phase 5.8-5.9: Distribution & Structure (v0.5.8 - v0.6.0)**
-✅ **Marketplace plugin support** - Works from Claude Code marketplace with `pip install -e`
-✅ **Unified CLI** - All commands use `solokit` executable
-✅ **Standard Python structure** - src/ layout following PEP 517/518
-✅ **Zero sys.path manipulation** - Clean imports with `from solokit.* import`
-✅ **Production-ready packaging** - Ready for PyPI distribution
-
-### Test Coverage & Quality
-
-- **1,408 tests** across unit, integration, and end-to-end
-- **85%+ code coverage** maintained
-- **8 CI/CD workflows** ensuring quality
-- **Battle-tested** on real development projects
+Solokit is a **complete development framework for solo developers building production software with AI assistants like Claude Code**. It combines production-ready project templates, automated quality gates, intelligent session management, and AI-powered knowledge capture into a cohesive workflow.
 
 ---
 
-## Current State (v0.6.0)
+## Current Capabilities
 
-### What Works Today
+### Core Features (Available Today)
 
-**Session Workflow:**
-- Complete session lifecycle with quality gates
-- Multi-session work item support (in-progress tracking)
+**Session Management**
+- Complete session lifecycle with AI-powered briefings
+- Quality gates enforcement (tests, linting, security, coverage)
 - Automatic context loading and state management
-- Git workflow automation (branching, commits, merges)
+- Git workflow automation (branching, commits, PR creation)
 
-**Work Item Management:**
-- 6 comprehensive work item types with spec templates
-- Dependency resolution and critical path analysis
+**Work Item System**
+- 6 comprehensive work item types (feature, bug, refactor, security, integration_test, deployment)
+- Dependency resolution with critical path analysis
 - Milestone tracking and progress visualization
-- Spec-first workflow with validation
+- Spec-first architecture with validation
+- Dependency graph visualization (ASCII, DOT, SVG)
 
-**Knowledge Management:**
-- Automatic learning extraction and categorization
-- Duplicate detection and merging
-- Full-text search and filtering
+**Knowledge Management**
+- Automatic learning extraction and categorization (6 categories)
+- Duplicate detection and intelligent merging
+- Full-text search and filtering capabilities
 - Growing knowledge base across sessions
 
-**Quality Enforcement:**
-- Automated testing and coverage requirements
+**Quality Automation**
+- Multi-language support (Python, JavaScript, TypeScript)
+- Test execution with coverage tracking
 - Security scanning (bandit, safety, npm audit)
 - Code quality checks (linting, formatting)
 - Documentation validation
-- Integration testing and performance benchmarks
-- Deployment validation and rollback automation
+- Integration testing with Docker orchestration
+- Performance benchmarks and API contract validation
+- Deployment automation with rollback support
 
-**Developer Experience:**
-- Clean CLI with `solokit` command
-- 15+ slash commands for Claude Code
+**Project Templates**
+- **4 production-ready stacks**: T3 Stack, FastAPI, Refine, Next.js
+- **4 quality tiers**: Essential, Standard, Comprehensive, Production-Ready
+- **16 total configurations** with battle-tested tooling
+- Complete CI/CD, Docker, environment configs per tier
+
+**Developer Experience**
+- Clean CLI with `sk` command
+- 15+ slash commands for Claude Code (`/sk:*`)
 - Comprehensive documentation and guides
 - Template-driven workflow
+- Interactive UI integration with Claude Code
+
+### Test Coverage & Quality
+
+- **2,391 tests** across unit, integration, and end-to-end
+- **100% pass rate** maintained
+- **Zero linting/type errors** (ruff, mypy)
+- **8 CI/CD workflows** ensuring quality
+- **Battle-tested** on real development projects
 
 ### Installation
 
-**Method 1: Claude Code Marketplace**
+**PyPI (Coming Soon):**
 ```bash
-# After installing from marketplace:
-pip install -e ~/.claude/plugins/marketplaces/claude-plugins/solokit
+pip install solokit
 ```
 
-**Method 2: Direct Installation**
+**From Source:**
 ```bash
 git clone https://github.com/ankushdixit/solokit.git
 cd solokit
 pip install -e .
 ```
 
+**Verify Installation:**
+```bash
+sk --help
+```
+
 ---
 
-## Future Roadmap
+## Near-Term Roadmap
 
-### v0.7.0: PyPI Publishing (Next)
+### Public Distribution (In Progress)
 
-**Goal:** Make Solokit publicly available via PyPI for simple installation
-
-**Status:** 📅 PLANNED
+**Goal:** Make Solokit publicly available via PyPI
 
 **Tasks:**
-- [ ] Prepare package metadata for PyPI
-- [ ] Create PyPI account and verify email
-- [ ] Test upload to TestPyPI
-- [ ] Publish to PyPI: `pip install solokit`
-- [ ] Update marketplace plugin to be lightweight (commands only)
-- [ ] Update documentation with PyPI installation instructions
-- [ ] Announcement and release notes
+- [x] Complete rebrand from session-driven-development to solokit
+- [x] Rename package, CLI commands, and all references
+- [x] Update all documentation and README
+- [x] Achieve 100% test pass rate (2,391 tests)
+- [ ] Publish to PyPI as `solokit`
+- [ ] Update marketplace plugin (lightweight commands only)
+- [ ] Create comprehensive video tutorials
+- [ ] Write getting started guide
 
 **Benefits:**
 - ✅ Simple installation: `pip install solokit`
-- ✅ Version management through PyPI
 - ✅ Automatic updates via `pip install --upgrade solokit`
 - ✅ Wider adoption and discoverability
 - ✅ Professional distribution channel
 
-**Estimated Effort:** 1-2 days
-
 ---
 
-### v0.8.0+: Advanced Features (Optional)
-
-**Status:** 📅 FUTURE (Implement as needed)
+## Future Enhancements
 
 These features may be added based on community feedback and real-world usage:
 
-#### **Custom Work Item Types**
-- User-defined work item schemas
-- Custom validation rules per type
-- Template system for specifications
-- Type-specific quality gates
+### Template Expansion
 
-#### **Metrics & Analytics**
+- Additional stack templates (Ruby on Rails, Django, Laravel, etc.)
+- Mobile app templates (React Native, Flutter)
+- Data science/ML templates
+- Serverless templates (AWS Lambda, Vercel Functions)
+- Community-contributed templates
+
+### Metrics & Analytics
+
 - Session velocity tracking
 - Work item completion trends
-- Learning accumulation rate
-- Quality gate pass/fail rates
+- Learning accumulation insights
+- Quality gate statistics
 - Coverage trends over time
-- Time estimates vs. actual
+- Time estimation vs. actual analysis
 
-#### **Project Presets**
-- Web application preset
-- Python library preset
-- CLI tool preset
-- Microservices preset
-- Auto-configure based on project type
+### AI-Powered Enhancements
 
-#### **Enhanced Documentation**
-- ADR (Architecture Decision Records) templates
-- Requirement → work item traceability
-- Documentation generation from specs
-- Version tracking and sync detection
-
-#### **AI-Powered Enhancements**
 - Context-aware session suggestions
 - Automatic priority recommendations
 - Smart dependency detection
-- Work item decomposition suggestions
+- Work item decomposition assistance
 - Time estimation from historical data
+- Spec quality analysis
+
+### Custom Work Item Types
+
+- User-defined work item schemas
+- Custom validation rules per type
+- Type-specific quality gates
+- Template system for custom specs
+
+### Enhanced Documentation
+
+- ADR (Architecture Decision Records) templates
+- Requirement → work item traceability
+- Auto-generated documentation from specs
+- Version tracking and change detection
+
+### Project Presets
+
+- Quick setup for common project types
+- Auto-configured quality gates by domain
+- Stack-specific best practices
+- Pre-configured CI/CD templates
 
 ---
 
-## Not Planned
+## Intentionally Excluded
 
-The following features are **intentionally excluded** from the roadmap:
-
-❌ **Spec-Kit Integration**
-- Current work item + spec schema is comprehensive
-- Integration would add complexity without clear benefit
-- Our templates and validation are battle-tested
+The following features are **not planned** as they conflict with Solokit's core philosophy:
 
 ❌ **Team Collaboration Features**
-- Solokit is focused on solo development workflow
-- Multi-developer support adds significant complexity
-- May reconsider based on community demand
+- Solokit focuses on solo development workflow
+- Multi-developer support adds complexity without benefit
+- Git provides sufficient collaboration when needed
+
+❌ **External Tool Deep Integrations**
+- Notion, Linear, Jira, Slack integrations
+- Git-based workflow is sufficient
+- Avoids vendor lock-in and maintenance burden
+
+❌ **Web-Based Dashboard**
+- Terminal-based workflow is core philosophy
+- CLI provides sufficient visibility
+- Keep it simple and fast
 
 ❌ **Enterprise Features**
 - SSO, audit logs, compliance reporting, RBAC
 - Out of scope for developer productivity tool
-- Focus remains on individual developer experience
+- Focus remains on individual developers
 
-❌ **External Tool Deep Integrations**
-- Notion, Linear, Jira, Slack, Discord
-- Git-based workflow is sufficient
-- Avoid vendor lock-in and maintenance burden
-
-❌ **Web-Based Dashboard**
-- Terminal-based workflow is core philosophy
-- Metrics and graphs not needed for most workflows
-- CLI provides sufficient visibility
-
----
-
-## Release History
-
-| Version | Date | Milestone |
-|---------|------|-----------|
-| **v0.6.0** | 2025-10-26 | ✅ Standard Python structure (src/ layout) |
-| **v0.5.8** | 2025-10-21 | ✅ Marketplace plugin support, unified CLI |
-| **v0.5.7** | 2025-10-18 | ✅ Spec-first architecture |
-| **v0.5.6** | 2025-10-15 | ✅ Deployment support |
-| **v0.5.5** | 2025-10-15 | ✅ Integration testing support |
-| **v0.5** | 2025-10-14 | ✅ Quality gates and validation |
-| **v0.4** | 2025-10-14 | ✅ Learning management system |
-| **v0.3** | 2025-10-13 | ✅ Dependency graph visualization |
-| **v0.2** | 2025-10-13 | ✅ Work item management |
-| **v0.1** | 2025-10-13 | ✅ Core session workflow |
-| **v0.0** | 2025-10-10 | ✅ Foundation and documentation |
+❌ **Spec-Kit Integration**
+- Current spec system is comprehensive and battle-tested
+- Integration adds complexity without clear benefit
+- Our templates and validation work well
 
 ---
 
 ## Success Metrics
 
-### Production-Ready (v0.6.0) ✅
+### v0.1.0 Release Metrics ✅
 
-- ✅ All core phases (0-5.9) complete
-- ✅ 1,408 tests passing with 85%+ coverage
-- ✅ Zero sys.path manipulation
-- ✅ Standard Python packaging structure
-- ✅ Used successfully on multiple projects
-- ✅ 50+ development sessions completed
-- ✅ Quality gates prevent broken states
-- ✅ Git workflow prevents common mistakes
-- ✅ Learnings accumulate automatically
-- ✅ No manual tracking needed
+- ✅ 2,391 tests passing (100% pass rate)
+- ✅ Zero linting/type errors
+- ✅ Complete rebrand to Solokit
+- ✅ 4 production stacks × 4 quality tiers = 16 configurations
+- ✅ 6 work item types with comprehensive specs
+- ✅ Full session lifecycle with quality automation
+- ✅ Learning system with 6 categories
+- ✅ Used successfully on multiple real projects
 
-### Future Milestones
+### Future Goals
 
-**v0.7.0 Goals:**
-- Published on PyPI
-- 100+ PyPI downloads
-- Installation via `pip install solokit`
+**Short-term:**
+- 1,000+ PyPI downloads in first month
+- 100+ GitHub stars
+- 10+ community-contributed templates
+- 5+ video tutorials published
 
-**v0.8.0+ Goals:**
-- Custom work item types working
-- Metrics providing actionable insights
-- Used on projects with 100+ work items
+**Long-term:**
+- 10,000+ PyPI downloads
+- Active community contributions
+- Featured in developer productivity tools lists
+- Case studies from solo developers
 
 ---
 
@@ -264,12 +231,38 @@ For bugs and enhancements, see:
 - [BUGS.md](./BUGS.md) - Bug tracker
 - [ENHANCEMENTS.md](./ENHANCEMENTS.md) - Enhancement backlog
 
+**Ways to Contribute:**
+- Report bugs and suggest features
+- Submit stack templates for new technologies
+- Write guides and tutorials
+- Improve documentation
+- Share your Solokit workflow and learnings
+
 ---
 
 ## Related Documentation
 
 - [README.md](../../README.md) - Quick start and installation
-- [Solokit Methodology](../guides/solokit-methodology.md) - Complete methodology
+- [Solokit Methodology](../architecture/solokit-methodology.md) - Complete methodology
 - [Writing Effective Specifications](../guides/writing-specs.md) - Spec writing guide
 - [Configuration Guide](../guides/configuration.md) - Quality gates and settings
-- [Learning System](../guides/learning-system.md) - Knowledge capture guide
+- [Command Reference](../commands/) - All `sk` commands documented
+
+---
+
+## Philosophy
+
+Solokit is built on these principles:
+
+1. **Spec-First**: Write specifications before code
+2. **Quality-First**: Automate quality checks, don't skip them
+3. **Context-First**: AI briefings provide full project context
+4. **Learning-First**: Capture insights automatically
+5. **Template-First**: Start with production-ready foundations
+6. **Solo-First**: Optimized for individual developers, not teams
+
+We believe solo developers can achieve team-level sophistication with the right tools and workflows.
+
+---
+
+*Last Updated: 2025-11-10*
