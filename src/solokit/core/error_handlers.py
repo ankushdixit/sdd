@@ -165,16 +165,32 @@ def log_errors(
             try:
                 return func(*args, **kwargs)
             except SolokitError as e:
-                # Log structured error data
-                log.error(
-                    f"{func.__name__} failed: {e.message}",
-                    extra={
-                        "error_code": e.code.value,
-                        "error_category": e.category.value,
-                        "context": e.context,
-                        "function": func.__name__,
-                    },
-                )
+                # Import here to avoid circular dependency
+                from solokit.core.exceptions import NotFoundError, ValidationError
+
+                # User input errors (ValidationError, NotFoundError) should be DEBUG level
+                # System/integration errors should be ERROR level
+                if isinstance(e, (ValidationError, NotFoundError)):
+                    log.debug(
+                        f"{func.__name__} failed: {e.message}",
+                        extra={
+                            "error_code": e.code.value,
+                            "error_category": e.category.value,
+                            "context": e.context,
+                            "function": func.__name__,
+                        },
+                    )
+                else:
+                    # Log system/integration errors at ERROR level
+                    log.error(
+                        f"{func.__name__} failed: {e.message}",
+                        extra={
+                            "error_code": e.code.value,
+                            "error_category": e.category.value,
+                            "context": e.context,
+                            "function": func.__name__,
+                        },
+                    )
                 raise
             except Exception as e:  # noqa: BLE001 - Logging decorator catches all for observability
                 # Log unexpected errors
