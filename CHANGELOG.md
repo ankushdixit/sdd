@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Critical: Phase 2 Terminal Testing - Clean Output, Archiver Fix, and Briefing Improvements**
+  - Fixed log leakage issue where INFO/WARNING/ERROR logs appeared in all commands without --verbose flag
+    - Changed default CLI log level from INFO to ERROR for clean terminal output
+    - Removed redundant logging configuration from `validate.py`
+    - Updated `src/solokit/cli.py` to set ERROR level by default, DEBUG with --verbose
+    - Only ERROR and above messages shown to users unless explicitly requesting verbose mode
+  - Fixed archiver type comparison error causing learning curation to fail
+    - Updated `src/solokit/learning/archiver.py` to handle new session dict format
+    - Changed from comparing dict objects directly to extracting `session_num` field first
+    - Resolves `'>' not supported between instances of 'dict' and 'int'` error
+  - Fixed work-list count logic to include blocked items in not_started category
+    - Updated `src/solokit/work_items/query.py` to count items by actual status
+    - Blocked is now correctly treated as a property, not a separate status
+    - Count math now accurate: total = in_progress + not_started + completed
+  - Added template comment stripping to briefing output for cleaner specs
+    - Created `strip_template_comments()` method in `src/solokit/session/briefing/formatter.py`
+    - Removes HTML comments, placeholder text, and excessive blank lines from specs
+    - Briefings now ~5x shorter and more readable without template cruft
+  - Verified work-graph documentation already matches implementation (ascii, dot, svg formats)
+  - Added comprehensive regression test suite: `tests/integration/test_phase_2_terminal_fixes.py`
+    - 15 new tests covering all 5 issues
+    - Updated 5 existing tests to use new session dict format
+  - All 2,388 tests passing with zero regressions
+  - Quality checks: All ruff linting passed, all formatting compliant, all mypy checks passed
+  - Impact: Resolves 5 critical Phase 2 terminal testing issues for professional CLI UX
+
 - **Critical: Phase 1 Terminal Testing - Error Messaging & UX Improvements**
   - Fixed missing `jsonschema>=4.20.0` dependency causing all learning commands to fail
   - Enhanced argparse error messages with helpful examples and next steps:

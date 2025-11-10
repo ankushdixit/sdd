@@ -366,7 +366,9 @@ def main() -> int:
         args, remaining = parser.parse_known_args()
 
         # Setup logging based on global flags
-        log_level = "DEBUG" if args.verbose else "INFO"
+        # Default to ERROR level for clean terminal output
+        # Only show detailed logs with --verbose flag
+        log_level = "DEBUG" if args.verbose else "ERROR"
         log_file = Path(args.log_file) if args.log_file else None
         setup_logging(level=log_level, log_file=log_file)
 

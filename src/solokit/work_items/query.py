@@ -286,10 +286,11 @@ class WorkItemQuery:
         }
 
         for item in items:
+            # Count by actual status (blocked is a property, not a status)
+            status_counts[item["status"]] += 1
+            # Also track blocked count separately for display purposes
             if item.get("_blocked"):
                 status_counts[WorkItemStatus.BLOCKED.value] += 1
-            else:
-                status_counts[item["status"]] += 1
 
         # Header
         total = len(items)

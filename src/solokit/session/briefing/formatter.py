@@ -68,6 +68,39 @@ class BriefingFormatter:
 
         return "\n".join(result)
 
+    def strip_template_comments(self, content: str) -> str:
+        """Remove HTML comments and template placeholders from spec content.
+
+        This cleans up specification files that contain template instructions
+        and placeholder text, making the briefing output more concise and readable.
+
+        Args:
+            content: Raw spec file content
+
+        Returns:
+            Cleaned content without comments and obvious placeholders
+        """
+        import re
+
+        # Remove HTML comments (including multi-line)
+        content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
+
+        # Remove common template placeholder patterns
+        # These are generic placeholder lines that should not appear in real specs
+        placeholders = [
+            r"^Brief description of.*$",
+            r"^Clear description of.*$",
+            r"^Provide a \d+-\d+ sentence.*$",
+            r"^As a \[type of user\].*$",
+        ]
+        for pattern in placeholders:
+            content = re.sub(pattern, "", content, flags=re.MULTILINE)
+
+        # Remove excessive blank lines (3+ consecutive newlines)
+        content = re.sub(r"\n{3,}", "\n\n", content)
+
+        return content.strip()
+
     def extract_section(self, markdown: str, heading: str) -> str:
         """Extract section from markdown between heading and next ## heading.
 
@@ -427,8 +460,9 @@ class BriefingFormatter:
             if previous_work:
                 briefing += previous_work
 
-        # Work item specification - shift headings to maintain hierarchy under H2
-        shifted_spec = self.shift_heading_levels(work_item_spec, 2)
+        # Work item specification - strip comments and shift headings to maintain hierarchy under H2
+        cleaned_spec = self.strip_template_comments(work_item_spec)
+        shifted_spec = self.shift_heading_levels(cleaned_spec, 2)
         briefing += f"""## Work Item Specification
 
 {shifted_spec}

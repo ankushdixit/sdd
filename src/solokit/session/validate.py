@@ -427,13 +427,8 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # Control logging verbosity based on --debug flag
-    import logging
-
-    if not args.debug:
-        # Suppress INFO and WARNING logs unless --debug is passed
-        # Only show ERROR and above
-        logging.getLogger("solokit").setLevel(logging.ERROR)
+    # Note: Logging configuration is handled globally in cli.py
+    # No need to configure logging here
 
     try:
         validator = SessionValidator()
