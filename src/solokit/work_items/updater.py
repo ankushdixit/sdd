@@ -76,7 +76,7 @@ class WorkItemUpdater:
         for field, value in updates.items():
             if field == "status":
                 if value not in WorkItemStatus.values():
-                    logger.warning("Invalid status: %s", value)
+                    # Don't log warning here - user-facing error message is clear
                     raise ValidationError(
                         message=f"Invalid status: {value}",
                         code=ErrorCode.INVALID_STATUS,
@@ -89,7 +89,7 @@ class WorkItemUpdater:
 
             elif field == "priority":
                 if value not in self.PRIORITIES:
-                    logger.warning("Invalid priority: %s", value)
+                    # Don't log warning here - user-facing error message is clear
                     raise ValidationError(
                         message=f"Invalid priority: {value}",
                         code=ErrorCode.INVALID_PRIORITY,
@@ -118,6 +118,9 @@ class WorkItemUpdater:
                         else:
                             logger.warning("Dependency '%s' not found", dep_id)
                             raise WorkItemNotFoundError(dep_id)
+                    else:
+                        # Dependency already exists - inform user
+                        output.warning(f"Dependency '{dep_id}' already exists (skipped)")
 
                 item["dependencies"] = deps
 
@@ -134,9 +137,9 @@ class WorkItemUpdater:
                 item["dependencies"] = deps
 
         if not changes:
-            logger.info("No changes made to %s", work_id)
+            # Don't log here - user-facing error message is clear
             raise ValidationError(
-                message="No changes made",
+                message="No changes to update",
                 code=ErrorCode.MISSING_REQUIRED_FIELD,
                 context={"work_item_id": work_id},
                 remediation="Provide valid field updates",

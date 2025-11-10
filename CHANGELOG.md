@@ -8,6 +8,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**
+  - Fixed `.session/` directory causing uncommitted changes warnings (#9 - Critical)
+    - Added `.session/` to .gitignore in all 4 stack templates (saas_t3, ml_ai_fastapi, dashboard_refine, fullstack_nextjs)
+    - Templates now properly exclude session tracking from git by default
+  - Fixed DOT syntax error in work-graph SVG generation (#4/#5 - Critical)
+    - Changed from invalid `"bold, color=red"` to valid DOT syntax `'style=bold, color=red'`
+    - Updated `src/solokit/visualization/dependency_graph.py:169`
+    - SVG graph generation now works correctly with Graphviz
+  - Changed uncommitted changes from ERROR to INFO level in sk start (#8 - High)
+    - Updated `src/solokit/session/briefing/git_context.py` to handle WorkingDirNotCleanError gracefully
+    - Users no longer see ERROR logs for normal uncommitted changes during development
+  - Added progress messaging and Claude Code promotion to sk init (#1 - High)
+    - Added initial progress message during initialization
+    - Changed final messages to use `output.info()` instead of `logger.info()` for visibility
+    - Updated `src/solokit/init/orchestrator.py` with user-facing completion summary
+  - Added warning when dependency already exists in work-update (#2 - Medium)
+    - Shows `output.warning("Dependency 'X' already exists (skipped)")` instead of silently skipping
+    - Updated `src/solokit/work_items/updater.py`
+  - Replaced verbose output with compact table format in work-next (#6 - Medium)
+    - New table shows ID, Type, Priority, Status, Blocks, and Title columns
+    - Displays top 5 ready items and top 3 blocked items
+    - Arrow (→) marks recommended item, updated `src/solokit/work_items/scheduler.py`
+  - Added interactive prompt to work-delete when no flags provided (#12 - Medium)
+    - Users now get choices: 1=keep spec, 2=delete spec, 3=cancel
+    - No longer requires --keep-spec or --delete-spec flags (but still accepts them)
+    - Updated `src/solokit/work_items/delete.py` with user-friendly menu
+  - Removed redundant ERROR/WARNING logs in edge cases (#14/#15/#16 - Medium)
+    - Removed duplicate logging before user-facing error messages
+    - Updated `query.py`, `updater.py`, and `delete.py` to avoid log duplication
+    - Changed "No changes made" to "No changes to update" for clarity
+  - Updated work-graph to use HelpfulArgumentParser for better errors (#17 - Medium)
+    - Invalid format errors now show examples instead of raw argparse output
+    - Updated `src/solokit/visualization/dependency_graph.py`
+  - Improved "no results" message in learn-search (#11 - Low)
+    - Now suggests trying different keywords or browsing all learnings
+    - Updated `src/solokit/learning/reporter.py`
+  - Added validation for empty query in learn-search (#18 - Low)
+    - Shows error with examples when query is empty or whitespace-only
+    - Updated `src/solokit/learning/curator.py`
+  - Test updates: Fixed 1 test in `test_briefing_generator.py` to match new git status message
+  - All 2,388 tests passing with zero regressions
+  - Quality checks: All ruff linting passed, all formatting compliant, all mypy checks passed
+  - Impact: Completes all 18 Phase 2 terminal testing issues for professional CLI UX
+
 - **Critical: Phase 2 Terminal Testing - Clean Output, Archiver Fix, and Briefing Improvements**
   - Fixed log leakage issue where INFO/WARNING/ERROR logs appeared in all commands without --verbose flag
     - Changed default CLI log level from INFO to ERROR for clean terminal output

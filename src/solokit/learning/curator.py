@@ -336,7 +336,7 @@ class LearningsCurator:
         return self.repository.load_learnings()
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point"""
     parser = HelpfulArgumentParser(
         description="Learning curation and management",
@@ -430,6 +430,14 @@ Examples:
     elif args.command == "show-learnings":
         curator.show_learnings(category=args.category, tag=args.tag, session=args.session)
     elif args.command == "search":
+        # Validate query is not empty
+        if not args.query or not args.query.strip():
+            output.error("Please provide a search query")
+            output.info("\nExample:")
+            output.info("  sk learn-search authentication")
+            output.info("  sk learn-search database")
+            output.info("")
+            return 1
         curator.search_learnings(args.query)
     elif args.command == "add-learning":
         tags = args.tags.split(",") if args.tags else None
@@ -449,6 +457,8 @@ Examples:
     else:
         # Default to report if no command specified
         curator.generate_report()
+
+    return 0
 
 
 if __name__ == "__main__":

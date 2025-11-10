@@ -102,3 +102,6 @@ celerybeat.pid
 # Local development
 .DS_Store
 Thumbs.db
+
+# Solokit session tracking
+.session/

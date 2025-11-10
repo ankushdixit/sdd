@@ -41,15 +41,29 @@ class GitContext:
         """
         try:
             # Import git workflow from new location
+            from solokit.core.exceptions import WorkingDirNotCleanError
             from solokit.git.integration import GitWorkflow
 
             workflow = GitWorkflow()
-            is_clean: bool
-            status_msg: str
-            is_clean, status_msg = workflow.check_git_status()  # type: ignore[misc]
             current_branch = workflow.get_current_branch()
 
-            return {"clean": is_clean, "status": status_msg, "branch": current_branch}
+            # Try to check git status - if uncommitted changes, handle gracefully
+            try:
+                workflow.check_git_status()
+                return {
+                    "clean": True,
+                    "status": "Working directory clean",
+                    "branch": current_branch,
+                }
+            except WorkingDirNotCleanError as e:
+                # This is not an error - just return the status
+                changes = e.context.get("uncommitted_changes", [])
+                logger.info(f"Working directory has uncommitted changes: {len(changes)} files")
+                return {
+                    "clean": False,
+                    "status": "Working directory not clean (uncommitted changes)",
+                    "branch": current_branch,
+                }
         except ImportError as e:
             raise SystemError(
                 message="Failed to import GitWorkflow",

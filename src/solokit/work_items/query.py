@@ -118,9 +118,7 @@ class WorkItemQuery:
             )
 
         if work_id not in items:
-            # Log available work items for context
-            available = list(items.keys())[:5]
-            logger.error(f"Work item '{work_id}' not found. Available: {', '.join(available)}")
+            # Don't log error here - user-facing error message is clear
             raise WorkItemNotFoundError(work_id)
 
         item = items[work_id]

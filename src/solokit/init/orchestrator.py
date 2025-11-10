@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Literal, Optional, cast
 
+from solokit.core.output import get_output
 from solokit.init.claude_commands_installer import install_claude_commands
 from solokit.init.dependency_installer import install_dependencies
 from solokit.init.docs_structure import create_docs_structure
@@ -26,6 +27,7 @@ from solokit.init.session_structure import create_session_directories, initializ
 from solokit.init.template_installer import get_template_info, install_template
 
 logger = logging.getLogger(__name__)
+output = get_output()
 
 
 def run_template_based_init(
@@ -56,6 +58,12 @@ def run_template_based_init(
 
     if project_root is None:
         project_root = Path.cwd()
+
+    # Show user-facing progress message
+    output.info("\n⏳ Initializing project... This may take a few minutes.\n")
+    output.info(
+        "Installing dependencies, configuring quality gates, and setting up project structure...\n"
+    )
 
     logger.info("🚀 Initializing Session-Driven Development with Template System...\n")
 
@@ -227,34 +235,35 @@ def run_template_based_init(
     logger.info("=" * 70)
     logger.info("")
     logger.info(f"📦 Template: {template_info['display_name']}")
-    logger.info(f"🎯 Quality Tier: {tier}")
-    logger.info(f"📊 Coverage Target: {coverage_target}%")
-    logger.info("")
-    logger.info("✓ Project structure created")
-    logger.info("✓ Dependencies installed")
-    logger.info("✓ Quality gates configured")
-    logger.info("✓ Documentation structure created")
-    logger.info("✓ Session tracking initialized")
-    logger.info("✓ Git repository configured")
-    logger.info("")
-    logger.info("=" * 70)
-    logger.info("💡 Best used with Claude Code!")
-    logger.info("=" * 70)
-    logger.info("")
-    logger.info("Open this project in Claude Code to unlock the full experience:")
-    logger.info("   • /start      - Begin a session with comprehensive briefing")
-    logger.info("   • /end        - Complete work with quality gates & learning capture")
-    logger.info("   • /work-new   - Create work items interactively")
-    logger.info("   • /work-list  - View and manage your work items")
-    logger.info("")
-    logger.info("Get Claude Code: https://claude.com/claude-code")
-    logger.info("")
-    logger.info("=" * 70)
-    logger.info("")
-    logger.info("🚀 Next Steps:")
-    logger.info("   1. Review README.md for getting started guide")
-    logger.info("   2. Create your first work item: /work-new")
-    logger.info("   3. Start working: /start")
-    logger.info("")
+    # Show completion summary to user
+    output.info(f"\n🎯 Quality Tier: {tier}")
+    output.info(f"📊 Coverage Target: {coverage_target}%")
+    output.info("")
+    output.info("✓ Project structure created")
+    output.info("✓ Dependencies installed")
+    output.info("✓ Quality gates configured")
+    output.info("✓ Documentation structure created")
+    output.info("✓ Session tracking initialized")
+    output.info("✓ Git repository configured")
+    output.info("")
+    output.info("=" * 70)
+    output.info("💡 Best used with Claude Code!")
+    output.info("=" * 70)
+    output.info("")
+    output.info("Open this project in Claude Code to unlock the full experience:")
+    output.info("   • /start      - Begin a session with comprehensive briefing")
+    output.info("   • /end        - Complete work with quality gates & learning capture")
+    output.info("   • /work-new   - Create work items interactively")
+    output.info("   • /work-list  - View and manage your work items")
+    output.info("")
+    output.info("Get Claude Code: https://claude.com/claude-code")
+    output.info("")
+    output.info("=" * 70)
+    output.info("")
+    output.info("🚀 Next Steps:")
+    output.info("   1. Review README.md for getting started guide")
+    output.info("   2. Create your first work item: /work-new")
+    output.info("   3. Start working: /start")
+    output.info("")
 
     return 0
