@@ -74,9 +74,7 @@ def install_claude_commands(project_root: Path | None = None) -> list[Path]:
             logger.debug(f"Installed command: {cmd_file.name}")
 
         logger.info(f"Installed {len(installed_commands)} Claude Code slash commands")
-        logger.info(
-            "You can now use slash commands like /start, /end, /work-new in Claude Code"
-        )
+        logger.info("You can now use slash commands like /start, /end, /work-new in Claude Code")
 
     except Exception as e:
         raise FileOperationError(
