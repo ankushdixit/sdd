@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
+
+from solokit.core.cli_prompts import confirm_action, multi_select_list, select_from_list
 
 logger = logging.getLogger(__name__)
 
@@ -22,40 +23,24 @@ def prompt_template_selection() -> str:
     Returns:
         Selected template ID (e.g., "saas_t3")
     """
-    print("\n📋 Select your project template:\n")
-    print("1. SaaS Application (T3 Stack)")
-    print("   Next.js 16, React 19, tRPC, Prisma, Tailwind")
-    print("   Best for: Multi-tenant SaaS products\n")
-
-    print("2. ML/AI Tooling (FastAPI)")
-    print("   FastAPI, SQLModel, Pydantic, Alembic")
-    print("   Best for: ML APIs, data pipelines, model serving\n")
-
-    print("3. Internal Dashboard (Refine)")
-    print("   Refine, Next.js 16, shadcn/ui, React Hook Form")
-    print("   Best for: Admin panels, analytics dashboards\n")
-
-    print("4. Full-Stack Product (Next.js)")
-    print("   Next.js 16, Prisma, Zod, Tailwind")
-    print("   Best for: General purpose web applications\n")
+    choices = [
+        "SaaS Application (T3 Stack) - Next.js 16, React 19, tRPC, Prisma",
+        "ML/AI Tooling (FastAPI) - FastAPI, SQLModel, Pydantic, Alembic",
+        "Internal Dashboard (Refine) - Refine, Next.js 16, shadcn/ui",
+        "Full-Stack Product (Next.js) - Next.js 16, Prisma, Zod, Tailwind",
+    ]
 
     template_map = {
-        "1": "saas_t3",
-        "2": "ml_ai_fastapi",
-        "3": "dashboard_refine",
-        "4": "fullstack_nextjs",
+        choices[0]: "saas_t3",
+        choices[1]: "ml_ai_fastapi",
+        choices[2]: "dashboard_refine",
+        choices[3]: "fullstack_nextjs",
     }
 
-    while True:
-        if not sys.stdin.isatty():
-            # Non-interactive mode - default to saas_t3
-            logger.info("Non-interactive mode: defaulting to SaaS Application (T3 Stack)")
-            return "saas_t3"
+    print("\n📋 Select your project template:\n")
+    selected = select_from_list("Choose a template:", choices, default=choices[0])
 
-        choice = input("Enter choice (1-4): ").strip()
-        if choice in template_map:
-            return template_map[choice]
-        print("❌ Invalid choice. Please enter 1-4.")
+    return template_map.get(selected, "saas_t3")
 
 
 def prompt_quality_tier() -> str:
@@ -65,36 +50,28 @@ def prompt_quality_tier() -> str:
     Returns:
         Selected tier ID (e.g., "tier-2-standard")
     """
-    print("\n🎯 Select quality tier:\n")
-    print("1. Essential - Linting, formatting, type-check, basic tests")
-    print("   Best for: Prototypes, MVPs, small internal tools\n")
-
-    print("2. Standard - Essential + Pre-commit hooks + Security foundation")
-    print("   Best for: Production apps, funded startups, small teams\n")
-
-    print("3. Comprehensive - Standard + Advanced quality + Testing")
-    print("   Best for: Production SaaS, growing teams, mission-critical apps\n")
-
-    print("4. Production-Ready - Comprehensive + Operations + Deployment")
-    print("   Best for: Enterprise apps, regulated industries, high-scale\n")
+    choices = [
+        "Essential - Linting, formatting, type-check, basic tests",
+        "Standard - Essential + Pre-commit hooks + Security foundation",
+        "Comprehensive - Standard + Advanced quality + Testing",
+        "Production-Ready - Comprehensive + Operations + Deployment",
+    ]
 
     tier_map = {
-        "1": "tier-1-essential",
-        "2": "tier-2-standard",
-        "3": "tier-3-comprehensive",
-        "4": "tier-4-production",
+        choices[0]: "tier-1-essential",
+        choices[1]: "tier-2-standard",
+        choices[2]: "tier-3-comprehensive",
+        choices[3]: "tier-4-production",
     }
 
-    while True:
-        if not sys.stdin.isatty():
-            # Non-interactive mode - default to tier-2
-            logger.info("Non-interactive mode: defaulting to Standard tier")
-            return "tier-2-standard"
+    print("\n🎯 Select quality tier:\n")
+    selected = select_from_list(
+        "Choose a quality tier:",
+        choices,
+        default=choices[1],  # Default to Standard
+    )
 
-        choice = input("Enter choice (1-4): ").strip()
-        if choice in tier_map:
-            return tier_map[choice]
-        print("❌ Invalid choice. Please enter 1-4.")
+    return tier_map.get(selected, "tier-2-standard")
 
 
 def prompt_coverage_target() -> int:
@@ -104,23 +81,26 @@ def prompt_coverage_target() -> int:
     Returns:
         Coverage target percentage (60, 80, or 90)
     """
+    choices = [
+        "60% - Light coverage, fast iteration",
+        "80% - Balanced coverage (recommended)",
+        "90% - High coverage, maximum confidence",
+    ]
+
+    coverage_map = {
+        choices[0]: 60,
+        choices[1]: 80,
+        choices[2]: 90,
+    }
+
     print("\n📊 Select test coverage target:\n")
-    print("1. 60% - Light coverage, fast iteration")
-    print("2. 80% - Balanced coverage (recommended)")
-    print("3. 90% - High coverage, maximum confidence\n")
+    selected = select_from_list(
+        "Choose a coverage target:",
+        choices,
+        default=choices[1],  # Default to 80%
+    )
 
-    coverage_map = {"1": 60, "2": 80, "3": 90}
-
-    while True:
-        if not sys.stdin.isatty():
-            # Non-interactive mode - default to 80%
-            logger.info("Non-interactive mode: defaulting to 80% coverage")
-            return 80
-
-        choice = input("Enter choice (1-3): ").strip()
-        if choice in coverage_map:
-            return coverage_map[choice]
-        print("❌ Invalid choice. Please enter 1-3.")
+    return coverage_map.get(selected, 80)
 
 
 def prompt_additional_options() -> list[str]:
@@ -130,46 +110,25 @@ def prompt_additional_options() -> list[str]:
     Returns:
         List of selected option IDs (e.g., ["ci_cd", "docker"])
     """
-    print("\n⚙️  Select additional options (comma-separated, or press Enter to skip):\n")
-    print("1. CI/CD - GitHub Actions workflows")
-    print("2. Docker - Container support with docker-compose")
-    print("3. Pre-commit - Automated quality checks before commits")
-    print("4. Env Templates - .env files and .editorconfig\n")
-    print("Examples: '1,2' for CI/CD+Docker, '1,2,3,4' for all, or Enter for none\n")
+    choices = [
+        "CI/CD - GitHub Actions workflows",
+        "Docker - Container support with docker-compose",
+        "Pre-commit - Automated quality checks before commits",
+        "Env Templates - .env files and .editorconfig",
+    ]
 
     option_map = {
-        "1": "ci_cd",
-        "2": "docker",
-        "3": "pre_commit",
-        "4": "env_templates",
+        choices[0]: "ci_cd",
+        choices[1]: "docker",
+        choices[2]: "pre_commit",
+        choices[3]: "env_templates",
     }
 
-    if not sys.stdin.isatty():
-        # Non-interactive mode - default to all options
-        logger.info("Non-interactive mode: enabling all additional options")
-        return ["ci_cd", "docker", "pre_commit", "env_templates"]
+    print("\n⚙️  Select additional options (use space to select, enter to confirm):\n")
+    selected_labels = multi_select_list("Choose additional options (optional):", choices)
 
-    while True:
-        choice = input("Enter choices (e.g., '1,2' or Enter to skip): ").strip()
-
-        # Allow empty input (skip all options)
-        if not choice:
-            return []
-
-        # Parse comma-separated choices
-        selected = []
-        choices = [c.strip() for c in choice.split(",")]
-        valid = True
-
-        for c in choices:
-            if c not in option_map:
-                print(f"❌ Invalid choice: {c}. Please use 1-4.")
-                valid = False
-                break
-            selected.append(option_map[c])
-
-        if valid:
-            return selected
+    # Map selected labels back to option IDs
+    return [option_map[label] for label in selected_labels if label in option_map]
 
 
 def main() -> int:
@@ -264,11 +223,9 @@ def main() -> int:
             print("Additional:       None")
         print("=" * 60 + "\n")
 
-        if sys.stdin.isatty():
-            confirm = input("Proceed with initialization? (y/N): ").strip().lower()
-            if confirm not in ["y", "yes"]:
-                print("\n❌ Initialization cancelled")
-                return 1
+        if not confirm_action("Proceed with initialization?", default=False):
+            print("\n❌ Initialization cancelled")
+            return 1
 
     # Run template-based init
     return run_template_based_init(

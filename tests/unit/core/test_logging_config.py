@@ -168,6 +168,25 @@ class TestHumanReadableFormatter:
         assert "INFO" in output
         assert "test" in output
 
+    def test_human_readable_formatter_shortens_logger_names(self):
+        """Test that HumanReadableFormatter shows only the last component of logger names."""
+        # Arrange
+        formatter = HumanReadableFormatter()
+        logger = logging.getLogger("solokit.init.orchestrator")
+        record = logger.makeRecord(
+            "solokit.init.orchestrator", logging.INFO, __file__, 1, "Test message", (), None
+        )
+
+        # Act
+        output = formatter.format(record)
+
+        # Assert
+        assert "Test message" in output
+        assert "INFO" in output
+        # Should show only 'orchestrator', not 'solokit.init.orchestrator'
+        assert "orchestrator - Test message" in output
+        assert "solokit.init.orchestrator" not in output
+
 
 class TestLogContext:
     """Test suite for LogContext."""
