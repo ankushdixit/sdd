@@ -1,5 +1,37 @@
 # Troubleshooting Guide
 
+## First Step: Run Diagnostics
+
+**Before diving into specific issues, run the diagnostic command:**
+
+```bash
+sk doctor
+```
+
+This command performs a comprehensive system check and identifies common problems:
+- ✓ Python version compatibility (>= 3.9.0)
+- ✓ Git installation and availability
+- ✓ Project structure (`.session/` directory and config.json)
+- ✓ Configuration file validity
+- ✓ Work items file integrity
+- ✓ Quality tools availability (pytest, ruff, etc.)
+
+**Example output:**
+```
+Running system diagnostics...
+
+✓ Python 3.11.7 (>= 3.9.0 required)
+✓ git version 2.45.2 installed
+✓ .session/ directory exists with config.json
+✓ config.json is valid
+✓ work_items.json will be created when needed
+✓ All quality tools available: pytest, ruff
+
+✓ All 6 checks passed
+```
+
+If any checks fail, `sk doctor` provides actionable suggestions for fixing the issue.
+
 ## Common Issues and Solutions
 
 ### Undoing a Failed `/sk:start` Command

@@ -399,6 +399,18 @@ sk learn-curate                # Run curation
 /learn-curate         # Run curation (categorize, deduplicate)
 ```
 
+### Utility Commands (Claude Code & Terminal)
+
+```
+sk help               # Show all commands with descriptions
+sk help <command>     # Show detailed help for specific command
+sk version            # Show version information
+sk --version, -V      # Show version (global flag)
+sk doctor             # Run system diagnostics
+sk config show        # Display current configuration
+sk config show --json # Display configuration as JSON
+```
+
 <details>
 <summary><strong>Alternative: Terminal Commands</strong> (without AI assistance)</summary>
 
@@ -428,6 +440,17 @@ sk learn              # Capture learning
 sk learn-show         # Browse learnings
 sk learn-search <q>   # Search learnings
 sk learn-curate       # Run curation
+```
+
+### Utility Commands
+```bash
+sk help               # Show all commands
+sk help <command>     # Show command help
+sk version            # Show version
+sk --version, -V      # Show version (flag)
+sk doctor             # Run diagnostics
+sk config show        # Display config
+sk config show --json # Display as JSON
 ```
 
 </details>
@@ -580,7 +603,7 @@ solokit/
 │   ├── project/              # Project initialization
 │   └── templates/            # Project templates & work item specs
 ├── docs/                     # Comprehensive documentation
-├── tests/                    # 2,390 tests (100% passing)
+├── tests/                    # 2,417 tests (100% passing)
 │   ├── unit/                 # Unit tests
 │   ├── integration/          # Integration tests
 │   └── e2e/                  # End-to-end tests
@@ -630,7 +653,7 @@ While Claude Code is excellent for code generation and exploration, Solokit adds
 
 **Current Version:** v0.1.1 (Production-Ready)
 
-**Test Coverage:** 2,390 tests passing (100%)
+**Test Coverage:** 2,417 tests passing (100%)
 
 ### Completed Features
 

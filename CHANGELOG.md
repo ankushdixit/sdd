@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Essential CLI Commands: help, version, doctor, config show**
+  - Added `sk help` command to display all commands organized by category
+    - `sk help <command>` shows detailed help for specific commands with usage, options, and examples
+    - Global `--help` and `-h` flags supported
+    - Created `src/solokit/commands/help.py` with comprehensive command documentation
+  - Added `sk version` command to display version information
+    - Shows Solokit version, Python version, and platform
+    - Global `--version` and `-V` flags supported
+    - Created `src/solokit/commands/version.py`
+  - Added `sk doctor` command for comprehensive system diagnostics
+    - Checks Python version (>= 3.9.0), git installation, project structure
+    - Validates config.json and work_items.json integrity
+    - Verifies quality tools availability (pytest, ruff)
+    - Provides actionable suggestions for failed checks
+    - Returns exit code 0 if all pass, 1 if any fail
+    - Created `src/solokit/commands/doctor.py`
+  - Added `sk config show` command to display configuration
+    - Shows config file path and formatted configuration
+    - Validates configuration and displays status
+    - `--json` flag for machine-readable output
+    - Created `src/solokit/commands/config.py`
+  - Updated CLI routing in `src/solokit/cli.py` to support new commands
+  - Running `sk` with no arguments now shows help (instead of error)
+  - Added 27 new unit tests for all commands (100% passing)
+  - Updated README.md with utility commands section
+  - Updated docs/guides/troubleshooting.md to reference `sk doctor` as first troubleshooting step
+
 ### Fixed
 - **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**
   - Fixed `.session/` directory causing uncommitted changes warnings (#9 - Critical)
