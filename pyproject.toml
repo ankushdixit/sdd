@@ -59,10 +59,25 @@ sk = "solokit.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["solokit"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
-"solokit.templates" = ["*.md", "*.json", "*.toml", "git-hooks/*", "tests/*"]
+solokit = [
+    "templates/**/*",
+    "templates/**/.gitignore",
+    "templates/**/.eslintrc.json",
+    "templates/**/.prettierrc.json",
+    "templates/.claude/commands/*.md"
+]
+
+[tool.setuptools.exclude-package-data]
+solokit = [
+    "templates/.claude/COMMANDS_README.md",
+    "templates/.claude/COMMAND_FORMAT.md",
+    "**/.DS_Store"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
