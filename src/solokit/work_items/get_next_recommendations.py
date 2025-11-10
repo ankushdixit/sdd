@@ -48,7 +48,14 @@ def get_ready_work_items(limit: int = 4) -> list[dict[str, Any]]:
     # Extract work_items from data structure
     work_items = data.get("work_items", {})
     if not work_items:
-        print("No work items found", file=sys.stderr)
+        print("⚠️ No work items found in this project\n", file=sys.stderr)
+        print("To get started:", file=sys.stderr)
+        print(
+            "  1. Create a work item: sk work-new --type feature --title '...' --priority high",
+            file=sys.stderr,
+        )
+        print("  2. Or use /work-new in Claude Code for interactive creation\n", file=sys.stderr)
+        print("💡 Work items help track your development tasks and sessions", file=sys.stderr)
         return []
 
     # Filter to not_started items
@@ -86,7 +93,17 @@ def get_ready_work_items(limit: int = 4) -> list[dict[str, Any]]:
             )
 
     if not ready_items:
-        print("No work items ready to start. All have unmet dependencies.", file=sys.stderr)
+        print("⚠️ No work items ready to start\n", file=sys.stderr)
+        print(
+            "All work items may be blocked by dependencies or already completed.", file=sys.stderr
+        )
+        print("\nTo investigate:", file=sys.stderr)
+        print("  1. Check all work items: sk work-list", file=sys.stderr)
+        print("  2. View dependencies: sk work-graph", file=sys.stderr)
+        print(
+            "  3. Create a new work item: sk work-new --type feature --title '...' --priority high\n",
+            file=sys.stderr,
+        )
         return []
 
     # Sort by priority (critical > high > medium > low)
@@ -106,14 +123,33 @@ def main() -> int:
     """Main entry point for script."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Get next recommended work items for interactive selection"
+    from solokit.core.argparse_helpers import HelpfulArgumentParser
+    from solokit.core.system_utils import get_python_binary
+
+    binary = get_python_binary()
+
+    parser = HelpfulArgumentParser(
+        description="Get next recommended work items for interactive selection",
+        epilog=f"""
+Examples:
+  {binary} -m solokit.work_items.get_next_recommendations
+  {binary} -m solokit.work_items.get_next_recommendations --limit 10
+
+Returns work items that are ready to start (all dependencies satisfied),
+sorted by priority (critical > high > medium > low).
+
+Output format: work_item_id | type | title | priority
+
+💡 View all work items: sk work-list
+💡 Start a work item: sk start <work_item_id>
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--limit",
         type=int,
         default=4,
-        help="Maximum number of recommendations to return (default: 4)",
+        help="Maximum number of recommendations to return",
     )
     args = parser.parse_args()
 

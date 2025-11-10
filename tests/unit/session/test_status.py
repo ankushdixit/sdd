@@ -110,18 +110,37 @@ class TestGetSessionStatusNoWorkItem:
         """
         Test that empty work item ID raises ValidationError.
 
-        Arrange: Mock status file with empty current_work_item
+        Arrange: Mock status file with empty current_work_item and work items exist
         Act: Call get_session_status()
-        Assert: Raises ValidationError
+        Assert: Raises ValidationError with helpful remediation
         """
         with patch("solokit.session.status.Path") as mock_path:
             # Arrange
             status_data = {"current_work_item": ""}
+            work_items_data = {
+                "work_items": {"WI-001": {"status": "not_started", "title": "Test work item"}}
+            }
+
+            # Mock both status and work_items files
             mock_status_file = MagicMock()
             mock_status_file.exists.return_value = True
             mock_status_file.read_text.return_value = json.dumps(status_data)
-            mock_path.return_value.__truediv__.return_value.__truediv__.return_value = (
-                mock_status_file
+
+            mock_work_items_file = MagicMock()
+            mock_work_items_file.exists.return_value = True
+            mock_work_items_file.read_text.return_value = json.dumps(work_items_data)
+
+            # Set up path mocking to return appropriate file based on path
+            def path_side_effect(*args):
+                path_str = str(args[0]) if args else ""
+                if "status_update.json" in path_str:
+                    return mock_status_file
+                elif "work_items.json" in path_str:
+                    return mock_work_items_file
+                return MagicMock()
+
+            mock_path.return_value.__truediv__.return_value.__truediv__.side_effect = (
+                path_side_effect
             )
 
             # Act & Assert
@@ -129,7 +148,9 @@ class TestGetSessionStatusNoWorkItem:
                 get_session_status()
 
             assert "No active work item in this session" in str(exc_info.value)
+            # Updated to match new context-aware message when work items exist
             assert "sk start" in exc_info.value.remediation
+            assert "work items available" in exc_info.value.remediation.lower()
 
 
 class TestGetSessionStatusWorkItemNotFound:

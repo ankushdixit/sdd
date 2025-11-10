@@ -21,6 +21,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from solokit.core.argparse_helpers import HelpfulArgumentParser
 from solokit.core.error_formatter import ErrorFormatter
 
 # Import error handling infrastructure
@@ -104,26 +105,52 @@ def parse_work_list_args(args: list[str]) -> argparse.Namespace:
 
 def parse_work_show_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-show command."""
-    parser = argparse.ArgumentParser(description="Show work item details")
+    parser = HelpfulArgumentParser(
+        description="Show work item details",
+        epilog="""
+Examples:
+  sk work-show feat_001
+  sk work-show bug_fix_phase_1_error_messaging_an
+
+💡 List all work items: sk work-list
+💡 View work item dependencies: sk work-graph --focus <work_id>
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("work_id", help="Work item ID")
     return parser.parse_args(args)
 
 
 def parse_work_new_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-new command."""
-    parser = argparse.ArgumentParser(description="Create a new work item")
+    parser = HelpfulArgumentParser(
+        description="Create a new work item",
+        epilog="""
+Examples:
+  sk work-new --type feature --title "Add user authentication" --priority high
+  sk work-new -t bug -T "Fix login error" -p critical
+  sk work-new -t refactor -T "Improve database queries" -p medium --dependencies feat_001
+
+Valid types: feature, bug, refactor, security, integration_test, deployment
+Valid priorities: critical, high, medium, low
+
+💡 View existing work items: sk work-list
+💡 For interactive creation in Claude Code, use /work-new
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "--type",
         "-t",
         required=True,
-        help="Work item type (feature, bug, refactor, security, integration_test, deployment)",
+        help="Work item type",
     )
     parser.add_argument("--title", "-T", required=True, help="Work item title")
     parser.add_argument(
         "--priority",
         "-p",
         required=True,
-        help="Priority (critical, high, medium, low)",
+        help="Priority level",
     )
     parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")
     return parser.parse_args(args)
@@ -131,12 +158,27 @@ def parse_work_new_args(args: list[str]) -> argparse.Namespace:
 
 def parse_work_update_args(args: list[str]) -> argparse.Namespace:
     """Parse arguments for work-update command."""
-    parser = argparse.ArgumentParser(description="Update work item fields")
-    parser.add_argument("work_id", help="Work item ID")
-    parser.add_argument(
-        "--status", help="Update status (not_started/in_progress/blocked/completed)"
+    parser = HelpfulArgumentParser(
+        description="Update work item fields",
+        epilog="""
+Examples:
+  sk work-update feat_001 --status in_progress
+  sk work-update feat_001 --priority critical
+  sk work-update feat_001 --add-dependency bug_002
+  sk work-update feat_001 --milestone "v1.0"
+  sk work-update feat_001 --status completed --priority high
+
+Valid statuses: not_started, in_progress, blocked, completed
+Valid priorities: critical, high, medium, low
+
+💡 View current work item status: sk work-show <work_id>
+💡 For interactive updates in Claude Code, use /work-update
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--priority", help="Update priority (critical/high/medium/low)")
+    parser.add_argument("work_id", help="Work item ID")
+    parser.add_argument("--status", help="Update status")
+    parser.add_argument("--priority", help="Update priority")
     parser.add_argument("--milestone", help="Update milestone")
     parser.add_argument("--add-dependency", help="Add dependency by ID")
     parser.add_argument("--remove-dependency", help="Remove dependency by ID")

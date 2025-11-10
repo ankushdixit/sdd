@@ -201,7 +201,25 @@ def main() -> int:
     """CLI entry point for work item deletion."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Delete a work item")
+    from solokit.core.argparse_helpers import HelpfulArgumentParser
+
+    parser = HelpfulArgumentParser(
+        description="Delete a work item",
+        epilog="""
+Examples:
+  sk work-delete feat_001
+  sk work-delete feat_001 --keep-spec
+  sk work-delete feat_001 --delete-spec
+
+By default, prompts to confirm spec file deletion.
+Use --keep-spec to preserve the spec file.
+Use --delete-spec to skip confirmation and delete both.
+
+💡 View all work items: sk work-list
+💡 Restore accidentally deleted items from git: git checkout HEAD -- .session/
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("work_item_id", help="ID of work item to delete")
     parser.add_argument(
         "--keep-spec",

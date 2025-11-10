@@ -420,7 +420,20 @@ def main() -> int:
         action="store_true",
         help="Automatically fix linting and formatting issues",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Show detailed error messages and stack traces",
+    )
     args = parser.parse_args()
+
+    # Control logging verbosity based on --debug flag
+    import logging
+
+    if not args.debug:
+        # Suppress INFO and WARNING logs unless --debug is passed
+        # Only show ERROR and above
+        logging.getLogger("solokit").setLevel(logging.ERROR)
 
     try:
         validator = SessionValidator()
@@ -439,12 +452,25 @@ def main() -> int:
         output.error(f"Error: {e.message}")
         if e.remediation:
             output.info(f"Remediation: {e.remediation}")
-        logger.error("Validation error: %s", e.message, exc_info=True)
+
+        # Only log traceback in debug mode
+        if args.debug:
+            logger.error("Validation error: %s", e.message, exc_info=True)
+        else:
+            logger.error("Validation error: %s", e.message)
+
         return e.exit_code
     except Exception as e:
         # Unexpected error
         output.error(f"Unexpected error during validation: {e}")
-        logger.error("Unexpected validation error", exc_info=True)
+
+        # Only log traceback in debug mode
+        if args.debug:
+            logger.error("Unexpected validation error", exc_info=True)
+        else:
+            logger.error("Unexpected validation error: %s", e)
+            output.info("💡 Run with --debug flag for detailed traceback")
+
         return 1
 
 

@@ -18,6 +18,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
+from solokit.core.argparse_helpers import HelpfulArgumentParser
 from solokit.core.constants import MAX_LEARNING_AGE_SESSIONS
 from solokit.core.error_handlers import log_errors
 from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
@@ -337,7 +338,20 @@ class LearningsCurator:
 
 def main() -> None:
     """Main entry point"""
-    parser = argparse.ArgumentParser(description="Learning curation and management")
+    parser = HelpfulArgumentParser(
+        description="Learning curation and management",
+        epilog="""
+Examples:
+  sk learn-show                              # Show all learnings
+  sk learn-show --category best_practices    # Show specific category
+  sk learn-search "authentication"           # Search learnings
+  sk learn-curate                            # Run curation process
+
+💡 Use /learn in Claude Code for interactive learning capture
+💡 Learnings are automatically extracted during /end sessions
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -352,7 +366,20 @@ def main() -> None:
     show_parser.add_argument("--session", type=int, help="Filter by session number")
 
     # Search command
-    search_parser = subparsers.add_parser("search", help="Search learnings")
+    search_parser = subparsers.add_parser(
+        "search",
+        help="Search learnings by keyword",
+        epilog="""
+Examples:
+  sk learn-search "authentication"
+  sk learn-search "database"
+  sk learn-search "performance"
+
+💡 Search looks in content, tags, and context fields
+💡 Use sk learn-show to see all learnings organized by category
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     search_parser.add_argument("query", type=str, help="Search query")
 
     # Add learning command
