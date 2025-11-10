@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Literal, Optional, cast
 
+from solokit.init.claude_commands_installer import install_claude_commands
 from solokit.init.dependency_installer import install_dependencies
 from solokit.init.docs_structure import create_docs_structure
 from solokit.init.env_generator import generate_env_files
@@ -187,6 +188,15 @@ def run_template_based_init(
     logger.info("Step 17: Installing git hooks...")
     install_git_hooks(project_root)
     logger.info("✓ Installed git hooks\n")
+
+    # Step 17.5: Install Claude Code slash commands
+    logger.info("Step 17.5: Installing Claude Code slash commands...")
+    try:
+        installed_commands = install_claude_commands(project_root)
+        logger.info(f"✓ Installed {len(installed_commands)} slash commands to .claude/commands/\n")
+    except Exception as e:
+        logger.warning(f"Claude commands installation failed: {e}")
+        logger.warning("Slash commands may not be available. You can install them manually.\n")
 
     # Step 18: Update .gitignore
     logger.info("Step 18: Updating .gitignore...")
