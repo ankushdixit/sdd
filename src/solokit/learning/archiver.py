@@ -87,7 +87,12 @@ class LearningArchiver:
                 for item in data.get("work_items", {}).values():
                     sessions = item.get("sessions", [])
                     if sessions and isinstance(sessions, list):
-                        max_session = max(max_session, max(sessions))
+                        # Extract session_num from each session dict
+                        session_nums = [
+                            s.get("session_num", 0) for s in sessions if isinstance(s, dict)
+                        ]
+                        if session_nums:
+                            max_session = max(max_session, max(session_nums))
                 return max_session
         except (ValueError, KeyError, TypeError) as e:
             logger.warning(f"Failed to get current session number: {e}")

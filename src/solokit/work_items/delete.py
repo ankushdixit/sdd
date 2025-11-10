@@ -91,7 +91,7 @@ def delete_work_item(
 
     # Validate work item exists
     if work_item_id not in work_items:
-        logger.error("Work item '%s' not found", work_item_id)
+        # Don't log error here - user-facing error message is clear
         raise WorkItemNotFoundError(work_item_id)
 
     item = work_items[work_item_id]
@@ -119,17 +119,29 @@ def delete_work_item(
     else:
         output.info("  Dependents: none")
 
-    # Require explicit flag (no interactive mode)
+    # Interactive prompt if no flag provided
     if delete_spec is None:
-        logger.error("Must specify --keep-spec or --delete-spec flag")
-        raise ValidationError(
-            message="Must specify either --keep-spec or --delete-spec flag",
-            remediation=(
-                "Use command-line flags:\n"
-                "  sk work-delete <work_item_id> --keep-spec   (delete work item only)\n"
-                "  sk work-delete <work_item_id> --delete-spec (delete work item and spec)"
-            ),
-        )
+        output.info("\nWhat would you like to delete?")
+        output.info("  1. Delete work item only (keep spec file)")
+        output.info("  2. Delete work item and spec file")
+        output.info("  3. Cancel")
+        output.info("")
+
+        try:
+            choice = input("Enter choice (1-3): ").strip()
+            if choice == "1":
+                delete_spec = False
+            elif choice == "2":
+                delete_spec = True
+            elif choice == "3":
+                output.info("Deletion cancelled.")
+                return False
+            else:
+                output.warning("Invalid choice. Deletion cancelled.")
+                return False
+        except (EOFError, KeyboardInterrupt):
+            output.info("\nDeletion cancelled.")
+            return False
 
     # Show what will be done
     if delete_spec:

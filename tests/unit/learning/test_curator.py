@@ -1224,7 +1224,12 @@ class TestArchivalFunctionality:
 
         import json
 
-        work_items_data = {"work_items": {"WI-001": {"sessions": [100]}}}
+        # Use new dict format for sessions (not integers)
+        work_items_data = {
+            "work_items": {
+                "WI-001": {"sessions": [{"session_num": 100, "started_at": "2025-01-01T10:00:00"}]}
+            }
+        }
         work_items_file.write_text(json.dumps(work_items_data))
 
         learnings = {
@@ -1250,7 +1255,12 @@ class TestArchivalFunctionality:
 
         import json
 
-        work_items_data = {"work_items": {"WI-001": {"sessions": [10]}}}
+        # Use new dict format for sessions (not integers)
+        work_items_data = {
+            "work_items": {
+                "WI-001": {"sessions": [{"session_num": 10, "started_at": "2025-01-01T10:00:00"}]}
+            }
+        }
         work_items_file.write_text(json.dumps(work_items_data))
 
         learnings = {
@@ -1275,7 +1285,12 @@ class TestArchivalFunctionality:
 
         import json
 
-        work_items_data = {"work_items": {"WI-001": {"sessions": [100]}}}
+        # Use new dict format for sessions (not integers)
+        work_items_data = {
+            "work_items": {
+                "WI-001": {"sessions": [{"session_num": 100, "started_at": "2025-01-01T10:00:00"}]}
+            }
+        }
         work_items_file.write_text(json.dumps(work_items_data))
 
         learnings = {
@@ -1329,10 +1344,22 @@ class TestSessionNumberExtraction:
 
         import json
 
+        # Use new dict format for sessions (not integers)
         work_items_data = {
             "work_items": {
-                "WI-001": {"sessions": [1, 2, 3]},
-                "WI-002": {"sessions": [4, 5]},
+                "WI-001": {
+                    "sessions": [
+                        {"session_num": 1, "started_at": "2025-01-01T10:00:00"},
+                        {"session_num": 2, "started_at": "2025-01-01T11:00:00"},
+                        {"session_num": 3, "started_at": "2025-01-01T12:00:00"},
+                    ]
+                },
+                "WI-002": {
+                    "sessions": [
+                        {"session_num": 4, "started_at": "2025-01-01T13:00:00"},
+                        {"session_num": 5, "started_at": "2025-01-01T14:00:00"},
+                    ]
+                },
             }
         }
         work_items_file.write_text(json.dumps(work_items_data))
@@ -1343,9 +1370,12 @@ class TestSessionNumberExtraction:
         # Assert
         assert result == 5
 
-    def test_get_current_session_number_no_file(self, curator):
+    def test_get_current_session_number_no_file(self, temp_project):
         """Test getting session number when file doesn't exist."""
-        # Act
+        # Arrange - use temp_project to avoid reading real project data
+        project_root, curator = temp_project
+
+        # Act - file doesn't exist in temp_project
         result = curator._get_current_session_number()
 
         # Assert

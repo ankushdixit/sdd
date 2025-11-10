@@ -158,9 +158,39 @@ Output format: work_item_id | type | title | priority
     if not ready_items:
         sys.exit(1)
 
-    # Output format: work_item_id | type | title | priority
-    for item in ready_items:
-        print(f"{item['id']} | {item['type']} | {item['title']} | {item['priority']}")
+    # Print table header
+    print("\n📋 Ready Work Items (sorted by priority):\n")
+
+    # Calculate column widths
+    max_id_len = max((len(item["id"]) for item in ready_items), default=15)
+    max_type_len = max((len(item["type"]) for item in ready_items), default=8)
+    max_title_len = max((len(item["title"]) for item in ready_items), default=30)
+
+    # Priority emoji mapping
+    priority_emoji = {
+        "critical": "🔴",
+        "high": "🟠",
+        "medium": "🟡",
+        "low": "🟢",
+    }
+
+    # Print header
+    header = f"  {'ID':<{max_id_len}} | {'Type':<{max_type_len}} | {'Priority':<12} | {'Title':<{max_title_len}}"
+    separator = "  " + "-" * len(header.replace("  ", ""))
+    print(header)
+    print(separator)
+
+    # Print rows
+    for idx, item in enumerate(ready_items):
+        emoji = priority_emoji.get(item["priority"], "")
+        marker = "→" if idx == 0 else " "  # Arrow for top recommendation
+        priority_display = f"{emoji} {item['priority']}"
+        print(
+            f"{marker} {item['id']:<{max_id_len}} | {item['type']:<{max_type_len}} | {priority_display:<12} | {item['title']:<{max_title_len}}"
+        )
+
+    print(f"\n💡 Top recommendation: {ready_items[0]['id']}")
+    print(f"   To start: /start {ready_items[0]['id']}\n")
 
     return 0
 

@@ -90,7 +90,9 @@ class LearningReporter:
 
         # Display results
         if not matches:
-            output.info(f"\nNo learnings found matching '{query}'\n")
+            output.info(f"\n⚠️ No learnings found matching '{query}'\n")
+            output.info("Try different keywords or use 'sk learn-show' to browse all learnings.")
+            output.info("")
             return
 
         output.info(f"\n=== Search Results for '{query}' ===\n")

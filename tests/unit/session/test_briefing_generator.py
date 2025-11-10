@@ -733,7 +733,7 @@ class TestCheckGitStatus:
 
         # Assert
         assert result["clean"] is True
-        assert result["status"] == "clean"
+        assert result["status"] == "Working directory clean"
         assert result["branch"] == "main"
 
     @patch("solokit.git.integration.GitWorkflow")

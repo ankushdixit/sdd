@@ -132,7 +132,7 @@ class WorkItemScheduler:
         blocked_items: list,
         all_items: dict,
     ) -> None:
-        """Display the next recommended work item
+        """Display the next recommended work item in a table format
 
         Args:
             next_id: ID of next item
@@ -141,8 +141,7 @@ class WorkItemScheduler:
             blocked_items: List of blocked items
             all_items: All work items
         """
-        output.info("\nNext Recommended Work Item:")
-        output.info("=" * 80)
+        output.info("\n📋 Next Recommended Work Items:")
         output.info("")
 
         priority_emoji = {
@@ -152,39 +151,65 @@ class WorkItemScheduler:
             Priority.LOW.value: "🟢",
         }
 
-        emoji = priority_emoji.get(next_item["priority"], "")
-        output.info(f"{emoji} {next_item['priority'].upper()}: {next_item['title']}")
-        output.info(f"ID: {next_id}")
-        output.info(f"Type: {next_item['type']}")
-        output.info(f"Priority: {next_item['priority']}")
-        output.info("Ready to start: Yes ✓")
+        # Build table rows
+        rows = []
+
+        # Add ready items first (top one will be recommended)
+        for idx, (work_id, item) in enumerate(ready_items[:5]):  # Show top 5 ready items
+            emoji = priority_emoji.get(item["priority"], "")
+            title = item["title"][:30] + "..." if len(item["title"]) > 30 else item["title"]
+            marker = "→" if idx == 0 else " "  # Arrow for recommended item
+            rows.append(
+                {
+                    "marker": marker,
+                    "id": work_id,
+                    "type": item["type"],
+                    "priority": f"{emoji} {item['priority']}",
+                    "status": "✓ ready",
+                    "blockers": "0",
+                    "title": title,
+                }
+            )
+
+        # Add blocked items
+        for work_id, item, blocking in blocked_items[:3]:  # Show top 3 blocked items
+            title = item["title"][:30] + "..." if len(item["title"]) > 30 else item["title"]
+            blocker_count = str(len(blocking))
+            rows.append(
+                {
+                    "marker": " ",
+                    "id": work_id,
+                    "type": item["type"],
+                    "priority": f"{priority_emoji.get(item['priority'], '')} {item['priority']}",
+                    "status": "blocked",
+                    "blockers": blocker_count,
+                    "title": title,
+                }
+            )
+
+        # Calculate column widths
+        max_id_len = max((len(r["id"]) for r in rows), default=10)
+        max_type_len = max((len(r["type"]) for r in rows), default=8)
+        max_title_len = max((len(r["title"]) for r in rows), default=20)
+
+        # Print table header
+        header = (
+            f"  {'ID':<{max_id_len}} | {'Type':<{max_type_len}} | "
+            f"{'Priority':<10} | {'Status':<9} | {'Blocks':<6} | {'Title':<{max_title_len}}"
+        )
+        separator = "  " + "-" * len(header.replace("  ", ""))
+        output.info(header)
+        output.info(separator)
+
+        # Print table rows
+        for row in rows:
+            line = (
+                f"{row['marker']} {row['id']:<{max_id_len}} | {row['type']:<{max_type_len}} | "
+                f"{row['priority']:<10} | {row['status']:<9} | {row['blockers']:<6} | {row['title']:<{max_title_len}}"
+            )
+            output.info(line)
+
         output.info("")
-
-        # Dependencies
-        deps = next_item.get("dependencies", [])
-        if deps:
-            output.info("Dependencies: All satisfied")
-            for dep_id in deps:
-                output.info(f"  ✓ {dep_id} (completed)")
-        else:
-            output.info("Dependencies: None")
+        output.info(f"💡 Top recommendation: {next_id}")
+        output.info(f"   To start: /start {next_id}")
         output.info("")
-
-        # Estimated effort
-        estimated = next_item.get("estimated_effort", "Unknown")
-        output.info(f"Estimated effort: {estimated}")
-        output.info("")
-
-        output.info("To start: /start")
-        output.info("")
-
-        # Show other items
-        if len(ready_items) > 1 or blocked_items:
-            output.info("Other items waiting:")
-            for work_id, item in ready_items[1:3]:  # Show next 2 ready items
-                emoji = priority_emoji.get(item["priority"], "")
-                output.info(f"  {emoji} {work_id} - Ready ({item['priority']} priority)")
-
-            for work_id, item, blocking in blocked_items[:2]:  # Show 2 blocked items
-                output.info(f"  🔴 {work_id} - Blocked by: {', '.join(blocking[:2])}")
-            output.info("")

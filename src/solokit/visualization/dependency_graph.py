@@ -8,7 +8,6 @@ Supports DOT format, SVG, and ASCII art output.
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 from typing import Any
@@ -165,8 +164,9 @@ class DependencyGraphVisualizer:
             for dep_id in item.get("dependencies", []):
                 # Check if dependency exists in filtered items
                 if any(wi["id"] == dep_id for wi in work_items):
+                    # Use proper DOT syntax: style=value, color=value (no bare attributes)
                     edge_style = (
-                        "bold, color=red"
+                        "style=bold, color=red"
                         if item["id"] in critical_items and dep_id in critical_items
                         else ""
                     )
@@ -626,7 +626,9 @@ class DependencyGraphVisualizer:
 
 def main() -> int:
     """CLI entry point for graph generation."""
-    parser = argparse.ArgumentParser(description="Generate work item dependency graphs")
+    from solokit.core.argparse_helpers import HelpfulArgumentParser
+
+    parser = HelpfulArgumentParser(description="Generate work item dependency graphs")
 
     # Output format
     parser.add_argument(

@@ -8,6 +8,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**
+  - Fixed `.session/` directory causing uncommitted changes warnings (#9 - Critical)
+    - Added `.session/` to .gitignore in all 4 stack templates (saas_t3, ml_ai_fastapi, dashboard_refine, fullstack_nextjs)
+    - Templates now properly exclude session tracking from git by default
+  - Fixed DOT syntax error in work-graph SVG generation (#4/#5 - Critical)
+    - Changed from invalid `"bold, color=red"` to valid DOT syntax `'style=bold, color=red'`
+    - Updated `src/solokit/visualization/dependency_graph.py:169`
+    - SVG graph generation now works correctly with Graphviz
+  - Changed uncommitted changes from ERROR to INFO level in sk start (#8 - High)
+    - Updated `src/solokit/session/briefing/git_context.py` to handle WorkingDirNotCleanError gracefully
+    - Users no longer see ERROR logs for normal uncommitted changes during development
+  - Added progress messaging and Claude Code promotion to sk init (#1 - High)
+    - Added initial progress message during initialization
+    - Changed final messages to use `output.info()` instead of `logger.info()` for visibility
+    - Updated `src/solokit/init/orchestrator.py` with user-facing completion summary
+  - Added warning when dependency already exists in work-update (#2 - Medium)
+    - Shows `output.warning("Dependency 'X' already exists (skipped)")` instead of silently skipping
+    - Updated `src/solokit/work_items/updater.py`
+  - Replaced verbose output with compact table format in work-next (#6 - Medium)
+    - New table shows ID, Type, Priority, Status, Blocks, and Title columns
+    - Displays top 5 ready items and top 3 blocked items
+    - Arrow (→) marks recommended item, updated `src/solokit/work_items/scheduler.py`
+  - Added interactive prompt to work-delete when no flags provided (#12 - Medium)
+    - Users now get choices: 1=keep spec, 2=delete spec, 3=cancel
+    - No longer requires --keep-spec or --delete-spec flags (but still accepts them)
+    - Updated `src/solokit/work_items/delete.py` with user-friendly menu
+  - Removed redundant ERROR/WARNING logs in edge cases (#14/#15/#16 - Medium)
+    - Removed duplicate logging before user-facing error messages
+    - Updated `query.py`, `updater.py`, and `delete.py` to avoid log duplication
+    - Changed "No changes made" to "No changes to update" for clarity
+  - Updated work-graph to use HelpfulArgumentParser for better errors (#17 - Medium)
+    - Invalid format errors now show examples instead of raw argparse output
+    - Updated `src/solokit/visualization/dependency_graph.py`
+  - Improved "no results" message in learn-search (#11 - Low)
+    - Now suggests trying different keywords or browsing all learnings
+    - Updated `src/solokit/learning/reporter.py`
+  - Added validation for empty query in learn-search (#18 - Low)
+    - Shows error with examples when query is empty or whitespace-only
+    - Updated `src/solokit/learning/curator.py`
+  - Test updates: Fixed 1 test in `test_briefing_generator.py` to match new git status message
+  - All 2,388 tests passing with zero regressions
+  - Quality checks: All ruff linting passed, all formatting compliant, all mypy checks passed
+  - Impact: Completes all 18 Phase 2 terminal testing issues for professional CLI UX
+
+- **Critical: Phase 2 Terminal Testing - Clean Output, Archiver Fix, and Briefing Improvements**
+  - Fixed log leakage issue where INFO/WARNING/ERROR logs appeared in all commands without --verbose flag
+    - Changed default CLI log level from INFO to ERROR for clean terminal output
+    - Removed redundant logging configuration from `validate.py`
+    - Updated `src/solokit/cli.py` to set ERROR level by default, DEBUG with --verbose
+    - Only ERROR and above messages shown to users unless explicitly requesting verbose mode
+  - Fixed archiver type comparison error causing learning curation to fail
+    - Updated `src/solokit/learning/archiver.py` to handle new session dict format
+    - Changed from comparing dict objects directly to extracting `session_num` field first
+    - Resolves `'>' not supported between instances of 'dict' and 'int'` error
+  - Fixed work-list count logic to include blocked items in not_started category
+    - Updated `src/solokit/work_items/query.py` to count items by actual status
+    - Blocked is now correctly treated as a property, not a separate status
+    - Count math now accurate: total = in_progress + not_started + completed
+  - Added template comment stripping to briefing output for cleaner specs
+    - Created `strip_template_comments()` method in `src/solokit/session/briefing/formatter.py`
+    - Removes HTML comments, placeholder text, and excessive blank lines from specs
+    - Briefings now ~5x shorter and more readable without template cruft
+  - Verified work-graph documentation already matches implementation (ascii, dot, svg formats)
+  - Added comprehensive regression test suite: `tests/integration/test_phase_2_terminal_fixes.py`
+    - 15 new tests covering all 5 issues
+    - Updated 5 existing tests to use new session dict format
+  - All 2,388 tests passing with zero regressions
+  - Quality checks: All ruff linting passed, all formatting compliant, all mypy checks passed
+  - Impact: Resolves 5 critical Phase 2 terminal testing issues for professional CLI UX
+
 - **Critical: Phase 1 Terminal Testing - Error Messaging & UX Improvements**
   - Fixed missing `jsonschema>=4.20.0` dependency causing all learning commands to fail
   - Enhanced argparse error messages with helpful examples and next steps:
@@ -391,10 +461,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created comprehensive API reference documentation in `docs/reference/file-operations-api.md`
   - Updated architecture documentation
 
-## [0.7.0] - 2025-10-26
+## [0.1.0] - 2025-10-26
+
+> **Note:** Versions 0.6.0 and 0.7.0 were development versions that have been consolidated into the 0.1.x public release series.
 
 ### Added
-- **Enhanced session briefings with context continuity (Enhancement #11)**
+- **Enhanced session briefings with context continuity**
   - Previous Work section for in-progress items showing commits, file stats, and quality gates from prior sessions
   - Enriched session summaries with full commit messages and file change statistics
   - Enhanced learning relevance scoring using multi-factor algorithm (keywords, type, recency, category bonuses)
@@ -414,32 +486,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 19 comprehensive unit tests
   - Full documentation in `.claude/commands/work-delete.md` and `docs/commands/work-delete.md`
 
-- **PyPI Publishing Workflow** - Automated package publishing to PyPI on GitHub releases
-
-## [0.6.0] - 2025-10-26
-
-### Changed
-- **BREAKING: Package structure migrated to standard Python src/ layout (Phase 5.9)**
-  - Moved all Python modules from flat directory to organized `src/solokit/` package structure
-  - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
-  - Updated all imports from `scripts.X` to `solokit.X` pattern (43 files)
-  - Removed all `sys.path.insert()` hacks (38 instances)
-  - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
-  - CLI command remains `solokit` (no user-facing changes)
-  - All 1408 tests pass, PyPI-ready structure, better IDE support
-- **Simplified git branch naming** - Branch names now use work item ID directly
-  - Format: `feature_oauth` instead of `session-001-feature_oauth`
-  - Clearer intent, shorter names, backward compatible
-- **Standardized spec validation** - All work item types now use "Acceptance Criteria" section consistently
-  - Updated refactor specs to use "Acceptance Criteria" (was "Success Criteria")
-- **Makefile clean target** - Now removes coverage artifacts (`htmlcov/`, `coverage.xml`, `coverage.json`)
-
-### Added
 - **Work item completion status control** - Explicit control over work item completion during session end
   - Interactive 3-choice prompt: "Mark completed", "Keep in-progress", "Cancel"
   - Command-line flags: `--complete` and `--incomplete`
   - Supports multi-session workflows
   - 8 unit tests added
+- **PyPI Publishing Workflow** - Automated package publishing to PyPI on GitHub releases
 - **Comprehensive test infrastructure** - Test suite reorganization and expansion
   - 1,408 comprehensive tests (up from 183, 765% increase)
   - 85% code coverage (up from 30%)
@@ -449,6 +501,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pre-flight commit check** - `sk end` validates all changes are committed before running quality gates
 - **CHANGELOG workflow improvements** - Git hooks with reminders + smarter branch-level detection
 - **OS-specific .gitignore patterns** - macOS, Windows, and Linux patterns automatically added during `sk init`
+
+### Changed
+- **BREAKING: Package structure migrated to standard Python src/ layout**
+  - Moved all Python modules from flat directory to organized `src/solokit/` package structure
+  - Created domain-organized subdirectories: `core/`, `session/`, `work_items/`, `learning/`, `quality/`, `visualization/`, `git/`, `testing/`, `deployment/`, `project/`
+  - Updated all imports from `scripts.X` to `solokit.X` pattern (43 files)
+  - Removed all `sys.path.insert()` hacks (38 instances)
+  - Removed `setup.py` in favor of PEP 517/518 pyproject.toml-only configuration
+  - CLI command remains `solokit` (no user-facing changes)
+  - All tests pass, PyPI-ready structure, better IDE support
+- **Simplified git branch naming** - Branch names now use work item ID directly
+  - Format: `feature_oauth` instead of `session-001-feature_oauth`
+  - Clearer intent, shorter names, backward compatible
+- **Standardized spec validation** - All work item types now use "Acceptance Criteria" section consistently
+  - Updated refactor specs to use "Acceptance Criteria" (was "Success Criteria")
+- **Makefile clean target** - Now removes coverage artifacts (`htmlcov/`, `coverage.xml`, `coverage.json`)
 
 ### Fixed
 - **Quality gates test timeout** - Increased from 5 to 10 minutes (1408 tests take ~6 minutes)
@@ -780,21 +848,22 @@ Versions follow semantic versioning (MAJOR.MINOR.PATCH):
 - **MINOR**: New functionality (backward compatible)
 - **PATCH**: Bug fixes (backward compatible)
 
-Phase mapping to versions:
-- Phase 0 = v0.0 (Foundation & documentation)
-- Phase 1 = v0.1 (Core session workflow)
-- Phase 2 = v0.2 (Work item system)
-- Phase 3 = v0.3 (Dependency graphs)
-- Phase 4 = v0.4 (Learning management)
-- Phase 5 = v0.5 (Quality gates)
-- Phase 5.5 = v0.5.5 (Integration testing)
-- Phase 5.6 = v0.5.6 (Deployment support)
-- Phase 5.7 = v0.5.7 (Spec-first architecture)
-- Phase 5.8 = v0.5.8 (Marketplace plugin support)
-- Phase 5.9 = v0.6.0 (Standard Python src/ layout) ✅ **Current**
-- v0.7.0 = PyPI publishing (planned)
-- v0.8.0+ = Advanced features (planned)
-- v1.0.0 = Production-ready public release
+Phase mapping to public release versions:
+- Phases 0-5.9 (Development phases) → **v0.1.0** (Initial Public Release)
+  - Phase 0: Foundation & documentation
+  - Phase 1: Core session workflow
+  - Phase 2: Work item system
+  - Phase 3: Dependency graphs
+  - Phase 4: Learning management
+  - Phase 5: Quality gates
+  - Phase 5.5: Integration testing
+  - Phase 5.6: Deployment support
+  - Phase 5.7: Spec-first architecture
+  - Phase 5.8: Marketplace plugin support
+  - Phase 5.9: Standard Python src/ layout & PyPI publishing
+- **v0.1.1** = Current release (UX improvements & bug fixes) ✅ **Current**
+- v0.2.0+ = Future enhancements (planned)
+- v1.0.0 = Stable API release (planned)
 
 ## Links
 
