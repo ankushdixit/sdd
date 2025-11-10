@@ -200,7 +200,7 @@ from solokit.session.briefing import generate_briefing
 
 **Import Guidelines:**
 - Use standard Python imports from the `solokit` package
-- No `sys.path` manipulation needed (v0.1.1+)
+- No `sys.path` manipulation needed (v0.1.2+)
 - Package organized by domain for clarity
 - Full PEP 517/518 compliance
 

@@ -889,7 +889,8 @@ Phase mapping to public release versions:
   - Phase 5.7: Spec-first architecture
   - Phase 5.8: Marketplace plugin support
   - Phase 5.9: Standard Python src/ layout & PyPI publishing
-- **v0.1.1** = Current release (UX improvements & bug fixes) ✅ **Current**
+- **v0.1.2** = Current release ✅ **Current**
+- v0.1.1 = Previous release (UX improvements & bug fixes)
 - v0.2.0+ = Future enhancements (planned)
 - v1.0.0 = Stable API release (planned)
 
