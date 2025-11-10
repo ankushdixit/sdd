@@ -1,9 +1,5 @@
 """Unit tests for doctor command."""
 
-import json
-import sys
-from pathlib import Path
-
 import pytest
 
 from solokit.commands.doctor import (

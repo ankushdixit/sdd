@@ -3,8 +3,6 @@
 import platform
 import sys
 
-import pytest
-
 from solokit.__version__ import __version__
 from solokit.commands.version import show_version
 

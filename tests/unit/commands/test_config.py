@@ -1,9 +1,6 @@
 """Unit tests for config command."""
 
 import json
-from pathlib import Path
-
-import pytest
 
 from solokit.commands.config import format_config_yaml_style, show_config
 

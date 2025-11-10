@@ -1,7 +1,5 @@
 """Unit tests for help command."""
 
-import pytest
-
 from solokit.commands.help import show_command_help, show_help
 
 
