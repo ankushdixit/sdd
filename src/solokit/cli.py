@@ -91,6 +91,11 @@ COMMANDS = {
     "learn-curate": ("solokit.learning.curator", None, "main", True),
     # Project Initialization
     "init": ("solokit.project.init", None, "main", True),
+    # Utility Commands
+    "help": ("solokit.commands.help", None, "main", True),
+    "version": ("solokit.commands.version", None, "main", False),
+    "doctor": ("solokit.commands.doctor", None, "main", True),
+    "config": ("solokit.commands.config", None, "main", True),
 }
 
 
@@ -361,9 +366,33 @@ def main() -> int:
             type=str,
             help="Write logs to file",
         )
+        parser.add_argument(
+            "--version",
+            "-V",
+            action="store_true",
+            help="Show version information",
+        )
+        parser.add_argument(
+            "--help",
+            "-h",
+            action="store_true",
+            help="Show help message",
+        )
 
         # Parse known args (global flags) and leave rest for command routing
         args, remaining = parser.parse_known_args()
+
+        # Handle global --version flag
+        if args.version:
+            from solokit.commands.version import show_version
+
+            return show_version()
+
+        # Handle global --help flag
+        if args.help:
+            from solokit.commands.help import show_help
+
+            return show_help()
 
         # Setup logging based on global flags
         # Default to ERROR level for clean terminal output
@@ -374,22 +403,9 @@ def main() -> int:
 
         # Check if command is provided
         if len(remaining) < 1:
-            output.error("Usage: solokit [--verbose] [--log-file FILE] <command> [args...]")
-            output.error("\nGlobal flags:")
-            output.error("  --verbose, -v        Enable verbose (DEBUG) logging")
-            output.error("  --log-file FILE      Write logs to file")
-            output.error("\nAvailable commands:")
-            output.error("  Work Items:")
-            output.error(
-                "    work-list, work-next, work-show, work-update, work-new, work-delete, work-graph"
-            )
-            output.error("  Sessions:")
-            output.error("    start, end, status, validate")
-            output.error("  Learnings:")
-            output.error("    learn, learn-show, learn-search, learn-curate")
-            output.error("  Initialization:")
-            output.error("    init")
-            return 1
+            from solokit.commands.help import show_help
+
+            return show_help()
 
         command = remaining[0]
         command_args = remaining[1:]
