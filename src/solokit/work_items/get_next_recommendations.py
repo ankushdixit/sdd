@@ -185,7 +185,9 @@ Output format: work_item_id | type | title | priority
         emoji = priority_emoji.get(item["priority"], "")
         marker = "→" if idx == 0 else " "  # Arrow for top recommendation
         priority_display = f"{emoji} {item['priority']}"
-        print(f"{marker} {item['id']:<{max_id_len}} | {item['type']:<{max_type_len}} | {priority_display:<12} | {item['title']:<{max_title_len}}")
+        print(
+            f"{marker} {item['id']:<{max_id_len}} | {item['type']:<{max_type_len}} | {priority_display:<12} | {item['title']:<{max_title_len}}"
+        )
 
     print(f"\n💡 Top recommendation: {ready_items[0]['id']}")
     print(f"   To start: /start {ready_items[0]['id']}\n")

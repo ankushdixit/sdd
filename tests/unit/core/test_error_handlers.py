@@ -140,21 +140,59 @@ class TestLogErrorsDecorator:
     """Test log errors decorator"""
 
     def test_logs_solokit_error(self, caplog):
-        """Test logging of SolokitError"""
+        """Test logging of SolokitError at ERROR level (system errors)"""
+        from solokit.core.exceptions import SystemError
 
         @log_errors()
         def raises_solokit_error():
+            raise SystemError(
+                message="Test system error",
+                code=ErrorCode.FILE_OPERATION_FAILED,
+                context={"component": "test"},
+            )
+
+        with pytest.raises(SystemError):
+            raises_solokit_error()
+
+        assert "raises_solokit_error failed" in caplog.text
+        assert "Test system error" in caplog.text
+
+    def test_logs_validation_error_at_debug(self, caplog):
+        """Test logging of ValidationError at DEBUG level (user input errors)"""
+        import logging
+
+        caplog.set_level(logging.DEBUG)
+
+        @log_errors()
+        def raises_validation_error():
             raise ValidationError(
-                message="Test error",
+                message="Test validation error",
                 code=ErrorCode.INVALID_WORK_ITEM_ID,
                 context={"item_id": "test"},
             )
 
         with pytest.raises(ValidationError):
-            raises_solokit_error()
+            raises_validation_error()
 
-        assert "raises_solokit_error failed" in caplog.text
-        assert "Test error" in caplog.text
+        assert "raises_validation_error failed" in caplog.text
+        assert "Test validation error" in caplog.text
+
+    def test_logs_notfound_error_at_debug(self, caplog):
+        """Test logging of NotFoundError at DEBUG level (user input errors)"""
+        import logging
+
+        from solokit.core.exceptions import WorkItemNotFoundError
+
+        caplog.set_level(logging.DEBUG)
+
+        @log_errors()
+        def raises_notfound_error():
+            raise WorkItemNotFoundError("nonexistent_item")
+
+        with pytest.raises(WorkItemNotFoundError):
+            raises_notfound_error()
+
+        assert "raises_notfound_error failed" in caplog.text
 
     def test_logs_generic_error(self, caplog):
         """Test logging of generic exception"""
