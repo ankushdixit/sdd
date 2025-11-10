@@ -651,7 +651,7 @@ While Claude Code is excellent for code generation and exploration, Solokit adds
 
 ## Development Status
 
-**Current Version:** v0.1.1 (Production-Ready)
+**Current Version:** v0.1.2 (Production-Ready)
 
 **Test Coverage:** 2,417 tests passing (100%)
 
