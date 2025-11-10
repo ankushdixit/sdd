@@ -685,7 +685,7 @@ def main() -> int:
 
         if not has_filters:
             # No work items exist at all
-            output.error("⚠️ No work items found in this project\n")
+            output.error("No work items found in this project\n")
             output.info("To get started:")
             output.info(
                 "  1. Create a work item: sk work-new --type feature --title '...' --priority high"

@@ -48,7 +48,14 @@ def get_ready_work_items(limit: int = 4) -> list[dict[str, Any]]:
     # Extract work_items from data structure
     work_items = data.get("work_items", {})
     if not work_items:
-        print("No work items found", file=sys.stderr)
+        print("⚠️ No work items found in this project\n", file=sys.stderr)
+        print("To get started:", file=sys.stderr)
+        print(
+            "  1. Create a work item: sk work-new --type feature --title '...' --priority high",
+            file=sys.stderr,
+        )
+        print("  2. Or use /work-new in Claude Code for interactive creation\n", file=sys.stderr)
+        print("💡 Work items help track your development tasks and sessions", file=sys.stderr)
         return []
 
     # Filter to not_started items
