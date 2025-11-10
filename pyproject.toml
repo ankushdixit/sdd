@@ -28,6 +28,7 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "PyYAML>=6.0.0,<7.0.0",  # Required by init system and quality validators
+    "questionary>=2.0.0,<3.0.0",  # Interactive CLI prompts
 ]
 
 [project.optional-dependencies]
@@ -148,4 +149,8 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "pytest"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "questionary.*"
 ignore_missing_imports = true

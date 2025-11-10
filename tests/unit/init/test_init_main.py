@@ -75,7 +75,9 @@ class TestMain:
                         with patch(
                             "solokit.project.init.prompt_additional_options", return_value=["ci_cd"]
                         ):
-                            with patch("builtins.input", return_value="y"):  # Confirm prompt
+                            with patch(
+                                "solokit.project.init.confirm_action", return_value=True
+                            ):  # Confirm prompt
                                 with patch(
                                     "solokit.init.orchestrator.run_template_based_init"
                                 ) as mock_run:

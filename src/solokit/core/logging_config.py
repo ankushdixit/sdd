@@ -58,7 +58,7 @@ class HumanReadableFormatter(logging.Formatter):
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         level = record.levelname
-        name = record.name
+        name = record.name.split(".")[-1]  # Extract last component only
         message = record.getMessage()
 
         # Color code by level

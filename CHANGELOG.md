@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Feature: UX Enhancements - Logger Shortening, Interactive Prompts, and Claude Code Promotion**
+  - Shortened logger names for better terminal readability (e.g., "orchestrator" vs "solokit.init.orchestrator")
+  - Added `questionary` library for rich interactive CLI prompts with styled UI components
+  - Created `src/solokit/core/cli_prompts.py` utility module with 4 reusable functions:
+    - `confirm_action()`: Styled confirmation prompts with default fallback
+    - `select_from_list()`: Single-select lists with arrow key navigation
+    - `multi_select_list()`: Multi-select checkboxes for multiple options
+    - `text_input()`: Text input with optional validation and defaults
+  - Replaced basic `input()` calls in `src/solokit/project/init.py` with questionary prompts:
+    - Template selection now uses interactive list selection
+    - Quality tier selection with rich descriptions
+    - Coverage target selection with visual list
+    - Additional options use multi-select checkboxes
+    - Final confirmation with styled yes/no prompt
+  - Added Claude Code promotion to initialization completion:
+    - Prominent messaging after `sk init` completes
+    - Lists key slash commands (/start, /end, /work-new, /work-list)
+    - Includes link to https://claude.com/claude-code
+    - Better flow: Claude Code promotion → Next Steps
+  - Enhanced README.md with Claude Code positioning:
+    - Added "💡 Best Used with Claude Code" hero section with Quick Start variant
+    - Enhanced Prerequisites to strongly recommend Claude Code (not just required)
+    - Added "vs. Using Claude Code Standalone" comparison explaining workflow benefits
+    - Repositioned documentation to emphasize Claude Code as primary interface
+  - All prompts gracefully fall back to defaults in non-interactive environments (CI/CD, piped stdin)
+  - Added EOF/KeyboardInterrupt error handling for robust test execution
+  - Test suite: 2,373 tests passing (added 17 new tests for cli_prompts module)
+  - Quality: All ruff linting passed, all mypy checks passed with modern type annotations
+
 ### Fixed
 - **Quality: Complete code quality and test suite cleanup**
   - Fixed all linting issues: Replaced deprecated `typing.List` with built-in `list` type in 3 template files

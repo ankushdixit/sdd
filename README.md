@@ -105,6 +105,31 @@ sk end
 - ✅ Perfect AI context continuity
 - ✅ Growing knowledge base
 
+## 💡 Best Used with Claude Code
+
+Solokit is designed to work seamlessly with [Claude Code](https://claude.com/claude-code), providing:
+
+- **Slash Command Interface**: Use `/start`, `/end`, `/work-new`, and more without memorizing CLI syntax
+- **Context Continuity**: Claude maintains full project context across sessions, understanding your work items, dependencies, and progress
+- **Interactive Workflow**: Rich prompts and guided workflows make session management effortless
+- **Quality Automation**: Automatic quality gate validation and learning capture integrated into your natural workflow
+
+### Quick Start with Claude Code
+
+1. **Initialize your project** (one-time setup):
+   ```bash
+   sk init
+   ```
+
+2. **Open in Claude Code** and use slash commands:
+   ```
+   /work-new      # Create your first work item
+   /start         # Begin a development session with full briefing
+   /end           # Complete session with quality gates
+   ```
+
+That's it! Claude Code handles the rest, providing context-aware assistance throughout your development session.
+
 ## Key Features
 
 ### 🎯 Production-Ready Templates
@@ -402,9 +427,10 @@ sk status
 
 ### Prerequisites
 
-- **Claude Code** - Required for slash command integration
-- **Python 3.9+** - Core framework
-- **Git** - Version control integration
+- **Python 3.9+** - Core runtime
+- **pip** - Package installer
+- **Git** - Version control
+- **Claude Code** - *Strongly recommended* for slash command integration and optimal workflow experience. While Solokit can be used via CLI alone, Claude Code provides the richest experience with interactive prompts, context continuity, and intelligent assistance.
 
 **Optional Tools** (for quality gates):
 - Testing: `pytest` (Python), `jest` (JS/TS)
@@ -533,6 +559,15 @@ solokit/
 - ✅ **Quality enforcement** - Automated validation throughout
 - ✅ **Session management** - Perfect context across all work
 - ✅ **4 quality tiers** - From MVP to enterprise
+
+### vs. Using Claude Code Standalone
+While Claude Code is excellent for code generation and exploration, Solokit adds:
+- ✅ **Workflow structure** - Session-driven development with clear start/end boundaries
+- ✅ **Quality enforcement** - Automated gates ensure testing, linting, and security standards
+- ✅ **Learning capture** - Systematic knowledge accumulation across sessions
+- ✅ **Work item management** - Organize and track progress on multiple features/bugs
+- ✅ **Production templates** - Battle-tested project setups with validated dependencies
+- ✅ **Spec-first architecture** - Clear requirements before implementation
 
 **Solokit is the only tool that combines:**
 - Production-ready templates with validated dependencies
