@@ -23,8 +23,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import ErrorCode, GitError, SpecValidationError
-from sdd.session import briefing as briefing_generator
+from solokit.core.exceptions import ErrorCode, GitError, SpecValidationError
+from solokit.session import briefing as briefing_generator
 
 
 @pytest.fixture
@@ -161,7 +161,7 @@ class TestLoadWorkItems:
         work_items_file = Path(".session/tracking/work_items.json")
         work_items_file.write_text(json.dumps(sample_work_items))
 
-        with patch("sdd.session.briefing.logger") as mock_logger:
+        with patch("solokit.session.briefing.logger") as mock_logger:
             # Act
             briefing_generator.load_work_items()
 
@@ -546,7 +546,7 @@ class TestLoadCurrentTree:
         """Test that load_current_tree raises FileOperationError on read failure."""
         from unittest.mock import patch
 
-        from sdd.core.exceptions import FileOperationError
+        from solokit.core.exceptions import FileOperationError
 
         # Arrange
         tree_file = Path(".session/tracking/tree.txt")
@@ -719,7 +719,7 @@ class TestValidateEnvironment:
 class TestCheckGitStatus:
     """Tests for check_git_status function."""
 
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_check_git_status_returns_git_info(self, mock_git_workflow_class):
         """Test that check_git_status returns git status information."""
         # Arrange
@@ -736,7 +736,7 @@ class TestCheckGitStatus:
         assert result["status"] == "clean"
         assert result["branch"] == "main"
 
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_check_git_status_raises_git_error_on_exception(self, mock_git_workflow_class):
         """Test that check_git_status raises GitError when git workflow fails."""
         # Arrange - simulate git error
@@ -751,7 +751,7 @@ class TestCheckGitStatus:
         assert exc_info.value.code.name == "GIT_COMMAND_FAILED"
         assert "Failed to check git status" in exc_info.value.message
 
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_check_git_status_reraises_git_error(self, mock_git_workflow_class):
         """Test that check_git_status re-raises GitError as-is."""
         # Arrange - simulate GitError from workflow
@@ -811,7 +811,7 @@ class TestGenerateIntegrationTestBriefing:
         # Assert
         assert result == ""
 
-    @patch("sdd.session.briefing.check_command_exists")
+    @patch("solokit.session.briefing.check_command_exists")
     def test_generate_integration_test_briefing_includes_context(self, mock_check):
         """Test that generate_integration_test_briefing includes integration test context."""
         # Arrange
@@ -839,7 +839,7 @@ class TestGenerateIntegrationTestBriefing:
         assert "database" in result
         assert "Test Scenarios" in result
 
-    @patch("sdd.session.briefing.check_command_exists")
+    @patch("solokit.session.briefing.check_command_exists")
     def test_generate_integration_test_briefing_checks_docker(self, mock_check):
         """Test that generate_integration_test_briefing checks for Docker availability."""
         # Arrange
@@ -891,7 +891,7 @@ class TestGenerateDeploymentBriefing:
 class TestDetermineGitBranchFinalStatus:
     """Tests for determine_git_branch_final_status function."""
 
-    @patch("sdd.session.briefing.git_context.CommandRunner")
+    @patch("solokit.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_merged_when_merged(self, mock_runner_class):
         """Test that determine_git_branch_final_status returns 'merged' when branch is merged."""
         # Arrange
@@ -907,7 +907,7 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "merged"
 
-    @patch("sdd.session.briefing.git_context.CommandRunner")
+    @patch("solokit.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_pr_created_when_open_pr(
         self, mock_runner_class
     ):
@@ -933,7 +933,7 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "pr_created"
 
-    @patch("sdd.session.briefing.git_context.CommandRunner")
+    @patch("solokit.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_pr_closed_when_closed_pr(
         self, mock_runner_class
     ):
@@ -959,7 +959,7 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "pr_closed"
 
-    @patch("sdd.session.briefing.git_context.CommandRunner")
+    @patch("solokit.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_ready_for_pr_when_branch_exists(
         self, mock_runner_class
     ):
@@ -987,7 +987,7 @@ class TestDetermineGitBranchFinalStatus:
         # Assert
         assert result == "ready_for_pr"
 
-    @patch("sdd.session.briefing.git_context.CommandRunner")
+    @patch("solokit.session.briefing.git_context.CommandRunner")
     def test_determine_git_branch_final_status_returns_deleted_when_not_found(
         self, mock_runner_class
     ):
@@ -1096,14 +1096,14 @@ class TestFinalizePreviousWorkItemGitStatus:
 class TestGenerateBriefing:
     """Tests for generate_briefing function."""
 
-    @patch("sdd.session.briefing.load_project_docs")
-    @patch("sdd.session.briefing.load_current_stack")
-    @patch("sdd.session.briefing.load_current_tree")
-    @patch("sdd.session.briefing.load_work_item_spec")
-    @patch("sdd.session.briefing.validate_environment")
-    @patch("sdd.session.briefing.check_git_status")
-    @patch("sdd.session.briefing.load_milestone_context")
-    @patch("sdd.session.briefing.get_relevant_learnings")
+    @patch("solokit.session.briefing.load_project_docs")
+    @patch("solokit.session.briefing.load_current_stack")
+    @patch("solokit.session.briefing.load_current_tree")
+    @patch("solokit.session.briefing.load_work_item_spec")
+    @patch("solokit.session.briefing.validate_environment")
+    @patch("solokit.session.briefing.check_git_status")
+    @patch("solokit.session.briefing.load_milestone_context")
+    @patch("solokit.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_work_item_info(
         self,
         mock_learnings,
@@ -1144,14 +1144,14 @@ class TestGenerateBriefing:
         assert "feature" in result
         assert "high" in result
 
-    @patch("sdd.session.briefing.load_project_docs")
-    @patch("sdd.session.briefing.load_current_stack")
-    @patch("sdd.session.briefing.load_current_tree")
-    @patch("sdd.session.briefing.load_work_item_spec")
-    @patch("sdd.session.briefing.validate_environment")
-    @patch("sdd.session.briefing.check_git_status")
-    @patch("sdd.session.briefing.load_milestone_context")
-    @patch("sdd.session.briefing.get_relevant_learnings")
+    @patch("solokit.session.briefing.load_project_docs")
+    @patch("solokit.session.briefing.load_current_stack")
+    @patch("solokit.session.briefing.load_current_tree")
+    @patch("solokit.session.briefing.load_work_item_spec")
+    @patch("solokit.session.briefing.validate_environment")
+    @patch("solokit.session.briefing.check_git_status")
+    @patch("solokit.session.briefing.load_milestone_context")
+    @patch("solokit.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_environment_status(
         self,
         mock_learnings,
@@ -1186,15 +1186,15 @@ class TestGenerateBriefing:
         assert "Python: " in result  # Accept any Python version
         assert "Git: git version" in result  # Accept any git version format
 
-    @patch("sdd.session.briefing.load_project_docs")
-    @patch("sdd.session.briefing.load_current_stack")
-    @patch("sdd.session.briefing.load_current_tree")
-    @patch("sdd.session.briefing.load_work_item_spec")
-    @patch("sdd.session.briefing.validate_environment")
-    @patch("sdd.session.briefing.check_git_status")
-    @patch("sdd.session.briefing.load_milestone_context")
-    @patch("sdd.session.briefing.get_relevant_learnings")
-    @patch("sdd.work_items.spec_validator.validate_spec_file")
+    @patch("solokit.session.briefing.load_project_docs")
+    @patch("solokit.session.briefing.load_current_stack")
+    @patch("solokit.session.briefing.load_current_tree")
+    @patch("solokit.session.briefing.load_work_item_spec")
+    @patch("solokit.session.briefing.validate_environment")
+    @patch("solokit.session.briefing.check_git_status")
+    @patch("solokit.session.briefing.load_milestone_context")
+    @patch("solokit.session.briefing.get_relevant_learnings")
+    @patch("solokit.work_items.spec_validator.validate_spec_file")
     def test_generate_briefing_includes_spec_validation_warning(
         self,
         mock_validate_spec,
@@ -1228,7 +1228,7 @@ class TestGenerateBriefing:
 
         # Patch the spec validator in the correct location
         with patch(
-            "sdd.work_items.spec_validator.format_validation_report",
+            "solokit.work_items.spec_validator.format_validation_report",
             return_value="Validation Warning",
         ):
             # Act
@@ -1237,14 +1237,14 @@ class TestGenerateBriefing:
         # Assert
         assert "Validation Warning" in result  # Should include the formatted validation report
 
-    @patch("sdd.session.briefing.load_project_docs")
-    @patch("sdd.session.briefing.load_current_stack")
-    @patch("sdd.session.briefing.load_current_tree")
-    @patch("sdd.session.briefing.load_work_item_spec")
-    @patch("sdd.session.briefing.validate_environment")
-    @patch("sdd.session.briefing.check_git_status")
-    @patch("sdd.session.briefing.load_milestone_context")
-    @patch("sdd.session.briefing.get_relevant_learnings")
+    @patch("solokit.session.briefing.load_project_docs")
+    @patch("solokit.session.briefing.load_current_stack")
+    @patch("solokit.session.briefing.load_current_tree")
+    @patch("solokit.session.briefing.load_work_item_spec")
+    @patch("solokit.session.briefing.validate_environment")
+    @patch("solokit.session.briefing.check_git_status")
+    @patch("solokit.session.briefing.load_milestone_context")
+    @patch("solokit.session.briefing.get_relevant_learnings")
     def test_generate_briefing_includes_relevant_learnings(
         self,
         mock_learnings,
@@ -1282,11 +1282,11 @@ class TestGenerateBriefing:
 class TestMainFunction:
     """Tests for main CLI function."""
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
-    @patch("sdd.session.briefing.get_next_work_item")
-    @patch("sdd.session.briefing.generate_briefing")
-    @patch("sdd.session.briefing.finalize_previous_work_item_git_status")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.get_next_work_item")
+    @patch("solokit.session.briefing.generate_briefing")
+    @patch("solokit.session.briefing.finalize_previous_work_item_git_status")
     def test_main_selects_next_work_item_when_no_arg(
         self,
         mock_finalize,
@@ -1319,7 +1319,7 @@ class TestMainFunction:
         # Arrange - Create a temp directory without .session
         import os
 
-        from sdd.core.exceptions import SessionNotFoundError
+        from solokit.core.exceptions import SessionNotFoundError
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Change to temp directory where .session doesn't exist
@@ -1333,15 +1333,15 @@ class TestMainFunction:
             finally:
                 os.chdir(orig_cwd)
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
-    @patch("sdd.session.briefing.get_next_work_item")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.get_next_work_item")
     def test_main_returns_error_when_no_available_work_items(
         self, mock_get_next, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
         """Test that main raises ValidationError when no available work items."""
         # Arrange
-        from sdd.core.exceptions import ValidationError
+        from solokit.core.exceptions import ValidationError
 
         mock_load_work_items.return_value = {"work_items": {}}
         mock_load_learnings.return_value = {"learnings": []}
@@ -1352,8 +1352,8 @@ class TestMainFunction:
             with pytest.raises(ValidationError):
                 briefing_generator.main()
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
     def test_main_with_explicit_work_item_id(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1373,22 +1373,22 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001"]):
-            with patch("sdd.session.briefing.generate_briefing", return_value="# Briefing"):
-                with patch("sdd.session.briefing.finalize_previous_work_item_git_status"):
+            with patch("solokit.session.briefing.generate_briefing", return_value="# Briefing"):
+                with patch("solokit.session.briefing.finalize_previous_work_item_git_status"):
                     # Act
                     result = briefing_generator.main()
 
         # Assert
         assert result == 0
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
     def test_main_returns_error_when_work_item_not_found(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
         """Test that main raises WorkItemNotFoundError when specified work item not found."""
         # Arrange
-        from sdd.core.exceptions import WorkItemNotFoundError
+        from solokit.core.exceptions import WorkItemNotFoundError
 
         mock_load_work_items.return_value = {"work_items": {}}
         mock_load_learnings.return_value = {"learnings": []}
@@ -1398,14 +1398,14 @@ class TestMainFunction:
             with pytest.raises(WorkItemNotFoundError):
                 briefing_generator.main()
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
     def test_main_blocks_when_another_item_in_progress(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
         """Test that main raises SessionAlreadyActiveError when another item is in-progress."""
         # Arrange
-        from sdd.core.exceptions import SessionAlreadyActiveError
+        from solokit.core.exceptions import SessionAlreadyActiveError
 
         work_items_data = {
             "work_items": {
@@ -1421,8 +1421,8 @@ class TestMainFunction:
             with pytest.raises(SessionAlreadyActiveError):
                 briefing_generator.main()
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
     def test_main_allows_force_start_with_flag(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
@@ -1443,22 +1443,22 @@ class TestMainFunction:
         mock_load_learnings.return_value = {"learnings": []}
 
         with patch("sys.argv", ["briefing_generator.py", "WORK-001", "--force"]):
-            with patch("sdd.session.briefing.generate_briefing", return_value="# Briefing"):
-                with patch("sdd.session.briefing.finalize_previous_work_item_git_status"):
+            with patch("solokit.session.briefing.generate_briefing", return_value="# Briefing"):
+                with patch("solokit.session.briefing.finalize_previous_work_item_git_status"):
                     # Act
                     result = briefing_generator.main()
 
         # Assert
         assert result == 0
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
     def test_main_checks_dependencies_are_satisfied(
         self, mock_load_learnings, mock_load_work_items, temp_session_dir
     ):
         """Test that main raises UnmetDependencyError when dependencies not satisfied."""
         # Arrange
-        from sdd.core.exceptions import UnmetDependencyError
+        from solokit.core.exceptions import UnmetDependencyError
 
         work_items_data = {
             "work_items": {
@@ -1478,11 +1478,11 @@ class TestMainFunction:
             with pytest.raises(UnmetDependencyError):
                 briefing_generator.main()
 
-    @patch("sdd.session.briefing.load_work_items")
-    @patch("sdd.session.briefing.load_learnings")
-    @patch("sdd.session.briefing.generate_briefing")
-    @patch("sdd.session.briefing.finalize_previous_work_item_git_status")
-    @patch("sdd.git.integration.GitWorkflow")
+    @patch("solokit.session.briefing.load_work_items")
+    @patch("solokit.session.briefing.load_learnings")
+    @patch("solokit.session.briefing.generate_briefing")
+    @patch("solokit.session.briefing.finalize_previous_work_item_git_status")
+    @patch("solokit.git.integration.GitWorkflow")
     def test_main_starts_git_workflow(
         self,
         mock_git_workflow_class,

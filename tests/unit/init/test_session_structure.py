@@ -15,8 +15,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError
-from sdd.init.session_structure import (
+from solokit.core.exceptions import FileOperationError
+from solokit.init.session_structure import (
     create_session_directories,
     initialize_tracking_files,
 )
@@ -51,7 +51,7 @@ class TestCreateSessionDirectories:
 
     def test_default_project_root(self):
         """Test using default project root (Path.cwd())."""
-        with patch("sdd.init.session_structure.Path") as mock_path:
+        with patch("solokit.init.session_structure.Path") as mock_path:
             mock_cwd = Mock()
             mock_cwd.cwd.return_value = Path("/fake/cwd")
             mock_path.cwd.return_value = Path("/fake/cwd")
@@ -72,7 +72,7 @@ class TestInitializeTrackingFiles:
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
         # Mock __file__ to point to a fake location so template_dir points to our test templates
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         # Create a fake module structure: fake_sdd/init/session_structure.py
         # So Path(__file__).parent.parent / "templates" = fake_sdd/templates
@@ -105,7 +105,7 @@ class TestInitializeTrackingFiles:
 
         import shutil
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         # Create a fake module structure: fake_sdd/init/session_structure.py
         fake_sdd_dir = tmp_path / "fake_sdd"
@@ -135,7 +135,7 @@ class TestInitializeTrackingFiles:
 
         import shutil
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         # Create a fake module structure: fake_sdd/init/session_structure.py
         fake_sdd_dir = tmp_path / "fake_sdd"
@@ -165,7 +165,7 @@ class TestInitializeTrackingFiles:
         # Use a real tmp directory for the test
         import tempfile
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
@@ -188,7 +188,7 @@ class TestInitializeTrackingFiles:
             fake_file = str(fake_init_dir / "session_structure.py")
 
             # Mock Path.cwd() to return our tmp directory
-            with patch("sdd.init.session_structure.Path.cwd", return_value=tmp_path):
+            with patch("solokit.init.session_structure.Path.cwd", return_value=tmp_path):
                 with patch.object(session_structure_module, "__file__", fake_file):
                     # Call without project_root to trigger Path.cwd()
                     files = initialize_tracking_files("tier-1-essential", 80)
@@ -199,7 +199,7 @@ class TestInitializeTrackingFiles:
         """Test error handling when file copy fails."""
         import shutil
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
@@ -229,7 +229,7 @@ class TestInitializeTrackingFiles:
         """Test error handling when creating update tracking files fails."""
         import shutil
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 
@@ -259,7 +259,7 @@ class TestInitializeTrackingFiles:
         """Test error handling when copying config schema fails."""
         import shutil
 
-        import sdd.init.session_structure as session_structure_module
+        import solokit.init.session_structure as session_structure_module
 
         (tmp_path / ".session" / "tracking").mkdir(parents=True)
 

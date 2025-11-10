@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from sdd.work_items.get_dependencies import (
+from solokit.work_items.get_dependencies import (
     _filter_by_relevance,
     get_available_dependencies,
 )

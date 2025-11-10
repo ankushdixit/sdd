@@ -5,7 +5,7 @@ Tests for the ConsoleReporter class which generates human-readable console repor
 
 import pytest
 
-from sdd.quality.reporters.console import ConsoleReporter
+from solokit.quality.reporters.console import ConsoleReporter
 
 
 @pytest.fixture

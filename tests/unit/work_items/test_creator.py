@@ -8,13 +8,13 @@ import json
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ErrorCode,
     ValidationError,
     WorkItemAlreadyExistsError,
 )
-from sdd.work_items.creator import WorkItemCreator
-from sdd.work_items.repository import WorkItemRepository
+from solokit.work_items.creator import WorkItemCreator
+from solokit.work_items.repository import WorkItemRepository
 
 
 @pytest.fixture

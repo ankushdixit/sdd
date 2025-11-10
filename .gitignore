@@ -53,11 +53,7 @@ notes/
 scratch/
 demo-projects/
 
-# Implementation planning documents
-PLUGIN_IMPLEMENTATION_PLAN_*.md
-SDD_AUDIT_REPORT.md
-
-# SDD-related patterns
+# Solokit-related patterns
 .session/briefings/
 .session/history/
 coverage/

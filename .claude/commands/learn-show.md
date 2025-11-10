@@ -12,7 +12,7 @@ View captured learnings with optional filtering.
 Parse $ARGUMENTS for filters and run the show-learnings command:
 
 ```bash
-sdd learn-show "$@"
+sk learn-show "$@"
 ```
 
 ### Filter Options
@@ -33,27 +33,27 @@ sdd learn-show "$@"
 
 Show all learnings:
 ```bash
-sdd learn-show
+sk learn-show
 ```
 
 Show only gotchas:
 ```bash
-sdd learn-show --category gotchas
+sk learn-show --category gotchas
 ```
 
 Show learnings tagged with "fastapi":
 ```bash
-sdd learn-show --tag fastapi
+sk learn-show --tag fastapi
 ```
 
 Show learnings from session 5:
 ```bash
-sdd learn-show --session 5
+sk learn-show --session 5
 ```
 
 Combine filters (gotchas from session 5):
 ```bash
-sdd learn-show --category gotchas --session 5
+sk learn-show --category gotchas --session 5
 ```
 
 ## Display Format

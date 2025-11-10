@@ -2,7 +2,7 @@
 
 from io import StringIO
 
-from sdd.core.error_formatter import (
+from solokit.core.error_formatter import (
     ErrorFormatter,
     format_info_message,
     format_progress_message,
@@ -10,7 +10,7 @@ from sdd.core.error_formatter import (
     format_validation_errors,
     format_warning_message,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ConfigValidationError,
     ErrorCategory,
     ErrorCode,
@@ -30,7 +30,7 @@ class TestErrorFormatter:
 
         assert "🔍" in formatted  # Not found symbol
         assert "my_feature" in formatted
-        assert "sdd work-list" in formatted  # Remediation
+        assert "sk work-list" in formatted  # Remediation
 
     def test_format_sdd_error_verbose(self):
         """Test verbose formatting includes context and error code"""

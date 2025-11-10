@@ -57,12 +57,12 @@ class TestDocumentationUpdates:
             assert concept.lower() in content.lower(), f"writing-specs.md should mention: {concept}"
 
     def test_session_driven_development_updated_with_spec_architecture(self):
-        """Test that docs/architecture/session-driven-development.md includes spec architecture section."""
+        """Test that docs/architecture/solokit-methodology.md includes spec architecture section."""
         # Arrange
-        sdd_doc_path = project_root / "docs" / "architecture" / "session-driven-development.md"
+        sdd_doc_path = project_root / "docs" / "architecture" / "solokit-methodology.md"
 
         # Assert file exists
-        assert sdd_doc_path.exists(), "docs/architecture/session-driven-development.md should exist"
+        assert sdd_doc_path.exists(), "docs/architecture/solokit-methodology.md should exist"
 
         # Act
         content = sdd_doc_path.read_text(encoding="utf-8")
@@ -80,7 +80,7 @@ class TestDocumentationUpdates:
         ]
 
         for section in required_sections:
-            assert section in content, f"session-driven-development.md should contain: {section}"
+            assert section in content, f"solokit-methodology.md should contain: {section}"
 
         # Assert - check for key concepts (case-insensitive search)
         key_concepts = [
@@ -94,7 +94,7 @@ class TestDocumentationUpdates:
         content_lower = content.lower()
         for concept in key_concepts:
             assert concept.lower() in content_lower, (
-                f"session-driven-development.md should mention: {concept}"
+                f"solokit-methodology.md should mention: {concept}"
             )
 
     def test_command_documentation_updated_for_spec_workflow(self):

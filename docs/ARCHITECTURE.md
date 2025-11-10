@@ -1,12 +1,12 @@
-# SDD Architecture Overview
+# Solokit Architecture Overview
 
-Session-Driven Development (SDD) is a structured workflow system for AI-augmented software development. This document provides a high-level overview of the system architecture.
+Session-Driven Development (Solokit) is a structured workflow system for AI-augmented software development. This document provides a high-level overview of the system architecture.
 
 ## Core Concepts
 
 ### Session-Driven Workflow
 
-SDD organizes development work into discrete **sessions**, each focused on completing a single work item. A session follows this lifecycle:
+Solokit organizes development work into discrete **sessions**, each focused on completing a single work item. A session follows this lifecycle:
 
 1. **Start** (`/start`) - Creates a comprehensive briefing with project context
 2. **Implementation** - AI and developer work together on the work item
@@ -15,7 +15,7 @@ SDD organizes development work into discrete **sessions**, each focused on compl
 
 ### Work Items
 
-Work items are the fundamental unit of work in SDD. Each work item:
+Work items are the fundamental unit of work in Solokit. Each work item:
 
 - Has a unique ID and type (feature, bug, refactor, security, integration_test, deployment)
 - Contains a detailed specification in `.session/specs/{work_item_id}.md`
@@ -25,7 +25,7 @@ Work items are the fundamental unit of work in SDD. Each work item:
 
 ### Learning System
 
-SDD automatically captures and curates knowledge from development sessions:
+Solokit automatically captures and curates knowledge from development sessions:
 
 - **Capture** (`/learn`) - Record insights during development
 - **Storage** - Learnings stored in `.session/learnings.json`
@@ -36,50 +36,50 @@ SDD automatically captures and curates knowledge from development sessions:
 
 ### CLI Entry Point
 
-`src/sdd/cli.py` - Main command-line interface that routes commands to appropriate modules.
+`src/solokit/cli.py` - Main command-line interface that routes commands to appropriate modules.
 
 ### Core Modules
 
-Python package organized by domain in `src/sdd/`:
+Python package organized by domain in `src/solokit/`:
 
-**Core (`sdd.core`):**
+**Core (`solokit.core`):**
 - **file_ops.py** - Centralized JSON file I/O operations with atomic writes, validation hooks, and consistent error handling
 - **logging_config.py** - Logging configuration
 - **config_validator.py** - Configuration validation
 
-**Session Management (`sdd.session`):**
+**Session Management (`solokit.session`):**
 - **briefing.py** - Generates comprehensive session briefings
 - **complete.py** - Handles session completion and learning capture
 - **status.py** - Displays current session status
 - **validate.py** - Validates quality gates
 
-**Work Items (`sdd.work_items`):**
+**Work Items (`solokit.work_items`):**
 - **manager.py** - CRUD operations for work items
 - **spec_parser.py** - Parses work item specifications
 - **spec_validator.py** - Validates spec completeness
 
-**Learning (`sdd.learning`):**
+**Learning (`solokit.learning`):**
 - **curator.py** - AI-powered learning extraction and organization
 
-**Quality (`sdd.quality`):**
+**Quality (`solokit.quality`):**
 - **gates.py** - Test and validation execution
 - **env_validator.py** - Environment validation
 - **api_validator.py** - API contract validation
 
-**Visualization (`sdd.visualization`):**
+**Visualization (`solokit.visualization`):**
 - **dependency_graph.py** - Visualizes work item dependencies
 
-**Git Integration (`sdd.git`):**
+**Git Integration (`solokit.git`):**
 - **integration.py** - Git branch and status management
 
-**Testing (`sdd.testing`):**
+**Testing (`solokit.testing`):**
 - **integration_runner.py** - Integration test execution
 - **performance.py** - Performance benchmarking
 
-**Deployment (`sdd.deployment`):**
+**Deployment (`solokit.deployment`):**
 - **executor.py** - Deployment execution
 
-**Project (`sdd.project`):**
+**Project (`solokit.project`):**
 - **init.py** - Project initialization
 - **stack.py** - Technology stack generation
 - **tree.py** - Project tree generation
@@ -88,7 +88,7 @@ Python package organized by domain in `src/sdd/`:
 ### Configuration
 
 - `.session/config.json` - Project configuration
-- `src/sdd/templates/config.schema.json` - Configuration schema
+- `src/solokit/templates/config.schema.json` - Configuration schema
 
 ### Session State
 
@@ -177,7 +177,7 @@ User runs /learn-curate
 
 ### Claude Code Integration
 
-Slash commands in `.claude/commands/` map to SDD CLI commands, enabling seamless AI-assisted development.
+Slash commands in `.claude/commands/` map to Solokit CLI commands, enabling seamless AI-assisted development.
 
 ## Design Principles
 
@@ -191,7 +191,7 @@ Slash commands in `.claude/commands/` map to SDD CLI commands, enabling seamless
 
 ## Further Reading
 
-- [Session-Driven Development Methodology](architecture/session-driven-development.md)
+- [Solokit Methodology](architecture/solokit-methodology.md)
 - [AI-Augmented Solo Framework](architecture/ai-augmented-solo-framework.md)
 - [Implementation Insights](architecture/implementation-insights.md)
 - [Configuration Guide](guides/configuration.md)

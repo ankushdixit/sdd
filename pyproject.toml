@@ -3,15 +3,15 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "session-driven-development"
-version = "0.7.0"
-description = "Session-Driven Development - AI-augmented development workflow framework"
+name = "solokit"
+version = "0.1.0"
+description = "Solokit - Structured Solo Development with AI and Quality Automation"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "SDD Contributors"}
+    {name = "Solokit Contributors"}
 ]
-keywords = ["development", "workflow", "ai", "session-driven", "productivity", "quality-gates"]
+keywords = ["solo-development", "ai-native", "workflow", "quality-automation", "productivity", "ai-assistant", "claude-code"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -44,25 +44,25 @@ viz = [
     "graphviz>=0.20.1,<0.21.0",
 ]
 dev = [
-    "sdd[test,quality,viz]",
+    "solokit[test,quality,viz]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/ankushdixit/sdd"
-Documentation = "https://github.com/ankushdixit/sdd/blob/main/README.md"
-Repository = "https://github.com/ankushdixit/sdd"
-Issues = "https://github.com/ankushdixit/sdd/issues"
-Changelog = "https://github.com/ankushdixit/sdd/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/ankushdixit/solokit"
+Documentation = "https://github.com/ankushdixit/solokit/blob/main/README.md"
+Repository = "https://github.com/ankushdixit/solokit"
+Issues = "https://github.com/ankushdixit/solokit/issues"
+Changelog = "https://github.com/ankushdixit/solokit/blob/main/CHANGELOG.md"
 
 [project.scripts]
-sdd = "sdd.cli:main"
+sk = "solokit.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["sdd"]
+packages = ["solokit"]
 
 [tool.setuptools.package-data]
-"sdd.templates" = ["*.md", "*.json", "*.toml", "git-hooks/*", "tests/*"]
+"solokit.templates" = ["*.md", "*.json", "*.toml", "git-hooks/*", "tests/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -83,8 +83,8 @@ ignore = [
 ]
 
 [tool.coverage.run]
-source = ["src/sdd"]
-omit = ["tests/*", "src/sdd/templates/*"]
+source = ["src/solokit"]
+omit = ["tests/*", "src/solokit/templates/*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -108,9 +108,9 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 extra_checks = true
-files = ["src/sdd"]
+files = ["src/solokit"]
 exclude = [
-    "src/sdd/templates/",
+    "src/solokit/templates/",
 ]
 show_error_codes = true
 pretty = true
@@ -128,7 +128,7 @@ module = "graphviz.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "sdd.templates.*"
+module = "solokit.templates.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]

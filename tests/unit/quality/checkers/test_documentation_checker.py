@@ -7,8 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from sdd.core.command_runner import CommandResult, CommandRunner
-from sdd.quality.checkers.documentation import DocumentationChecker
+from solokit.core.command_runner import CommandResult, CommandRunner
+from solokit.quality.checkers.documentation import DocumentationChecker
 
 
 @pytest.fixture

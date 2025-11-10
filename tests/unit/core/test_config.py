@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from sdd.core.config import (
+from solokit.core.config import (
     ConfigManager,
     CurationConfig,
     DocumentationConfig,
@@ -18,7 +18,7 @@ from sdd.core.config import (
     SpecCompletenessConfig,
     get_config_manager,
 )
-from sdd.core.exceptions import ConfigurationError
+from solokit.core.exceptions import ConfigurationError
 
 
 @pytest.fixture

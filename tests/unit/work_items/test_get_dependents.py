@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from sdd.work_items.get_dependents import get_dependents
+from solokit.work_items.get_dependents import get_dependents
 
 
 @pytest.fixture

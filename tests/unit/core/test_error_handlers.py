@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from sdd.core.error_handlers import (
+from solokit.core.error_handlers import (
     ErrorContext,
     convert_file_errors,
     convert_subprocess_errors,
@@ -14,15 +14,15 @@ from sdd.core.error_handlers import (
     with_retry,
     with_timeout,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     ErrorCode,
     GitError,
     SubprocessError,
     SystemError,
     ValidationError,
 )
-from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.core.exceptions import TimeoutError as SDDTimeoutError
+from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from solokit.core.exceptions import TimeoutError as SDDTimeoutError
 
 
 class TestWithRetryDecorator:

@@ -1,6 +1,6 @@
 # Work New Command
 
-**Usage:** `/sdd:work-new`
+**Usage:** `/sk:work-new`
 
 **Description:** Create a new work item interactively with rich UI components.
 
@@ -117,7 +117,7 @@ The spec file contains the complete implementation plan. The `work_items.json` f
 ### Creating a Feature
 
 ```bash
-/sdd:work-new
+/sk:work-new
 ```
 
 **Interactive flow:**
@@ -155,13 +155,13 @@ Specification file: .session/specs/feature_auth.md
 
 Next steps:
 1. Complete the specification file
-2. Start working: /sdd:start feature_auth
+2. Start working: /sk:start feature_auth
 ```
 
 ### Creating a Bug Fix with Dependencies
 
 ```bash
-/sdd:work-new
+/sk:work-new
 ```
 
 **Interactive flow:**
@@ -199,7 +199,7 @@ Specification file: .session/specs/bug_session_timeout.md
 Next steps:
 1. Complete the specification file
 2. Wait for dependencies to complete
-3. Start working when ready: /sdd:start bug_session_timeout
+3. Start working when ready: /sk:start bug_session_timeout
 ```
 
 ## Work Item ID Generation
@@ -221,7 +221,7 @@ Each work item type has a specific template:
 - **integration_test** - Test plan and coverage
 - **deployment** - Deployment checklist and rollback plan
 
-Templates are located at: `src/sdd/templates/{type}_spec.md`
+Templates are located at: `src/solokit/templates/{type}_spec.md`
 
 ## Validation
 
@@ -240,7 +240,7 @@ The command validates:
 ERROR: Work item 'feature_auth' already exists
 
 Use a different title or update the existing item:
-  /sdd:work-update feature_auth
+  /sk:work-update feature_auth
 ```
 
 ### Invalid Dependency
@@ -252,7 +252,7 @@ Available work items:
   feature_database (in_progress)
   refactor_models (not_started)
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### Empty Title
@@ -276,7 +276,7 @@ Please provide a descriptive title for the work item.
 
 4. **Start working:**
    ```bash
-   /sdd:start {work_item_id}
+   /sk:start {work_item_id}
    ```
 
 ## See Also

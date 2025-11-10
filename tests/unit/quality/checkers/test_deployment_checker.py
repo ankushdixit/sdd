@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandRunner
-from sdd.quality.checkers.base import CheckResult
-from sdd.quality.checkers.deployment import DeploymentChecker
+from solokit.core.command_runner import CommandRunner
+from solokit.quality.checkers.base import CheckResult
+from solokit.quality.checkers.deployment import DeploymentChecker
 
 
 @pytest.fixture
@@ -167,8 +167,8 @@ class TestDeploymentCheckerRun:
         assert result.status == "skipped"
         assert result.info.get("reason") == "disabled"
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_passes_when_all_gates_pass(
         self,
         mock_security_checker_class,
@@ -218,8 +218,8 @@ class TestDeploymentCheckerRun:
         assert "gates" in result.info
         assert len(result.info["gates"]) == 5  # 5 gates total
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_fails_when_integration_tests_fail(
         self,
         mock_security_checker_class,
@@ -267,8 +267,8 @@ class TestDeploymentCheckerRun:
         assert len(result.errors) > 0
         assert any("Integration Tests" in str(e.get("gate", "")) for e in result.errors)
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_fails_when_security_scans_fail(
         self,
         mock_security_checker_class,
@@ -316,8 +316,8 @@ class TestDeploymentCheckerRun:
         assert len(result.errors) > 0
         assert any("Security Scans" in str(e.get("gate", "")) for e in result.errors)
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_fails_when_environment_validation_fails(
         self,
         mock_security_checker_class,
@@ -365,8 +365,8 @@ class TestDeploymentCheckerRun:
         assert len(result.errors) > 0
         assert any("Environment Validation" in str(e.get("gate", "")) for e in result.errors)
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_fails_when_documentation_incomplete(
         self,
         mock_security_checker_class,
@@ -414,8 +414,8 @@ class TestDeploymentCheckerRun:
         assert len(result.errors) > 0
         assert any("Deployment Documentation" in str(e.get("gate", "")) for e in result.errors)
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_run_handles_integration_checker_not_available(
         self,
         mock_security_checker_class,
@@ -470,7 +470,7 @@ class TestDeploymentEnvironmentValidation:
 
         checker = DeploymentChecker(work_item, deployment_config, runner=mock_runner)
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (True, {})
@@ -489,7 +489,7 @@ class TestDeploymentEnvironmentValidation:
 
         checker = DeploymentChecker(work_item, deployment_config, runner=mock_runner)
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (True, {})
@@ -508,7 +508,7 @@ class TestDeploymentEnvironmentValidation:
 
         checker = DeploymentChecker(work_item, deployment_config, runner=mock_runner)
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (True, {})
@@ -529,7 +529,7 @@ class TestDeploymentEnvironmentValidation:
 
         checker = DeploymentChecker(work_item, deployment_config, runner=mock_runner)
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (
@@ -551,7 +551,7 @@ class TestDeploymentEnvironmentValidation:
         checker = DeploymentChecker(work_item, deployment_config, runner=mock_runner)
 
         with patch(
-            "sdd.quality.env_validator.EnvironmentValidator",
+            "solokit.quality.env_validator.EnvironmentValidator",
             side_effect=ImportError("Module not found"),
         ):
             result = checker._validate_deployment_environment()
@@ -702,8 +702,8 @@ class TestRollbackTesting:
 class TestDeploymentCheckerIntegration:
     """Integration tests for full deployment checker workflow."""
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_full_deployment_workflow_success(
         self,
         mock_security_checker_class,
@@ -741,7 +741,7 @@ class TestDeploymentCheckerIntegration:
 
         checker = DeploymentChecker(deployment_work_item, deployment_config, runner=mock_runner)
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (True, {})
@@ -762,8 +762,8 @@ class TestDeploymentCheckerIntegration:
         assert "Deployment Documentation" in gate_names
         assert "Rollback Tested" in gate_names
 
-    @patch("sdd.quality.checkers.integration.IntegrationChecker")
-    @patch("sdd.quality.checkers.security.SecurityChecker")
+    @patch("solokit.quality.checkers.integration.IntegrationChecker")
+    @patch("solokit.quality.checkers.security.SecurityChecker")
     def test_full_deployment_workflow_with_multiple_failures(
         self,
         mock_security_checker_class,
@@ -803,7 +803,7 @@ class TestDeploymentCheckerIntegration:
             incomplete_deployment_work_item, deployment_config, runner=mock_runner
         )
 
-        with patch("sdd.quality.env_validator.EnvironmentValidator") as mock_validator:
+        with patch("solokit.quality.env_validator.EnvironmentValidator") as mock_validator:
             mock_validator_instance = Mock()
             mock_validator.return_value = mock_validator_instance
             mock_validator_instance.validate_all.return_value = (False, {})

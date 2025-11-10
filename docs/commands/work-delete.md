@@ -1,6 +1,6 @@
 # Work Delete Command
 
-**Usage:** `/sdd:work-delete <work_item_id>`
+**Usage:** `/sk:work-delete <work_item_id>`
 
 **Description:** Delete a work item from the system with dependency checking and interactive confirmation.
 
@@ -16,7 +16,7 @@ The `work-delete` command safely removes work items from the system:
 ## Usage
 
 ```bash
-/sdd:work-delete <work_item_id>
+/sk:work-delete <work_item_id>
 ```
 
 **Required argument:**
@@ -85,8 +85,8 @@ After deletion:
 ✓ Deleted spec file '.session/specs/feature_obsolete.md'
 
 ⚠️  Reminder: Update dependencies for these work items:
-  /sdd:work-update bug_related_fix remove-dependency
-  /sdd:work-update feature_dashboard remove-dependency
+  /sk:work-update bug_related_fix remove-dependency
+  /sk:work-update feature_dashboard remove-dependency
 
 Deletion successful.
 ```
@@ -96,7 +96,7 @@ Deletion successful.
 ### Deleting Obsolete Work Item
 
 ```bash
-/sdd:work-delete feature_old_implementation
+/sk:work-delete feature_old_implementation
 ```
 
 **Interactive flow:**
@@ -131,7 +131,7 @@ How would you like to delete 'feature_old_implementation'?
 ✓ Deleted spec file '.session/specs/feature_old_implementation.md'
 
 ⚠️  Reminder: Update dependencies for these work items:
-  /sdd:work-update bug_implementation_fix remove-dependency
+  /sk:work-update bug_implementation_fix remove-dependency
 
 Deletion successful.
 ```
@@ -139,7 +139,7 @@ Deletion successful.
 ### Deleting Test Work Item
 
 ```bash
-/sdd:work-delete feature_test
+/sk:work-delete feature_test
 ```
 
 **Interactive flow:**
@@ -217,7 +217,7 @@ feature_dashboard still depends on: feature_auth (DELETED), feature_search
 
 **You must manually clean up:**
 ```bash
-/sdd:work-update feature_dashboard remove-dependency
+/sk:work-update feature_dashboard remove-dependency
 # Select feature_auth from the list
 ```
 
@@ -246,7 +246,7 @@ Once deleted:
 ### Work Item Not Found
 
 ```bash
-/sdd:work-delete nonexistent_item
+/sk:work-delete nonexistent_item
 ```
 
 **Output:**
@@ -258,23 +258,23 @@ Available work items:
   bug_timeout (not_started)
   refactor_api (not_started)
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### Missing Argument
 
 ```bash
-/sdd:work-delete
+/sk:work-delete
 ```
 
 **Output:**
 ```
-ERROR: Usage: /sdd:work-delete <work_item_id>
+ERROR: Usage: /sk:work-delete <work_item_id>
 
 Example:
-  /sdd:work-delete feature_obsolete
+  /sk:work-delete feature_obsolete
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### Spec File Already Deleted
@@ -302,27 +302,27 @@ Deletion successful.
 ### Clean Up Duplicates
 
 ```bash
-/sdd:work-list --type feature
+/sk:work-list --type feature
 # Find: feature_auth_v1 and feature_auth_v2 (duplicates)
 
-/sdd:work-delete feature_auth_v1
+/sk:work-delete feature_auth_v1
 # Select: Delete work item and spec file
 ```
 
 ### Remove Test Items
 
 ```bash
-/sdd:work-list --type feature | grep test
+/sk:work-list --type feature | grep test
 # Find: feature_test_experiment
 
-/sdd:work-delete feature_test_experiment
+/sk:work-delete feature_test_experiment
 # Select: Delete work item and spec file
 ```
 
 ### Archive Obsolete Work
 
 ```bash
-/sdd:work-delete feature_old_approach
+/sk:work-delete feature_old_approach
 # Select: Delete work item only (keep spec file)
 # Spec file kept for historical reference
 ```
@@ -332,28 +332,28 @@ Deletion successful.
 ### 1. Check for Dependents
 
 ```bash
-/sdd:work-list --status blocked
+/sk:work-list --status blocked
 # See if any items are now referencing deleted work item
 ```
 
 ### 2. Update Dependencies
 
 ```bash
-/sdd:work-update <dependent_id> remove-dependency
+/sk:work-update <dependent_id> remove-dependency
 # Remove reference to deleted work item
 ```
 
 ### 3. Verify Cleanup
 
 ```bash
-/sdd:work-show <dependent_id>
+/sk:work-show <dependent_id>
 # Verify dependencies are correct
 ```
 
 ### 4. Check Dependency Graph
 
 ```bash
-/sdd:work-graph
+/sk:work-graph
 # Visualize that no broken dependencies exist
 ```
 
@@ -362,17 +362,17 @@ Deletion successful.
 ### Before Deletion
 
 ```bash
-/sdd:work-show feature_obsolete  # Review details
-/sdd:work-list  # Check dependents
-/sdd:work-delete feature_obsolete  # Delete
+/sk:work-show feature_obsolete  # Review details
+/sk:work-list  # Check dependents
+/sk:work-delete feature_obsolete  # Delete
 ```
 
 ### After Deletion
 
 ```bash
-/sdd:work-list --status blocked  # Find affected items
-/sdd:work-update <id> remove-dependency  # Clean up
-/sdd:work-graph  # Verify graph integrity
+/sk:work-list --status blocked  # Find affected items
+/sk:work-update <id> remove-dependency  # Clean up
+/sk:work-graph  # Verify graph integrity
 ```
 
 ## Optimized Performance

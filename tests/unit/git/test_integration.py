@@ -7,16 +7,16 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.core.config import ConfigManager, GitWorkflowConfig
-from sdd.core.exceptions import (
+from solokit.core.command_runner import CommandResult
+from solokit.core.config import ConfigManager, GitWorkflowConfig
+from solokit.core.exceptions import (
     CommandExecutionError,
     ErrorCode,
     GitError,
     NotAGitRepoError,
     WorkingDirNotCleanError,
 )
-from sdd.git.integration import GitWorkflow
+from solokit.git.integration import GitWorkflow
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def mock_config_manager():
     """Mock ConfigManager for tests that don't need file-based config."""
     mock_manager = MagicMock()
     mock_manager.git_workflow = GitWorkflowConfig()
-    with patch("sdd.git.integration.get_config_manager", return_value=mock_manager):
+    with patch("solokit.git.integration.get_config_manager", return_value=mock_manager):
         yield mock_manager
 
 
@@ -50,7 +50,7 @@ class TestGitWorkflowInit:
         # Arrange & Act
         with (
             patch.object(Path, "cwd", return_value=Path("/test/root")),
-            patch("sdd.git.integration.get_config_manager"),
+            patch("solokit.git.integration.get_config_manager"),
         ):
             workflow = GitWorkflow()
 
@@ -65,7 +65,7 @@ class TestGitWorkflowInit:
         custom_root = Path("/custom/path")
 
         # Act
-        with patch("sdd.git.integration.get_config_manager"):
+        with patch("solokit.git.integration.get_config_manager"):
             workflow = GitWorkflow(project_root=custom_root)
 
         # Assert
@@ -1291,8 +1291,8 @@ class TestMain:
         mock_workflow.get_current_branch.return_value = "main"
 
         # Act
-        with patch("sdd.git.integration.GitWorkflow", return_value=mock_workflow):
-            from sdd.git.integration import main
+        with patch("solokit.git.integration.GitWorkflow", return_value=mock_workflow):
+            from solokit.git.integration import main
 
             main()
 

@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sdd.core.command_runner import (
+from solokit.core.command_runner import (
     CommandResult,
     CommandRunner,
     run_command,
 )
-from sdd.core.exceptions import CommandExecutionError, TimeoutError
+from solokit.core.exceptions import CommandExecutionError, TimeoutError
 
 
 class TestCommandResult:

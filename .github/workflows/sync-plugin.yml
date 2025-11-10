@@ -21,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main SDD repository
+      - name: Checkout main Solokit repository
         uses: actions/checkout@v4
         with:
-          path: sdd
+          path: solokit
           fetch-depth: 0  # Get full history for proper versioning
 
       - name: Checkout claude-plugins repository
@@ -40,24 +40,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install sdd package
-        working-directory: sdd
+      - name: Install solokit package
+        working-directory: solokit
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
       - name: Run sync script
-        working-directory: sdd
+        working-directory: solokit
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             echo "Running in DRY RUN mode..."
-            python src/sdd/project/sync_plugin.py \
+            python src/solokit/project/sync_plugin.py \
               --main-repo . \
               --plugin-repo ../claude-plugins \
               --dry-run
           else
             echo "Running sync..."
-            python src/sdd/project/sync_plugin.py \
+            python src/solokit/project/sync_plugin.py \
               --main-repo . \
               --plugin-repo ../claude-plugins
           fi
@@ -79,7 +79,7 @@ jobs:
 
       - name: Get version
         id: get_version
-        working-directory: sdd
+        working-directory: solokit
         run: |
           VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -96,12 +96,12 @@ jobs:
 
           # Create commit message with details
           cat > commit_msg.txt << 'EOF'
-          Sync from main SDD repo v${{ steps.get_version.outputs.version }}
+          Sync from main Solokit repo v${{ steps.get_version.outputs.version }}
 
-          Auto-synced from ankushdixit/sdd@${{ github.sha }}
+          Auto-synced from ankushdixit/solokit@${{ github.sha }}
 
           Changes synced:
-          - src/sdd/ (complete package structure)
+          - src/solokit/ (complete package structure)
           - .claude/commands/
           - pyproject.toml
           - plugin.json version update
@@ -118,7 +118,7 @@ jobs:
         run: |
           echo "## Sync Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Main SDD repo:** ankushdixit/sdd@${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Main Solokit repo:** ankushdixit/solokit@${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Target repo:** ankushdixit/claude-plugins" >> $GITHUB_STEP_SUMMARY
           echo "- **Dry run:** ${{ github.event.inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY

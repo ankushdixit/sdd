@@ -1,4 +1,4 @@
-# SDD Enhancements Summary (Planned)
+# Solokit Enhancements Summary (Planned)
 
 Quick reference guide for enhancements #12-#37. Use this to check for duplicates and understand planned features.
 
@@ -29,7 +29,7 @@ Research and optimize session briefing content and structure to maximize informa
 **Priority:** Critical
 
 **Problem:**
-Security scans run at `/sdd:end` but if they fail, code might already be committed. No enforcement to prevent merging insecure code (secret exposure, known vulnerabilities, code vulnerabilities, supply chain attacks, license compliance).
+Security scans run at `/sk:end` but if they fail, code might already be committed. No enforcement to prevent merging insecure code (secret exposure, known vulnerabilities, code vulnerabilities, supply chain attacks, license compliance).
 
 **Solution:**
 Implement mandatory pre-merge security gates that prevent merging to main if critical issues exist: secret scanning, SAST, dependency vulnerability scanning, supply chain security, license compliance.
@@ -186,13 +186,13 @@ Implement JSON Schema-based spec validation: schema definitions for each work it
 **Priority:** High
 
 **Problem:**
-SDD supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). No project-specific types (spike, research, documentation-task, data-migration, experiment), no extensibility, rigid structure.
+Solokit supports only 6 fixed work item types (feature, bug, refactor, security, integration_test, deployment). No project-specific types (spike, research, documentation-task, data-migration, experiment), no extensibility, rigid structure.
 
 **Solution:**
 Implement custom work item type system: user-defined type schema with metadata, custom spec templates for each type, type-specific quality gates (e.g., spike doesn't require tests), type lifecycle configuration, branch naming patterns per type.
 
 **Key Benefits:**
-- Project flexibility: adapt SDD to any workflow and terminology
+- Project flexibility: adapt Solokit to any workflow and terminology
 - Better semantics: use types that match actual work
 - Workflow optimization: different quality gates for different types
 - Extensibility: framework grows with user needs
@@ -208,13 +208,13 @@ Implement custom work item type system: user-defined type schema with metadata, 
 **Priority:** High
 
 **Problem:**
-Current SDD-Claude integration is via slash commands that execute CLI commands and return text output. Text-only output, no programmatic access, parsing overhead, limited interactivity, no structured data, foundation missing for advanced features like inline annotations.
+Current Solokit-Claude integration is via slash commands that execute CLI commands and return text output. Text-only output, no programmatic access, parsing overhead, limited interactivity, no structured data, foundation missing for advanced features like inline annotations.
 
 **Solution:**
-Implement MCP (Model Context Protocol) server for SDD that exposes operations as structured tools: work item operations, learning operations, session operations, quality gate operations, visualization operations. Returns structured JSON instead of text.
+Implement MCP (Model Context Protocol) server for Solokit that exposes operations as structured tools: work item operations, learning operations, session operations, quality gate operations, visualization operations. Returns structured JSON instead of text.
 
 **Key Benefits:**
-- Programmatic access: Claude can query SDD state directly
+- Programmatic access: Claude can query Solokit state directly
 - Structured data: no text parsing, clean JSON responses
 - Rich interactions: contextual follow-up queries
 - Foundation for features: enables inline annotations and real-time updates
@@ -233,7 +233,7 @@ Implement MCP (Model Context Protocol) server for SDD that exposes operations as
 MCP servers consume context tokens even when idle. Developers must manually manage servers for each project with no intelligent selection based on work context. Same servers enabled for frontend and backend work, wasting tokens.
 
 **Solution:**
-Implement context-aware MCP server management: project-level server registry (initialized during `sdd init`), servers disabled by default (zero token cost), automatic enablement during `sdd start` based on work item context (type, tags, tech stack), token budgeting to respect context limits, manual override support.
+Implement context-aware MCP server management: project-level server registry (initialized during `sk init`), servers disabled by default (zero token cost), automatic enablement during `sk start` based on work item context (type, tags, tech stack), token budgeting to respect context limits, manual override support.
 
 **Key Benefits:**
 - Context efficiency: save thousands of tokens by only enabling relevant servers
@@ -258,13 +258,13 @@ Implement context-aware MCP server management: project-level server registry (in
 **Priority:** Medium
 
 **Problem:**
-When working on a work item, developers have no real-time visibility of SDD state in their editor. No work item status visibility, no learning hints in context, no quality gate indicators inline, context switching required, lost context.
+When working on a work item, developers have no real-time visibility of Solokit state in their editor. No work item status visibility, no learning hints in context, no quality gate indicators inline, context switching required, lost context.
 
 **Solution:**
-Implement inline editor annotations that display SDD state contextually: work item status annotations in files, learning snippets on hover, quality gate indicators (linting errors, coverage gaps), dependency warnings, session context display.
+Implement inline editor annotations that display Solokit state contextually: work item status annotations in files, learning snippets on hover, quality gate indicators (linting errors, coverage gaps), dependency warnings, session context display.
 
 **Key Benefits:**
-- Context awareness: see SDD state without leaving editor
+- Context awareness: see Solokit state without leaving editor
 - Learning reminders: relevant learnings shown in context
 - Proactive quality: see issues as you code
 - Reduced context switching: less terminal usage
@@ -323,7 +323,7 @@ Implement frontend-specific quality gates: design token compliance validation (d
 **Priority:** High
 
 **Problem:**
-AI-Augmented Solo Framework assumes developers start with Vision, PRD, Architecture docs, but SDD has no workflow to parse project documentation, generate work items from docs, maintain doc-code traceability, track architecture decisions, or validate against architecture.
+AI-Augmented Solo Framework assumes developers start with Vision, PRD, Architecture docs, but Solokit has no workflow to parse project documentation, generate work items from docs, maintain doc-code traceability, track architecture decisions, or validate against architecture.
 
 **Solution:**
 Implement documentation-driven development: document parsing (Vision, PRD, Architecture), smart work item generation from docs, ADR (Architecture Decision Records) management, document-to-code traceability, architecture validation, API-first documentation system (OpenAPI, SDKs).

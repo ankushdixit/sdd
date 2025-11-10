@@ -1,8 +1,8 @@
-# SDD Initialization System Test Suite
+# Solokit Initialization System Test Suite
 
 ## Overview
 
-Comprehensive test suite for the SDD initialization system with 172+ test cases targeting 90%+ code coverage.
+Comprehensive test suite for the Solokit initialization system with 172+ test cases targeting 90%+ code coverage.
 
 ## Test Files Created
 
@@ -56,7 +56,7 @@ Tests for README.md generation with stack-specific content.
 - Project name and tech stack inclusion
 - npm vs Python command differences
 - Additional options documentation
-- SDD workflow commands
+- Solokit workflow commands
 - Error handling
 
 ### 6. test_docs_structure.py (5 tests)
@@ -159,7 +159,7 @@ pytest tests/unit/init/ -v
 
 ### Run with coverage:
 ```bash
-pytest tests/unit/init/ --cov=sdd.init --cov-report=term-missing --cov-report=html
+pytest tests/unit/init/ --cov=solokit.init --cov-report=term-missing --cov-report=html
 ```
 
 ### Run specific test file:
@@ -268,7 +268,7 @@ The source code in `git_setup.py` uses `ErrorCode.PROJECT_NOT_BLANK` which doesn
 
 ## Next Steps
 
-1. **Run full test suite:** `pytest tests/unit/init/ -v --cov=sdd.init --cov-report=html`
+1. **Run full test suite:** `pytest tests/unit/init/ -v --cov=solokit.init --cov-report=html`
 2. **Review coverage report:** `open htmlcov/index.html`
 3. **Fix missing ErrorCode:** Add PROJECT_NOT_BLANK to exceptions.py
 4. **Add integration tests:** Create e2e tests in tests/integration/

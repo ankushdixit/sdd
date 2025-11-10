@@ -12,7 +12,7 @@ Full-text search across all learning content, tags, and context.
 Extract the search query from $ARGUMENTS and run:
 
 ```bash
-sdd learn-search "$@"
+sk learn-search "$@"
 ```
 
 ### How Search Works
@@ -29,17 +29,17 @@ Search is case-insensitive and finds partial matches.
 
 Search for "CORS":
 ```bash
-sdd learn-search "CORS"
+sk learn-search "CORS"
 ```
 
 Search for "FastAPI middleware":
 ```bash
-sdd learn-search "FastAPI middleware"
+sk learn-search "FastAPI middleware"
 ```
 
 Search for "authentication":
 ```bash
-sdd learn-search "authentication"
+sk learn-search "authentication"
 ```
 
 ## Display Format

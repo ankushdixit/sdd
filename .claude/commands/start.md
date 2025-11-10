@@ -18,7 +18,7 @@ argument-hint: [work_item_id]
 Get the top 4 recommended work items:
 
 ```bash
-python -m sdd.work_items.get_next_recommendations --limit 4
+python -m solokit.work_items.get_next_recommendations --limit 4
 ```
 
 This will output ready-to-start work items in format:
@@ -53,7 +53,7 @@ Parse the output and present options using `AskUserQuestion`:
 Based on the selected work item ID (either from user argument or interactive selection):
 
 ```bash
-sdd start {work_item_id}
+sk start {work_item_id}
 ```
 
 Replace `{work_item_id}` with:

@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for SDD test suite.
+"""Shared pytest fixtures for Solokit test suite.
 
 This module provides common fixtures used across unit, integration, and e2e tests.
 """
@@ -22,7 +22,7 @@ def temp_dir(tmp_path):
 
 @pytest.fixture
 def temp_project_dir(tmp_path):
-    """Create a temporary SDD project directory structure.
+    """Create a temporary Solokit project directory structure.
 
     Creates:
         - .session/ directory
@@ -36,7 +36,7 @@ def temp_project_dir(tmp_path):
     project_dir = tmp_path / "test_project"
     project_dir.mkdir()
 
-    # Create standard SDD directories
+    # Create standard Solokit directories
     (project_dir / ".session").mkdir()
     (project_dir / "work_items").mkdir()
     (project_dir / "learnings").mkdir()
@@ -47,7 +47,7 @@ def temp_project_dir(tmp_path):
 
 @pytest.fixture
 def sample_config() -> dict[str, Any]:
-    """Provide a sample SDD configuration dictionary.
+    """Provide a sample Solokit configuration dictionary.
 
     Returns:
         dict: Sample configuration with default values.

@@ -339,12 +339,12 @@ For plugins, commands in `commands/` directory follow the same format. Commands 
 
 ```
 commands/
-  init.md           → /sdd:init
-  work-new.md       → /sdd:work-new
-  work-list.md      → /sdd:work-list
+  init.md           → /sk:init
+  work-new.md       → /sk:work-new
+  work-list.md      → /sk:work-list
 ```
 
-Commands are automatically namespaced by plugin name (e.g., `/sdd:command-name`).
+Commands are automatically namespaced by plugin name (e.g., `/sk:command-name`).
 
 ## References
 

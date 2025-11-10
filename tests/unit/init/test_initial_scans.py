@@ -11,7 +11,7 @@ Target: 90%+ coverage
 
 from unittest.mock import Mock, patch
 
-from sdd.init.initial_scans import run_initial_scans, run_stack_scan, run_tree_scan
+from solokit.init.initial_scans import run_initial_scans, run_stack_scan, run_tree_scan
 
 
 class TestRunStackScan:
@@ -19,7 +19,7 @@ class TestRunStackScan:
 
     def test_stack_scan_success(self, tmp_path):
         """Test successful stack scan."""
-        with patch("sdd.init.initial_scans.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_scans.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=True)
@@ -30,7 +30,7 @@ class TestRunStackScan:
 
     def test_stack_scan_failure(self, tmp_path):
         """Test stack scan failure."""
-        with patch("sdd.init.initial_scans.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_scans.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=False, stderr="Error")
@@ -42,10 +42,10 @@ class TestRunStackScan:
     def test_stack_script_not_found(self, tmp_path):
         """Test when stack.py script doesn't exist."""
         # Mock __file__ at module level to point to a fake location
-        import sdd.init.initial_scans as initial_scans_module
+        import solokit.init.initial_scans as initial_scans_module
 
-        with patch.object(initial_scans_module, "__file__", "/fake/sdd/init/initial_scans.py"):
-            # Now Path(__file__).parent.parent / "project" / "stack.py" will be /fake/sdd/project/stack.py
+        with patch.object(initial_scans_module, "__file__", "/fake/solokit/init/initial_scans.py"):
+            # Now Path(__file__).parent.parent / "project" / "stack.py" will be /fake/solokit/project/stack.py
             # which doesn't exist
             result = run_stack_scan(tmp_path)
 
@@ -57,7 +57,7 @@ class TestRunTreeScan:
 
     def test_tree_scan_success(self, tmp_path):
         """Test successful tree scan."""
-        with patch("sdd.init.initial_scans.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_scans.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=True)
@@ -68,7 +68,7 @@ class TestRunTreeScan:
 
     def test_tree_scan_failure(self, tmp_path):
         """Test tree scan failure."""
-        with patch("sdd.init.initial_scans.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.initial_scans.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=False)
@@ -83,8 +83,8 @@ class TestRunInitialScans:
 
     def test_run_both_scans(self, tmp_path):
         """Test running both stack and tree scans."""
-        with patch("sdd.init.initial_scans.run_stack_scan") as mock_stack:
-            with patch("sdd.init.initial_scans.run_tree_scan") as mock_tree:
+        with patch("solokit.init.initial_scans.run_stack_scan") as mock_stack:
+            with patch("solokit.init.initial_scans.run_tree_scan") as mock_tree:
                 mock_stack.return_value = True
                 mock_tree.return_value = True
 
@@ -97,8 +97,8 @@ class TestRunInitialScans:
 
     def test_partial_success(self, tmp_path):
         """Test when only one scan succeeds."""
-        with patch("sdd.init.initial_scans.run_stack_scan") as mock_stack:
-            with patch("sdd.init.initial_scans.run_tree_scan") as mock_tree:
+        with patch("solokit.init.initial_scans.run_stack_scan") as mock_stack:
+            with patch("solokit.init.initial_scans.run_tree_scan") as mock_tree:
                 mock_stack.return_value = True
                 mock_tree.return_value = False
 

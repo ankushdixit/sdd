@@ -690,7 +690,7 @@ Before starting a session, verify your spec has:
 
 Run validation:
 ```bash
-sdd validate-spec {work_item_id} {type}
+sk validate-spec {work_item_id} {type}
 ```
 
 ---
@@ -699,7 +699,7 @@ sdd validate-spec {work_item_id} {type}
 
 - **Template Examples:** `templates/{type}_spec.md`
 - **Template Structure:** `docs/spec-template-structure.md`
-- **Session-Driven Development:** `docs/session-driven-development.md`
+- **Session-Driven Development:** `docs/solokit-methodology.md`
 - **Validation Rules:** `docs/spec-template-structure.md#validation-rules`
 
 ---

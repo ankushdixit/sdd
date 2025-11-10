@@ -1,6 +1,6 @@
 # Start Command
 
-**Usage:** `/sdd:start [work_item_id]`
+**Usage:** `/sk:start [work_item_id]`
 
 **Description:** Start a new development session with comprehensive briefing.
 
@@ -19,7 +19,7 @@ The `start` command initializes a development session by:
 Start a specific work item directly:
 
 ```bash
-/sdd:start feature_auth
+/sk:start feature_auth
 ```
 
 ### Interactive Selection
@@ -27,7 +27,7 @@ Start a specific work item directly:
 Run without arguments to see recommended work items:
 
 ```bash
-/sdd:start
+/sk:start
 ```
 
 You'll be presented with up to 4 ready-to-start work items prioritized by:
@@ -35,7 +35,7 @@ You'll be presented with up to 4 ready-to-start work items prioritized by:
 - Priority level
 - Creation order
 
-If no work items are ready (all blocked or in progress), you'll see an error message with guidance to use `/sdd:work-list` to review work item statuses.
+If no work items are ready (all blocked or in progress), you'll see an error message with guidance to use `/sk:work-list` to review work item statuses.
 
 ## Briefing Contents
 
@@ -111,7 +111,7 @@ The `work_items.json` file only stores metadata (type, priority, status, depende
 ### Starting First Available Work Item
 
 ```bash
-/sdd:start
+/sk:start
 ```
 
 **Output:**
@@ -135,7 +135,7 @@ After selection, you'll receive the complete briefing and begin implementation.
 ### Starting Specific Work Item
 
 ```bash
-/sdd:start feature_auth
+/sk:start feature_auth
 ```
 
 **Output:**
@@ -182,8 +182,8 @@ All work items are either:
 - Already in progress
 - Completed
 
-Use /sdd:work-list to see all work items and their status.
-Use /sdd:work-new to create a new work item.
+Use /sk:work-list to see all work items and their status.
+Use /sk:work-new to create a new work item.
 ```
 
 ### Invalid Work Item ID
@@ -191,7 +191,7 @@ Use /sdd:work-new to create a new work item.
 ```
 ERROR: Work item 'invalid_id' not found
 
-Use /sdd:work-list to see all available work items.
+Use /sk:work-list to see all available work items.
 ```
 
 ### Work Item Already In Progress
@@ -200,10 +200,10 @@ Use /sdd:work-list to see all available work items.
 ERROR: Work item 'feature_auth' is already in progress
 
 To continue working on this item:
-  /sdd:start feature_auth
+  /sk:start feature_auth
 
 To end current session first:
-  /sdd:end
+  /sk:end
 ```
 
 ## After Starting
@@ -219,7 +219,7 @@ Once the session starts:
 When implementation is complete:
 
 ```bash
-/sdd:end
+/sk:end
 ```
 
 This will run quality gates, capture learnings, and create a session summary.

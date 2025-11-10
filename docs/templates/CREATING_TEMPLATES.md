@@ -1,10 +1,10 @@
-# Creating SDD Templates
+# Creating Solokit Templates
 
-This guide explains how to create new project templates for SDD's template-based initialization system.
+This guide explains how to create new project templates for Solokit's template-based initialization system.
 
 ## Overview
 
-SDD uses a tier-based template system that allows projects to be initialized with different quality levels:
+Solokit uses a tier-based template system that allows projects to be initialized with different quality levels:
 
 - **Tier 1 (Essential)**: Core testing and linting
 - **Tier 2 (Standard)**: + Security scanning and formatting
@@ -228,7 +228,7 @@ Let's create a simple Express.js template:
 ### 1. Create directory structure
 
 ```bash
-mkdir -p src/sdd/templates/express_api/{base,tier-1-essential,tier-2-standard}
+mkdir -p src/solokit/templates/express_api/{base,tier-1-essential,tier-2-standard}
 ```
 
 ### 2. Create base template
@@ -367,7 +367,7 @@ stacks:
 cd /tmp
 mkdir test-express-api
 cd test-express-api
-sdd init --template=express_api --tier=tier-1-essential
+sk init --template=express_api --tier=tier-1-essential
 ```
 
 2. **Verify installation:**
@@ -379,10 +379,10 @@ npm run dev
 3. **Check all tiers:**
 ```bash
 # Test each tier
-sdd init --template=express_api --tier=tier-1-essential
-sdd init --template=express_api --tier=tier-2-standard
-sdd init --template=express_api --tier=tier-3-comprehensive
-sdd init --template=express_api --tier=tier-4-production
+sk init --template=express_api --tier=tier-1-essential
+sk init --template=express_api --tier=tier-2-standard
+sk init --template=express_api --tier=tier-3-comprehensive
+sk init --template=express_api --tier=tier-4-production
 ```
 
 ## Best Practices
@@ -447,5 +447,5 @@ sdd init --template=express_api --tier=tier-4-production
 
 - [Stack Versions Schema](stack-versions-schema.md)
 - [Template Registry Schema](template-registry-schema.md)
-- [Template Installer](../../src/sdd/init/template_installer.py)
-- [Dependency Installer](../../src/sdd/init/dependency_installer.py)
+- [Template Installer](../../src/solokit/init/template_installer.py)
+- [Dependency Installer](../../src/solokit/init/dependency_installer.py)

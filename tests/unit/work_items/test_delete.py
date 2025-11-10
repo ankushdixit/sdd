@@ -8,13 +8,13 @@ import json
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     FileNotFoundError as SDDFileNotFoundError,
 )
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     WorkItemNotFoundError,
 )
-from sdd.work_items.delete import delete_work_item, find_dependents
+from solokit.work_items.delete import delete_work_item, find_dependents
 
 
 @pytest.fixture

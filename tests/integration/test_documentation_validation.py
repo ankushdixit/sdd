@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from sdd.quality.gates import QualityGates
+from solokit.quality.gates import QualityGates
 
 
 class TestDocumentationValidationBasics:
@@ -50,7 +50,7 @@ class TestDocumentationValidationBasics:
         assert passed is True
         assert results.get("status") == "skipped"
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_validate_results_structure(self, mock_parse):
         """Test that validate_integration_documentation returns correct structure."""
         # Arrange
@@ -73,7 +73,7 @@ class TestDocumentationValidationBasics:
         for key in expected_keys:
             assert key in results
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_validate_summary_format(self, mock_parse):
         """Test that summary shows X/Y format."""
         # Arrange
@@ -95,7 +95,7 @@ class TestDocumentationValidationBasics:
         assert "/" in results.get("summary", "")
         assert "documentation requirements met" in results.get("summary", "")
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_validate_skips_when_disabled(self, mock_parse, temp_dir):
         """Test that validation skips when disabled in config."""
         # Arrange
@@ -120,7 +120,7 @@ class TestDocumentationValidationBasics:
 class TestArchitectureDiagramValidation:
     """Tests for integration architecture diagram validation."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_detects_missing_architecture_diagram(self, mock_parse):
         """Test that validation detects missing architecture diagram."""
         # Arrange
@@ -141,7 +141,7 @@ class TestArchitectureDiagramValidation:
         assert has_arch_check
         assert "Integration architecture diagram" in results.get("missing", [])
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_architecture_diagram_in_docs(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds architecture diagram in docs/ directory."""
         # Arrange
@@ -174,7 +174,7 @@ class TestArchitectureDiagramValidation:
         assert arch_check is not None
         assert arch_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_architecture_diagram_in_architecture_subdir(
         self, mock_parse, temp_dir, monkeypatch
     ):
@@ -208,7 +208,7 @@ class TestArchitectureDiagramValidation:
         )
         assert arch_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_architecture_diagram_in_session_specs(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds architecture diagram in .session/specs/ directory."""
         # Arrange
@@ -240,7 +240,7 @@ class TestArchitectureDiagramValidation:
         )
         assert arch_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_architecture_diagram_disabled_in_config(self, mock_parse, temp_dir):
         """Test that architecture diagram check can be disabled in config."""
         # Arrange
@@ -270,7 +270,7 @@ class TestArchitectureDiagramValidation:
 class TestSequenceDiagramValidation:
     """Tests for sequence diagram validation."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_detects_missing_sequence_diagrams(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation detects missing sequence diagrams."""
         # Arrange
@@ -312,7 +312,7 @@ class TestSequenceDiagramValidation:
         # Assert
         assert "Sequence diagrams for test scenarios" in results.get("missing", [])
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_mermaid_sequence_diagrams(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds mermaid sequence diagrams."""
         # Arrange
@@ -362,7 +362,7 @@ sequenceDiagram
         assert seq_check is not None
         assert seq_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_scenario_sections_without_diagrams_fail(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation fails when scenarios exist but have no diagrams."""
         # Arrange
@@ -407,7 +407,7 @@ sequenceDiagram
         assert seq_check is not None
         assert seq_check["passed"] is False
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_sequence_diagrams_disabled_in_config(self, mock_parse, temp_dir):
         """Test that sequence diagram check can be disabled in config."""
         # Arrange
@@ -436,7 +436,7 @@ sequenceDiagram
 class TestAPIContractDocumentation:
     """Tests for API contract documentation validation."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_detects_missing_api_contracts(self, mock_parse):
         """Test that validation detects missing API contract documentation."""
         # Arrange
@@ -469,7 +469,7 @@ class TestAPIContractDocumentation:
         assert has_contract_check
         assert "API contract documentation" in results.get("missing", [])
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_api_contract_documentation(self, mock_parse, temp_dir):
         """Test that validation finds API contract documentation."""
         # Arrange
@@ -504,7 +504,7 @@ class TestAPIContractDocumentation:
         assert contract_check is not None
         assert contract_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_api_contracts_require_minimum_length(self, mock_parse, temp_dir):
         """Test that API contracts must have meaningful content (not just a few chars)."""
         # Arrange
@@ -539,7 +539,7 @@ class TestAPIContractDocumentation:
 class TestPerformanceBaselineDocumentation:
     """Tests for performance baseline documentation validation."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_detects_missing_baseline_file(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation detects missing baseline file."""
         # Arrange
@@ -571,7 +571,7 @@ class TestPerformanceBaselineDocumentation:
         # Assert
         assert "Performance baseline documentation" in results.get("missing", [])
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_baseline_file(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation finds existing baseline file."""
         # Arrange
@@ -617,7 +617,7 @@ class TestPerformanceBaselineDocumentation:
         assert baseline_check is not None
         assert baseline_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_skips_baseline_check_when_no_benchmarks(self, mock_parse, temp_dir):
         """Test that validation skips baseline check when no performance benchmarks defined."""
         # Arrange
@@ -647,7 +647,7 @@ class TestPerformanceBaselineDocumentation:
 class TestIntegrationPointsDocumentation:
     """Tests for integration points documentation validation."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_detects_missing_integration_points_short_scope(self, mock_parse):
         """Test that validation detects missing integration points when scope is too short."""
         # Arrange
@@ -661,7 +661,7 @@ class TestIntegrationPointsDocumentation:
         # Assert
         assert "Integration points documentation" in results.get("missing", [])
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_finds_integration_points_detailed_scope(self, mock_parse):
         """Test that validation finds integration points when scope is detailed."""
         # Arrange
@@ -683,7 +683,7 @@ class TestIntegrationPointsDocumentation:
         assert points_check is not None
         assert points_check["passed"] is True
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_integration_points_require_minimum_length(self, mock_parse):
         """Test that integration points require meaningful content (more than 20 chars)."""
         # Arrange
@@ -701,7 +701,7 @@ class TestIntegrationPointsDocumentation:
         )
         assert points_check["passed"] is False
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_handles_spec_parse_error_gracefully(self, mock_parse):
         """Test that validation handles spec parse errors gracefully."""
         # Arrange
@@ -725,7 +725,7 @@ class TestIntegrationPointsDocumentation:
 class TestOverallValidation:
     """Tests for overall documentation validation logic."""
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_passes_when_all_requirements_met(self, mock_parse, temp_dir, monkeypatch):
         """Test that validation passes when all documentation requirements are met."""
         # Arrange
@@ -766,7 +766,7 @@ class TestOverallValidation:
         assert results["passed"] is True
         assert len(results["missing"]) == 0
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_fails_when_requirements_not_met(self, mock_parse):
         """Test that validation fails when documentation requirements are not met."""
         # Arrange
@@ -782,7 +782,7 @@ class TestOverallValidation:
         assert results["passed"] is False
         assert len(results["missing"]) > 0
 
-    @patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file")
+    @patch("solokit.quality.checkers.integration.spec_parser.parse_spec_file")
     def test_summary_counts_passed_and_total_checks(self, mock_parse):
         """Test that summary correctly counts passed and total checks."""
         # Arrange

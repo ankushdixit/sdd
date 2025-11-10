@@ -11,7 +11,7 @@ This module tests the logging configuration functionality including:
 import json
 import logging
 
-from sdd.core.logging_config import (
+from solokit.core.logging_config import (
     HumanReadableFormatter,
     LogContext,
     StructuredFormatter,
@@ -27,7 +27,7 @@ class TestSetupLogging:
         """Test that setup_logging creates a logger with INFO level by default."""
         # Arrange & Act
         setup_logging()
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
 
         # Assert
         assert logger.level == logging.INFO
@@ -37,7 +37,7 @@ class TestSetupLogging:
         """Test that setup_logging correctly sets DEBUG log level."""
         # Arrange & Act
         setup_logging(level="DEBUG")
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
 
         # Assert
         assert logger.level == logging.DEBUG
@@ -46,7 +46,7 @@ class TestSetupLogging:
         """Test that setup_logging correctly sets WARNING log level."""
         # Arrange & Act
         setup_logging(level="WARNING")
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
 
         # Assert
         assert logger.level == logging.WARNING
@@ -55,7 +55,7 @@ class TestSetupLogging:
         """Test that setup_logging correctly sets ERROR log level."""
         # Arrange & Act
         setup_logging(level="ERROR")
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
 
         # Assert
         assert logger.level == logging.ERROR
@@ -67,7 +67,7 @@ class TestSetupLogging:
 
         # Act
         setup_logging(log_file=log_file)
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
         logger.info("Test message")
 
         # Assert
@@ -82,7 +82,7 @@ class TestSetupLogging:
 
         # Act
         setup_logging(log_file=log_file, structured=True)
-        logger = logging.getLogger("sdd")
+        logger = logging.getLogger("solokit")
         logger.info("Structured log test")
 
         # Assert
@@ -97,7 +97,7 @@ class TestGetLogger:
     """Test suite for get_logger function."""
 
     def test_get_logger_returns_named_logger(self):
-        """Test that get_logger returns a logger with the specified module name prefixed with 'sdd'."""
+        """Test that get_logger returns a logger with the specified module name prefixed with 'solokit'."""
         # Arrange
         module_name = "test_module"
 
@@ -105,7 +105,7 @@ class TestGetLogger:
         logger = get_logger(module_name)
 
         # Assert
-        assert logger.name == f"sdd.{module_name}"
+        assert logger.name == f"solokit.{module_name}"
         assert isinstance(logger, logging.Logger)
 
 

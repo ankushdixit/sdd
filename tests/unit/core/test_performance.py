@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.performance import Timer, measure_time
+from solokit.core.performance import Timer, measure_time
 
 
 class TestMeasureTime:
@@ -18,7 +18,7 @@ class TestMeasureTime:
         def sample_function():
             return "result"
 
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             result = sample_function()
             assert result == "result"
             # Should not log for fast operations
@@ -32,7 +32,7 @@ class TestMeasureTime:
         def sample_function():
             return "result"
 
-        with patch("sdd.core.performance.logger"):
+        with patch("solokit.core.performance.logger"):
             result = sample_function()
             assert result == "result"
 
@@ -44,7 +44,7 @@ class TestMeasureTime:
             time.sleep(0.15)  # Slightly over 100ms threshold
             return "result"
 
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             result = slow_function()
             assert result == "result"
             # Should log info for operations > 100ms
@@ -58,7 +58,7 @@ class TestMeasureTime:
             time.sleep(1.1)  # Over 1s threshold
             return "result"
 
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             result = very_slow_function()
             assert result == "result"
             # Should log warning for operations > 1s
@@ -72,7 +72,7 @@ class TestMeasureTime:
             time.sleep(0.15)
             raise ValueError("Test error")
 
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             with pytest.raises(ValueError, match="Test error"):
                 failing_function()
             # Should still log performance even when exception occurs
@@ -114,7 +114,7 @@ class TestTimer:
 
     def test_timer_logs_slow_operations(self):
         """Test Timer logs operations > 100ms"""
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             with Timer("slow_operation"):
                 time.sleep(0.15)
 
@@ -122,7 +122,7 @@ class TestTimer:
 
     def test_timer_does_not_log_fast_operations(self):
         """Test Timer doesn't log operations < 100ms"""
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             with Timer("fast_operation"):
                 time.sleep(0.01)
 
@@ -144,7 +144,7 @@ class TestTimer:
 
     def test_timer_with_exception(self):
         """Test Timer still measures time when exception occurs"""
-        with patch("sdd.core.performance.logger") as mock_logger:
+        with patch("solokit.core.performance.logger") as mock_logger:
             try:
                 with Timer("failing_operation") as timer:
                     time.sleep(0.15)

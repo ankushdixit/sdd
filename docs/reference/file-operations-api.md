@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `sdd.core.file_ops` module provides centralized JSON file I/O operations with consistent error handling, atomic writes, and validation hooks. This eliminates code duplication and ensures uniform behavior across the entire codebase.
+The `solokit.core.file_ops` module provides centralized JSON file I/O operations with consistent error handling, atomic writes, and validation hooks. This eliminates code duplication and ensures uniform behavior across the entire codebase.
 
 ## Core Components
 
@@ -11,7 +11,7 @@ The `sdd.core.file_ops` module provides centralized JSON file I/O operations wit
 Custom exception class for all file operation errors.
 
 ```python
-from sdd.core.file_ops import FileOperationError
+from solokit.core.file_ops import FileOperationError
 
 try:
     data = load_json(path)
@@ -56,7 +56,7 @@ def load_json(
 
 ```python
 from pathlib import Path
-from sdd.core.file_ops import JSONFileOperations
+from solokit.core.file_ops import JSONFileOperations
 
 # Load required file (raises if missing)
 data = JSONFileOperations.load_json(Path("config.json"))
@@ -99,7 +99,7 @@ def save_json(
 
 ```python
 from pathlib import Path
-from sdd.core.file_ops import JSONFileOperations
+from solokit.core.file_ops import JSONFileOperations
 
 # Save with atomic write (default)
 JSONFileOperations.save_json(Path("data.json"), {"key": "value"})
@@ -140,7 +140,7 @@ def load_json_safe(file_path: Path, default: dict[str, Any]) -> dict[str, Any]
 
 ```python
 from pathlib import Path
-from sdd.core.file_ops import JSONFileOperations
+from solokit.core.file_ops import JSONFileOperations
 
 # Always returns a dict, never raises
 config = JSONFileOperations.load_json_safe(Path("config.json"), {})
@@ -161,7 +161,7 @@ For convenience and backward compatibility, the module provides simplified funct
 Wrapper for `JSONFileOperations.load_json()` without optional parameters.
 
 ```python
-from sdd.core.file_ops import load_json
+from solokit.core.file_ops import load_json
 
 data = load_json(Path("data.json"))  # Raises FileOperationError if not found
 ```
@@ -171,7 +171,7 @@ data = load_json(Path("data.json"))  # Raises FileOperationError if not found
 Wrapper for `JSONFileOperations.save_json()` with defaults.
 
 ```python
-from sdd.core.file_ops import save_json
+from solokit.core.file_ops import save_json
 
 save_json(Path("data.json"), {"key": "value"})
 ```
@@ -201,7 +201,7 @@ class MyClass:
 
 **After:**
 ```python
-from sdd.core.file_ops import load_json, save_json
+from solokit.core.file_ops import load_json, save_json
 
 class MyClass:
     def load_config(self):
@@ -222,7 +222,7 @@ except FileNotFoundError:
 
 **After:**
 ```python
-from sdd.core.file_ops import JSONFileOperations
+from solokit.core.file_ops import JSONFileOperations
 
 # Option 1: Use default parameter
 data = JSONFileOperations.load_json(path, default={})
@@ -300,7 +300,7 @@ JSONFileOperations.save_json(
 3. **Prefer centralized functions over direct JSON operations:**
    ```python
    # Good
-   from sdd.core.file_ops import load_json, save_json
+   from solokit.core.file_ops import load_json, save_json
 
    # Avoid
    import json

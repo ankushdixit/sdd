@@ -10,8 +10,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult, CommandRunner
-from sdd.quality.checkers.security import SecurityChecker
+from solokit.core.command_runner import CommandResult, CommandRunner
+from solokit.quality.checkers.security import SecurityChecker
 
 
 @pytest.fixture

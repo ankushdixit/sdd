@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandRunner
-from sdd.core.exceptions import FileOperationError
-from sdd.quality.checkers.context7 import Context7Checker
+from solokit.core.command_runner import CommandRunner
+from solokit.core.exceptions import FileOperationError
+from solokit.quality.checkers.context7 import Context7Checker
 
 
 @pytest.fixture

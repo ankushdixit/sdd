@@ -1,16 +1,16 @@
-# Enum Usage Guide for SDD
+# Enum Usage Guide for Solokit
 
-This guide explains how to use type-safe enums throughout the SDD codebase, replacing magic strings.
+This guide explains how to use type-safe enums throughout the Solokit codebase, replacing magic strings.
 
 ## Available Enums
 
-All enums are defined in `src/sdd/core/types.py` and inherit from `str` for JSON serialization compatibility.
+All enums are defined in `src/solokit/core/types.py` and inherit from `str` for JSON serialization compatibility.
 
 ### WorkItemType
 
 Valid work item types:
 ```python
-from sdd.core.types import WorkItemType
+from solokit.core.types import WorkItemType
 
 WorkItemType.FEATURE          # "feature"
 WorkItemType.BUG              # "bug"
@@ -24,7 +24,7 @@ WorkItemType.DEPLOYMENT       # "deployment"
 
 Valid work item statuses:
 ```python
-from sdd.core.types import WorkItemStatus
+from solokit.core.types import WorkItemStatus
 
 WorkItemStatus.NOT_STARTED  # "not_started"
 WorkItemStatus.IN_PROGRESS  # "in_progress"
@@ -36,7 +36,7 @@ WorkItemStatus.COMPLETED    # "completed"
 
 Valid priority levels (with comparison support):
 ```python
-from sdd.core.types import Priority
+from solokit.core.types import Priority
 
 Priority.CRITICAL  # "critical"
 Priority.HIGH      # "high"
@@ -51,7 +51,7 @@ assert Priority.CRITICAL < Priority.HIGH  # True (higher priority = lower value)
 
 Valid git workflow statuses for work item branches:
 ```python
-from sdd.core.types import GitStatus
+from solokit.core.types import GitStatus
 
 GitStatus.IN_PROGRESS     # "in_progress"
 GitStatus.READY_TO_MERGE  # "ready_to_merge"
@@ -184,7 +184,7 @@ def process_work_item(item):
 
 ### After:
 ```python
-from sdd.core.types import WorkItemType, WorkItemStatus
+from solokit.core.types import WorkItemType, WorkItemStatus
 
 def process_work_item(item):
     if item["status"] == WorkItemStatus.COMPLETED.value:
@@ -236,7 +236,7 @@ def create_work_item():
     return {"type": WorkItemType.FEATURE.value}  # NameError!
 
 # ✅ CORRECT - proper import
-from sdd.core.types import WorkItemType
+from solokit.core.types import WorkItemType
 
 def create_work_item():
     return {"type": WorkItemType.FEATURE.value}
@@ -296,10 +296,10 @@ The enum refactoring maintains full backward compatibility:
 
 | Enum | Import | Values Method | Example Usage |
 |------|--------|---------------|---------------|
-| `WorkItemType` | `from sdd.core.types import WorkItemType` | `WorkItemType.values()` | `WorkItemType.FEATURE.value` |
-| `WorkItemStatus` | `from sdd.core.types import WorkItemStatus` | `WorkItemStatus.values()` | `WorkItemStatus.IN_PROGRESS.value` |
-| `Priority` | `from sdd.core.types import Priority` | `Priority.values()` | `Priority.HIGH.value` |
-| `GitStatus` | `from sdd.core.types import GitStatus` | `GitStatus.values()` | `GitStatus.IN_PROGRESS.value` |
+| `WorkItemType` | `from solokit.core.types import WorkItemType` | `WorkItemType.values()` | `WorkItemType.FEATURE.value` |
+| `WorkItemStatus` | `from solokit.core.types import WorkItemStatus` | `WorkItemStatus.values()` | `WorkItemStatus.IN_PROGRESS.value` |
+| `Priority` | `from solokit.core.types import Priority` | `Priority.values()` | `Priority.HIGH.value` |
+| `GitStatus` | `from solokit.core.types import GitStatus` | `GitStatus.values()` | `GitStatus.IN_PROGRESS.value` |
 
 ## Questions or Issues?
 
@@ -310,4 +310,4 @@ If you encounter issues with enum usage:
 3. Verify enum inheritance from `str` is maintained
 4. Run tests to catch any type mismatches
 
-For more information, see `src/sdd/core/types.py` or the comprehensive unit tests in `tests/unit/test_types.py`.
+For more information, see `src/solokit/core/types.py` or the comprehensive unit tests in `tests/unit/test_types.py`.

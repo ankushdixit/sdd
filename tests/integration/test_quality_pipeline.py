@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.quality.gates import QualityGates
+from solokit.quality.gates import QualityGates
 
 
 class TestQualityGatesInit:
@@ -200,9 +200,11 @@ class TestIntegrationTestsDisabled:
         }
 
         # Act
-        with patch("sdd.work_items.spec_parser.parse_spec_file") as mock_parse:
+        with patch("solokit.work_items.spec_parser.parse_spec_file") as mock_parse:
             mock_parse.return_value = {"test_scenarios": []}
-            with patch("sdd.testing.integration_runner.IntegrationTestRunner") as mock_runner_class:
+            with patch(
+                "solokit.testing.integration_runner.IntegrationTestRunner"
+            ) as mock_runner_class:
                 mock_runner = Mock()
                 # setup_environment now raises exceptions instead of returning tuple
                 mock_runner.setup_environment.return_value = None
@@ -372,7 +374,7 @@ class TestIntegrationTestExecution:
         work_item = {"id": "INTEG-001", "type": "integration_test"}
 
         # Act & Assert
-        from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+        from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
 
         with pytest.raises(
             SDDFileNotFoundError, match="File not found: .session/specs/INTEG-001.md"

@@ -9,7 +9,7 @@ Run tests:
 Target: 90%+ coverage
 """
 
-from sdd.init.gitignore_updater import (
+from solokit.init.gitignore_updater import (
     get_os_specific_gitignore_entries,
     get_stack_specific_gitignore_entries,
     update_gitignore,

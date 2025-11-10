@@ -10,12 +10,12 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     CommandExecutionError,
     FileOperationError,
     ValidationError,
 )
-from sdd.visualization.dependency_graph import DependencyGraphVisualizer
+from solokit.visualization.dependency_graph import DependencyGraphVisualizer
 
 
 @pytest.fixture
@@ -481,11 +481,11 @@ class TestGenerateAscii:
 class TestGenerateSvg:
     """Tests for generate_svg method."""
 
-    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
+    @patch("solokit.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_success(self, mock_run, tmp_path):
         """Test that generate_svg successfully generates SVG file."""
         # Arrange
-        from sdd.core.command_runner import CommandResult
+        from solokit.core.command_runner import CommandResult
 
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
@@ -510,11 +510,11 @@ class TestGenerateSvg:
         assert "-o" in call_args
         assert str(output_file) in call_args
 
-    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
+    @patch("solokit.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_graphviz_not_found(self, mock_run, tmp_path):
         """Test that generate_svg raises CommandExecutionError when Graphviz not installed."""
         # Arrange
-        from sdd.core.command_runner import CommandResult
+        from solokit.core.command_runner import CommandResult
 
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
@@ -534,11 +534,11 @@ class TestGenerateSvg:
 
         assert exc_info.value.context["returncode"] == 127
 
-    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
+    @patch("solokit.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_timeout(self, mock_run, tmp_path):
         """Test that generate_svg raises CommandExecutionError on timeout."""
         # Arrange
-        from sdd.core.command_runner import CommandResult
+        from solokit.core.command_runner import CommandResult
 
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"
@@ -556,11 +556,11 @@ class TestGenerateSvg:
         with pytest.raises(CommandExecutionError):
             viz.generate_svg(dot_content, output_file)
 
-    @patch("sdd.visualization.dependency_graph.CommandRunner.run")
+    @patch("solokit.visualization.dependency_graph.CommandRunner.run")
     def test_generate_svg_nonzero_exit(self, mock_run, tmp_path):
         """Test that generate_svg raises CommandExecutionError on non-zero exit code."""
         # Arrange
-        from sdd.core.command_runner import CommandResult
+        from solokit.core.command_runner import CommandResult
 
         viz = DependencyGraphVisualizer()
         output_file = tmp_path / "output.svg"

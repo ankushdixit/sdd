@@ -1,7 +1,7 @@
 """
 Shared fixtures for init module tests.
 
-This module provides common fixtures for testing the SDD initialization system.
+This module provides common fixtures for testing the Solokit initialization system.
 All tests in tests/unit/init/ can use these fixtures.
 """
 

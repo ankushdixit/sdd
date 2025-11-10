@@ -14,8 +14,8 @@ import os
 
 import pytest
 
-from sdd.core.exceptions import ValidationError
-from sdd.quality.env_validator import EnvironmentValidator
+from solokit.core.exceptions import ValidationError
+from solokit.quality.env_validator import EnvironmentValidator
 
 
 class TestEnvironmentValidatorInit:

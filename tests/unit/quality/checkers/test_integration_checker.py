@@ -8,14 +8,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult, CommandRunner
-from sdd.core.exceptions import (
+from solokit.core.command_runner import CommandResult, CommandRunner
+from solokit.core.exceptions import (
     EnvironmentSetupError,
     IntegrationExecutionError,
     IntegrationTestError,
 )
-from sdd.core.types import WorkItemType
-from sdd.quality.checkers.integration import IntegrationChecker
+from solokit.core.types import WorkItemType
+from solokit.quality.checkers.integration import IntegrationChecker
 
 
 @pytest.fixture
@@ -142,7 +142,7 @@ class TestIntegrationCheckerRun:
         assert result.status == "skipped"
         assert result.info.get("reason") == "not integration test"
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_passes_when_tests_pass(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -158,7 +158,7 @@ class TestIntegrationCheckerRun:
         assert result.status == "passed"
         assert result.info["integration_tests"]["passed"] == 5
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_fails_when_tests_fail(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -175,7 +175,7 @@ class TestIntegrationCheckerRun:
         assert len(result.errors) > 0
         assert "2 integration tests failed" in result.errors[0]["message"]
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_handles_environment_setup_error(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -194,7 +194,7 @@ class TestIntegrationCheckerRun:
         assert len(result.errors) > 0
         assert "Docker not available" in result.errors[0]["message"]
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_handles_integration_execution_error(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -212,7 +212,7 @@ class TestIntegrationCheckerRun:
         assert result.status == "failed"
         assert "Test execution failed" in result.errors[0]["message"]
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_handles_integration_test_error(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -227,7 +227,7 @@ class TestIntegrationCheckerRun:
         assert result.passed is False
         assert result.status == "failed"
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_tears_down_environment_on_success(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -241,7 +241,7 @@ class TestIntegrationCheckerRun:
 
         mock_runner_instance.teardown_environment.assert_called_once()
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_tears_down_environment_on_failure(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -255,7 +255,7 @@ class TestIntegrationCheckerRun:
 
         mock_runner_instance.teardown_environment.assert_called_once()
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_logs_teardown_failure_as_warning(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -273,8 +273,8 @@ class TestIntegrationCheckerRun:
         assert len(result.warnings) > 0
         assert "Environment teardown failed" in result.warnings[0]["message"]
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
-    @patch("sdd.testing.performance.PerformanceBenchmark")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.performance.PerformanceBenchmark")
     def test_run_includes_performance_benchmarks(
         self,
         mock_benchmark_class,
@@ -302,8 +302,8 @@ class TestIntegrationCheckerRun:
         assert result.passed is True
         assert result.info["performance_benchmarks"]["latency"] == "100ms"
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
-    @patch("sdd.testing.performance.PerformanceBenchmark")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.performance.PerformanceBenchmark")
     def test_run_fails_when_required_benchmarks_fail(
         self,
         mock_benchmark_class,
@@ -331,8 +331,8 @@ class TestIntegrationCheckerRun:
         assert result.passed is False
         assert any("Performance benchmarks failed" in e["message"] for e in result.errors)
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
-    @patch("sdd.testing.performance.PerformanceBenchmark")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.performance.PerformanceBenchmark")
     def test_run_warns_when_optional_benchmarks_fail(
         self, mock_benchmark_class, mock_runner_class, integration_work_item
     ):
@@ -360,8 +360,8 @@ class TestIntegrationCheckerRun:
             "Performance benchmarks failed (optional)" in w["message"] for w in result.warnings
         )
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
-    @patch("sdd.quality.api_validator.APIContractValidator")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.quality.api_validator.APIContractValidator")
     def test_run_includes_api_contracts(
         self,
         mock_validator_class,
@@ -389,8 +389,8 @@ class TestIntegrationCheckerRun:
         assert result.passed is True
         assert result.info["api_contracts"]["contracts"] == 3
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
-    @patch("sdd.quality.api_validator.APIContractValidator")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.quality.api_validator.APIContractValidator")
     def test_run_fails_when_required_contracts_fail(
         self,
         mock_validator_class,
@@ -418,7 +418,7 @@ class TestIntegrationCheckerRun:
         assert result.passed is False
         assert any("API contract validation failed" in e["message"] for e in result.errors)
 
-    @patch("sdd.testing.integration_runner.IntegrationTestRunner")
+    @patch("solokit.testing.integration_runner.IntegrationTestRunner")
     def test_run_includes_execution_time(
         self, mock_runner_class, integration_config, integration_work_item
     ):
@@ -683,7 +683,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser to return integration points
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {
                 "scope": "This is a detailed scope with integration points documented here."
             }
@@ -720,7 +722,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {"scope": "Detailed scope with integration points."}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
@@ -755,7 +759,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with sequence diagrams
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "test_scenarios": [
@@ -796,7 +802,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser without sequence diagrams
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope",
                 "test_scenarios": [
@@ -835,7 +843,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with API contracts
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "api_contracts": "API contracts are documented here with endpoints and schemas.",
@@ -878,7 +888,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser with performance benchmarks
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {
                 "scope": "Integration scope with detailed integration points documentation.",
                 "performance_benchmarks": "Performance benchmarks are documented here with latency targets.",
@@ -915,7 +927,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser to raise error
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.side_effect = ValueError("Spec file not found")
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
@@ -949,7 +963,9 @@ class TestIntegrationCheckerValidateDocumentation:
         )
 
         # Mock spec parser
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {"scope": "Integration points documented here."}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})
@@ -965,7 +981,9 @@ class TestIntegrationCheckerValidateDocumentation:
         monkeypatch.chdir(tmp_path)
 
         # Mock spec parser
-        with patch("sdd.quality.checkers.integration.spec_parser.parse_spec_file") as mock_parse:
+        with patch(
+            "solokit.quality.checkers.integration.spec_parser.parse_spec_file"
+        ) as mock_parse:
             mock_parse.return_value = {"scope": "Integration scope"}
 
             checker = IntegrationChecker(integration_work_item, {"enabled": True})

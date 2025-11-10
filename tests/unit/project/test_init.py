@@ -1,7 +1,7 @@
 """Unit tests for init_project module.
 
 This module tests the project initialization functionality which creates
-the SDD project structure, tracking files, and git repository.
+the Solokit project structure, tracking files, and git repository.
 """
 
 import json
@@ -11,9 +11,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.command_runner import CommandResult
-from sdd.core.exceptions import DirectoryNotEmptyError
-from sdd.project.init import (
+from solokit.core.command_runner import CommandResult
+from solokit.core.exceptions import DirectoryNotEmptyError
+from solokit.project.init import (
     check_or_init_git,
     create_initial_commit,
     create_session_structure,
@@ -58,8 +58,8 @@ def mock_template_dir(tmp_path):
     # Create test templates
     tests_dir = template_dir / "tests"
     tests_dir.mkdir()
-    (tests_dir / "sdd-setup.test.ts").write_text("test('setup', () => {});")
-    (tests_dir / "sdd-setup.test.js").write_text("test('setup', () => {});")
+    (tests_dir / "solokit-setup.test.ts").write_text("test('setup', () => {});")
+    (tests_dir / "solokit-setup.test.js").write_text("test('setup', () => {});")
     (tests_dir / "test_sdd_setup.py").write_text("def test_setup(): pass")
 
     # Create config templates
@@ -158,7 +158,7 @@ class TestInstallGitHooks:
     def test_git_hooks_dir_not_found(self, temp_project):
         """Test when .git/hooks directory doesn't exist."""
         # Act & Assert
-        from sdd.core.exceptions import NotAGitRepoError
+        from solokit.core.exceptions import NotAGitRepoError
 
         with pytest.raises(NotAGitRepoError):
             install_git_hooks(temp_project)
@@ -172,10 +172,10 @@ class TestInstallGitHooks:
         mock_copy.side_effect = OSError("Permission denied")
 
         # Mock the template path to exist
-        from sdd.core.exceptions import FileOperationError
+        from solokit.core.exceptions import FileOperationError
 
         with patch.object(Path, "exists", return_value=True):
-            with patch("sdd.project.init.Path") as mock_path:
+            with patch("solokit.project.init.Path") as mock_path:
                 # Setup mock to return our template dir
                 mock_file = Mock()
                 mock_file.parent.parent = mock_template_dir.parent
@@ -555,7 +555,7 @@ class TestCreateSmokeTests:
         monkeypatch.chdir(temp_project)
         test_dir = temp_project / "tests"
         test_dir.mkdir()
-        test_file = test_dir / "sdd-setup.test.ts"
+        test_file = test_dir / "solokit-setup.test.ts"
         test_file.write_text("// My custom test")
 
         # Act
@@ -878,18 +878,18 @@ class TestInitProject:
         assert ".session" in str(exc_info.value)
         assert "already exists" in str(exc_info.value)
 
-    @patch("sdd.project.init.create_initial_commit")
-    @patch("sdd.project.init.ensure_gitignore_entries")
-    @patch("sdd.project.init.run_initial_scans")
-    @patch("sdd.project.init.initialize_tracking_files")
-    @patch("sdd.project.init.create_session_structure")
-    @patch("sdd.project.init.create_smoke_tests")
-    @patch("sdd.project.init.install_dependencies")
-    @patch("sdd.project.init.ensure_config_files")
-    @patch("sdd.project.init.ensure_package_manager_file")
-    @patch("sdd.project.init.detect_project_type")
-    @patch("sdd.project.init.install_git_hooks")
-    @patch("sdd.project.init.check_or_init_git")
+    @patch("solokit.project.init.create_initial_commit")
+    @patch("solokit.project.init.ensure_gitignore_entries")
+    @patch("solokit.project.init.run_initial_scans")
+    @patch("solokit.project.init.initialize_tracking_files")
+    @patch("solokit.project.init.create_session_structure")
+    @patch("solokit.project.init.create_smoke_tests")
+    @patch("solokit.project.init.install_dependencies")
+    @patch("solokit.project.init.ensure_config_files")
+    @patch("solokit.project.init.ensure_package_manager_file")
+    @patch("solokit.project.init.detect_project_type")
+    @patch("solokit.project.init.install_git_hooks")
+    @patch("solokit.project.init.check_or_init_git")
     def test_init_project_full_workflow(
         self,
         mock_git,
@@ -921,7 +921,7 @@ class TestInitProject:
 
         # Assert
         assert result == 0
-        assert "SDD Initialized Successfully!" in caplog.text
+        assert "Solokit Initialized Successfully!" in caplog.text
         mock_git.assert_called_once()
         mock_hooks.assert_called_once()
         mock_detect.assert_called_once()
@@ -935,18 +935,18 @@ class TestInitProject:
         mock_gitignore.assert_called_once()
         mock_commit.assert_called_once()
 
-    @patch("sdd.project.init.create_initial_commit")
-    @patch("sdd.project.init.ensure_gitignore_entries")
-    @patch("sdd.project.init.run_initial_scans")
-    @patch("sdd.project.init.initialize_tracking_files")
-    @patch("sdd.project.init.create_session_structure")
-    @patch("sdd.project.init.create_smoke_tests")
-    @patch("sdd.project.init.install_dependencies")
-    @patch("sdd.project.init.ensure_config_files")
-    @patch("sdd.project.init.ensure_package_manager_file")
-    @patch("sdd.project.init.detect_project_type")
-    @patch("sdd.project.init.install_git_hooks")
-    @patch("sdd.project.init.check_or_init_git")
+    @patch("solokit.project.init.create_initial_commit")
+    @patch("solokit.project.init.ensure_gitignore_entries")
+    @patch("solokit.project.init.run_initial_scans")
+    @patch("solokit.project.init.initialize_tracking_files")
+    @patch("solokit.project.init.create_session_structure")
+    @patch("solokit.project.init.create_smoke_tests")
+    @patch("solokit.project.init.install_dependencies")
+    @patch("solokit.project.init.ensure_config_files")
+    @patch("solokit.project.init.ensure_package_manager_file")
+    @patch("solokit.project.init.detect_project_type")
+    @patch("solokit.project.init.install_git_hooks")
+    @patch("solokit.project.init.check_or_init_git")
     def test_init_project_python_workflow(
         self,
         mock_git,
@@ -989,21 +989,23 @@ class TestInitProject:
         # Arrange
         monkeypatch.chdir(temp_project)
 
-        with patch("sdd.project.init.check_or_init_git", return_value=True):
-            with patch("sdd.project.init.install_git_hooks", return_value=True):
-                with patch("sdd.project.init.detect_project_type", return_value="python"):
-                    with patch("sdd.project.init.ensure_package_manager_file"):
-                        with patch("sdd.project.init.ensure_config_files"):
-                            with patch("sdd.project.init.install_dependencies"):
-                                with patch("sdd.project.init.create_smoke_tests"):
-                                    with patch("sdd.project.init.create_session_structure"):
-                                        with patch("sdd.project.init.initialize_tracking_files"):
-                                            with patch("sdd.project.init.run_initial_scans"):
+        with patch("solokit.project.init.check_or_init_git", return_value=True):
+            with patch("solokit.project.init.install_git_hooks", return_value=True):
+                with patch("solokit.project.init.detect_project_type", return_value="python"):
+                    with patch("solokit.project.init.ensure_package_manager_file"):
+                        with patch("solokit.project.init.ensure_config_files"):
+                            with patch("solokit.project.init.install_dependencies"):
+                                with patch("solokit.project.init.create_smoke_tests"):
+                                    with patch("solokit.project.init.create_session_structure"):
+                                        with patch(
+                                            "solokit.project.init.initialize_tracking_files"
+                                        ):
+                                            with patch("solokit.project.init.run_initial_scans"):
                                                 with patch(
-                                                    "sdd.project.init.ensure_gitignore_entries"
+                                                    "solokit.project.init.ensure_gitignore_entries"
                                                 ):
                                                     with patch(
-                                                        "sdd.project.init.create_initial_commit",
+                                                        "solokit.project.init.create_initial_commit",
                                                         return_value=True,
                                                     ):
                                                         # Act
@@ -1019,4 +1021,4 @@ class TestInitProject:
         assert ".session/ structure" in caplog.text
         assert "Project context" in caplog.text
         assert ".gitignore updated" in caplog.text
-        assert "/sdd:work-new" in caplog.text
+        assert "/sk:work-new" in caplog.text

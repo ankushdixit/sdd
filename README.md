@@ -1,443 +1,451 @@
-# SDD (Session-Driven Development)
+# Solokit
 
-[![PyPI](https://img.shields.io/pypi/v/session-driven-development)](https://pypi.org/project/session-driven-development/)
-[![Tests](https://github.com/ankushdixit/sdd/workflows/Tests/badge.svg)](https://github.com/ankushdixit/sdd/actions?query=workflow%3ATests)
+[![PyPI](https://img.shields.io/pypi/v/solokit)](https://pypi.org/project/solokit/)
+[![Tests](https://github.com/ankushdixit/solokit/workflows/Tests/badge.svg)](https://github.com/ankushdixit/solokit/actions?query=workflow%3ATests)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/ankushdixit/sdd)
-[![GitHub Stars](https://img.shields.io/github/stars/ankushdixit/sdd?style=social)](https://github.com/ankushdixit/sdd/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/ankushdixit/sdd)](https://github.com/ankushdixit/sdd/issues)
+[![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/ankushdixit/solokit)
 
-**Session-Driven Development for Claude Code** - Maintain perfect context across multiple AI coding sessions.
+**Build production software alone with team-level sophistication.**
 
-> **Note:** This is designed for solo developers using Claude Code. It provides comprehensive session management, quality gates, and knowledge accumulation for AI-augmented software development.
+> Structured Solo Development with AI and Quality Automation for Claude Code
 
-## Overview
+## What is Solokit?
 
-**SDD** implements **Session-Driven Development**, a comprehensive methodology that enables AI coding assistants to work on software projects across multiple sessions with perfect context continuity, enforced quality standards, and accumulated institutional knowledge.
+**Solokit is a complete development framework for solo developers building production software with AI assistants like Claude Code.** It combines production-ready project templates, automated quality gates, intelligent session management, and AI-powered knowledge capture into a cohesive workflow that enables you to build alone with the sophistication of a 10-person engineering team.
 
-### The Problem
+### The Core Problem
 
-Traditional AI coding sessions suffer from:
-- **Context loss** between sessions - AI forgets what was done previously
-- **Quality entropy** over time - Standards slip without enforcement
-- **Knowledge fragmentation** across interactions - Learnings get lost
-- **Lack of process rigor** - No systematic workflow for complex projects
+Solo developers using AI assistants face critical challenges:
+- **Setup Time Waste** - Spending hours configuring frameworks, linters, tests, CI/CD
+- **Context Loss** - AI forgets previous work between sessions
+- **Quality Entropy** - Standards slip without enforcement
+- **Knowledge Fragmentation** - Learnings and decisions get lost
+- **Lack of Process** - No systematic workflow for complex projects
 
-### The Solution
+### The Solokit Solution
 
-Session-Driven Development provides:
-- **Perfect context continuity** through automated briefings that load full project state
-- **Quality enforcement** via automated validation gates (tests, linting, security scans)
-- **Knowledge accumulation** through learnings system with AI-powered categorization
-- **Dependency-driven workflow** (logical ordering based on dependencies, not arbitrary sequences)
-- **Living documentation** that stays current automatically with git integration
+**🚀 Production-Ready in <1 Minute**
+- 4 validated project templates (T3 Stack, FastAPI, Refine, Next.js)
+- 4 quality tiers (Essential → Production-Ready)
+- All dependencies version-pinned and compatibility-tested
+- CI/CD, Docker, pre-commit hooks included
 
-## Features
+**✨ Perfect Context Continuity**
+- Comprehensive AI briefings restore full project state
+- Spec-first architecture with complete implementation details
+- Previous work context for multi-session features
+- Dependency-aware workflow recommendations
 
-### Core Commands
+**🛡️ Zero-Compromise Quality**
+- Automated gates: tests, linting, formatting, security
+- Coverage thresholds, mutation testing, E2E tests
+- Performance monitoring, error tracking (tier 4)
+- Spec validation before and after sessions
 
-**Session Management:**
-- `/init` - Initialize project with .session/ structure
-- `/start` - Begin work session with comprehensive briefing
-- `/end` - Complete session with quality gates and summary
-- `/validate` - Pre-flight check before session completion
-- `/status` - Quick session overview
-
-**Work Item Management:**
-- `/work-new` - Create new work item with dependencies
-- `/work-list` - List work items with filters
-- `/work-show` - Show work item details
-- `/work-update` - Update work item fields
-- `/work-next` - Get next recommended work item
-- `/work-graph` - Visualize dependencies with critical path
-
-**Learning Management:**
-- `/learn` - Capture insight during development
-- `/learn-show` - Browse learnings with filters
-- `/learn-search` - Full-text search across learnings
-- `/learn-curate` - Run curation process (categorize, deduplicate, merge)
-
-### Key Capabilities
-
-✅ **Stateful Development** - Perfect context handoffs between sessions
-✅ **Quality Gates** - Tests, linting, formatting enforced before completion
-✅ **Dependency Management** - Work items ordered by logical dependencies
-✅ **Learning System** - Auto-categorized knowledge base with smart deduplication
-✅ **Visualization** - Dependency graphs with critical path analysis
-✅ **Git Integration** - Standardized commits with session summaries
-
-### Dependency Graph Visualization
-
-Visualize project structure and identify bottlenecks with dependency graphs:
-
-```bash
-# Via slash command
-/work-graph
-/work-graph --critical-path
-/work-graph --bottlenecks
-/work-graph --milestone "Phase 3"
-
-# Via CLI
-sdd work-graph
-sdd work-graph --format svg --output graph.svg
-sdd work-graph --stats
-```
-
-**Features:**
-- **Critical Path Highlighting** - Red nodes/edges show longest dependency chain
-- **Bottleneck Detection** - Identify items blocking multiple other items
-- **Multiple Formats** - ASCII (terminal), DOT (Graphviz), SVG (visual)
-- **Flexible Filtering** - By status, milestone, type, or focus on specific items
-- **Timeline Projection** - Estimate completion based on dependency levels
-
-### Learning System
-
-Automated knowledge capture and curation with AI-powered categorization:
-
-```bash
-# Via slash commands
-/learn                    # Capture insight conversationally
-/learn-show               # Browse all learnings
-/learn-show --category gotchas --tag fastapi
-/learn-search "CORS"      # Full-text search
-/learn-curate             # Run curation (categorize, deduplicate, merge)
-
-# Via CLI
-sdd learn-show
-sdd learn-search "keyword"
-sdd learn-curate --dry-run
-```
-
-**Features:**
-- **6 Learning Categories** - Auto-categorized (architecture, gotchas, best practices, technical debt, performance, security)
-- **3 Extraction Sources** - Session summaries, git commits (`LEARNING:` annotations), inline code comments (`# LEARNING:`)
-- **Similarity Detection** - Jaccard + containment algorithms detect duplicates
-- **Smart Deduplication** - Automatically merges similar learnings
-- **Advanced Filtering** - By category, tag, session, date range
-- **Statistics Dashboard** - Total learnings, by category, top tags, growth over time
-- **Timeline View** - Learning history by session
-- **Auto-Curation** - Runs every N sessions (configurable)
-
-## Installation
-
-### Option 1: Claude Code Plugin + PyPI (Recommended)
-
-For the best experience with both slash commands and CLI:
-
-**Step 1:** Install the SDD plugin from Claude Code marketplace (`ankushdixit/claude-plugins`)
-
-**Step 2:** Install the Python package:
-```bash
-pip install session-driven-development
-```
-
-**Step 3:** Verify installation:
-```bash
-sdd status
-```
-
-Now you have:
-- ✅ Slash commands available in Claude Code (`/sdd:init`, `/sdd:start`, `/sdd:end`, etc.)
-- ✅ CLI commands available globally (`sdd status`, `sdd work-list`, etc.)
-
-### Option 2: From Source (For Contributors)
-
-For development or customization:
-
-```bash
-# Clone repository
-git clone https://github.com/ankushdixit/sdd.git
-cd sdd
-
-# Install as editable package
-pip install -e .
-
-# Optional: Install with dev tools
-pip install -e ".[dev]"
-
-# Verify installation
-sdd status
-```
-
-This installs the package in editable mode, allowing you to modify the source code.
-
-### Verify Installation
-
-```bash
-# Check sdd command is available
-which sdd
-
-# Test the CLI
-sdd status
-
-# Optional: Run test suite
-pytest tests/ -v
-```
-
-### Prerequisites
-
-- **Claude Code**: Required for slash command integration
-- **Python 3.9+**: Core scripts require Python
-- **Git**: Required for version control integration
-- **Optional Tools** (for quality gates):
-  - `pytest`, `ruff` (Python linting/testing)
-  - `bandit`, `safety` (Security scanning)
-  - `eslint`, `prettier` (JavaScript/TypeScript)
-  - `graphviz` (Dependency graph visualization)
-
-Quality gates gracefully skip when tools aren't available.
+**🧠 Knowledge That Grows**
+- AI-powered learning categorization (6 categories)
+- Automatic extraction from commits and code comments
+- Smart deduplication and similarity detection
+- Searchable, filterable knowledge base
 
 ## Quick Start
 
-### 1. Initialize Your Project
+### 1. Install Solokit
 
-Start by initializing the Session-Driven Development structure in your project:
-
-```
-/init
+```bash
+pip install solokit
 ```
 
-This creates:
-- `.session/` directory with tracking files
-- `work_items.json` for task management
-- `learnings.json` for knowledge capture
-- `status_update.json` for session state
-- `tracking/` subdirectory for stack, tree, and other artifacts
-- `config.json` with project configuration
+### 2. Initialize Your Project
 
-### 2. Create Your First Work Item
-
-Create a work item (task) to work on:
-
-```
-/work-new
+```bash
+sk init
 ```
 
-Follow the conversational prompts to specify:
-- Type (feature, bug, refactor, security, integration_test, deployment)
-- Title and description
-- Acceptance criteria
-- Dependencies (if any)
-- Priority level
+Choose from **4 production-ready stacks**:
+- **SaaS T3 Stack** - Next.js + tRPC + Prisma (full-stack SaaS)
+- **ML/AI FastAPI** - FastAPI + Python ML libraries (model serving, data pipelines)
+- **Dashboard Refine** - Refine + shadcn/ui (admin panels, internal tools)
+- **Full-Stack Next.js** - Next.js + Prisma (general purpose web apps)
 
-### 3. Start a Development Session
+Select your **quality tier**:
+- **Essential** (60-80% coverage) - Prototypes, MVPs
+- **Standard** (80% coverage + security) - Production apps
+- **Comprehensive** (90% coverage + E2E + mutation) - Mission-critical
+- **Production-Ready** (+ monitoring + observability) - Enterprise-grade
 
-When ready to work, start a session:
+Options: CI/CD workflows, Docker support, pre-commit hooks, environment templates
 
-```
-/start
-```
+### 3. Start Building
 
-Or specify a work item ID:
+```bash
+# Create your first work item
+sk work-new
 
-```
-/start WI-001
-```
+# Start a development session
+sk start
 
-This generates a comprehensive briefing including:
-- Work item details and acceptance criteria
-- Project documentation (vision, architecture, PRD)
-- Current technology stack
-- Project structure (tree)
-- Git status and branch information
-- Related learnings from past sessions
-- Dependency context
+# Claude receives a comprehensive briefing with:
+# - Complete work item specification
+# - Project documentation and context
+# - Technology stack and file structure
+# - Related learnings from past sessions
+# - Dependency information
 
-### 4. Work on Your Task
+# Work with Claude...
 
-Develop your feature/fix with Claude Code's assistance. During the session:
-
-- **Capture learnings:**
-  ```
-  /learn
-  ```
-
-- **Check session status:**
-  ```
-  /status
-  ```
-
-- **Validate readiness:**
-  ```
-  /validate
-  ```
-
-### 5. Complete the Session
-
-When done, end the session:
-
-```
-/end
+# End session with automated quality gates
+sk end
 ```
 
-This automatically:
-- Runs quality gates (tests, linting, security scans)
-- Updates stack and tree tracking
-- Extracts learnings from your work
-- Commits changes with standardized message
-- Pushes to remote
-- Updates work item status
-- Generates session summary
+**That's it!** You now have:
+- ✅ Production-ready project setup
+- ✅ Automated quality enforcement
+- ✅ Perfect AI context continuity
+- ✅ Growing knowledge base
 
-## Typical Workflow
+## Key Features
 
-```mermaid
-graph TD
-    A["init"] --> B["work-new"]
-    B --> C["work-list"]
-    C --> D["start"]
-    D --> E["Develop with Claude"]
-    E --> F["learn"]
-    E --> G["validate"]
-    G --> H["end"]
-    H --> I{"More work?"}
-    I -->|Yes| B
-    I -->|No| J["Done"]
-```
+### 🎯 Production-Ready Templates
 
-## Work Item Management
+Initialize projects with battle-tested configurations:
 
-### Viewing Work Items
+**SaaS T3 Stack** (`saas_t3`)
+- Next.js 16.0.1, React 19.2.0, tRPC 11.7.1, Prisma 6.19.0
+- End-to-end type safety from database to UI
+- Perfect for: SaaS products, B2B apps, complex data models
 
-```
-/work-list                    # All work items
-/work-list --status not_started  # Filter by status
-/work-list --milestone "Phase 1"  # Filter by milestone
-/work-show WI-001             # Show specific item
-```
+**ML/AI FastAPI** (`ml_ai_fastapi`)
+- FastAPI 0.115.6, Python 3.11+, SQLModel, Pydantic 2.12.4
+- Async request handling, automatic OpenAPI docs
+- Perfect for: ML model serving, data pipelines, Python microservices
 
-### Managing Dependencies
+**Dashboard Refine** (`dashboard_refine`)
+- Refine 5.0.5, Next.js 16.0.1, shadcn/ui
+- Out-of-the-box CRUD operations and admin UI
+- Perfect for: Admin panels, internal dashboards, data management
 
-```
-/work-graph                   # Visualize all dependencies
-/work-graph --critical-path   # Show critical path
-/work-graph --bottlenecks     # Identify blockers
-/work-next                    # Get next available item
-```
+**Full-Stack Next.js** (`fullstack_nextjs`)
+- Next.js 16.0.1, React 19.2.0, Prisma 6.19.0
+- General purpose with REST APIs
+- Perfect for: Marketing sites, content platforms, e-commerce
 
-### Updating Work Items
+**All templates include:**
+- Exact version pinning (all tested for compatibility)
+- Framework-specific ESLint/Prettier configurations
+- Testing setup with framework utilities
+- TypeScript/Python type checking
+- Security scanning configured
+- Docker Compose for local development
+- CI/CD workflows (GitHub Actions)
+- Environment variable templates
 
-```
-/work-update WI-001 --status in_progress
-/work-update WI-001 --priority high
-```
+### 🛡️ Quality Gates
 
-## Spec-First Workflow
+Automated validation prevents technical debt:
 
-**The spec file is the single source of truth for work item content.**
+**Available Checkers:**
+- **Tests** - Unit, integration, E2E with coverage thresholds
+- **Linting** - Code quality (ESLint/Ruff) with auto-fix
+- **Formatting** - Code style (Prettier/Ruff) with auto-format
+- **Security** - Vulnerability scanning (bandit, safety, npm audit)
+- **Type Checking** - Static analysis (TypeScript/mypy)
+- **Documentation** - CHANGELOG, README, docstring validation
+- **Spec Completeness** - Work item specification validation
+- **Performance** - Benchmarks and regression detection
 
-SDD implements a **spec-first architecture** (Phase 5.7) where work item specifications are the authoritative source for implementation details, acceptance criteria, and testing strategies.
+**Quality Tiers:**
 
-### Architecture Overview
+| Tier | Use Case | What's Included |
+|------|----------|-----------------|
+| **Essential** | Prototypes, MVPs | Linting, formatting, type-check, basic tests (60-80% coverage) |
+| **Standard** | Production apps | Essential + Pre-commit hooks, security scanning, dependency auditing |
+| **Comprehensive** | Mission-critical | Standard + Mutation testing (75%+), E2E tests, integration tests |
+| **Production-Ready** | Enterprise | Comprehensive + Sentry, OpenTelemetry, performance monitoring, health checks |
 
-```
-.session/
-├── specs/
-│   ├── feature_xyz.md      ← Single source of truth (content)
-│   └── deployment_abc.md
-└── tracking/
-    └── work_items.json      ← Tracking only (metadata, status, dependencies)
-```
-
-### Key Concepts
-
-**Spec Files (`.session/specs/{work_item_id}.md`)**
-- **Content**: Implementation details, acceptance criteria, testing strategy
-- **Format**: Structured markdown with standardized sections
-- **Validation**: Checked for completeness before session starts
-- **Briefings**: Passed in full to Claude (no compression)
-
-**Work Items JSON (`work_items.json`)**
-- **Tracking**: ID, type, status, priority, dependencies, sessions
-- **Metadata Only**: No duplicate content (previously stored rationale, acceptance criteria)
-
-### Workflow
-
-1. **Create Work Item:**
-   ```bash
-   /work-new
-   # Creates .session/specs/{work_item_id}.md from template
-   # Creates tracking entry in work_items.json
-   ```
-
-2. **Fill Out Specification:**
-   - Open `.session/specs/{work_item_id}.md`
-   - Complete all required sections for the work item type
-   - Follow template guidance and inline comments
-   - See `docs/guides/writing-specs.md` for best practices
-
-3. **Start Session:**
-   ```bash
-   /start {work_item_id}
-   # Loads full spec file into briefing
-   # Validates spec completeness
-   # Shows warnings if spec is incomplete
-   ```
-
-4. **Work on Implementation:**
-   - Claude receives complete spec content in briefing
-   - All acceptance criteria and implementation details available
-   - No context loss from compression or truncation
-
-5. **Complete Session:**
-   ```bash
-   /end
-   # Validates spec completeness as quality gate
-   # Generates commit message from spec rationale
-   ```
-
-### Spec Templates
-
-SDD provides comprehensive templates for 6 work item types:
-
-| Type | Template | Required Sections |
-|------|----------|-------------------|
-| **Feature** | `templates/feature_spec.md` | Overview, Rationale, Acceptance Criteria, Implementation Details, Testing Strategy |
-| **Bug** | `templates/bug_spec.md` | Description, Steps to Reproduce, Root Cause Analysis, Fix Approach |
-| **Refactor** | `templates/refactor_spec.md` | Overview, Current State, Proposed Refactor, Scope |
-| **Security** | `templates/security_spec.md` | Security Issue, Threat Model, Attack Vector, Mitigation Strategy, Compliance |
-| **Integration Test** | `templates/integration_test_spec.md` | Scope, Test Scenarios, Performance Benchmarks, Environment Requirements |
-| **Deployment** | `templates/deployment_spec.md` | Deployment Scope, Procedure, Rollback, Smoke Tests |
-
-### Validation
-
-Specs are automatically validated for:
-- ✅ Required sections present and non-empty
-- ✅ Minimum 3 acceptance criteria items
-- ✅ Required subsections (e.g., deployment procedure steps)
-- ✅ Proper structure and formatting
-
-**Validation occurs:**
-- During `/start` - Warning displayed in briefing if spec incomplete
-- During `/end` - Quality gate fails if spec incomplete
-- Manually via scripts (for development)
-
-### Benefits
-
-- **Zero Context Loss**: Claude receives complete specifications, not truncated JSON fields
-- **Better Quality**: Comprehensive specs lead to better implementations
-- **Single Source of Truth**: No confusion about where content lives
-- **Validation**: Catch incomplete specs before starting work
-- **Templates**: Standardized structure for consistency
-
-For more information:
-- **Writing Specs**: `docs/guides/writing-specs.md`
-- **Template Structure**: `docs/reference/spec-template-structure.md`
-- **Session-Driven Development**: `docs/architecture/session-driven-development.md`
-
-## Configuration
-
-Configure SDD via `.session/config.json` (created during `/init`):
-
+Configure in `.session/config.json`:
 ```json
 {
   "quality_gates": {
     "tests": {"enabled": true, "required": true, "coverage_threshold": 80},
     "linting": {"enabled": true, "required": false, "auto_fix": true},
-    "formatting": {"enabled": true, "required": false, "auto_fix": true},
-    "security": {"enabled": true, "required": true, "fail_on": "high"},
-    "documentation": {"enabled": true, "required": false}
+    "security": {"enabled": true, "required": true, "fail_on": "high"}
+  }
+}
+```
+
+### 📋 Session Management
+
+**Perfect context continuity** across all AI interactions:
+
+```bash
+sk start feature_xyz
+```
+
+Claude receives:
+1. **Complete Work Item Spec** - Full implementation details from `.session/specs/feature_xyz.md`
+2. **Project Documentation** - Vision, architecture, PRD
+3. **Technology Stack** - Auto-detected frameworks and versions
+4. **Project Structure** - Current file tree
+5. **Git Context** - Branch status, recent commits
+6. **Related Learnings** - Past insights relevant to this work
+7. **Dependency Context** - What this depends on and what depends on it
+8. **Milestone Progress** - Where this fits in the roadmap
+9. **Previous Work Context** - For in-progress items: commits made, files changed, quality results
+
+**Session completion** enforces quality:
+
+```bash
+sk end
+```
+
+Automatically:
+- ✅ Runs all enabled quality gates
+- ✅ Updates stack/tree tracking
+- ✅ Extracts learnings from work
+- ✅ Commits with standardized message
+- ✅ Pushes to remote
+- ✅ Updates work item status
+- ✅ Generates session summary
+
+### 🎯 Work Item Management
+
+**Dependency-driven, spec-first workflow:**
+
+```bash
+# Create work items interactively
+sk work-new
+
+# List with filters
+sk work-list
+sk work-list --status not_started
+sk work-list --milestone "v1.0"
+
+# Get smart recommendations
+sk work-next  # Returns ready items (dependencies completed)
+
+# Visualize dependencies
+sk work-graph --critical-path    # Show longest dependency chain
+sk work-graph --bottlenecks      # Identify blockers
+sk work-graph --format svg       # Export visual graph
+
+# Update work items
+sk work-update feature_xyz --status in_progress
+sk work-update feature_xyz --priority high
+```
+
+**Spec-First Architecture:**
+
+Work item specifications are the single source of truth:
+
+```
+.session/
+├── specs/
+│   ├── feature_xyz.md         # Complete implementation guide
+│   └── deployment_abc.md
+└── tracking/
+    └── work_items.json         # Metadata only (status, deps)
+```
+
+**6 work item types** with structured templates:
+- **Feature** - New functionality
+- **Bug** - Issue fixes with root cause analysis
+- **Refactor** - Code improvements
+- **Security** - Security enhancements
+- **Integration Test** - Test suites
+- **Deployment** - Deployment procedures
+
+Each template includes:
+- Required sections enforced via validation
+- Implementation details, acceptance criteria
+- Testing strategy, validation rules
+- Type-specific guidelines
+
+### 🧠 Learning System
+
+**AI-powered knowledge capture and curation:**
+
+```bash
+# Capture learnings during development
+sk learn
+
+# Browse all learnings
+sk learn-show
+sk learn-show --category gotchas --tag fastapi
+
+# Search by keyword
+sk learn-search "CORS"
+
+# Auto-curate (categorize, deduplicate, merge)
+sk learn-curate
+```
+
+**6 Learning Categories** (auto-categorized):
+- **Architecture** - Design decisions, patterns
+- **Gotchas** - Edge cases, pitfalls
+- **Best Practices** - Effective approaches
+- **Technical Debt** - Areas needing improvement
+- **Performance** - Optimization insights
+- **Security** - Security discoveries
+
+**3 Extraction Sources:**
+1. Session summaries ("Learnings Captured" section)
+2. Git commits (`LEARNING:` annotations)
+3. Code comments (`# LEARNING:` in changed files)
+
+**Smart Deduplication:**
+- Jaccard + containment similarity detection
+- Automatic merging of similar learnings
+- Configurable similarity threshold (default: 0.7)
+
+## Commands Reference
+
+### Session Commands
+
+```bash
+sk init               # Initialize project with template selection
+sk start [item_id]    # Start session with comprehensive briefing
+sk end                # Complete session with quality gates
+sk status             # Quick session overview
+sk validate           # Pre-flight check (run gates without ending)
+```
+
+### Work Item Commands
+
+```bash
+sk work-new           # Create work item interactively
+sk work-list          # List all work items
+sk work-show <id>     # Show work item details
+sk work-update <id>   # Update work item fields
+sk work-next          # Get next recommended work item
+sk work-graph         # Visualize dependency graph
+sk work-delete <id>   # Delete work item (with safety checks)
+```
+
+### Learning Commands
+
+```bash
+sk learn              # Capture learning interactively
+sk learn-show         # Browse all learnings
+sk learn-search <q>   # Search learnings by keyword
+sk learn-curate       # Run curation (categorize, deduplicate)
+```
+
+### Claude Code Slash Commands
+
+For use within Claude Code conversations:
+
+```bash
+/sk:init              # Initialize project
+/sk:start [item_id]   # Start session
+/sk:end               # Complete session
+/sk:status            # Session status
+/sk:validate          # Validate readiness
+
+/sk:work-new          # Create work item
+/sk:work-list         # List work items
+/sk:work-show <id>    # Show work item
+/sk:work-update <id>  # Update work item
+/sk:work-next         # Get recommendation
+/sk:work-graph        # Visualize dependencies
+/sk:work-delete <id>  # Delete work item
+
+/sk:learn             # Capture learning
+/sk:learn-show        # Browse learnings
+/sk:learn-search <q>  # Search learnings
+/sk:learn-curate      # Run curation
+```
+
+## Typical Workflow
+
+```mermaid
+graph TD
+    A[sk init] --> B[Choose Template & Quality Tier]
+    B --> C[sk work-new]
+    C --> D[Write Spec]
+    D --> E[sk start]
+    E --> F[Develop with Claude]
+    F --> G{More Changes?}
+    G -->|Yes| F
+    G -->|No| H[sk validate]
+    H --> I{Gates Pass?}
+    I -->|No| J[Fix Issues]
+    J --> F
+    I -->|Yes| K[sk end]
+    K --> L{More Work?}
+    L -->|Yes| C
+    L -->|No| M[Done!]
+```
+
+## Installation
+
+### Option 1: PyPI (Recommended)
+
+```bash
+pip install solokit
+```
+
+### Option 2: From Source
+
+```bash
+git clone https://github.com/ankushdixit/solokit.git
+cd solokit
+pip install -e .
+```
+
+### Verify Installation
+
+```bash
+sk status
+```
+
+### Prerequisites
+
+- **Claude Code** - Required for slash command integration
+- **Python 3.9+** - Core framework
+- **Git** - Version control integration
+
+**Optional Tools** (for quality gates):
+- Testing: `pytest` (Python), `jest` (JS/TS)
+- Linting: `ruff` (Python), `eslint` (JS/TS)
+- Formatting: `prettier` (JS/TS)
+- Security: `bandit`, `safety` (Python), `npm audit` (JS)
+- Visualization: `graphviz` (dependency graphs)
+
+Quality gates gracefully skip when tools aren't available.
+
+## Configuration
+
+Configure Solokit via `.session/config.json` (created during `sk init`):
+
+```json
+{
+  "quality_gates": {
+    "tests": {
+      "enabled": true,
+      "required": true,
+      "coverage_threshold": 80
+    },
+    "linting": {
+      "enabled": true,
+      "required": false,
+      "auto_fix": true
+    },
+    "formatting": {
+      "enabled": true,
+      "required": false,
+      "auto_fix": true
+    },
+    "security": {
+      "enabled": true,
+      "required": true,
+      "fail_on": "high"
+    },
+    "documentation": {
+      "enabled": true,
+      "required": false
+    }
   },
   "learning_curation": {
     "auto_curate": true,
@@ -450,300 +458,142 @@ Configure SDD via `.session/config.json` (created during `/init`):
 }
 ```
 
-### Quality Gate Configuration
+**Quality Gate Options:**
+- `enabled` - Run this gate
+- `required` - Block `sk end` if fails
+- `auto_fix` - Automatically fix issues (linting/formatting)
+- `coverage_threshold` - Minimum test coverage percentage
+- `fail_on` - Security threshold (critical, high, medium, low)
 
-- `enabled`: Run this gate
-- `required`: Block `/end` if fails
-- `auto_fix`: Automatically fix issues (linting/formatting)
-- `coverage_threshold`: Minimum test coverage (%)
-- `fail_on`: Security threshold (critical, high, medium, low)
+**Learning Curation:**
+- `auto_curate` - Automatically run curation
+- `frequency` - Run every N sessions
 
-### Learning Curation
-
-- `auto_curate`: Automatically run curation
-- `frequency`: Run every N sessions
-
-### Git Configuration
-
-- `auto_push`: Automatically push after `/end`
-- `auto_merge`: Automatically merge branch if work item complete
+**Git Integration:**
+- `auto_push` - Automatically push after `sk end`
+- `auto_merge` - Automatically merge branch if work complete
 
 ## Documentation
 
-- [Documentation Index](docs/README.md) - Complete documentation navigation
-- [Architecture Overview](docs/ARCHITECTURE.md) - System architecture and components
-- [Session-Driven Development Framework](docs/architecture/session-driven-development.md) - Complete methodology specification
-- [AI-Augmented Solo Framework](docs/architecture/ai-augmented-solo-framework.md) - Philosophical context and broader methodology
-- [Implementation Insights](docs/architecture/implementation-insights.md) - Lessons learned and proven patterns
-- [Learning System Guide](docs/reference/learning-system.md) - Knowledge capture and curation details
-- [Configuration Guide](docs/guides/configuration.md) - Project configuration options
-- [Troubleshooting](docs/guides/troubleshooting.md) - Common issues and solutions
-- [Roadmap](docs/project/ROADMAP.md) - Phased development plan
+- **[Documentation Index](docs/README.md)** - Complete documentation navigation
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System architecture
+- **[Solokit Methodology](docs/architecture/solokit-methodology.md)** - Complete framework specification
+- **[AI-Augmented Solo Framework](docs/architecture/ai-augmented-solo-framework.md)** - Philosophical context
+- **[Learning System Guide](docs/reference/learning-system.md)** - Knowledge capture details
+- **[Configuration Guide](docs/guides/configuration.md)** - Configuration options
+- **[Writing Specs](docs/guides/writing-specs.md)** - Spec-first best practices
+- **[Troubleshooting](docs/guides/troubleshooting.md)** - Common issues
 
 ## Project Structure
 
 ```
-sdd/
-├── .claude/                  # Claude Code command definitions
-│   └── commands/             # 15 slash commands (auto-discovered by Claude Code)
-├── src/sdd/                  # Python package (standard src/ layout)
-│   ├── cli.py                # CLI entry point
-│   ├── core/                 # Core functionality (file ops, logging, config)
-│   ├── session/              # Session management (briefing, complete, status, validate)
-│   ├── work_items/           # Work item management (CRUD, specs, validation)
-│   ├── learning/             # Learning system (capture & curation)
-│   ├── quality/              # Quality gates and validation
+solokit/
+├── .claude/                  # Claude Code integration
+│   └── commands/             # 16 slash commands (/sk:init, /sk:start, etc.)
+├── src/solokit/              # Python package (standard src/ layout)
+│   ├── cli.py                # CLI entry point (sk command)
+│   ├── core/                 # Core functionality
+│   ├── session/              # Session management
+│   ├── work_items/           # Work item CRUD and specs
+│   ├── learning/             # Learning capture & curation
+│   ├── quality/              # Quality gates
 │   ├── visualization/        # Dependency graphs
 │   ├── git/                  # Git integration
 │   ├── testing/              # Testing utilities
-│   ├── deployment/           # Deployment executor
-│   ├── project/              # Project initialization and management
-│   └── templates/            # Work item specification templates
+│   ├── deployment/           # Deployment execution
+│   ├── project/              # Project initialization
+│   └── templates/            # Project templates & work item specs
 ├── docs/                     # Comprehensive documentation
-│   ├── commands/             # Command reference documentation
-│   ├── architecture/         # System architecture and design
-│   ├── guides/               # User guides and how-tos
-│   ├── reference/            # Reference documentation
-│   ├── project/              # Project planning (roadmap, bugs, enhancements)
-│   └── development/          # Development notes
-├── tests/                    # Test suites (1408 tests total)
+├── tests/                    # 2,391 tests (100% passing)
 │   ├── unit/                 # Unit tests
 │   ├── integration/          # Integration tests
 │   └── e2e/                  # End-to-end tests
 ├── README.md                 # This file
 ├── CHANGELOG.md              # Version history
 ├── CONTRIBUTING.md           # Contribution guidelines
-├── LICENSE                   # MIT License
-├── Makefile                  # Developer convenience targets
 └── pyproject.toml            # Package configuration (PEP 517/518)
 ```
 
-## Architecture Notes
+## Why Solokit?
 
-### Standard Python Package Structure (v0.6.0+)
+### vs. Project Management Tools (Linear, Jira)
+- ✅ **AI-native design** - Built for Claude Code, not bolted on
+- ✅ **Context continuity** - Perfect AI briefings, not manual updates
+- ✅ **Quality enforcement** - Automated gates, not manual reviews
+- ✅ **Knowledge capture** - AI-powered, not manual documentation
 
-SDD follows **standard Python packaging best practices** using src/ layout:
+### vs. AI Coding Tools (Cursor, Copilot)
+- ✅ **Complete framework** - Templates + workflow + quality + learning
+- ✅ **Production-ready** - Not just code completion
+- ✅ **Process rigor** - Systematic workflow, not ad-hoc
+- ✅ **Knowledge accumulation** - Learnings persist and grow
 
-**Current Implementation (v0.6.0):**
-- ✅ **Standard src/ layout**: Full PEP 517/518 compliance
-- ✅ **No sys.path manipulation**: Clean imports throughout codebase
-- ✅ **Domain-organized modules**: Code organized by functionality
-- ✅ **Unified CLI**: All commands use `sdd` command
-- ✅ **Pip installable**: `pip install -e .` for development
-- ✅ **Plugin compatible**: Works with Claude Code marketplace plugins
-- ✅ **PyPI-ready**: Can be published to PyPI
+### vs. Project Templates (Cookiecutter)
+- ✅ **Ongoing workflow** - Not just initial setup
+- ✅ **Quality enforcement** - Automated validation throughout
+- ✅ **Session management** - Perfect context across all work
+- ✅ **4 quality tiers** - From MVP to enterprise
 
-**For Contributors:**
-Import from the sdd package using standard Python imports:
-```python
-from sdd.work_items.manager import WorkItemManager
-from sdd.quality.gates import QualityGates
-from sdd.session.briefing import generate_briefing
-```
-
-**Package Organization:**
-- `sdd.core` - Core functionality (file ops, logging, config)
-- `sdd.session` - Session management
-- `sdd.work_items` - Work item management and specs
-- `sdd.learning` - Learning capture and curation
-- `sdd.quality` - Quality gates and validation
-- `sdd.visualization` - Dependency graphs
-- `sdd.git` - Git integration
-- `sdd.testing` - Testing utilities
-- `sdd.deployment` - Deployment execution
-- `sdd.project` - Project initialization
-
-See [ROADMAP.md Phase 5.9](docs/project/ROADMAP.md#phase-59-package-structure-refactoring-v060---python-best-practices) for migration details.
+**Solokit is the only tool that combines:**
+- Production-ready templates with validated dependencies
+- AI-native session management with perfect context
+- Automated quality enforcement throughout development
+- AI-powered knowledge capture and curation
+- Dependency-driven, spec-first workflow
 
 ## Development Status
 
-**Current Status:** Production-ready for personal use (Phases 0-5.6 complete)
+**Current Version:** v0.1.0 (Production-Ready)
 
-### Completed Phases
+**Test Coverage:** 2,391 tests passing (100%)
 
-| Phase | Version | Description | Status |
-|-------|---------|-------------|--------|
-| Phase 0 | v0.0 | Foundation & Documentation | ✅ Complete |
-| Phase 1 | v0.1 | Core Plugin Foundation | ✅ Complete |
-| Phase 2 | v0.2 | Work Item System | ✅ Complete |
-| Phase 3 | v0.3 | Dependency Visualization | ✅ Complete |
-| Phase 4 | v0.4 | Learning Management | ✅ Complete |
-| Phase 5 | v0.5 | Quality Gates | ✅ Complete |
-| Phase 5.5 | v0.5.5 | Integration Testing | ✅ Complete |
-| Phase 5.6 | v0.5.6 | Deployment Support | ✅ Complete |
-| Phase 5.7 | v0.5.7 | Spec-First Architecture | ✅ Complete |
-| Phase 5.8 | v0.5.8 | Marketplace Plugin Support | ✅ Complete |
+### Completed Features
 
-### Release History
+| Feature | Status |
+|---------|--------|
+| Core Session Management | ✅ Complete |
+| Work Item System | ✅ Complete |
+| Dependency Visualization | ✅ Complete |
+| Learning Management | ✅ Complete |
+| Quality Gates | ✅ Complete |
+| Spec-First Architecture | ✅ Complete |
+| Production Templates (4 stacks) | ✅ Complete |
+| Quality Tiers (4 levels) | ✅ Complete |
+| Claude Code Integration | ✅ Complete |
 
-See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes and version history.
-
-**Current Version:** v0.5.8 (Phase 5.8 Complete - Marketplace Plugin Support)
-
-### Test Coverage
-
-**Total: 392/392 tests passing (100%)** (Note: Will run tests after changes)
-
-- Phase 1: 6/6 tests ✅
-- Phase 2: 9/9 tests ✅
-- Phase 3: 11/11 tests ✅
-- Phase 4: 12/12 tests ✅
-- Phase 5: 12/12 tests ✅
-- Phase 5.5: 178/178 tests ✅
-- Phase 5.6: 65/65 tests ✅
-- Phase 5.7: 49/49 tests ✅
-- Phase 0: Manual validation ✅
-
-### Upcoming Phases
-
-- **Phase 6** (v0.6): Spec-Kit Integration - Import work items from specifications
-- **Phase 7** (v0.7+): Advanced Features - Templates, metrics, AI enhancements
-
-See [ROADMAP.md](ROADMAP.md) for detailed phase breakdown and timelines.
-
-## Technology Stack
-
-- **Language:** Python 3.9+
-- **Integration:** Claude Code slash commands
-- **Visualization:** Graphviz (for dependency graphs)
-- **Testing:** pytest (for quality gates)
-- **Linting:** ruff (for code quality)
-
-## Core Algorithms
-
-SDD includes battle-tested algorithms:
-
-- **Dependency Resolution** - DFS-based critical path analysis
-- **Learning Categorization** - Keyword-based auto-categorization (6 categories)
-- **Similarity Detection** - Jaccard + containment similarity for deduplication
-- **Quality Gates** - Multi-stage validation pipeline
-
-## Design Principles
-
-1. **AI-Native Design** - Built for Claude's environment, not as external tool
-2. **Atomic Operations** - Safe file writes, consistent state updates
-3. **Fail-Safe** - Quality gates prevent broken states from propagating
-4. **Zero Context Loss** - Comprehensive briefings ensure perfect handoffs
-5. **Deterministic** - Repeatable, predictable workflows
-
-## FAQ
-
-### Q: How do I install this?
-
-**Via Marketplace (easiest):**
-1. Install SDD plugin from Claude Code marketplace
-2. Run: `pip install -e ~/.claude/plugins/marketplaces/claude-plugins/sdd`
-
-**Direct installation:**
-```bash
-git clone https://github.com/ankushdixit/sdd.git
-cd sdd
-pip install -e .
-```
-
-### Q: Do I need to install all the optional tools?
-
-No. Quality gates gracefully skip when tools aren't available. Install only what you need for your project.
-
-### Q: Can I use this with other AI assistants?
-
-This is specifically designed for Claude Code's slash command system. It won't work with other AI tools without modification.
-
-### Q: How much disk space does the .session directory use?
-
-Typically 1-5 MB for most projects. It stores JSON files, text files, and small logs.
-
-### Q: Can I customize work item types?
-
-Currently, 6 built-in types are supported (feature, bug, refactor, security, integration_test, deployment). Custom types are planned for Phase 7.
-
-### Q: Does this work with GitHub/GitLab?
-
-Yes. It uses standard git commands and integrates with any git remote.
-
-### Q: What happens if I forget to run /end?
-
-Your work is still saved in git. You can manually update work items and tracking files, but you'll miss automated quality gates and learning extraction.
-
-### Q: Can I use this on multiple projects?
-
-Yes! After installing once (via marketplace or direct), use SDD in any project. Each project gets its own `.session/` directory with independent tracking.
-
-## Troubleshooting
-
-### /init fails with "Directory already exists"
-
-The `.session/` directory already exists. Either delete it (`rm -rf .session/`) or use your existing setup.
-
-### Quality gates fail even though tests pass
-
-Check:
-1. Exit codes from test commands
-2. Coverage threshold in config
-3. Required vs optional gate settings
-
-### Git integration not working
-
-Ensure:
-1. Git repository is initialized (`git init`)
-2. Remote is configured (`git remote -v`)
-3. Working directory is clean or changes are staged
-
-### Learning curation not triggering
-
-Check `.session/config.json`:
-- `auto_curate` should be `true`
-- `frequency` should be a positive integer (default: 5)
-
-### Commands fail with "Permission denied"
-
-Make the CLI executable:
-```bash
-chmod +x sdd/sdd_cli.py
-# Or if using symlink installation:
-chmod +x ~/sdd/sdd_cli.py
-```
-
-### Commands fail with "ModuleNotFoundError"
-
-Ensure you're running commands from your project root, not from within the `sdd/` directory. The CLI uses relative paths that work from the project root.
+See [CHANGELOG.md](./CHANGELOG.md) for detailed release history.
 
 ## Contributing
 
-Contributions are welcome! This project follows standard open-source contribution guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Make your changes with tests
-4. Run the test suite (`pytest tests/`)
-5. Commit your changes
-6. Push to your fork
-7. Open a Pull Request
-
-### Development Setup
+Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ```bash
-# Clone the repo
-git clone https://github.com/ankushdixit/sdd.git
-cd sdd
-
-# Install development dependencies
-pip install pytest pytest-cov
+# Clone and install
+git clone https://github.com/ankushdixit/solokit.git
+cd solokit
+pip install -e ".[dev]"
 
 # Run tests
-pytest tests/
+pytest tests/ -v
 
-# Run specific phase tests
-pytest tests/phase_1/
-pytest tests/phase_5/test_phase_5_complete.py
+# Run quality checks
+ruff check src/solokit/ tests/
+ruff format src/solokit/ tests/
+mypy src/solokit
 ```
+
+## License
+
+MIT License - See [LICENSE](./LICENSE) for details.
 
 ## Credits
 
-Built with insights from building complex software projects with Claude Code assistance.
+Built for solo developers building production software with AI assistance.
 
 Inspired by professional software development practices adapted for AI-augmented solo development.
 
 ---
 
-**Ready for use!** Phases 0-5.8 complete with 392/392 tests passing.
+**Solo doesn't mean shortcuts. Build with team-level sophistication.**
+
+🌐 [getsolokit.com](https://getsolokit.com) | 📦 [PyPI](https://pypi.org/project/solokit/) | 🐙 [GitHub](https://github.com/ankushdixit/solokit)

@@ -1,6 +1,6 @@
 # Work Update Command
 
-**Usage:** `/sdd:work-update <work_item_id> <field>`
+**Usage:** `/sk:work-update <work_item_id> <field>`
 
 **Description:** Update a specific field of an existing work item using interactive UI.
 
@@ -11,12 +11,12 @@ The `work-update` command allows you to modify work item properties:
 - Milestone assignment
 - Dependencies (add or remove)
 
-**Note:** Status changes are NOT allowed via this command. Status is managed automatically by the session workflow (`/sdd:start` sets to in_progress, `/sdd:end` sets to completed).
+**Note:** Status changes are NOT allowed via this command. Status is managed automatically by the session workflow (`/sk:start` sets to in_progress, `/sk:end` sets to completed).
 
 ## Usage
 
 ```bash
-/sdd:work-update <work_item_id> <field>
+/sk:work-update <work_item_id> <field>
 ```
 
 **Required arguments:**
@@ -29,28 +29,28 @@ The `work-update` command allows you to modify work item properties:
 Update work item priority level
 
 ```bash
-/sdd:work-update feature_auth priority
+/sk:work-update feature_auth priority
 ```
 
 ### milestone
 Assign work item to a milestone
 
 ```bash
-/sdd:work-update feature_auth milestone
+/sk:work-update feature_auth milestone
 ```
 
 ### add-dependency
 Add a dependency to the work item
 
 ```bash
-/sdd:work-update feature_auth add-dependency
+/sk:work-update feature_auth add-dependency
 ```
 
 ### remove-dependency
 Remove an existing dependency
 
 ```bash
-/sdd:work-update feature_auth remove-dependency
+/sk:work-update feature_auth remove-dependency
 ```
 
 ## Interactive Flow
@@ -79,7 +79,7 @@ Based on the field specified, you'll be prompted to select the new value.
 ### Update Priority
 
 ```bash
-/sdd:work-update bug_timeout priority
+/sk:work-update bug_timeout priority
 ```
 
 **Interactive flow:**
@@ -114,7 +114,7 @@ Updated bug_timeout priority: medium → high
 ### Assign Milestone
 
 ```bash
-/sdd:work-update feature_search milestone
+/sk:work-update feature_search milestone
 ```
 
 **Interactive flow:**
@@ -145,7 +145,7 @@ Updated feature_search milestone: (none) → sprint_2
 ### Add Dependency
 
 ```bash
-/sdd:work-update feature_dashboard add-dependency
+/sk:work-update feature_dashboard add-dependency
 ```
 
 **Interactive flow:**
@@ -180,7 +180,7 @@ Status updated: not_started → blocked
 ### Remove Dependency
 
 ```bash
-/sdd:work-update feature_dashboard remove-dependency
+/sk:work-update feature_dashboard remove-dependency
 ```
 
 **Interactive flow:**
@@ -212,7 +212,7 @@ Status: blocked (still waiting on feature_auth)
 
 If you try:
 ```bash
-/sdd:work-update feature_auth status
+/sk:work-update feature_auth status
 ```
 
 **Output:**
@@ -220,18 +220,18 @@ If you try:
 ERROR: Status changes are not allowed via /work-update.
 
 Status is managed by session workflow:
-  - /sdd:start → Sets to "in_progress"
-  - /sdd:end → Sets to "completed" or keeps "in_progress"
+  - /sk:start → Sets to "in_progress"
+  - /sk:end → Sets to "completed" or keeps "in_progress"
 
 Use these commands to change status.
 ```
 
 **Status transitions are automatic:**
-- `not_started` → `in_progress` when you run `/sdd:start`
+- `not_started` → `in_progress` when you run `/sk:start`
 - `not_started` → `blocked` when you add an incomplete dependency
 - `blocked` → `not_started` when all dependencies complete
-- `in_progress` → `completed` when you run `/sdd:end` and select "Yes"
-- `in_progress` → `in_progress` when you run `/sdd:end` and select "No"
+- `in_progress` → `completed` when you run `/sk:end` and select "Yes"
+- `in_progress` → `in_progress` when you run `/sk:end` and select "No"
 
 ## Validation
 
@@ -262,37 +262,37 @@ The command validates:
 ### Missing Arguments
 
 ```bash
-/sdd:work-update feature_auth
+/sk:work-update feature_auth
 ```
 
 **Output:**
 ```
-ERROR: Usage: /sdd:work-update <work_item_id> <field>
+ERROR: Usage: /sk:work-update <work_item_id> <field>
 
 Valid fields: priority, milestone, add-dependency, remove-dependency
 
 Example:
-  /sdd:work-update feature_auth priority
-  /sdd:work-update feature_auth milestone
+  /sk:work-update feature_auth priority
+  /sk:work-update feature_auth milestone
 ```
 
 ### Work Item Not Found
 
 ```bash
-/sdd:work-update nonexistent_item priority
+/sk:work-update nonexistent_item priority
 ```
 
 **Output:**
 ```
 ERROR: Work item 'nonexistent_item' not found
 
-Use /sdd:work-list to see all available work items.
+Use /sk:work-list to see all available work items.
 ```
 
 ### Invalid Field
 
 ```bash
-/sdd:work-update feature_auth invalid_field
+/sk:work-update feature_auth invalid_field
 ```
 
 **Output:**
@@ -305,7 +305,7 @@ Valid fields: priority, milestone, add-dependency, remove-dependency
 ### Circular Dependency
 
 ```bash
-/sdd:work-update feature_auth add-dependency
+/sk:work-update feature_auth add-dependency
 # Select feature_search (which already depends on feature_auth)
 ```
 
@@ -323,7 +323,7 @@ This would create an unresolvable dependency chain.
 ### Completed Dependency
 
 ```bash
-/sdd:work-update feature_dashboard add-dependency
+/sk:work-update feature_dashboard add-dependency
 # Try to select feature_auth (which is completed)
 ```
 
@@ -376,22 +376,22 @@ Status: Still blocked because feature_auth is incomplete
 
 ### After updating priority:
 ```bash
-/sdd:work-update feature_auth priority
-/sdd:work-list --type feature  # See updated priority
-/sdd:work-next  # New priority affects recommendations
+/sk:work-update feature_auth priority
+/sk:work-list --type feature  # See updated priority
+/sk:work-next  # New priority affects recommendations
 ```
 
 ### After updating milestone:
 ```bash
-/sdd:work-update feature_auth milestone
-/sdd:work-list --milestone sprint_1  # See items in milestone
+/sk:work-update feature_auth milestone
+/sk:work-list --milestone sprint_1  # See items in milestone
 ```
 
 ### After updating dependencies:
 ```bash
-/sdd:work-update feature_dashboard add-dependency
-/sdd:work-show feature_dashboard  # Verify dependencies
-/sdd:work-graph  # Visualize dependency graph
+/sk:work-update feature_dashboard add-dependency
+/sk:work-show feature_dashboard  # Verify dependencies
+/sk:work-graph  # Visualize dependency graph
 ```
 
 ## See Also

@@ -7,7 +7,7 @@ description: Display current session status with progress overview
 Get a quick overview of the current session by running:
 
 ```bash
-sdd status
+sk status
 ```
 
 The status includes:

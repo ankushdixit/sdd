@@ -1,6 +1,6 @@
 # Work Graph Command
 
-**Usage:** `/sdd:work-graph [OPTIONS]`
+**Usage:** `/sk:work-graph [OPTIONS]`
 
 **Description:** Generate dependency graph visualization for work items with critical path analysis and bottleneck detection.
 
@@ -167,7 +167,7 @@ Rendered graph image suitable for:
 ### Example 1: Basic Graph (All Incomplete Items)
 
 ```bash
-/sdd:work-graph
+/sk:work-graph
 ```
 
 **Output:**
@@ -212,7 +212,7 @@ Bottlenecks: feature_auth (blocks 4 items)
 ### Example 2: Critical Path Analysis
 
 ```bash
-/sdd:work-graph --critical-path
+/sk:work-graph --critical-path
 ```
 
 **Output:**
@@ -260,7 +260,7 @@ Timeline Analysis:
 ### Example 3: Bottleneck Detection
 
 ```bash
-/sdd:work-graph --bottlenecks
+/sk:work-graph --bottlenecks
 ```
 
 **Output:**
@@ -308,7 +308,7 @@ Items that block multiple other items. Prioritize these for maximum impact!
 ### Example 4: Milestone View
 
 ```bash
-/sdd:work-graph --milestone "Phase 3" --include-completed
+/sk:work-graph --milestone "Phase 3" --include-completed
 ```
 
 **Output:**
@@ -359,7 +359,7 @@ Next Items:
 ### Example 5: Focus on Specific Item
 
 ```bash
-/sdd:work-graph --focus feature_oauth
+/sk:work-graph --focus feature_oauth
 ```
 
 **Output:**
@@ -413,7 +413,7 @@ Analysis:
 ### Example 6: Statistics Only
 
 ```bash
-/sdd:work-graph --stats
+/sk:work-graph --stats
 ```
 
 **Output:**
@@ -482,7 +482,7 @@ Project Health: ⚠️ Moderate
 ### Example 7: Export to SVG
 
 ```bash
-/sdd:work-graph --format svg --output project-dependencies.svg
+/sk:work-graph --format svg --output project-dependencies.svg
 ```
 
 **Output:**
@@ -517,7 +517,7 @@ To view the graph now, run:
 ### Example 8: Combined Filters
 
 ```bash
-/sdd:work-graph --status not_started --milestone "Phase 3" --type feature
+/sk:work-graph --status not_started --milestone "Phase 3" --type feature
 ```
 
 **Output:**
@@ -570,7 +570,7 @@ Next Recommended: feature_analytics
 ### Example 9: Type-Specific Graph
 
 ```bash
-/sdd:work-graph --type bug --include-completed
+/sk:work-graph --type bug --include-completed
 ```
 
 **Output:**
@@ -650,7 +650,7 @@ Bug Summary:
 ### 1. Project Planning
 
 ```bash
-/sdd:work-graph --stats
+/sk:work-graph --stats
 ```
 
 Get high-level overview of project structure, completion status, and timeline.
@@ -658,7 +658,7 @@ Get high-level overview of project structure, completion status, and timeline.
 ### 2. Sprint Planning
 
 ```bash
-/sdd:work-graph --milestone "Sprint 5" --status not_started
+/sk:work-graph --milestone "Sprint 5" --status not_started
 ```
 
 See what's available to work on in upcoming sprint.
@@ -666,7 +666,7 @@ See what's available to work on in upcoming sprint.
 ### 3. Timeline Estimation
 
 ```bash
-/sdd:work-graph --critical-path
+/sk:work-graph --critical-path
 ```
 
 Identify minimum project duration and items that directly impact deadline.
@@ -674,7 +674,7 @@ Identify minimum project duration and items that directly impact deadline.
 ### 4. Unblocking Work
 
 ```bash
-/sdd:work-graph --bottlenecks
+/sk:work-graph --bottlenecks
 ```
 
 Find high-impact items to prioritize for maximum team unblocking.
@@ -682,7 +682,7 @@ Find high-impact items to prioritize for maximum team unblocking.
 ### 5. Documentation
 
 ```bash
-/sdd:work-graph --format svg --output docs/architecture/dependencies.svg
+/sk:work-graph --format svg --output docs/architecture/dependencies.svg
 ```
 
 Generate visual documentation for:
@@ -694,7 +694,7 @@ Generate visual documentation for:
 ### 6. Status Reports
 
 ```bash
-/sdd:work-graph --milestone "Q4 Goals" --include-completed
+/sk:work-graph --milestone "Q4 Goals" --include-completed
 ```
 
 Show progress on milestone objectives for:
@@ -705,7 +705,7 @@ Show progress on milestone objectives for:
 ### 7. Dependency Analysis
 
 ```bash
-/sdd:work-graph --focus feature_complex_item
+/sk:work-graph --focus feature_complex_item
 ```
 
 Understand dependencies before starting complex work item.
@@ -713,7 +713,7 @@ Understand dependencies before starting complex work item.
 ### 8. Bug Triage
 
 ```bash
-/sdd:work-graph --type bug --stats
+/sk:work-graph --type bug --stats
 ```
 
 See bug distribution and dependencies for prioritization.
@@ -724,7 +724,7 @@ See bug distribution and dependencies for prioritization.
 
 ```bash
 # Weekly review
-/sdd:work-graph --critical-path
+/sk:work-graph --critical-path
 ```
 
 Stay aware of items that impact project timeline.
@@ -733,7 +733,7 @@ Stay aware of items that impact project timeline.
 
 ```bash
 # Before sprint planning
-/sdd:work-graph --bottlenecks
+/sk:work-graph --bottlenecks
 ```
 
 Identify and address bottlenecks proactively.
@@ -742,10 +742,10 @@ Identify and address bottlenecks proactively.
 
 ```bash
 # Start of milestone
-/sdd:work-graph --milestone "current" --format svg --output milestone-start.svg
+/sk:work-graph --milestone "current" --format svg --output milestone-start.svg
 
 # End of milestone
-/sdd:work-graph --milestone "current" --include-completed --format svg --output milestone-complete.svg
+/sk:work-graph --milestone "current" --include-completed --format svg --output milestone-complete.svg
 ```
 
 Document milestone progress visually.
@@ -754,7 +754,7 @@ Document milestone progress visually.
 
 ```bash
 # Before starting complex item
-/sdd:work-graph --focus <work_item_id>
+/sk:work-graph --focus <work_item_id>
 ```
 
 Understand full context of dependencies and impact.
@@ -763,7 +763,7 @@ Understand full context of dependencies and impact.
 
 ```bash
 # For stakeholder review
-/sdd:work-graph --format svg --output stakeholder-review.svg
+/sk:work-graph --format svg --output stakeholder-review.svg
 ```
 
 Visual graphs communicate better than text lists.
@@ -773,7 +773,7 @@ Visual graphs communicate better than text lists.
 ### Work Item Not Found (Focus Mode)
 
 ```bash
-/sdd:work-graph --focus nonexistent_item
+/sk:work-graph --focus nonexistent_item
 ```
 
 **Output:**
@@ -783,13 +783,13 @@ ERROR: Work item 'nonexistent_item' not found
 Available work items:
   feature_auth, feature_oauth, feature_profile, bug_db_pool, ...
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### No Items Match Filters
 
 ```bash
-/sdd:work-graph --status completed --milestone "Future Phase"
+/sk:work-graph --status completed --milestone "Future Phase"
 ```
 
 **Output:**
@@ -802,14 +802,14 @@ Active Filters:
 
 Suggestions:
   - Remove --status filter to see all items in milestone
-  - Check milestone name: /sdd:work-list --milestone "Future Phase"
-  - View all milestones: /sdd:work-list
+  - Check milestone name: /sk:work-list --milestone "Future Phase"
+  - View all milestones: /sk:work-list
 ```
 
 ### Graphviz Not Installed (SVG Format)
 
 ```bash
-/sdd:work-graph --format svg --output graph.svg
+/sk:work-graph --format svg --output graph.svg
 ```
 
 **Output:**
@@ -833,7 +833,7 @@ Falling back to DOT format...
 ### Circular Dependencies Detected
 
 ```bash
-/sdd:work-graph
+/sk:work-graph
 ```
 
 **Output:**
@@ -846,8 +846,8 @@ Circular dependency chain:
 This creates a deadlock - none of these items can start.
 
 To fix:
-  1. /sdd:work-show feature_a
-  2. /sdd:work-update feature_a remove-dependency
+  1. /sk:work-show feature_a
+  2. /sk:work-update feature_a remove-dependency
   3. Remove the circular dependency
 
 Graph generated with circular dependencies marked.
@@ -858,31 +858,31 @@ Graph generated with circular dependencies marked.
 ### Before Starting Work
 
 ```bash
-/sdd:work-graph --bottlenecks     # Find high-impact item
-/sdd:work-next                     # Get recommendation
-/sdd:start <recommended_item>      # Begin work
+/sk:work-graph --bottlenecks     # Find high-impact item
+/sk:work-next                     # Get recommendation
+/sk:start <recommended_item>      # Begin work
 ```
 
 ### During Sprint Planning
 
 ```bash
-/sdd:work-graph --milestone "Sprint 5" --stats
-/sdd:work-list --milestone "Sprint 5" --status not_started
-/sdd:work-next  # Get first item to start
+/sk:work-graph --milestone "Sprint 5" --stats
+/sk:work-list --milestone "Sprint 5" --status not_started
+/sk:work-next  # Get first item to start
 ```
 
 ### After Completing Work
 
 ```bash
-/sdd:end                          # Complete current work
-/sdd:work-graph --bottlenecks     # See if you unblocked work
-/sdd:work-next                    # Get next item
+/sk:end                          # Complete current work
+/sk:work-graph --bottlenecks     # See if you unblocked work
+/sk:work-next                    # Get next item
 ```
 
 ### For Documentation
 
 ```bash
-/sdd:work-graph --format svg --output docs/dependencies.svg
+/sk:work-graph --format svg --output docs/dependencies.svg
 # Commit and push for team visibility
 ```
 

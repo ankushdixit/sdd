@@ -2,11 +2,11 @@
 
 ## Common Issues and Solutions
 
-### Undoing a Failed `/sdd:start` Command
+### Undoing a Failed `/sk:start` Command
 
-If you run `/sdd:start` and it fails (e.g., spec file not found, wrong work item), you can undo the changes by reverting the session state:
+If you run `/sk:start` and it fails (e.g., spec file not found, wrong work item), you can undo the changes by reverting the session state:
 
-#### What `/sdd:start` Changes:
+#### What `/sk:start` Changes:
 
 1. **Work Item Status** - Sets status to "in_progress" in `.session/tracking/work_items.json`
 2. **Session Tracking** - Adds a session entry to the work item
@@ -48,13 +48,13 @@ git checkout HEAD -- .session/tracking/work_items.json
 
 #### Automated Undo Script (Future Enhancement)
 
-A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
+A `/sk:undo` or `/sk:reset` command could be added to automate this process.
 
 ---
 
 ### Spec File Not Found in Briefing
 
-**Symptom:** Running `/sdd:start` generates a briefing, but the work item specification section shows "Specification file not found"
+**Symptom:** Running `/sk:start` generates a briefing, but the work item specification section shows "Specification file not found"
 
 **Cause:** The spec file path in `work_items.json` doesn't match the actual file location.
 
@@ -80,16 +80,16 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 
 ### Work Item Already In Progress
 
-**Symptom:** When running `/sdd:start`, you get a work item that's already marked "in_progress"
+**Symptom:** When running `/sk:start`, you get a work item that's already marked "in_progress"
 
-**Cause:** A previous session was started but not completed with `/sdd:end`
+**Cause:** A previous session was started but not completed with `/sk:end`
 
 **Solution:**
 
 **Option 1: Resume the Session**
 ```bash
 # Continue working on the in-progress item
-/sdd:start
+/sk:start
 # This will resume the existing work item
 ```
 
@@ -97,13 +97,13 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 ```bash
 # Manually edit .session/tracking/work_items.json
 # Change the status from "in_progress" to "not_started"
-# Then run /sdd:start again
+# Then run /sk:start again
 ```
 
 **Option 3: Complete the Session**
 ```bash
 # If you're actually done with the work
-/sdd:end
+/sk:end
 # This will mark it complete and move to the next item
 ```
 
@@ -111,7 +111,7 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 
 ### No Available Work Items
 
-**Symptom:** `/sdd:start` says "No available work items. All dependencies must be satisfied first."
+**Symptom:** `/sk:start` says "No available work items. All dependencies must be satisfied first."
 
 **Cause:** All remaining work items have unsatisfied dependencies.
 
@@ -119,12 +119,12 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 
 1. Check work item dependencies:
    ```bash
-   /sdd:work-list --status not_started
+   /sk:work-list --status not_started
    ```
 
 2. Look at the dependency graph:
    ```bash
-   /sdd:work-graph --bottlenecks
+   /sk:work-graph --bottlenecks
    ```
 
 3. Either:
@@ -136,7 +136,7 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 
 ### Git Branch Already Exists
 
-**Symptom:** `/sdd:start` fails because the git branch already exists
+**Symptom:** `/sk:start` fails because the git branch already exists
 
 **Cause:** A previous session created the branch but wasn't cleaned up
 
@@ -145,16 +145,16 @@ A `/sdd:undo` or `/sdd:reset` command could be added to automate this process.
 ```bash
 # Option 1: Resume on existing branch
 git checkout session-XXX-US-X-X
-/sdd:start
+/sk:start
 
 # Option 2: Delete and recreate
 git checkout main
 git branch -D session-XXX-US-X-X
-/sdd:start
+/sk:start
 
 # Option 3: Rename the old branch for archival
 git branch -m session-XXX-US-X-X session-XXX-US-X-X-old
-/sdd:start
+/sk:start
 ```
 
 ---
@@ -172,10 +172,10 @@ git branch -m session-XXX-US-X-X session-XXX-US-X-X-old
 
 ```bash
 # Specify which work item you want to start
-/sdd:start --item US-X-X
+/sk:start --item US-X-X
 
 # Or check what the next item will be
-/sdd:work-next
+/sk:work-next
 ```
 
 ---
@@ -221,13 +221,13 @@ Error: The directory contains files that could conflict:
 Either try using a new directory name, or remove the files listed above.
 ```
 
-**Cause:** The SDD framework creates a `.session/` directory for tracking work items, learnings, and session state. Tools like `create-next-app` detect this as a conflict because they expect an empty directory.
+**Cause:** The Solokit framework creates a `.session/` directory for tracking work items, learnings, and session state. Tools like `create-next-app` detect this as a conflict because they expect an empty directory.
 
 **Solutions:**
 
 **Option 1: Initialize in Parent Directory (Recommended)**
 ```bash
-# If you're in the SDD project directory, initialize Next.js in the current directory
+# If you're in the Solokit project directory, initialize Next.js in the current directory
 # using the --force flag (use with caution)
 npx create-next-app@latest . --typescript --tailwind --app --use-npm
 # When prompted about conflicts, confirm to proceed
@@ -259,13 +259,13 @@ npx create-next-app@latest . --typescript --tailwind --app --use-npm
 mv .session.tmp .session
 ```
 
-**Note:** The `.session/` directory is essential for SDD to function. Do not delete it or add it to `.gitignore` if you're using Session-Driven Development workflow.
+**Note:** The `.session/` directory is essential for Solokit to function. Do not delete it or add it to `.gitignore` if you're using Session-Driven Development workflow.
 
 ---
 
 ### `work-update` Command Fails with EOFError
 
-**Symptom:** Running `sdd work-update US-0-1 --status in_progress` fails with:
+**Symptom:** Running `sk work-update US-0-1 --status in_progress` fails with:
 ```
 EOFError: EOF when reading a line
 ```
@@ -274,26 +274,26 @@ EOFError: EOF when reading a line
 
 **Solution:**
 
-**For SDD v0.5.10+:** This is fixed! The `work-update` command now supports both interactive and non-interactive modes:
+**For Solokit v0.5.10+:** This is fixed! The `work-update` command now supports both interactive and non-interactive modes:
 
 ```bash
 # Non-interactive mode (with flags)
-sdd work-update US-0-1 --status completed
-sdd work-update US-0-1 --priority high
-sdd work-update US-0-1 --milestone "MVP"
-sdd work-update US-0-1 --add-dependency US-0-2
-sdd work-update US-0-1 --remove-dependency US-0-3
+sk work-update US-0-1 --status completed
+sk work-update US-0-1 --priority high
+sk work-update US-0-1 --milestone "MVP"
+sk work-update US-0-1 --add-dependency US-0-2
+sk work-update US-0-1 --remove-dependency US-0-3
 
 # Interactive mode (no flags)
-sdd work-update US-0-1
+sk work-update US-0-1
 # Prompts: What would you like to update?
 ```
 
 **For older versions:** Upgrade to the latest version or avoid using `work-update` in non-interactive contexts.
 
 **Important for Claude Code Users:**
-- The `/sdd:start` command automatically updates the work item status to `in_progress`
-- You do NOT need to manually run `sdd work-update US-0-1 --status in_progress` after starting a session
+- The `/sk:start` command automatically updates the work item status to `in_progress`
+- You do NOT need to manually run `sk work-update US-0-1 --status in_progress` after starting a session
 - The briefing will show: `✓ Work item status updated: US-0-1 → in_progress`
 
 ---
@@ -302,9 +302,9 @@ sdd work-update US-0-1
 
 If you encounter issues not covered here:
 
-1. Check the [Session-Driven Development docs](./session-driven-development.md)
+1. Check the [Session-Driven Development docs](./solokit-methodology.md)
 2. Review the [Configuration guide](./configuration.md)
-3. Open an issue on the [SDD GitHub repository](https://github.com/anthropics/sdd)
+3. Open an issue on the [Solokit GitHub repository](https://github.com/anthropics/solokit)
 4. Check the command-specific docs in `docs/commands/`
 
 ---
@@ -318,7 +318,7 @@ For more verbose output during troubleshooting:
 export SDD_DEBUG=1
 
 # Run commands
-/sdd:start
+/sk:start
 
 # Check logs
 tail -f .session/debug.log

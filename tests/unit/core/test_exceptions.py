@@ -1,6 +1,6 @@
 """Unit tests for exception hierarchy"""
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     BranchNotFoundError,
     CircularDependencyError,
     CommandExecutionError,
@@ -156,7 +156,7 @@ class TestNotFoundErrors:
         assert error.category == ErrorCategory.NOT_FOUND
         assert error.code == ErrorCode.WORK_ITEM_NOT_FOUND
         assert "nonexistent_item" in error.message
-        assert "sdd work-list" in error.remediation
+        assert "sk work-list" in error.remediation
 
     def test_file_not_found_error(self):
         """Test FileNotFoundError"""
@@ -174,7 +174,7 @@ class TestNotFoundErrors:
 
         assert error.category == ErrorCategory.NOT_FOUND
         assert error.code == ErrorCode.SESSION_NOT_FOUND
-        assert "sdd start" in error.remediation
+        assert "sk start" in error.remediation
 
 
 class TestConfigurationErrors:
@@ -312,7 +312,7 @@ class TestAlreadyExistsErrors:
         assert error.category == ErrorCategory.ALREADY_EXISTS
         assert error.code == ErrorCode.SESSION_ALREADY_ACTIVE
         assert error.context["current_work_item_id"] == "current_feature"
-        assert "sdd end" in error.remediation
+        assert "sk end" in error.remediation
 
     def test_work_item_already_exists_error(self):
         """Test WorkItemAlreadyExistsError"""

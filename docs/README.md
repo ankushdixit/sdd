@@ -1,18 +1,18 @@
-# SDD Documentation
+# Solokit Documentation
 
-Welcome to the Session-Driven Development (SDD) documentation.
+Welcome to the Session-Driven Development (Solokit) documentation.
 
 ## Getting Started
 
 - [README](../README.md) - Project overview and quick start
-- [Contributing Guidelines](../CONTRIBUTING.md) - How to contribute to SDD
+- [Contributing Guidelines](../CONTRIBUTING.md) - How to contribute to Solokit
 - [Changelog](../CHANGELOG.md) - Version history and release notes
 
 ## Architecture
 
 High-level system design and architectural decisions:
 
-- [Session-Driven Development](architecture/session-driven-development.md) - Core methodology and principles
+- [Session-Driven Development](architecture/solokit-methodology.md) - Core methodology and principles
 - [AI-Augmented Solo Framework](architecture/ai-augmented-solo-framework.md) - AI collaboration patterns
 - [Implementation Insights](architecture/implementation-insights.md) - Technical implementation details
 - [Architecture Overview](ARCHITECTURE.md) - System architecture and components
@@ -27,7 +27,7 @@ Project templates with tier-based quality gates:
 
 ## Guides
 
-Step-by-step guides for using SDD:
+Step-by-step guides for using Solokit:
 
 - [Writing Specifications](guides/writing-specs.md) - How to write effective work item specs
 - [Configuration](guides/configuration.md) - Project configuration options
@@ -63,7 +63,7 @@ Internal development documentation:
 
 For detailed command documentation, see the [commands](commands/) directory:
 
-- [/init](commands/init.md) - Initialize a new SDD project
+- [/init](commands/init.md) - Initialize a new Solokit project
 - [/start](commands/start.md) - Start a development session
 - [/end](commands/end.md) - End a development session
 - [/status](commands/status.md) - View session status

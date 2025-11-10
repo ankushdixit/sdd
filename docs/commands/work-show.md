@@ -1,6 +1,6 @@
 # Work Show Command
 
-**Usage:** `/sdd:work-show <work_item_id>`
+**Usage:** `/sk:work-show <work_item_id>`
 
 **Description:** Display detailed information about a specific work item including specification, dependencies, session history, and git information.
 
@@ -16,7 +16,7 @@ The `work-show` command provides a comprehensive view of a work item:
 ## Usage
 
 ```bash
-/sdd:work-show <work_item_id>
+/sk:work-show <work_item_id>
 ```
 
 **Required argument:**
@@ -61,7 +61,7 @@ The `work-show` command provides a comprehensive view of a work item:
 ### Viewing Not Started Work Item
 
 ```bash
-/sdd:work-show feature_auth
+/sk:work-show feature_auth
 ```
 
 **Output:**
@@ -106,15 +106,15 @@ SESSION HISTORY:
   No sessions yet. This work item hasn't been started.
 
 NEXT STEPS:
-  Start working:    /sdd:start feature_auth
-  Update priority:  /sdd:work-update feature_auth priority
-  View all items:   /sdd:work-list
+  Start working:    /sk:start feature_auth
+  Update priority:  /sk:work-update feature_auth priority
+  View all items:   /sk:work-list
 ```
 
 ### Viewing In-Progress Work Item
 
 ```bash
-/sdd:work-show bug_session_timeout
+/sk:work-show bug_session_timeout
 ```
 
 **Output:**
@@ -165,15 +165,15 @@ GIT INFORMATION:
   Files changed: 5 (+123, -12)
 
 NEXT STEPS:
-  Complete work:    /sdd:end
-  Validate quality: /sdd:validate
-  View status:      /sdd:status
+  Complete work:    /sk:end
+  Validate quality: /sk:validate
+  View status:      /sk:status
 ```
 
 ### Viewing Completed Work Item
 
 ```bash
-/sdd:work-show feature_dashboard
+/sk:work-show feature_dashboard
 ```
 
 **Output:**
@@ -240,15 +240,15 @@ COMPLETION SUMMARY:
   ✓ Documentation: Complete
 
 NEXT STEPS:
-  View learnings:   /sdd:learn-show --session feature_dashboard
-  Related items:    /sdd:work-list --milestone sprint_1
+  View learnings:   /sk:learn-show --session feature_dashboard
+  Related items:    /sk:work-list --milestone sprint_1
   Dependents:       (no items depend on this)
 ```
 
 ### Viewing Blocked Work Item
 
 ```bash
-/sdd:work-show feature_search
+/sk:work-show feature_search
 ```
 
 **Output:**
@@ -296,10 +296,10 @@ DEPENDENCY STATUS:
   Estimated unblock: ~1-2 sessions remaining
 
 NEXT STEPS:
-  View blocker:     /sdd:work-show feature_auth
-  Check progress:   /sdd:status
-  Update deps:      /sdd:work-update feature_search remove-dependency
-  View graph:       /sdd:work-graph --focus feature_search
+  View blocker:     /sk:work-show feature_auth
+  Check progress:   /sk:status
+  Update deps:      /sk:work-update feature_search remove-dependency
+  View graph:       /sk:work-graph --focus feature_search
 ```
 
 ## Work Item States
@@ -322,7 +322,7 @@ NEXT STEPS:
 ### completed
 - All work finished
 - Quality gates passed
-- Marked complete in `/sdd:end`
+- Marked complete in `/sk:end`
 
 ## Understanding Dependencies
 
@@ -407,7 +407,7 @@ The command provides contextual suggestions:
 ### Work Item Not Found
 
 ```bash
-/sdd:work-show nonexistent_item
+/sk:work-show nonexistent_item
 ```
 
 **Output:**
@@ -420,23 +420,23 @@ Available work items:
   refactor_api (not_started)
   feature_dashboard (completed)
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### Missing Argument
 
 ```bash
-/sdd:work-show
+/sk:work-show
 ```
 
 **Output:**
 ```
-ERROR: Usage: /sdd:work-show <work_item_id>
+ERROR: Usage: /sk:work-show <work_item_id>
 
 Example:
-  /sdd:work-show feature_auth
+  /sk:work-show feature_auth
 
-Use /sdd:work-list to see all work items.
+Use /sk:work-list to see all work items.
 ```
 
 ### Specification File Missing
@@ -455,32 +455,32 @@ SPECIFICATION:
 ### Before Starting Work
 
 ```bash
-/sdd:work-show feature_auth  # Review details
-/sdd:start feature_auth      # Start working
+/sk:work-show feature_auth  # Review details
+/sk:start feature_auth      # Start working
 ```
 
 ### During Work
 
 ```bash
-/sdd:work-show bug_timeout   # Check progress
-/sdd:status                  # Quick status
-/sdd:validate                # Check quality
+/sk:work-show bug_timeout   # Check progress
+/sk:status                  # Quick status
+/sk:validate                # Check quality
 ```
 
 ### After Completion
 
 ```bash
-/sdd:work-show feature_dashboard      # Review completion
-/sdd:learn-show --session feature_dashboard  # View learnings
-/sdd:work-list --status completed     # See all completed
+/sk:work-show feature_dashboard      # Review completion
+/sk:learn-show --session feature_dashboard  # View learnings
+/sk:work-list --status completed     # See all completed
 ```
 
 ### For Blocked Items
 
 ```bash
-/sdd:work-show feature_search        # See what's blocking
-/sdd:work-show feature_auth          # Check blocker progress
-/sdd:work-graph --focus feature_search  # Visualize
+/sk:work-show feature_search        # See what's blocking
+/sk:work-show feature_auth          # Check blocker progress
+/sk:work-graph --focus feature_search  # Visualize
 ```
 
 ## Performance

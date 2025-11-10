@@ -25,7 +25,7 @@ import pytest
 
 @pytest.fixture
 def sdd_project_for_validation():
-    """Create a temp SDD project with active session for validation testing.
+    """Create a temp Solokit project with active session for validation testing.
 
     Returns:
         Path: Project directory with session and work items.
@@ -148,13 +148,13 @@ Testing the validation system.
 
 
 class TestValidationCommand:
-    """Tests for sdd validate command execution."""
+    """Tests for sk validate command execution."""
 
     def test_validate_command_exists(self, sdd_project_for_validation):
-        """Test that sdd validate command executes."""
+        """Test that sk validate command executes."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -168,7 +168,7 @@ class TestValidationCommand:
         """Test that validation runs multiple quality checks."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -196,7 +196,7 @@ class TestQualityGates:
         """Test that quality gates are reported with structure."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -221,7 +221,7 @@ class TestGitValidation:
         """Test that validation checks git status."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -240,7 +240,7 @@ class TestGitValidation:
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -268,7 +268,7 @@ class TestWorkItemValidation:
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -283,7 +283,7 @@ class TestWorkItemValidation:
         """Test that validation checks spec file existence."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -301,7 +301,7 @@ class TestWorkItemValidation:
 
         # Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -324,7 +324,7 @@ class TestValidationReporting:
         """Test that validation provides clear, structured output."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -343,14 +343,14 @@ class TestValidationReporting:
         """Test that validation exit codes are consistent."""
         # Arrange & Act - Run validation twice
         result1 = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
         )
 
         result2 = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,
@@ -374,7 +374,7 @@ class TestValidationIntegration:
 
         # Act - Run validation
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=sdd_project_for_validation,
             capture_output=True,
             text=True,

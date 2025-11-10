@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError, FileOperationError
-from sdd.core.file_ops import (
+from solokit.core.exceptions import FileNotFoundError, FileOperationError
+from solokit.core.file_ops import (
     JSONFileOperations,
     backup_file,
     ensure_directory,

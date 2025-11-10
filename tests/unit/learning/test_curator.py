@@ -13,15 +13,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import FileNotFoundError as SDDFileNotFoundError
-from sdd.learning.curator import LearningsCurator, main
-from sdd.learning.validator import LEARNING_SCHEMA
+from solokit.core.exceptions import FileNotFoundError as SDDFileNotFoundError
+from solokit.learning.curator import LearningsCurator, main
+from solokit.learning.validator import LEARNING_SCHEMA
 
 
 @pytest.fixture(autouse=True)
 def reset_config_manager():
     """Reset ConfigManager singleton before each test."""
-    from sdd.core.config import ConfigManager
+    from solokit.core.config import ConfigManager
 
     ConfigManager._instance = None
     ConfigManager._config = None

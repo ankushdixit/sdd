@@ -7,13 +7,13 @@ description: Validate current session meets quality standards without ending it
 Run the validation script to check quality standards:
 
 ```bash
-sdd validate
+sk validate
 ```
 
 To automatically fix linting and formatting issues:
 
 ```bash
-sdd validate --fix
+sk validate --fix
 ```
 
 The validation checks:
@@ -24,4 +24,4 @@ The validation checks:
 - **Git Status**: Working directory is clean or has expected changes
 - **Acceptance Criteria**: Work item requirements are met
 
-Display the validation results to the user with a clear pass/fail status for each check. If linting or formatting fail, suggest using `sdd validate --fix` to automatically fix the issues. This command allows checking quality during development without ending the session.
+Display the validation results to the user with a clear pass/fail status for each check. If linting or formatting fail, suggest using `sk validate --fix` to automatically fix the issues. This command allows checking quality during development without ending the session.

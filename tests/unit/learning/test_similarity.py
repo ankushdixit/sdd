@@ -1,6 +1,6 @@
 """Unit tests for learning similarity engine"""
 
-from sdd.learning.similarity import (
+from solokit.learning.similarity import (
     ENGLISH_STOPWORDS,
     JaccardContainmentSimilarity,
     LearningSimilarityEngine,

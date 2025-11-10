@@ -24,7 +24,7 @@ import pytest
 
 @pytest.fixture
 def sdd_project_with_learnings():
-    """Create a temp SDD project with some learnings for testing.
+    """Create a temp Solokit project with some learnings for testing.
 
     Returns:
         Path: Project directory with learning system initialized.
@@ -140,7 +140,7 @@ class TestLearningCapture:
         # Arrange & Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Test learning with all fields",
@@ -175,7 +175,7 @@ class TestLearningCapture:
         # Arrange & Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Minimal learning test",
@@ -205,7 +205,7 @@ class TestLearningDisplay:
         # Add learnings
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Learning 1",
@@ -220,7 +220,7 @@ class TestLearningDisplay:
         )
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Learning 2",
@@ -234,7 +234,7 @@ class TestLearningDisplay:
             capture_output=True,
         )
         subprocess.run(
-            ["sdd", "learn", "--content", "Learning 3", "--category", "architecture_patterns"],
+            ["sk", "learn", "--content", "Learning 3", "--category", "architecture_patterns"],
             cwd=sdd_project_with_learnings,
             check=True,
             capture_output=True,
@@ -245,7 +245,7 @@ class TestLearningDisplay:
         """Test displaying all learnings without filters."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "learn-show"],
+            ["sk", "learn-show"],
             cwd=project_with_multiple_learnings,
             capture_output=True,
             text=True,
@@ -259,7 +259,7 @@ class TestLearningDisplay:
         """Test filtering learnings by category."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "learn-show", "--category", "best_practices"],
+            ["sk", "learn-show", "--category", "best_practices"],
             cwd=project_with_multiple_learnings,
             capture_output=True,
             text=True,
@@ -272,7 +272,7 @@ class TestLearningDisplay:
         """Test filtering learnings by tag."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "learn-show", "--tag", "testing"],
+            ["sk", "learn-show", "--tag", "testing"],
             cwd=project_with_multiple_learnings,
             capture_output=True,
             text=True,
@@ -295,7 +295,7 @@ class TestLearningSearch:
         """Add learnings with searchable content."""
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Python async functions are tricky",
@@ -308,7 +308,7 @@ class TestLearningSearch:
         )
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Use design patterns wisely",
@@ -325,7 +325,7 @@ class TestLearningSearch:
         """Test searching learnings by keyword."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "learn-search", "async"],
+            ["sk", "learn-search", "async"],
             cwd=project_with_searchable_learnings,
             capture_output=True,
             text=True,
@@ -350,7 +350,7 @@ class TestLearningCuration:
         """Add similar learnings for duplicate detection."""
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Test learning with all required fields",
@@ -363,7 +363,7 @@ class TestLearningCuration:
         )
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "learn",
                 "--content",
                 "Test learning with all fields required",
@@ -385,7 +385,7 @@ class TestLearningCuration:
 
         # Act
         result = subprocess.run(
-            ["sdd", "learn-curate", "--dry-run"],
+            ["sk", "learn-curate", "--dry-run"],
             cwd=project_with_similar_learnings,
             capture_output=True,
             text=True,
@@ -408,7 +408,7 @@ class TestLearningCuration:
 
         # Act
         result = subprocess.run(
-            ["sdd", "learn-curate"],
+            ["sk", "learn-curate"],
             cwd=project_with_similar_learnings,
             capture_output=True,
             text=True,
@@ -447,7 +447,7 @@ class TestAutoCategorization:
         for category in categories:
             result = subprocess.run(
                 [
-                    "sdd",
+                    "sk",
                     "learn",
                     "--content",
                     f"Learning for {category} category",
@@ -483,7 +483,7 @@ class TestLearningEdgeCases:
 
         # Act & Assert - Show learnings
         result = subprocess.run(
-            ["sdd", "learn-show"],
+            ["sk", "learn-show"],
             cwd=sdd_project_with_learnings,
             capture_output=True,
             text=True,
@@ -492,7 +492,7 @@ class TestLearningEdgeCases:
 
         # Act & Assert - Search learnings
         result = subprocess.run(
-            ["sdd", "learn-search", "test"],
+            ["sk", "learn-search", "test"],
             cwd=sdd_project_with_learnings,
             capture_output=True,
             text=True,
@@ -501,7 +501,7 @@ class TestLearningEdgeCases:
 
         # Act & Assert - Curate learnings
         result = subprocess.run(
-            ["sdd", "learn-curate"],
+            ["sk", "learn-curate"],
             cwd=sdd_project_with_learnings,
             capture_output=True,
             text=True,

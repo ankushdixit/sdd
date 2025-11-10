@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError
-from sdd.session.briefing.stack_detector import StackDetector
+from solokit.core.exceptions import FileOperationError
+from solokit.session.briefing.stack_detector import StackDetector
 
 
 @pytest.fixture

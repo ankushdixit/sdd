@@ -4,7 +4,7 @@ description: Initialize a new Session-Driven Development project with template-b
 
 # Template-Based Project Initialization
 
-Initialize a new SDD project with guided template selection for production-ready setup.
+Initialize a new Solokit project with guided template selection for production-ready setup.
 
 ## Interactive Template Selection (4 Questions)
 
@@ -96,7 +96,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 After collecting all answers via AskUserQuestion, run the Python CLI with the appropriate arguments:
 
 ```bash
-sdd init --template=<category> --tier=<tier> --coverage=<coverage> --options=<options>
+sk init --template=<category> --tier=<tier> --coverage=<coverage> --options=<options>
 ```
 
 **Mapping user selections to CLI arguments:**
@@ -143,17 +143,17 @@ Show the user the success output from the script, then explain:
 
 **Next steps:**
 1. Review `README.md` for stack-specific getting started guide
-2. Create your first work item: `/sdd:work-new`
-3. Start working: `/sdd:start`"
+2. Create your first work item: `/sk:work-new`
+3. Start working: `/sk:start`"
 
 ---
 
 ## Error Handling
 
-If the `sdd init` command fails, show the error message from the CLI output. The Python script provides clear error messages for common issues:
+If the `sk init` command fails, show the error message from the CLI output. The Python script provides clear error messages for common issues:
 - Already initialized
 - Not a blank project
 - Missing environment requirements
 - etc.
 
-Do not retry automatically - let the user address the issue and run `/sdd:init` again.
+Do not retry automatically - let the user address the issue and run `/sk:init` again.

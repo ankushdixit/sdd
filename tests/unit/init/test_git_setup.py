@@ -7,7 +7,7 @@ Run tests:
     pytest tests/unit/init/test_git_setup.py -v
 
 Run with coverage:
-    pytest tests/unit/init/test_git_setup.py --cov=sdd.init.git_setup --cov-report=term-missing
+    pytest tests/unit/init/test_git_setup.py --cov=solokit.init.git_setup --cov-report=term-missing
 
 Target: 90%+ coverage
 """
@@ -17,8 +17,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import ErrorCode, GitError, ValidationError
-from sdd.init.git_setup import (
+from solokit.core.exceptions import ErrorCode, GitError, ValidationError
+from solokit.init.git_setup import (
     check_blank_project_or_exit,
     check_or_init_git,
     is_blank_project,
@@ -73,7 +73,7 @@ class TestIsBlankProject:
         is_blank, blocking = is_blank_project(temp_project)
 
         assert is_blank is False
-        assert ".session/ (SDD already initialized)" in blocking
+        assert ".session/ (Solokit already initialized)" in blocking
 
     def test_non_blank_with_src_directory_content(self, project_with_src):
         """Test non-blank project with src/ containing files."""
@@ -132,7 +132,7 @@ class TestIsBlankProject:
 
     def test_defaults_to_cwd_when_none(self):
         """Test that function defaults to current directory when project_root is None."""
-        with patch("sdd.init.git_setup.Path.cwd") as mock_cwd:
+        with patch("solokit.init.git_setup.Path.cwd") as mock_cwd:
             mock_path = Mock()
             mock_path.exists.return_value = False
             mock_cwd.return_value = mock_path
@@ -227,7 +227,7 @@ class TestCheckOrInitGit:
 
     def test_git_init_success(self, temp_project, mock_successful_command):
         """Test successful git initialization."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = mock_successful_command
@@ -244,7 +244,7 @@ class TestCheckOrInitGit:
 
     def test_git_init_fails(self, temp_project, mock_failed_command):
         """Test git init command failure."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = mock_failed_command
@@ -257,7 +257,7 @@ class TestCheckOrInitGit:
 
     def test_git_branch_rename_fails(self, temp_project):
         """Test git branch rename failure."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
 
@@ -275,7 +275,7 @@ class TestCheckOrInitGit:
 
     def test_defaults_to_cwd(self):
         """Test that function defaults to current directory when project_root is None."""
-        with patch("sdd.init.git_setup.Path.cwd") as mock_cwd:
+        with patch("solokit.init.git_setup.Path.cwd") as mock_cwd:
             mock_path = Mock()
             mock_git = Mock()
             mock_git.exists.return_value = True
@@ -290,7 +290,7 @@ class TestCheckOrInitGit:
 
     def test_uses_correct_timeout(self, temp_project):
         """Test that CommandRunner uses GIT_QUICK_TIMEOUT."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(success=True, stdout="", stderr="", returncode=0)
@@ -298,7 +298,7 @@ class TestCheckOrInitGit:
             check_or_init_git(temp_project)
 
             # Verify CommandRunner was initialized with GIT_QUICK_TIMEOUT
-            from sdd.core.constants import GIT_QUICK_TIMEOUT
+            from solokit.core.constants import GIT_QUICK_TIMEOUT
 
             mock_runner_class.assert_called_once_with(
                 default_timeout=GIT_QUICK_TIMEOUT, working_dir=temp_project
@@ -306,7 +306,7 @@ class TestCheckOrInitGit:
 
     def test_error_context_includes_stderr(self, temp_project):
         """Test that GitError context includes stderr output."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = Mock(
@@ -321,7 +321,7 @@ class TestCheckOrInitGit:
 
     def test_remediation_message_provided(self, temp_project, mock_failed_command):
         """Test that remediation message is provided on error."""
-        with patch("sdd.init.git_setup.CommandRunner") as mock_runner_class:
+        with patch("solokit.init.git_setup.CommandRunner") as mock_runner_class:
             mock_runner = Mock()
             mock_runner_class.return_value = mock_runner
             mock_runner.run.return_value = mock_failed_command

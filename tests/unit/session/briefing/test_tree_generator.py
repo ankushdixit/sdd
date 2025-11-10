@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.project.tree import TreeGenerator
+from solokit.project.tree import TreeGenerator
 
 
 @pytest.fixture
@@ -460,7 +460,7 @@ class TestRecordTreeUpdate:
         reasoning = "Added source directory"
 
         # Act
-        with patch("sdd.project.tree.datetime") as mock_datetime:
+        with patch("solokit.project.tree.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             tree_generator._record_tree_update(session_num, changes, reasoning)
 
@@ -494,7 +494,7 @@ class TestRecordTreeUpdate:
         reasoning = "Added source directory"
 
         # Act
-        with patch("sdd.project.tree.datetime") as mock_datetime:
+        with patch("solokit.project.tree.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             tree_generator._record_tree_update(session_num, changes, reasoning)
 
@@ -513,7 +513,7 @@ class TestRecordTreeUpdate:
         reasoning = "Added source directory"
 
         # Act
-        with patch("sdd.project.tree.datetime") as mock_datetime:
+        with patch("solokit.project.tree.datetime") as mock_datetime:
             mock_datetime.now.return_value.isoformat.return_value = "2024-01-01T10:00:00"
             tree_generator._record_tree_update(session_num, changes, reasoning)
 
@@ -532,7 +532,7 @@ class TestMainFunction:
 
         # Act
         with patch("sys.argv", ["generate_tree.py"] + test_args):
-            with patch("sdd.project.tree.TreeGenerator") as mock_generator_class:
+            with patch("solokit.project.tree.TreeGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.update_tree.return_value = [
                     {"type": "directory_added", "path": "src/"}
@@ -540,7 +540,7 @@ class TestMainFunction:
                 mock_instance.tree_file = temp_project / "tree.txt"
                 mock_generator_class.return_value = mock_instance
 
-                from sdd.project.tree import main
+                from solokit.project.tree import main
 
                 main()
 
@@ -566,13 +566,13 @@ class TestMainFunction:
 
         # Act
         with patch("sys.argv", ["generate_tree.py"] + test_args):
-            with patch("sdd.project.tree.TreeGenerator") as mock_generator_class:
+            with patch("solokit.project.tree.TreeGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.updates_file.exists.return_value = True
                 mock_instance.updates_file.read_text.return_value = json.dumps(updates_data)
                 mock_generator_class.return_value = mock_instance
 
-                from sdd.project.tree import main
+                from solokit.project.tree import main
 
                 main()
 
@@ -589,12 +589,12 @@ class TestMainFunction:
 
         # Act
         with patch("sys.argv", ["generate_tree.py"] + test_args):
-            with patch("sdd.project.tree.TreeGenerator") as mock_generator_class:
+            with patch("solokit.project.tree.TreeGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.updates_file.exists.return_value = False
                 mock_generator_class.return_value = mock_instance
 
-                from sdd.project.tree import main
+                from solokit.project.tree import main
 
                 main()
 
@@ -606,13 +606,13 @@ class TestMainFunction:
         """Test main function when no changes detected."""
         # Act
         with patch("sys.argv", ["generate_tree.py"]):
-            with patch("sdd.project.tree.TreeGenerator") as mock_generator_class:
+            with patch("solokit.project.tree.TreeGenerator") as mock_generator_class:
                 mock_instance = Mock()
                 mock_instance.update_tree.return_value = []
                 mock_instance.tree_file = temp_project / "tree.txt"
                 mock_generator_class.return_value = mock_instance
 
-                from sdd.project.tree import main
+                from solokit.project.tree import main
 
                 main()
 

@@ -1,6 +1,6 @@
-# Contributing to SDD (Session-Driven Development)
+# Contributing to Solokit (Session-Driven Development)
 
-Thank you for your interest in contributing to SDD! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to Solokit! This document provides guidelines and instructions for contributing to the project.
 
 ## Table of Contents
 
@@ -27,9 +27,9 @@ This project follows standard open-source community guidelines:
 
 Before you begin:
 
-1. **Familiarize yourself with SDD** - Read the [README](README.md) and [documentation](docs/README.md)
+1. **Familiarize yourself with Solokit** - Read the [README](README.md) and [documentation](docs/README.md)
 2. **Check existing issues** - Look for open issues or create a new one
-3. **Understand the architecture** - Review the [Session-Driven Development Framework](docs/architecture/session-driven-development.md)
+3. **Understand the architecture** - Review the [Solokit Framework](docs/architecture/solokit-methodology.md)
 
 ## Development Setup
 
@@ -44,8 +44,8 @@ Before you begin:
 
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/sdd.git
-cd sdd
+git clone https://github.com/YOUR_USERNAME/solokit.git
+cd solokit
 
 # Install development dependencies
 pip install pytest pytest-cov
@@ -57,9 +57,9 @@ pytest tests/
 ### Project Structure
 
 ```
-sdd/
+solokit/
 ├── .claude/commands/        # Slash command definitions (15 commands)
-├── src/sdd/                 # Python package (standard src/ layout)
+├── src/solokit/                 # Python package (standard src/ layout)
 │   ├── cli.py               # CLI entry point
 │   ├── core/                # Core functionality
 │   ├── session/             # Session management
@@ -90,8 +90,8 @@ sdd/
 ```bash
 # Fork the repository on GitHub
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/sdd.git
-cd sdd
+git clone https://github.com/YOUR_USERNAME/solokit.git
+cd solokit
 
 # Create a feature branch
 git checkout -b feature/your-feature-name
@@ -174,7 +174,7 @@ def calculate_dependency_depth(work_item_id: str, work_items: dict) -> int:
 
 ### Import Patterns
 
-**IMPORTANT:** SDD uses a hybrid packaging approach (v0.5.7). Follow these import patterns:
+**IMPORTANT:** Solokit uses a hybrid packaging approach (v0.5.7). Follow these import patterns:
 
 **For scripts importing other scripts:**
 ```python
@@ -193,13 +193,13 @@ from scripts.session_manager import SessionManager
 ```python
 # ❌ WRONG - Don't do this
 from .file_ops import load_json
-from sdd.work_items.manager import WorkItemManager
-from sdd.quality.gates import QualityGates
-from sdd.session.briefing import generate_briefing
+from solokit.work_items.manager import WorkItemManager
+from solokit.quality.gates import QualityGates
+from solokit.session.briefing import generate_briefing
 ```
 
 **Import Guidelines:**
-- Use standard Python imports from the `sdd` package
+- Use standard Python imports from the `solokit` package
 - No `sys.path` manipulation needed (v0.6.0+)
 - Package organized by domain for clarity
 - Full PEP 517/518 compliance
@@ -305,7 +305,7 @@ When reporting bugs, include:
    - OS and version
    - Python version
    - Claude Code version
-   - SDD version/commit
+   - Solokit version/commit
 
 ### Bug Report Template
 
@@ -322,7 +322,7 @@ Brief description of the bug
 - OS: macOS 14.0
 - Python: 3.11.5
 - Claude Code: 1.2.3
-- SDD: commit abc123
+- Solokit: commit abc123
 
 **Additional Context:**
 Any other relevant information
@@ -336,7 +336,7 @@ We welcome enhancement suggestions! When suggesting:
 2. **Describe the problem** - What problem does this solve?
 3. **Propose a solution** - How would you implement it?
 4. **Consider alternatives** - What other approaches exist?
-5. **Explain benefits** - How does this improve SDD?
+5. **Explain benefits** - How does this improve Solokit?
 
 ### Enhancement Template
 
@@ -351,7 +351,7 @@ Detailed description of proposed enhancement
 Other approaches you've considered
 
 **Benefits:**
-How this improves SDD
+How this improves Solokit
 
 **Implementation Notes:**
 Technical considerations or challenges
@@ -383,14 +383,14 @@ Technical considerations or challenges
 
 If you have questions:
 
-- Check existing [issues](https://github.com/ankushdixit/sdd/issues)
+- Check existing [issues](https://github.com/ankushdixit/solokit/issues)
 - Review [documentation](docs/README.md)
 - Open a new issue for discussion
 
 ## License
 
-By contributing to SDD, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+By contributing to Solokit, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
 ---
 
-Thank you for contributing to SDD! Your efforts help make AI-augmented development better for everyone.
+Thank you for contributing to Solokit! Your efforts help make AI-augmented development better for everyone.

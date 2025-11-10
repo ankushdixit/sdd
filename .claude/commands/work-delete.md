@@ -5,7 +5,7 @@ argument-hint: <work_item_id>
 
 # Work Item Delete
 
-Delete a work item from the SDD system with dependency checking and interactive confirmation.
+Delete a work item from the Solokit system with dependency checking and interactive confirmation.
 
 ## Usage
 
@@ -22,7 +22,7 @@ Delete a work item from the SDD system with dependency checking and interactive 
    - Exit
 
 2. **Load and display work item details** (optimized):
-   - Use `python -m sdd.work_items.get_metadata <work_item_id> --with-deps` for fast lookup
+   - Use `python -m solokit.work_items.get_metadata <work_item_id> --with-deps` for fast lookup
    - If work item doesn't exist: Show error and suggest using `/work-list`
    - Display current values:
      ```
@@ -34,7 +34,7 @@ Delete a work item from the SDD system with dependency checking and interactive 
      ```
 
 3. **Check for dependents** (work items that depend on this one):
-   - **Use optimized script**: Run `python -m sdd.work_items.get_dependents <work_item_id>`
+   - **Use optimized script**: Run `python -m solokit.work_items.get_dependents <work_item_id>`
    - This script efficiently finds all work items that depend on the given work item
    - If dependents exist, show warning:
      ```
@@ -61,12 +61,12 @@ Delete a work item from the SDD system with dependency checking and interactive 
 
    **If "Delete work item only" selected:**
    ```bash
-   sdd work-delete <work_item_id> --keep-spec
+   sk work-delete <work_item_id> --keep-spec
    ```
 
    **If "Delete work item and spec file" selected:**
    ```bash
-   sdd work-delete <work_item_id> --delete-spec
+   sk work-delete <work_item_id> --delete-spec
    ```
 
    **If "Cancel deletion" selected:**
@@ -86,8 +86,8 @@ Delete a work item from the SDD system with dependency checking and interactive 
 ## Examples
 
 ```bash
-sdd work-delete feature_obsolete_item --keep-spec
-sdd work-delete feature_test_item --delete-spec
+sk work-delete feature_obsolete_item --keep-spec
+sk work-delete feature_test_item --delete-spec
 ```
 
 ## Error Handling

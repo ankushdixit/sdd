@@ -6,21 +6,21 @@ This directory contains **executable command files** for Claude Code slash comma
 
 ```
 .claude/commands/          ← Claude Code reads these at runtime
-├── init.md                ← Instructions for /sdd:init
-├── start.md               ← Instructions for /sdd:start
-├── end.md                 ← Instructions for /sdd:end
-├── validate.md            ← Instructions for /sdd:validate
-├── status.md              ← Instructions for /sdd:status
-├── work-new.md            ← Instructions for /sdd:work-new
-├── work-list.md           ← Instructions for /sdd:work-list
-├── work-show.md           ← Instructions for /sdd:work-show
-├── work-update.md         ← Instructions for /sdd:work-update
-├── work-next.md           ← Instructions for /sdd:work-next
-├── work-graph.md          ← Instructions for /sdd:work-graph
-├── learn.md               ← Instructions for /sdd:learn
-├── learn-show.md          ← Instructions for /sdd:learn-show
-├── learn-search.md        ← Instructions for /sdd:learn-search
-└── learn-curate.md        ← Instructions for /sdd:learn-curate
+├── init.md                ← Instructions for /sk:init
+├── start.md               ← Instructions for /sk:start
+├── end.md                 ← Instructions for /sk:end
+├── validate.md            ← Instructions for /sk:validate
+├── status.md              ← Instructions for /sk:status
+├── work-new.md            ← Instructions for /sk:work-new
+├── work-list.md           ← Instructions for /sk:work-list
+├── work-show.md           ← Instructions for /sk:work-show
+├── work-update.md         ← Instructions for /sk:work-update
+├── work-next.md           ← Instructions for /sk:work-next
+├── work-graph.md          ← Instructions for /sk:work-graph
+├── learn.md               ← Instructions for /sk:learn
+├── learn-show.md          ← Instructions for /sk:learn-show
+├── learn-search.md        ← Instructions for /sk:learn-search
+└── learn-curate.md        ← Instructions for /sk:learn-curate
 
 commands/                  ← Full documentation (not used by Claude Code)
 └── *.md                   ← Detailed specs for developers
@@ -49,29 +49,29 @@ Display results to user.
 ## Available Commands
 
 ### Session Management
-- `/sdd:init` - Initialize project with Session-Driven Development
-- `/sdd:start` - Begin work session with comprehensive briefing
-- `/sdd:end` - Complete session with quality gates
-- `/sdd:validate` - Check quality standards mid-session
-- `/sdd:status` - Quick session overview
+- `/sk:init` - Initialize project with Session-Driven Development
+- `/sk:start` - Begin work session with comprehensive briefing
+- `/sk:end` - Complete session with quality gates
+- `/sk:validate` - Check quality standards mid-session
+- `/sk:status` - Quick session overview
 
 ### Work Item Management
-- `/sdd:work-new` - Create new work item interactively
-- `/sdd:work-list` - List work items with filtering
-- `/sdd:work-show` - Show detailed work item information
-- `/sdd:work-update` - Update work item fields
-- `/sdd:work-next` - Get next recommended work item
-- `/sdd:work-graph` - Generate dependency graph visualization
+- `/sk:work-new` - Create new work item interactively
+- `/sk:work-list` - List work items with filtering
+- `/sk:work-show` - Show detailed work item information
+- `/sk:work-update` - Update work item fields
+- `/sk:work-next` - Get next recommended work item
+- `/sk:work-graph` - Generate dependency graph visualization
 
 ### Learning System
-- `/sdd:learn` - Capture a learning during development session
-- `/sdd:learn-show` - Browse and filter learnings
-- `/sdd:learn-search` - Search learnings by keyword
-- `/sdd:learn-curate` - Run learning curation process
+- `/sk:learn` - Capture a learning during development session
+- `/sk:learn-show` - Browse and filter learnings
+- `/sk:learn-search` - Search learnings by keyword
+- `/sk:learn-curate` - Run learning curation process
 
 ## How Commands Work
 
-1. **You type**: `/sdd:work-list` in Claude Code
+1. **You type**: `/sk:work-list` in Claude Code
 2. **Claude reads**: `.claude/commands/work-list.md`
 3. **Claude executes**: The Python code/bash commands specified
 4. **Claude displays**: Formatted results to you
@@ -94,7 +94,7 @@ To test in a new session:
 1. Open Claude Code in this project
 2. Type `/help` to see all commands
 3. Commands appear with "(project)" label
-4. Try any command (e.g., `/sdd:work-list`)
+4. Try any command (e.g., `/sk:work-list`)
 
 ## Adding New Commands
 

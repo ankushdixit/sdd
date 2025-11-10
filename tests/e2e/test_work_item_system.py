@@ -28,7 +28,7 @@ import pytest
 
 @pytest.fixture
 def sdd_project_with_work_items():
-    """Create a temp SDD project with multiple work items for testing.
+    """Create a temp Solokit project with multiple work items for testing.
 
     Returns:
         tuple: (project_dir, work_item_ids) where work_item_ids is a list of created IDs.
@@ -142,7 +142,7 @@ def sdd_project_with_work_items():
         created_ids = []
         for wtype, title, priority in work_items_to_create:
             result = subprocess.run(
-                ["sdd", "work-new", "--type", wtype, "--title", title, "--priority", priority],
+                ["sk", "work-new", "--type", wtype, "--title", title, "--priority", priority],
                 cwd=project_dir,
                 capture_output=True,
                 text=True,
@@ -170,7 +170,7 @@ class TestWorkItemTypeTemplates:
     def test_all_work_item_templates_exist(self):
         """Test that all 6 work item type templates exist."""
         # Arrange
-        templates_dir = Path(__file__).parent.parent.parent / "src" / "sdd" / "templates"
+        templates_dir = Path(__file__).parent.parent.parent / "src" / "solokit" / "templates"
         expected_templates = [
             "feature_spec.md",
             "bug_spec.md",
@@ -189,7 +189,7 @@ class TestWorkItemTypeTemplates:
     def test_work_item_types_documentation_exists(self):
         """Test that WORK_ITEM_TYPES.md documents all types."""
         # Arrange
-        templates_dir = Path(__file__).parent.parent.parent / "src" / "sdd" / "templates"
+        templates_dir = Path(__file__).parent.parent.parent / "src" / "solokit" / "templates"
         types_file = templates_dir / "WORK_ITEM_TYPES.md"
         work_item_types = [
             "feature",
@@ -264,7 +264,7 @@ class TestWorkItemCreation:
         # Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-new",
                 "--type",
                 "feature",
@@ -316,7 +316,7 @@ class TestWorkItemList:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-list"],
+            ["sk", "work-list"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -333,7 +333,7 @@ class TestWorkItemList:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-list", "--type", "feature"],
+            ["sk", "work-list", "--type", "feature"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -351,7 +351,7 @@ class TestWorkItemList:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-list", "--status", "not_started"],
+            ["sk", "work-list", "--status", "not_started"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -377,7 +377,7 @@ class TestWorkItemShow:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-show", work_id],
+            ["sk", "work-show", work_id],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -411,7 +411,7 @@ class TestWorkItemUpdate:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-update", work_id, "--priority", "medium"],
+            ["sk", "work-update", work_id, "--priority", "medium"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -434,7 +434,7 @@ class TestWorkItemUpdate:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-update", work_id, "--status", "in_progress"],
+            ["sk", "work-update", work_id, "--status", "in_progress"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -457,7 +457,7 @@ class TestWorkItemUpdate:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-update", work_id, "--milestone", "MVP Phase 1"],
+            ["sk", "work-update", work_id, "--milestone", "MVP Phase 1"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -488,7 +488,7 @@ class TestWorkItemNextAndMilestones:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-next"],
+            ["sk", "work-next"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -507,7 +507,7 @@ class TestWorkItemNextAndMilestones:
         # Update some work items with milestone
         for work_id in created_ids[:3]:
             subprocess.run(
-                ["sdd", "work-update", work_id, "--milestone", "MVP Phase 1"],
+                ["sk", "work-update", work_id, "--milestone", "MVP Phase 1"],
                 cwd=project_dir,
                 check=True,
                 capture_output=True,
@@ -515,7 +515,7 @@ class TestWorkItemNextAndMilestones:
 
         # Act
         result = subprocess.run(
-            ["sdd", "work-list", "--milestone", "MVP Phase 1"],
+            ["sk", "work-list", "--milestone", "MVP Phase 1"],
             cwd=project_dir,
             capture_output=True,
             text=True,
@@ -540,7 +540,7 @@ class TestSessionStatus:
 
         # Act
         result = subprocess.run(
-            ["sdd", "status"],
+            ["sk", "status"],
             cwd=project_dir,
             capture_output=True,
             text=True,

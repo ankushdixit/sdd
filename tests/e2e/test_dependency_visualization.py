@@ -27,7 +27,7 @@ import pytest
 
 @pytest.fixture
 def sdd_project_with_dependencies():
-    """Create a temp SDD project with work items that have dependencies.
+    """Create a temp Solokit project with work items that have dependencies.
 
     Returns:
         Path: Project directory with complex dependency structure.
@@ -194,7 +194,7 @@ class TestBasicGraphGeneration:
         """Test generating dependency graph in ASCII format."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph"],
+            ["sk", "work-graph"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -211,7 +211,7 @@ class TestBasicGraphGeneration:
         """Test that completed items are excluded from default graph view."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph"],
+            ["sk", "work-graph"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -235,7 +235,7 @@ class TestCriticalPathAnalysis:
         """Test --critical-path flag shows only critical path items."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--critical-path"],
+            ["sk", "work-graph", "--critical-path"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -258,7 +258,7 @@ class TestBottleneckDetection:
         """Test --bottlenecks flag identifies blocking work items."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--bottlenecks"],
+            ["sk", "work-graph", "--bottlenecks"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -281,7 +281,7 @@ class TestGraphFiltering:
         """Test filtering graph by work item status."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--status", "not_started"],
+            ["sk", "work-graph", "--status", "not_started"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -294,7 +294,7 @@ class TestGraphFiltering:
         """Test filtering graph by work item type."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--type", "feature"],
+            ["sk", "work-graph", "--type", "feature"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -307,7 +307,7 @@ class TestGraphFiltering:
         """Test filtering graph by milestone."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--milestone", "MVP v1.0"],
+            ["sk", "work-graph", "--milestone", "MVP v1.0"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -321,7 +321,7 @@ class TestGraphFiltering:
         # Arrange & Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-graph",
                 "--status",
                 "not_started",
@@ -351,7 +351,7 @@ class TestFocusMode:
         """Test --focus flag shows specific work item and its neighborhood."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--focus", "2"],  # Focus on User Authentication
+            ["sk", "work-graph", "--focus", "2"],  # Focus on User Authentication
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -373,7 +373,7 @@ class TestGraphStatistics:
         """Test --stats flag shows graph statistics."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--stats"],
+            ["sk", "work-graph", "--stats"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -396,7 +396,7 @@ class TestIncludeCompleted:
         """Test --include-completed flag shows completed items."""
         # Arrange & Act - Without flag
         _result_default = subprocess.run(
-            ["sdd", "work-graph"],
+            ["sk", "work-graph"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -404,7 +404,7 @@ class TestIncludeCompleted:
 
         # Act - With flag
         result_with_completed = subprocess.run(
-            ["sdd", "work-graph", "--include-completed"],
+            ["sk", "work-graph", "--include-completed"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,
@@ -428,7 +428,7 @@ class TestDOTFormat:
         """Test generating dependency graph in DOT format for Graphviz."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-graph", "--format", "dot"],
+            ["sk", "work-graph", "--format", "dot"],
             cwd=sdd_project_with_dependencies,
             capture_output=True,
             text=True,

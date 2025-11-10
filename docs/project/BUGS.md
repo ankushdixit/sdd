@@ -1,4 +1,4 @@
-# SDD Bug Tracker
+# Solokit Bug Tracker
 
 This document tracks bugs discovered during development and testing.
 
@@ -36,7 +36,7 @@ This document tracks bugs discovered during development and testing.
 
 ---
 
-## Bug #25: /sdd:end Requires Pre-committed Changes, Cannot Commit as Part of Session End
+## Bug #25: /sk:end Requires Pre-committed Changes, Cannot Commit as Part of Session End
 
 **Status:** 🟡 MEDIUM
 
@@ -44,7 +44,7 @@ This document tracks bugs discovered during development and testing.
 
 ### Description
 
-The `/sdd:end` command currently requires all changes to be committed before it can run. If there are uncommitted changes in the working directory, the command aborts with an error message instructing the user to commit first, then run `/sdd:end` again. This creates friction in the workflow because:
+The `/sk:end` command currently requires all changes to be committed before it can run. If there are uncommitted changes in the working directory, the command aborts with an error message instructing the user to commit first, then run `/sk:end` again. This creates friction in the workflow because:
 
 1. Users must manually commit changes before ending the session
 2. The session end cannot create a final commit with the session summary
@@ -61,20 +61,20 @@ This occurs at the pre-flight check in `complete.py:check_uncommitted_changes()`
 
 ### Steps to Reproduce
 
-1. Start a work session with `/sdd:start work_item_id`
+1. Start a work session with `/sk:start work_item_id`
 2. Make code changes but don't commit them
-3. Run `/sdd:end --learnings-file .session/temp_learnings.txt`
+3. Run `/sk:end --learnings-file .session/temp_learnings.txt`
 4. Observe: Command aborts with uncommitted changes error
 
 **Environment:**
 - OS: macOS Darwin 24.6.0
 - Python: 3.11.7
 - Git: 2.45.2
-- SDD Version: Current (Session 30)
+- Solokit Version: Current (Session 30)
 
 ### Expected Behavior
 
-The `/sdd:end` command should:
+The `/sk:end` command should:
 1. Accept uncommitted changes in the working directory
 2. Create a commit automatically with the session summary message
 3. Run quality gates on the code as-is
@@ -91,37 +91,37 @@ UNCOMMITTED CHANGES DETECTED
 ==================================================
 
 You have uncommitted changes:
-   M src/sdd/session/complete.py
-   M src/sdd/quality/gates.py
+   M src/solokit/session/complete.py
+   M src/solokit/quality/gates.py
    ... and N more
 
 ==================================================
-📋 REQUIRED STEPS BEFORE /sdd:end:
+📋 REQUIRED STEPS BEFORE /sk:end:
 ==================================================
 1. Review your changes: git status
 2. Update CHANGELOG.md
 3. Commit everything: git add -A && git commit -m '...'
-4. Then run: sdd end
+4. Then run: sk end
 ```
 
-The user must exit, manually commit, then re-run `/sdd:end`.
+The user must exit, manually commit, then re-run `/sk:end`.
 
 ### Impact
 
 - **Severity:** Medium - Has workaround but disrupts workflow
-- **Affected Users:** All users running `/sdd:end` with uncommitted changes
+- **Affected Users:** All users running `/sk:end` with uncommitted changes
 - **Affected Versions:** Current implementation
 - **Business Impact:**
   - Adds friction to development workflow
   - Extra manual steps required
-  - Inconsistent with the automated philosophy of SDD
-- **Workaround:** Manually commit all changes before running `/sdd:end`
+  - Inconsistent with the automated philosophy of Solokit
+- **Workaround:** Manually commit all changes before running `/sk:end`
 
 ### Root Cause Analysis
 
 #### Investigation
 
-1. Reviewed `src/sdd/session/complete.py:838-926` - `check_uncommitted_changes()` function
+1. Reviewed `src/solokit/session/complete.py:838-926` - `check_uncommitted_changes()` function
 2. Function was designed as a safety check to prevent accidental session ends
 3. The git workflow (`complete_git_workflow()`) at line 1183 attempts to commit anyway
 4. The pre-flight check at line 1030 blocks execution before the commit can happen
@@ -142,7 +142,7 @@ The `check_uncommitted_changes()` function (line 838) was implemented as a defen
 
 **Code:**
 ```python
-# src/sdd/session/complete.py:1029-1034
+# src/solokit/session/complete.py:1029-1034
 # Pre-flight check - ensure changes are committed
 if not check_uncommitted_changes():
     logger.warning("Session completion aborted due to uncommitted changes")
@@ -166,7 +166,7 @@ if not check_uncommitted_changes():
 Remove or make the `check_uncommitted_changes()` call optional, allowing the git workflow to handle commits naturally:
 
 ```python
-# src/sdd/session/complete.py:1029-1034
+# src/solokit/session/complete.py:1029-1034
 # Optional: Check for uncommitted changes (warning only, don't block)
 has_uncommitted = check_uncommitted_changes()
 if has_uncommitted:
@@ -186,7 +186,7 @@ parser.add_argument(
 
 **Option 3: Smart Detection**
 
-Only abort if there are uncommitted changes that would conflict with session end operations (e.g., changes to `.session/` tracking files that sdd end will modify):
+Only abort if there are uncommitted changes that would conflict with session end operations (e.g., changes to `.session/` tracking files that sk end will modify):
 
 ```python
 # Filter out only user changes, ignore .session/ tracking files
@@ -210,13 +210,13 @@ else:
 - Reduces friction in the development loop
 
 **Files Modified:**
-- `src/sdd/session/complete.py` - Modify `main()` to make check non-blocking
+- `src/solokit/session/complete.py` - Modify `main()` to make check non-blocking
 - `tests/unit/session/test_complete.py` - Update tests for new behavior
 - `docs/commands/end.md` - Update documentation to reflect that uncommitted changes are OK
 
 ### Acceptance Criteria
 
-- [ ] `/sdd:end` can run with uncommitted changes in working directory
+- [ ] `/sk:end` can run with uncommitted changes in working directory
 - [ ] Uncommitted changes are automatically committed during session end
 - [ ] Quality gates still run on the current code state
 - [ ] CHANGELOG must still be updated (can be checked in quality gates)
@@ -228,11 +228,11 @@ else:
 ### Related Issues
 
 - Enhancement #6: Multi-session work items benefit from this fix (easier to end sessions mid-work)
-- Git workflow already has commit logic at `src/sdd/git/integration.py:419-503`
+- Git workflow already has commit logic at `src/solokit/git/integration.py:419-503`
 
 ### Notes
 
-This bug was discovered during Session 30 when analyzing warnings from `/sdd:end` execution. The git workflow showed:
+This bug was discovered during Session 30 when analyzing warnings from `/sk:end` execution. The git workflow showed:
 ```
 ⚠️  Git: Commit failed: Commit failed:
 ```

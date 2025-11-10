@@ -9,7 +9,7 @@ Run tests:
 Target: 90%+ coverage
 """
 
-from sdd.init.env_generator import (
+from solokit.init.env_generator import (
     generate_editorconfig,
     generate_env_example_nextjs,
     generate_env_example_python,

@@ -7,7 +7,7 @@ Run tests:
     pytest tests/unit/init/test_readme_generator.py -v
 
 Run with coverage:
-    pytest tests/unit/init/test_readme_generator.py --cov=sdd.init.readme_generator --cov-report=term-missing
+    pytest tests/unit/init/test_readme_generator.py --cov=solokit.init.readme_generator --cov-report=term-missing
 
 Target: 90%+ coverage
 """
@@ -17,8 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError
-from sdd.init.readme_generator import generate_readme
+from solokit.core.exceptions import FileOperationError
+from solokit.init.readme_generator import generate_readme
 
 
 class TestGenerateReadme:
@@ -26,11 +26,11 @@ class TestGenerateReadme:
 
     def test_generate_readme_for_saas_t3(self, tmp_path, mock_template_registry):
         """Test generating README for SaaS T3 template."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("saas_t3", "tier-2-standard", 80, ["ci_cd"], tmp_path)
@@ -43,11 +43,11 @@ class TestGenerateReadme:
 
     def test_readme_includes_tech_stack(self, tmp_path, mock_template_registry):
         """Test that README includes complete tech stack."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
@@ -59,11 +59,11 @@ class TestGenerateReadme:
 
     def test_readme_includes_npm_commands(self, tmp_path, mock_template_registry):
         """Test that README includes npm commands for Node.js stacks."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
@@ -75,11 +75,11 @@ class TestGenerateReadme:
 
     def test_readme_includes_python_commands(self, tmp_path, mock_template_registry):
         """Test that README includes Python commands for Python stacks."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["ml_ai_fastapi"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("ml_ai_fastapi", "tier-1-essential", 60, [], tmp_path)
@@ -91,11 +91,11 @@ class TestGenerateReadme:
 
     def test_readme_includes_additional_options(self, tmp_path, mock_template_registry):
         """Test that README includes additional options."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme(
@@ -112,11 +112,11 @@ class TestGenerateReadme:
         project = tmp_path / "my-awesome-project"
         project.mkdir()
 
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], project)
@@ -125,28 +125,28 @@ class TestGenerateReadme:
                 assert "my-awesome-project" in content
 
     def test_readme_includes_sdd_commands(self, tmp_path, mock_template_registry):
-        """Test that README includes SDD workflow commands."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        """Test that README includes Solokit workflow commands."""
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 readme_path = generate_readme("saas_t3", "tier-1-essential", 60, [], tmp_path)
 
                 content = readme_path.read_text()
-                assert "/sdd:work-new" in content
-                assert "/sdd:start" in content
-                assert "/sdd:end" in content
+                assert "/sk:work-new" in content
+                assert "/sk:start" in content
+                assert "/sk:end" in content
 
     def test_error_handling_on_write_failure(self, tmp_path, mock_template_registry):
         """Test error handling when README write fails."""
-        with patch("sdd.init.readme_generator.get_template_info") as mock_info:
+        with patch("solokit.init.readme_generator.get_template_info") as mock_info:
             mock_info.return_value = mock_template_registry["templates"]["saas_t3"]
 
             with patch(
-                "sdd.init.readme_generator.load_template_registry",
+                "solokit.init.readme_generator.load_template_registry",
                 return_value=mock_template_registry,
             ):
                 with patch.object(Path, "write_text", side_effect=PermissionError("Access denied")):

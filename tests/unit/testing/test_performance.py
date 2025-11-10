@@ -14,13 +14,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from sdd.core.exceptions import (
+from solokit.core.exceptions import (
     BenchmarkFailedError,
     LoadTestFailedError,
     PerformanceRegressionError,
     ValidationError,
 )
-from sdd.testing.performance import PerformanceBenchmark
+from solokit.testing.performance import PerformanceBenchmark
 
 
 class TestPerformanceBenchmarkInit:
@@ -61,7 +61,7 @@ class TestPerformanceBenchmarkInit:
 class TestLoadTestExecution:
     """Test load test execution and parsing."""
 
-    @patch("sdd.testing.performance.CommandRunner")
+    @patch("solokit.testing.performance.CommandRunner")
     def test_run_load_test_with_wrk_success(self, mock_runner_class):
         """Test successful load test execution with wrk."""
         work_item = {
@@ -307,7 +307,7 @@ class TestRegressionDetection:
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch("sdd.testing.performance.load_json")
+    @patch("solokit.testing.performance.load_json")
     def test_check_for_regression_no_baseline_for_work_item(self, mock_load_json, tmp_path):
         """Test regression check when no baseline exists for work item."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -320,7 +320,7 @@ class TestRegressionDetection:
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch("sdd.testing.performance.load_json")
+    @patch("solokit.testing.performance.load_json")
     def test_check_for_regression_within_threshold(self, mock_load_json, tmp_path):
         """Test regression check when performance is within acceptable threshold."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -338,7 +338,7 @@ class TestRegressionDetection:
         result = benchmark._check_for_regression()
         assert result is False
 
-    @patch("sdd.testing.performance.load_json")
+    @patch("solokit.testing.performance.load_json")
     def test_check_for_regression_exceeds_threshold(self, mock_load_json, tmp_path):
         """Test regression check when regression exceeds threshold."""
         work_item = {"id": "test_perf", "performance_benchmarks": {}}
@@ -368,7 +368,7 @@ class TestRegressionDetection:
 class TestResourceMeasurement:
     """Test resource usage measurement."""
 
-    @patch("sdd.testing.performance.CommandRunner")
+    @patch("solokit.testing.performance.CommandRunner")
     def test_measure_resource_usage_success(self, mock_runner_class):
         """Test successful resource usage measurement."""
         work_item = {
@@ -404,7 +404,7 @@ class TestMainFunction:
     @patch("sys.argv", ["performance.py"])
     def test_main_no_args_raises_validation_error(self):
         """Test that main() raises ValidationError when no work_item_id provided."""
-        from sdd.testing.performance import main
+        from solokit.testing.performance import main
 
         with pytest.raises(ValidationError) as exc_info:
             main()
@@ -412,11 +412,11 @@ class TestMainFunction:
         assert "Missing required argument: work_item_id" in str(exc_info.value)
 
     @patch("sys.argv", ["performance.py", "nonexistent_item"])
-    @patch("sdd.testing.performance.load_json")
+    @patch("solokit.testing.performance.load_json")
     @patch("sys.exit")
     def test_main_work_item_not_found_raises_error(self, mock_exit, mock_load_json):
         """Test that main() handles WorkItemNotFoundError and exits with error code."""
-        from sdd.testing.performance import main
+        from solokit.testing.performance import main
 
         mock_load_json.return_value = {"work_items": {}}
 

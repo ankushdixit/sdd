@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from sdd.work_items.get_metadata import get_work_item_metadata
+from solokit.work_items.get_metadata import get_work_item_metadata
 
 
 @pytest.fixture

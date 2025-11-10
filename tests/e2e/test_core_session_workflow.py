@@ -1,7 +1,7 @@
-"""End-to-end tests for core SDD session workflow (Phase 1).
+"""End-to-end tests for core Solokit session workflow (Phase 1).
 
 Tests the complete session workflow including:
-- Project initialization with sdd init
+- Project initialization with sk init
 - Work item creation and management
 - Session start with briefing generation
 - Stack and tree tracking updates
@@ -25,10 +25,10 @@ import pytest
 
 @pytest.fixture
 def temp_sdd_project():
-    """Create a temporary SDD project with git and basic files.
+    """Create a temporary Solokit project with git and basic files.
 
     Returns:
-        Path: Temporary project directory with git repo and SDD initialized.
+        Path: Temporary project directory with git repo and Solokit initialized.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         project_dir = Path(tmpdir) / "test_project"
@@ -135,10 +135,10 @@ def temp_sdd_project():
 
 
 class TestSessionInitialization:
-    """Tests for sdd init command and directory structure creation."""
+    """Tests for sk init command and directory structure creation."""
 
     def test_init_creates_session_directory_structure(self, temp_sdd_project):
-        """Test that sdd init creates all required directories."""
+        """Test that sk init creates all required directories."""
         # Arrange
         required_dirs = [
             ".session",
@@ -157,7 +157,7 @@ class TestSessionInitialization:
             assert full_path.is_dir(), f"Path exists but is not a directory: {dir_path}"
 
     def test_init_creates_tracking_files(self, temp_sdd_project):
-        """Test that sdd init creates all required tracking files."""
+        """Test that sk init creates all required tracking files."""
         # Arrange
         required_files = [
             ".session/tracking/work_items.json",
@@ -213,7 +213,7 @@ class TestWorkItemCreation:
         # Arrange & Act
         result = subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-new",
                 "--type",
                 "feature",
@@ -249,7 +249,16 @@ class TestWorkItemCreation:
         """Test that creating a work item generates a spec file."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "work-new", "--type", "bug", "--title", "Test Bug", "--priority", "critical"],
+            [
+                "sk",
+                "work-new",
+                "--type",
+                "bug",
+                "--title",
+                "Test Bug",
+                "--priority",
+                "critical",
+            ],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,
@@ -282,7 +291,7 @@ class TestSessionStart:
         """Create a work item for session start testing."""
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-new",
                 "--type",
                 "feature",
@@ -307,7 +316,7 @@ class TestSessionStart:
 
         # Act
         result = subprocess.run(
-            ["sdd", "start", work_item_id],
+            ["sk", "start", work_item_id],
             cwd=project_with_work_item,
             capture_output=True,
             text=True,
@@ -336,7 +345,7 @@ class TestSessionStart:
 
         # Act
         subprocess.run(
-            ["sdd", "start", work_item_id],
+            ["sk", "start", work_item_id],
             cwd=project_with_work_item,
             check=True,
             capture_output=True,
@@ -362,7 +371,7 @@ class TestSessionStart:
 
         # Act
         subprocess.run(
-            ["sdd", "start", work_item_id],
+            ["sk", "start", work_item_id],
             cwd=project_with_work_item,
             check=True,
             capture_output=True,
@@ -389,8 +398,8 @@ class TestStackAndTreeTracking:
         stack_file = temp_sdd_project / ".session/tracking/stack.txt"
         _original_content = stack_file.read_text()
 
-        # Get the project root to find sdd package directory
-        sdd_project_dir = Path(__file__).parent.parent.parent / "src/sdd/project"
+        # Get the project root to find solokit package directory
+        sdd_project_dir = Path(__file__).parent.parent.parent / "src/solokit/project"
 
         # Act
         result = subprocess.run(
@@ -417,7 +426,7 @@ class TestStackAndTreeTracking:
         project_root = Path(__file__).parent.parent.parent
         src_dir = project_root / "src"
 
-        # Set PYTHONPATH to include src directory so sdd module can be imported
+        # Set PYTHONPATH to include src directory so solokit module can be imported
         import os
 
         env = os.environ.copy()
@@ -425,7 +434,7 @@ class TestStackAndTreeTracking:
 
         # Act
         result = subprocess.run(
-            ["python3", "-m", "sdd.project.tree", "--non-interactive"],
+            ["python3", "-m", "solokit.project.tree", "--non-interactive"],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,
@@ -455,7 +464,7 @@ class TestGitWorkflowIntegration:
         """Create a project with an active session."""
         subprocess.run(
             [
-                "sdd",
+                "sk",
                 "work-new",
                 "--type",
                 "feature",
@@ -474,7 +483,7 @@ class TestGitWorkflowIntegration:
         work_item_id = list(work_items_data["work_items"].keys())[0]
 
         subprocess.run(
-            ["sdd", "start", work_item_id],
+            ["sk", "start", work_item_id],
             cwd=temp_sdd_project,
             check=True,
             capture_output=True,
@@ -528,10 +537,10 @@ class TestSessionValidation:
     """Tests for session validation command."""
 
     def test_validate_command_executes(self, temp_sdd_project):
-        """Test that sdd validate command executes."""
+        """Test that sk validate command executes."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,
@@ -547,7 +556,7 @@ class TestSessionValidation:
         """Test that validation includes git status check."""
         # Arrange & Act
         result = subprocess.run(
-            ["sdd", "validate"],
+            ["sk", "validate"],
             cwd=temp_sdd_project,
             capture_output=True,
             text=True,

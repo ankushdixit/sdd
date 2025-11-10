@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from sdd.core.exceptions import FileOperationError
-from sdd.session.briefing.learning_loader import LearningLoader
+from solokit.core.exceptions import FileOperationError
+from solokit.session.briefing.learning_loader import LearningLoader
 
 
 class TestLearningLoaderInit:

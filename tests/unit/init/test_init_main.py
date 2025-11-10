@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from sdd.project.init import main
+from solokit.project.init import main
 
 
 class TestMain:
@@ -31,7 +31,7 @@ class TestMain:
         ]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.init.orchestrator.run_template_based_init") as mock_run:
+            with patch("solokit.init.orchestrator.run_template_based_init") as mock_run:
                 mock_run.return_value = 0
 
                 result = main()
@@ -67,7 +67,7 @@ class TestMain:
         test_args = ["init"]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.project.init.init_project") as mock_legacy:
+            with patch("solokit.project.init.init_project") as mock_legacy:
                 mock_legacy.return_value = 0
 
                 result = main()
@@ -86,7 +86,7 @@ class TestMain:
         ]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.init.orchestrator.run_template_based_init") as mock_run:
+            with patch("solokit.init.orchestrator.run_template_based_init") as mock_run:
                 mock_run.return_value = 0
 
                 main()
@@ -126,7 +126,7 @@ class TestMain:
         ]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.init.orchestrator.run_template_based_init") as mock_run:
+            with patch("solokit.init.orchestrator.run_template_based_init") as mock_run:
                 mock_run.return_value = 0
 
                 main()
@@ -146,7 +146,7 @@ class TestMain:
         ]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.init.orchestrator.run_template_based_init") as mock_run:
+            with patch("solokit.init.orchestrator.run_template_based_init") as mock_run:
                 mock_run.return_value = 0
 
                 main()
@@ -164,7 +164,7 @@ class TestMain:
         ]
 
         with patch.object(sys, "argv", test_args):
-            with patch("sdd.init.orchestrator.run_template_based_init") as mock_run:
+            with patch("solokit.init.orchestrator.run_template_based_init") as mock_run:
                 mock_run.return_value = 0
 
                 main()
