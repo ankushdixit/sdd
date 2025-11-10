@@ -7,6 +7,7 @@ Runs initial stack and tree scans to populate .session/tracking/.
 from __future__ import annotations
 
 import logging
+import sys
 from pathlib import Path
 
 from solokit.core.command_runner import CommandRunner
@@ -39,7 +40,8 @@ def run_stack_scan(project_root: Path | None = None) -> bool:
     runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT, working_dir=project_root)
 
     try:
-        result = runner.run(["python", str(stack_script)], check=True)
+        # Use sys.executable to ensure we use the same Python interpreter
+        result = runner.run([sys.executable, str(stack_script)], check=True)
         if result.success:
             logger.info("Generated stack.txt")
             return True
@@ -77,7 +79,8 @@ def run_tree_scan(project_root: Path | None = None) -> bool:
     runner = CommandRunner(default_timeout=GIT_STANDARD_TIMEOUT, working_dir=project_root)
 
     try:
-        result = runner.run(["python", str(tree_script)], check=True)
+        # Use sys.executable to ensure we use the same Python interpreter
+        result = runner.run([sys.executable, str(tree_script)], check=True)
         if result.success:
             logger.info("Generated tree.txt")
             return True

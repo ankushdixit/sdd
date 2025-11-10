@@ -60,11 +60,13 @@ def check_node_version() -> tuple[bool, str | None]:
         - current_version: Version string or None if not installed
     """
     # Check if node is available
-    if not shutil.which("node"):
+    node_path = shutil.which("node")
+    if not node_path:
         return False, None
 
-    runner = CommandRunner(default_timeout=5)
-    result = runner.run(["node", "--version"], check=False)
+    # Use absolute path and increased timeout to avoid shell initialization issues
+    runner = CommandRunner(default_timeout=15)
+    result = runner.run([node_path, "--version"], check=False)
 
     if not result.success:
         return False, None
@@ -104,8 +106,9 @@ def check_python_version(
         if not binary_path:
             continue
 
-        runner = CommandRunner(default_timeout=5)
-        result = runner.run([binary, "--version"], check=False)
+        # Use absolute path and increased timeout to avoid shell initialization issues
+        runner = CommandRunner(default_timeout=15)
+        result = runner.run([binary_path, "--version"], check=False)
 
         if not result.success:
             continue
@@ -138,8 +141,8 @@ def attempt_node_install_with_nvm() -> tuple[bool, str]:
         return (
             False,
             "nvm not found. Please install Node.js 18+ manually:\n"
-            "  macOS:   brew install node@18\n"
-            "  Ubuntu:  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n"
+            "  macOS:   brew install node      # Latest LTS (Node 20+)\n"
+            "  Ubuntu:  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -\n"
             "           sudo apt-get install -y nodejs",
         )
 
@@ -164,8 +167,8 @@ def attempt_node_install_with_nvm() -> tuple[bool, str]:
             False,
             f"nvm installation failed: {result.stderr}\n\n"
             "Please install Node.js 18+ manually:\n"
-            "  macOS:   brew install node@18\n"
-            "  Ubuntu:  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n"
+            "  macOS:   brew install node      # Latest LTS (Node 20+)\n"
+            "  Ubuntu:  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -\n"
             "           sudo apt-get install -y nodejs",
         )
 

@@ -261,9 +261,9 @@ class IntegrationTestRunner:
                 logger.warning(f"Fixture not found: {fixture}")
                 continue
 
-            # Execute fixture loading script
+            # Execute fixture loading script using the same Python interpreter
             result = self.runner.run(
-                ["python", str(fixture_path)], timeout=FIXTURE_SETUP_TIMEOUT, check=True
+                [sys.executable, str(fixture_path)], timeout=FIXTURE_SETUP_TIMEOUT, check=True
             )
             if result.success:
                 logger.info(f"✓ Loaded fixture: {fixture}")
