@@ -70,19 +70,7 @@ def get_session_status() -> int:
             cause=e,
         )
 
-    work_item_id = status.get("current_work_item")
-
-    if not work_item_id:
-        logger.warning("No active work item in session")
-        raise ValidationError(
-            message="No active work item in this session",
-            context={"status_file": str(status_file)},
-            remediation="Start a work item with 'sk start <work_item_id>'",
-        )
-
-    logger.debug("Current work item: %s", work_item_id)
-
-    # Load work item
+    # Load work items first (for context-aware messaging)
     work_items_file = session_dir / "tracking" / "work_items.json"
     logger.debug("Loading work items from: %s", work_items_file)
 
@@ -101,14 +89,44 @@ def get_session_status() -> int:
             details=f"Invalid JSON: {e}",
             cause=e,
         )
-    except OSError as e:
-        raise FileOperationError(
-            operation="read",
-            file_path=str(work_items_file),
-            details=str(e),
-            cause=e,
-        )
 
+    work_item_id = status.get("current_work_item")
+
+    if not work_item_id:
+        logger.warning("No active work item in session")
+
+        # Provide context-aware message
+        work_items = data.get("work_items", {})
+        total_items = len(work_items)
+
+        if total_items == 0:
+            raise ValidationError(
+                message="No active work item in this session",
+                context={"status_file": str(status_file)},
+                remediation=(
+                    "No work items found. Create one first:\n"
+                    "  1. sk work-new --type feature --title '...' --priority high\n"
+                    "  2. Or use /work-new in Claude Code for interactive creation\n\n"
+                    "💡 Use 'sk work-list' to see all work items"
+                ),
+            )
+        else:
+            raise ValidationError(
+                message="No active work item in this session",
+                context={"status_file": str(status_file)},
+                remediation=(
+                    f"You have {total_items} work items available.\n\n"
+                    "To get started:\n"
+                    "  1. View work items: sk work-list\n"
+                    "  2. Start a work item: sk start <work_item_id>\n"
+                    "  3. Or use /start in Claude Code to choose interactively\n\n"
+                    "💡 Use 'sk work-next' to see recommended work items"
+                ),
+            )
+
+    logger.debug("Current work item: %s", work_item_id)
+
+    # Work items already loaded above (data variable)
     item = data["work_items"].get(work_item_id)
 
     if not item:

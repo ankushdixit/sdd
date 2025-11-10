@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Critical: Phase 1 Terminal Testing - Error Messaging & UX Improvements**
+  - Fixed missing `jsonschema>=4.20.0` dependency causing all learning commands to fail
+  - Enhanced argparse error messages with helpful examples and next steps:
+    - Created `src/solokit/core/argparse_helpers.py` with `HelpfulArgumentParser` class
+    - Updated `sk work-new`, `sk work-show`, `sk work-update`, `sk work-delete` with example-rich epilogs
+    - All argparse errors now show full help text with examples instead of raw usage
+  - Improved Python binary detection for cross-platform compatibility:
+    - Created `src/solokit/core/system_utils.py` with `get_python_binary()` function
+    - Updated `get_metadata.py`, `get_next_recommendations.py`, `get_dependencies.py` to detect python vs python3
+    - Error messages now show correct binary based on system availability
+  - Added `--debug` flag to `sk validate` to hide stack traces from end users by default
+  - Implemented context-aware "no work item" error messages:
+    - `sk start`: Differentiates between "no items exist" vs "items exist but blocked"
+    - `sk status`: Shows total item count and actionable next steps
+    - `sk end`: Provides complete workflow guidance instead of "Work item not found: None"
+    - `sk work-next`: Helpful creation steps instead of generic "No work items found."
+    - `sk work-list`: Better message instead of wrong command reference "/work-item create"
+    - `sk work-graph`: Context-aware message differentiating no items vs filtered results
+  - All error messages now include:
+    - Numbered action steps for both terminal (`sk` commands) and Claude Code (slash commands)
+    - Emoji hints (⚠️, 💡) for visual guidance
+    - Specific next steps instead of generic warnings
+  - Test updates: Fixed 1 test in `test_status.py` to match improved error messages
+  - All 2,155 unit tests passing
+  - Impact: Resolves 13 out of 19 Phase 1 terminal testing issues
+
 ### Added
 - **Feature: UX Enhancements - Logger Shortening, Interactive Prompts, and Claude Code Promotion**
   - Shortened logger names for better terminal readability (e.g., "orchestrator" vs "solokit.init.orchestrator")

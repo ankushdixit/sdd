@@ -40,7 +40,13 @@ class WorkItemScheduler:
         items = self.repository.get_all_work_items()
 
         if not items:
-            output.info("No work items found.")
+            output.info("⚠️ No work items found in this project\n")
+            output.info("To get started:")
+            output.info(
+                "  1. Create a work item: sk work-new --type feature --title '...' --priority high"
+            )
+            output.info("  2. Or use /work-new in Claude Code for interactive creation\n")
+            output.info("💡 Work items help track your development tasks and sessions")
             return None
 
         # Filter to not_started items

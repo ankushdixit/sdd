@@ -151,11 +151,36 @@ def main():
             logger.warning("No available work items found")
             from solokit.core.exceptions import ErrorCode, ValidationError
 
-            raise ValidationError(
-                message="No available work items. All dependencies must be satisfied first.",
-                code=ErrorCode.INVALID_STATUS,
-                remediation="Complete dependencies or use 'sk work-list' to see work item status",
-            )
+            # Check if any work items exist at all
+            work_items = work_items_data.get("work_items", {})
+            total_items = len(work_items)
+
+            if total_items == 0:
+                # No work items exist
+                raise ValidationError(
+                    message="No work items found in this project",
+                    code=ErrorCode.INVALID_STATUS,
+                    remediation=(
+                        "Create a work item first:\n"
+                        "  1. sk work-new --type feature --title '...' --priority high\n"
+                        "  2. Or use /work-new in Claude Code for interactive creation\n\n"
+                        "💡 Work items help track your development tasks and sessions"
+                    ),
+                )
+            else:
+                # Work items exist but none are available
+                raise ValidationError(
+                    message=f"No available work items ({total_items} total exist)",
+                    code=ErrorCode.INVALID_STATUS,
+                    remediation=(
+                        "All work items may be blocked by dependencies or already completed.\n\n"
+                        "To proceed:\n"
+                        "  1. Check work item status: sk work-list\n"
+                        "  2. View dependencies: sk work-graph\n"
+                        "  3. Find next available: sk work-next\n\n"
+                        "💡 Use 'sk work-list --status not_started' to see pending items"
+                    ),
+                )
 
     # Finalize previous work item's git status if starting a new work item
     finalize_previous_work_item_git_status(work_items_data, item_id)

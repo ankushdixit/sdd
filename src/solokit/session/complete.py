@@ -972,9 +972,34 @@ def main() -> int:
     work_item_id = status["current_work_item"]
     session_num = status["current_session"]
 
+    # Check if work_item_id is None (no active work item)
+    if not work_item_id:
+        logger.error("No active work item in session")
+
+        # Provide context-aware message
+        work_items = work_items_data.get("work_items", {})
+        total_items = len(work_items)
+
+        if total_items == 0:
+            output.error("No active work item to complete")
+            output.info("\nNo work items found. Create one first:")
+            output.info("  1. sk work-new --type feature --title '...' --priority high")
+            output.info("  2. Or use /work-new in Claude Code for interactive creation\n")
+            output.info("💡 Use 'sk work-list' to see all work items")
+        else:
+            output.error("No active work item to complete")
+            output.info(f"\nYou have {total_items} work items available.\n")
+            output.info("To start a work item:")
+            output.info("  1. View work items: sk work-list")
+            output.info("  2. Start a work item: sk start <work_item_id>")
+            output.info("  3. Or use /start in Claude Code to choose interactively\n")
+            output.info("💡 Use 'sk work-next' to see recommended work items")
+        return 1
+
     if work_item_id not in work_items_data["work_items"]:
         logger.error(f"Work item not found: {work_item_id}")
-        output.info(f"Error: Work item not found: {work_item_id}")
+        output.error(f"Work item not found: {work_item_id}")
+        output.info("\n💡 Use 'sk work-list' to see all work items")
         return 1
 
     work_item = work_items_data["work_items"][work_item_id]

@@ -678,7 +678,28 @@ def main() -> int:
     )
 
     if not work_items:
-        output.error("No work items found matching criteria.")
+        # Check if filters were applied
+        has_filters = any(
+            [args.status, args.milestone, args.type, args.include_completed, args.focus]
+        )
+
+        if not has_filters:
+            # No work items exist at all
+            output.error("⚠️ No work items found in this project\n")
+            output.info("To get started:")
+            output.info(
+                "  1. Create a work item: sk work-new --type feature --title '...' --priority high"
+            )
+            output.info("  2. Or use /work-new in Claude Code for interactive creation\n")
+            output.info("💡 Work items help track your development tasks and sessions")
+        else:
+            # Work items exist but were filtered out
+            output.error("No work items found matching the specified filters.")
+            output.info("\nTo view all work items:")
+            output.info("  1. Remove filters: sk work-graph")
+            output.info("  2. List all items: sk work-list")
+            output.info("  3. Try different filters (--status, --milestone, --type)\n")
+            output.info("💡 Use --include-completed to show completed work items")
         return 1
 
     # Apply special filters

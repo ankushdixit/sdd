@@ -135,22 +135,34 @@ def _filter_by_relevance(items: list[dict], title: str) -> list[dict]:
 
 
 def main() -> None:
-    """CLI entry point for get_dependencies script.
-
-    Usage:
-        python -m solokit.work_items.get_dependencies
-        python -m solokit.work_items.get_dependencies --title "My new feature"
-        python -m solokit.work_items.get_dependencies --title "Bug fix" --max 5
-        python -m solokit.work_items.get_dependencies --exclude-status not_started,in_progress
-    """
+    """CLI entry point for get_dependencies script."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Get available dependencies for work items")
-    parser.add_argument("--title", help="Optional title for smart filtering by relevance")
-    parser.add_argument("--max", type=int, default=3, help="Maximum number of results (default: 3)")
-    parser.add_argument(
-        "--exclude-status", help="Comma-separated list of statuses to exclude (default: completed)"
+    from solokit.core.argparse_helpers import HelpfulArgumentParser
+    from solokit.core.system_utils import get_python_binary
+
+    binary = get_python_binary()
+
+    parser = HelpfulArgumentParser(
+        description="Get available dependencies for work items",
+        epilog=f"""
+Examples:
+  {binary} -m solokit.work_items.get_dependencies
+  {binary} -m solokit.work_items.get_dependencies --title "My new feature"
+  {binary} -m solokit.work_items.get_dependencies --title "Bug fix" --max 5
+  {binary} -m solokit.work_items.get_dependencies --exclude-status not_started,in_progress
+
+Returns work items that can be used as dependencies (excluding completed by default).
+Uses smart filtering when --title is provided to show most relevant dependencies.
+
+💡 View all work items: sk work-list
+💡 Create work item with dependencies: sk work-new -t feature -T "..." -p high -d feat_001,bug_002
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument("--title", help="Optional title for smart filtering by relevance")
+    parser.add_argument("--max", type=int, default=3, help="Maximum number of results")
+    parser.add_argument("--exclude-status", help="Comma-separated list of statuses to exclude")
 
     args = parser.parse_args()
 
@@ -168,7 +180,10 @@ def main() -> None:
 
     # Output results
     if not dependencies:
-        print("No available dependencies found")
+        print("⚠️ No available dependencies found\n", file=sys.stderr)
+        print("All work items may be completed or excluded by your filters.", file=sys.stderr)
+        print("\nTo see all work items:", file=sys.stderr)
+        print("  sk work-list\n", file=sys.stderr)
         sys.exit(1)
 
     print(f"Found {len(dependencies)} available dependencies:")
