@@ -99,6 +99,7 @@ class WorkItemRepository:
         priority: str,
         dependencies: list[str],
         spec_file: str = "",
+        urgent: bool = False,
     ) -> None:
         """Add a new work item to tracking
 
@@ -109,6 +110,7 @@ class WorkItemRepository:
             priority: Priority level
             dependencies: List of dependency IDs
             spec_file: Relative path to spec file
+            urgent: Whether this item requires immediate attention
         """
         data = self.load_all()
 
@@ -118,6 +120,7 @@ class WorkItemRepository:
             "title": title,
             "status": WorkItemStatus.NOT_STARTED.value,
             "priority": priority,
+            "urgent": urgent,
             "dependencies": dependencies,
             "milestone": "",
             "spec_file": spec_file,
@@ -243,6 +246,74 @@ class WorkItemRepository:
         data.setdefault("milestones", {})[name] = milestone
         self.save_all(data)
         logger.info("Added milestone: %s", name)
+
+    def get_urgent_work_item(self) -> dict[str, Any] | None:
+        """Get the currently urgent work item
+
+        Returns:
+            dict: The urgent work item data, or None if no urgent item exists
+        """
+        data = self.load_all()
+        work_items = data.get("work_items", {})
+
+        for work_id, item in work_items.items():
+            # Add urgent field with default False for backward compatibility
+            if item.get("urgent", False):
+                return dict(item)
+
+        return None
+
+    def clear_urgent_flag(self, work_id: str) -> None:
+        """Clear the urgent flag from a specific work item
+
+        Args:
+            work_id: Work item ID to clear urgent flag from
+        """
+        data = self.load_all()
+        items = data.get("work_items", {})
+
+        if work_id in items:
+            items[work_id]["urgent"] = False
+            data["work_items"] = items
+            self.save_all(data)
+            logger.debug("Cleared urgent flag from work item: %s", work_id)
+
+    def clear_all_urgent_flags(self) -> None:
+        """Clear urgent flag from all work items to enforce single-item constraint"""
+        data = self.load_all()
+        work_items = data.get("work_items", {})
+
+        for item in work_items.values():
+            item["urgent"] = False
+
+        data["work_items"] = work_items
+        self.save_all(data)
+        logger.debug("Cleared all urgent flags")
+
+    def set_urgent_flag(self, work_id: str, clear_others: bool = True) -> None:
+        """Set the urgent flag on a work item
+
+        Args:
+            work_id: Work item ID to mark as urgent
+            clear_others: Whether to clear urgent flag from other items (default True)
+        """
+        data = self.load_all()
+        items = data.get("work_items", {})
+
+        if work_id not in items:
+            logger.warning("Cannot set urgent flag: work item %s not found", work_id)
+            return
+
+        # Clear urgent from all items if requested (enforce single-item constraint)
+        if clear_others:
+            for item in items.values():
+                item["urgent"] = False
+
+        # Set urgent on the target item
+        items[work_id]["urgent"] = True
+        data["work_items"] = items
+        self.save_all(data)
+        logger.info("Set urgent flag on work item: %s", work_id)
 
     def _update_metadata(self, data: dict[str, Any]) -> None:
         """Update metadata counters

@@ -87,6 +87,13 @@ class WorkItemUpdater:
                 item["status"] = value
                 changes.append(f"  status: {old_value} → {value}")
 
+                # Auto-clear urgent flag when work item is completed
+                if value == WorkItemStatus.COMPLETED.value and item.get("urgent", False):
+                    item["urgent"] = False
+                    self.repository.clear_urgent_flag(work_id)
+                    changes.append("  urgent flag: auto-cleared (work item completed)")
+                    logger.info("Auto-cleared urgent flag from completed work item: %s", work_id)
+
             elif field == "priority":
                 if value not in self.PRIORITIES:
                     # Don't log warning here - user-facing error message is clear
@@ -135,6 +142,14 @@ class WorkItemUpdater:
                         changes.append(f"  removed dependency: {dep_id}")
 
                 item["dependencies"] = deps
+
+            elif field == "clear_urgent":
+                if item.get("urgent", False):
+                    item["urgent"] = False
+                    changes.append("  urgent flag: cleared")
+                    self.repository.clear_urgent_flag(work_id)
+                else:
+                    output.warning("Work item is not marked as urgent (no change made)")
 
         if not changes:
             # Don't log here - user-facing error message is clear

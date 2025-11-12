@@ -199,6 +199,7 @@ class WorkItemDict(TypedDict, total=False):
         title: Human-readable title
         status: Current status (not_started, in_progress, etc.)
         priority: Priority level (critical, high, medium, low)
+        urgent: Whether this item requires immediate attention (only one can be urgent at a time)
         description: Detailed description
         dependencies: List of work item IDs this depends on
         milestone: Optional milestone this belongs to
@@ -214,6 +215,7 @@ class WorkItemDict(TypedDict, total=False):
     title: str
     status: str
     priority: str
+    urgent: bool
     description: str
     dependencies: list[WorkItemID]
     milestone: str

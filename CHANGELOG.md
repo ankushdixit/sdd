@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Urgent Flag for Single Immediate-Priority Work Items**
+  - Added `--urgent` flag to `sk work-new` command for marking work items that require immediate attention
+  - Exclusive single-item constraint: only ONE work item can be urgent at a time
+  - User confirmation prompt when setting a new urgent item (clears existing urgent flag)
+  - Urgent items override all priority levels and dependency ordering
+  - Visual ⚠️ indicator in `sk work-list` output for urgent items
+  - `sk work-next` always returns urgent items first, ignoring dependencies
+  - Added `--clear-urgent` flag to `sk work-update` command for manual clearing
+  - Auto-clear urgent flag when work item status changes to completed
+  - Added urgent status question to `/work-new` slash command (interactive UI)
+  - Backward compatible: work items without urgent field default to `false`
+  - Added 24 unit tests (repository, scheduler, updater) with 90%+ coverage
+  - Added 11 integration tests for end-to-end urgent workflow
+  - Updated command documentation: work-new.md, work-update.md, work-list.md, work-next.md
+
 - **Essential CLI Commands: help, version, doctor, config show**
   - Added `sk help` command to display all commands organized by category
     - `sk help <command>` shows detailed help for specific commands with usage, options, and examples

@@ -21,7 +21,7 @@ The `work-update` command allows you to modify work item properties:
 
 **Required arguments:**
 - `work_item_id` - ID of the work item to update
-- `field` - Field to update (priority, milestone, add-dependency, remove-dependency)
+- `field` - Field to update (priority, milestone, add-dependency, remove-dependency, clear-urgent)
 
 ## Available Fields
 
@@ -52,6 +52,19 @@ Remove an existing dependency
 ```bash
 /sk:work-update feature_auth remove-dependency
 ```
+
+### clear-urgent
+Clear the urgent flag from a work item
+
+```bash
+/sk:work-update bug_hotfix clear-urgent
+```
+
+**⚠️ About Urgent Flag:**
+- Only ONE work item can be urgent at a time
+- Urgent items override all priority and are worked on first
+- The urgent flag is automatically cleared when a work item is completed
+- Use this command to manually clear the urgent flag before completion
 
 ## Interactive Flow
 
@@ -204,6 +217,37 @@ Removed dependency: feature_dashboard ↛ feature_search
 
 Remaining dependencies: feature_auth
 Status: blocked (still waiting on feature_auth)
+```
+
+### Clear Urgent Flag
+
+```bash
+/sk:work-update bug_hotfix clear-urgent
+```
+
+**Interactive flow:**
+
+```
+Current: bug_hotfix
+- Type: bug
+- Status: not_started
+- Priority: critical
+- Milestone: (none)
+- Dependencies: (none)
+- ⚠️ Urgent: YES
+
+Clear urgent flag from bug_hotfix? (y/N): y
+
+Updated bug_hotfix:
+  urgent flag: cleared
+
+The work item will now follow normal priority ordering.
+```
+
+**Note:** If the work item is not marked as urgent, you'll see:
+
+```
+⚠️ Work item is not marked as urgent (no change made)
 ```
 
 ## Status Management

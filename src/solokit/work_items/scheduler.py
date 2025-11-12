@@ -34,6 +34,8 @@ class WorkItemScheduler:
     def get_next(self) -> dict[str, Any] | None:
         """Find next work item to start based on dependencies and priority
 
+        Urgent items are always prioritized first, regardless of dependencies or priority.
+
         Returns:
             dict: Next work item to start, or None if none available
         """
@@ -48,6 +50,18 @@ class WorkItemScheduler:
             output.info("  2. Or use /work-new in Claude Code for interactive creation\n")
             output.info("💡 Work items help track your development tasks and sessions")
             return None
+
+        # Check for urgent items first (highest priority, ignores dependencies)
+        urgent_item = self.repository.get_urgent_work_item()
+        if urgent_item and urgent_item.get("status") == WorkItemStatus.NOT_STARTED.value:
+            output.info("\n⚠️  URGENT ITEM DETECTED\n")
+            output.info(f"ID: {urgent_item.get('id', 'unknown')}")
+            output.info(f"Title: {urgent_item.get('title', 'Unknown')}")
+            output.info(f"Type: {urgent_item.get('type', 'unknown')}")
+            output.info(f"Priority: {urgent_item.get('priority', 'unknown')}")
+            output.info("\nThis item requires immediate attention and overrides normal priority.")
+            output.info(f"To start: /start {urgent_item.get('id', '')}\n")
+            return urgent_item
 
         # Filter to not_started items
         not_started = {

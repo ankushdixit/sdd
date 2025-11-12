@@ -8,7 +8,7 @@ Create a new work item using rich interactive UI components.
 
 ## Instructions
 
-1. **First, gather basic information** using the `AskUserQuestion` tool with these 3 questions:
+1. **First, gather basic information** using the `AskUserQuestion` tool with these 4 questions:
 
    **Question 1: Work Item Type**
    - Question: "What type of work item would you like to create?"
@@ -42,9 +42,17 @@ Create a new work item using rich interactive UI components.
      - Label: "medium", Description: "Normal priority work"
      - Label: "low", Description: "Nice to have, can be deferred"
 
+   **Question 4: Urgent Status**
+   - Question: "Does this work item require immediate attention? (Only ONE item can be urgent at a time)"
+   - Header: "Urgent"
+   - Multi-select: false
+   - Options:
+     - Label: "No", Description: "Normal workflow - will be prioritized by priority level and dependencies"
+     - Label: "Yes", Description: "Mark as urgent - will override all other priority and be worked on immediately"
+
 2. **Then, ask about dependencies** in a separate follow-up question (after you have the title):
 
-   **Question 4: Dependencies (separate AskUserQuestion call)**
+   **Question 5: Dependencies (separate AskUserQuestion call)**
    - Question: "Does this work item depend on other work items? (Select all that apply)"
    - Header: "Dependencies"
    - Multi-select: true
@@ -65,21 +73,24 @@ Create a new work item using rich interactive UI components.
    - Ensure title is not empty
    - Ensure priority is one of: critical, high, medium, low
    - Dependencies can be empty (no dependencies)
+   - Urgent should be converted to boolean: "Yes" → add --urgent flag, "No" → omit flag
 
 3. **Create the work item** by running:
 
 ```bash
-sk work-new --type <type> --title "<title>" --priority <priority> --dependencies "<dep1,dep2>"
+sk work-new --type <type> --title "<title>" --priority <priority> --dependencies "<dep1,dep2>" [--urgent]
 ```
 
-Example:
+Examples:
 ```bash
+# Normal work item with dependencies
 sk work-new --type feature --title "Add user authentication" --priority high --dependencies "feature_database_setup,bug_session_timeout"
-```
 
-If no dependencies:
-```bash
+# Normal work item without dependencies
 sk work-new --type feature --title "Add user authentication" --priority high --dependencies ""
+
+# Urgent work item (if user selected "Yes" for urgent)
+sk work-new --type bug --title "Critical security fix" --priority critical --urgent
 ```
 
 4. **Show the output** to the user, which includes:

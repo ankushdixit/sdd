@@ -24,18 +24,24 @@ No arguments needed - the command automatically analyzes all work items.
 
 The command follows this logic:
 
-### 1. Filter Available Work Items
+### 1. Check for Urgent Items (Highest Priority)
+- ⚠️ **Urgent items override all other logic**
+- If an urgent item exists with status `not_started`, it's returned immediately
+- Urgent items **ignore dependencies** and **ignore priority levels**
+- Only ONE work item can be urgent at a time
+
+### 2. Filter Available Work Items
 - Status must be `not_started`
 - All dependencies must be `completed`
 - Excludes `in_progress`, `blocked`, and `completed` items
 
-### 2. Sort by Priority
+### 3. Sort by Priority
 - **critical** - Blocking issues (highest priority)
 - **high** - Important work
 - **medium** - Normal priority
 - **low** - Nice to have (lowest priority)
 
-### 3. Recommend Top Item
+### 4. Recommend Top Item
 - Returns the highest priority unblocked work item
 - Provides rationale for the recommendation
 - Shows context of other waiting items
@@ -107,6 +113,31 @@ Blocked (0 items)
 QUICK START:
   /sk:start bug_session_timeout
 ```
+
+### Urgent Item (Overrides Everything)
+
+```bash
+/sk:work-next
+```
+
+**Output:**
+```
+⚠️  URGENT ITEM DETECTED
+
+ID: bug_production_hotfix
+Title: Critical production hotfix
+Type: bug
+Priority: medium
+
+This item requires immediate attention and overrides normal priority.
+To start: /start bug_production_hotfix
+```
+
+**Note:** When an urgent item exists:
+- It's returned **immediately** regardless of priority level
+- It **ignores dependencies** (can be returned even if dependencies are incomplete)
+- All other work items are deprioritized until the urgent item is completed
+- Only **ONE** work item can be urgent at a time
 
 ### Multiple High-Priority Items
 

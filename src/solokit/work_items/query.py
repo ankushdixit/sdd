@@ -335,6 +335,9 @@ class WorkItemQuery:
                 status_icon = self._get_status_icon(item)
                 work_id = item["id"]
 
+                # Add urgent indicator if applicable
+                urgent_indicator = "⚠️  " if item.get("urgent", False) else ""
+
                 # Build status string
                 if item.get("_blocked"):
                     # Show blocking dependencies
@@ -351,7 +354,7 @@ class WorkItemQuery:
                 else:
                     status_str = ""
 
-                output.info(f"  {status_icon} {work_id} {status_str}")
+                output.info(f"  {urgent_indicator}{status_icon} {work_id} {status_str}")
 
             output.info("")
 
@@ -360,6 +363,7 @@ class WorkItemQuery:
         output.info("  [  ] Not started")
         output.info("  [>>] In progress")
         output.info("  [✓] Completed")
+        output.info("  ⚠️  Urgent (requires immediate attention)")
         output.info("  🚫 Blocked by dependencies")
         output.info("  ✓ Ready to start")
         output.info("")

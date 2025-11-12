@@ -104,6 +104,14 @@ WORK ITEMS
 - 🟡 **medium** - Normal priority work
 - 🟢 **low** - Nice to have, can be deferred
 
+### Special Indicators
+
+- ⚠️ **Urgent** - Requires immediate attention, overrides all other priority
+  - Only ONE work item can be urgent at a time
+  - Displayed before the status icon: `⚠️ [>>] bug_hotfix`
+  - Urgent items are always returned first by `/work-next`
+  - Automatically cleared when work item is completed
+
 ### Dependency Status Markers
 
 - ✓ **Ready** - Dependency completed

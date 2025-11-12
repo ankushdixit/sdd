@@ -315,3 +315,137 @@ class TestMilestones:
         assert "v1.0" in data["milestones"]
         assert data["milestones"]["v1.0"]["title"] == "Version 1.0"
         assert data["milestones"]["v1.0"]["target_date"] == "2025-06-01"
+
+
+class TestUrgentFlag:
+    """Tests for urgent flag operations."""
+
+    def test_get_urgent_work_item_when_none_exists(self, repository_with_data):
+        """Test getting urgent item when none is marked urgent."""
+        # Act
+        urgent = repository_with_data.get_urgent_work_item()
+
+        # Assert
+        assert urgent is None
+
+    def test_get_urgent_work_item_when_exists(self, repository):
+        """Test getting urgent item when one is marked urgent."""
+        # Arrange
+        repository.add_work_item("bug_critical", "bug", "Critical Bug", "high", [], urgent=True)
+
+        # Act
+        urgent = repository.get_urgent_work_item()
+
+        # Assert
+        assert urgent is not None
+        assert urgent["id"] == "bug_critical"
+        assert urgent["urgent"] is True
+
+    def test_set_urgent_flag_clears_others(self, repository):
+        """Test setting urgent flag clears other urgent items."""
+        # Arrange
+        repository.add_work_item("bug_1", "bug", "Bug 1", "high", [], urgent=True)
+        repository.add_work_item("bug_2", "bug", "Bug 2", "high", [])
+
+        # Act
+        repository.set_urgent_flag("bug_2", clear_others=True)
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["bug_1"]["urgent"] is False
+        assert data["work_items"]["bug_2"]["urgent"] is True
+
+    def test_set_urgent_flag_without_clearing(self, repository):
+        """Test setting urgent flag without clearing others."""
+        # Arrange
+        repository.add_work_item("bug_1", "bug", "Bug 1", "high", [], urgent=True)
+        repository.add_work_item("bug_2", "bug", "Bug 2", "high", [])
+
+        # Act
+        repository.set_urgent_flag("bug_2", clear_others=False)
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["bug_1"]["urgent"] is True
+        assert data["work_items"]["bug_2"]["urgent"] is True
+
+    def test_clear_urgent_flag(self, repository):
+        """Test clearing urgent flag from specific work item."""
+        # Arrange
+        repository.add_work_item("bug_urgent", "bug", "Urgent Bug", "high", [], urgent=True)
+
+        # Act
+        repository.clear_urgent_flag("bug_urgent")
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["bug_urgent"]["urgent"] is False
+
+    def test_clear_all_urgent_flags(self, repository):
+        """Test clearing urgent flag from all work items."""
+        # Arrange
+        repository.add_work_item("bug_1", "bug", "Bug 1", "high", [], urgent=True)
+        repository.add_work_item("bug_2", "bug", "Bug 2", "high", [], urgent=True)
+
+        # Act
+        repository.clear_all_urgent_flags()
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["bug_1"]["urgent"] is False
+        assert data["work_items"]["bug_2"]["urgent"] is False
+
+    def test_add_work_item_with_urgent_flag(self, repository):
+        """Test adding work item with urgent flag set."""
+        # Act
+        repository.add_work_item(
+            "feature_urgent", "feature", "Urgent Feature", "critical", [], urgent=True
+        )
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["feature_urgent"]["urgent"] is True
+
+    def test_add_work_item_without_urgent_flag(self, repository):
+        """Test adding work item without urgent flag (defaults to False)."""
+        # Act
+        repository.add_work_item("feature_normal", "feature", "Normal Feature", "high", [])
+
+        # Assert
+        data = json.loads(repository.work_items_file.read_text())
+        assert data["work_items"]["feature_normal"]["urgent"] is False
+
+    def test_get_urgent_work_item_backward_compatibility(self, tmp_path):
+        """Test that get_urgent_work_item handles items without urgent field."""
+        # Arrange - create a work item without urgent field
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        tracking_dir = session_dir / "tracking"
+        tracking_dir.mkdir()
+
+        work_items_file = tracking_dir / "work_items.json"
+        data = {
+            "work_items": {
+                "old_feature": {
+                    "id": "old_feature",
+                    "title": "Old Feature",
+                    "type": "feature",
+                    "status": "not_started",
+                    "priority": "high",
+                    "dependencies": [],
+                }
+            },
+            "milestones": {},
+            "metadata": {},
+        }
+        work_items_file.write_text(json.dumps(data, indent=2))
+
+        repository = WorkItemRepository(session_dir)
+
+        # Act
+        urgent = repository.get_urgent_work_item()
+
+        # Assert
+        assert urgent is None  # Should return None since no urgent field exists
