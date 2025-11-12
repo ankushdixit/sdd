@@ -60,7 +60,12 @@ class WorkItemManager:
 
     # Delegate creation methods
     def create_work_item_from_args(
-        self, work_type: str, title: str, priority: str = "high", dependencies: str = ""
+        self,
+        work_type: str,
+        title: str,
+        priority: str = "high",
+        dependencies: str = "",
+        urgent: bool = False,
     ) -> str:
         """Create work item from command-line arguments
 
@@ -69,6 +74,7 @@ class WorkItemManager:
             title: Title of the work item
             priority: Priority level (critical, high, medium, low)
             dependencies: Comma-separated dependency IDs
+            urgent: Whether this item requires immediate attention
 
         Returns:
             str: The created work item ID
@@ -78,7 +84,7 @@ class WorkItemManager:
             WorkItemAlreadyExistsError: If work item with generated ID already exists
             FileOperationError: If spec file creation or tracking update fails
         """
-        return self.creator.create_from_args(work_type, title, priority, dependencies)
+        return self.creator.create_from_args(work_type, title, priority, dependencies, urgent)
 
     # Delegate query methods
     def list_work_items(

@@ -58,6 +58,23 @@ def get_ready_work_items(limit: int = 4) -> list[dict[str, Any]]:
         print("💡 Work items help track your development tasks and sessions", file=sys.stderr)
         return []
 
+    # Check for urgent items first (highest priority, ignores dependencies)
+    urgent_items = [
+        {
+            "id": wid,
+            "type": item.get("type", "unknown"),
+            "title": item.get("title", "Untitled"),
+            "priority": item.get("priority", "medium"),
+            "urgent": True,
+        }
+        for wid, item in work_items.items()
+        if item.get("urgent", False) and item.get("status") == "not_started"
+    ]
+
+    # If urgent items exist, return them first
+    if urgent_items:
+        return urgent_items[:limit]
+
     # Filter to not_started items
     not_started = {
         wid: item for wid, item in work_items.items() if item.get("status") == "not_started"

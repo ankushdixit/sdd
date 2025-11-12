@@ -47,7 +47,12 @@ class WorkItemCreator:
 
     @log_errors()
     def create_from_args(
-        self, work_type: str, title: str, priority: str = "high", dependencies: str = ""
+        self,
+        work_type: str,
+        title: str,
+        priority: str = "high",
+        dependencies: str = "",
+        urgent: bool = False,
     ) -> str:
         """Create work item from command-line arguments (non-interactive)
 
@@ -56,6 +61,7 @@ class WorkItemCreator:
             title: Title of the work item
             priority: Priority level (critical, high, medium, low)
             dependencies: Comma-separated dependency IDs
+            urgent: Whether this item requires immediate attention
 
         Returns:
             str: The created work item ID
@@ -64,7 +70,7 @@ class WorkItemCreator:
             ValidationError: If work type is invalid
             WorkItemAlreadyExistsError: If work item with generated ID already exists
         """
-        logger.info("Creating work item from args: type=%s, title=%s", work_type, title)
+        logger.info("Creating work item from args: type=%s, title=%s, urgent=%s", work_type, title, urgent)
 
         # Validate work type
         if work_type not in self.WORK_ITEM_TYPES:
@@ -108,12 +114,27 @@ class WorkItemCreator:
             logger.warning("Could not create specification file for %s", work_id)
             logger.warning("Warning: Could not create specification file")
 
+        # Handle urgent flag enforcement (single-item constraint)
+        should_set_urgent = urgent
+        if urgent:
+            existing_urgent = self.repository.get_urgent_work_item()
+            if existing_urgent:
+                should_set_urgent = self._confirm_urgent_override(existing_urgent)
+
         # Add to work_items.json
-        self.repository.add_work_item(work_id, work_type, title, priority, dep_list, spec_file)
-        logger.info("Work item created: %s (type=%s, priority=%s)", work_id, work_type, priority)
+        self.repository.add_work_item(
+            work_id, work_type, title, priority, dep_list, spec_file, urgent=should_set_urgent
+        )
+        logger.info(
+            "Work item created: %s (type=%s, priority=%s, urgent=%s)",
+            work_id,
+            work_type,
+            priority,
+            should_set_urgent,
+        )
 
         # Confirm
-        self._print_creation_confirmation(work_id, work_type, priority, dep_list, spec_file)
+        self._print_creation_confirmation(work_id, work_type, priority, dep_list, spec_file, should_set_urgent)
 
         return work_id
 
@@ -181,6 +202,31 @@ class WorkItemCreator:
         # Return relative path from project root
         return f".session/specs/{work_id}.md"
 
+    def _confirm_urgent_override(self, existing_urgent: dict) -> bool:
+        """Prompt user to confirm clearing existing urgent item
+
+        Args:
+            existing_urgent: The currently urgent work item data
+
+        Returns:
+            bool: True if user confirmed override, False otherwise
+        """
+        existing_id = existing_urgent.get("id", "unknown")
+        existing_title = existing_urgent.get("title", "Unknown Title")
+
+        output.warning(
+            f"\nWork item '{existing_id}' is currently marked urgent: {existing_title}"
+        )
+        response = input("Clear and set new urgent item? (y/N): ").strip().lower()
+
+        if response == "y":
+            self.repository.clear_urgent_flag(existing_id)
+            output.success(f"Cleared urgent flag from '{existing_id}'")
+            return True
+        else:
+            output.info("Keeping existing urgent item. New item will not be marked urgent.")
+            return False
+
     def _print_creation_confirmation(
         self,
         work_id: str,
@@ -188,6 +234,7 @@ class WorkItemCreator:
         priority: str,
         dependencies: list[str],
         spec_file: str,
+        urgent: bool = False,
     ) -> None:
         """Print creation confirmation message
 
@@ -197,6 +244,7 @@ class WorkItemCreator:
             priority: Priority level
             dependencies: List of dependency IDs
             spec_file: Path to spec file
+            urgent: Whether the item is marked urgent
         """
         output.info(f"\n{'=' * 50}")
         output.info("Work item created successfully!")
@@ -205,6 +253,8 @@ class WorkItemCreator:
         output.info(f"Type: {work_type}")
         output.info(f"Priority: {priority}")
         output.info(f"Status: {WorkItemStatus.NOT_STARTED.value}")
+        if urgent:
+            output.warning("Urgent: YES (will be prioritized above all other work items)")
         if dependencies:
             output.info(f"Dependencies: {', '.join(dependencies)}")
 

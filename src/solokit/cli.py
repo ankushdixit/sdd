@@ -135,9 +135,13 @@ Examples:
   sk work-new --type feature --title "Add user authentication" --priority high
   sk work-new -t bug -T "Fix login error" -p critical
   sk work-new -t refactor -T "Improve database queries" -p medium --dependencies feat_001
+  sk work-new -t bug -T "Critical hotfix" -p high --urgent
 
 Valid types: feature, bug, refactor, security, integration_test, deployment
 Valid priorities: critical, high, medium, low
+
+The --urgent flag marks an item for immediate attention. Only ONE item can be urgent at a time.
+When you mark a new item as urgent, you'll be prompted to clear the existing urgent flag.
 
 💡 View existing work items: sk work-list
 💡 For interactive creation in Claude Code, use /work-new
@@ -158,6 +162,11 @@ Valid priorities: critical, high, medium, low
         help="Priority level",
     )
     parser.add_argument("--dependencies", "-d", default="", help="Comma-separated dependency IDs")
+    parser.add_argument(
+        "--urgent",
+        action="store_true",
+        help="Mark this item as urgent (requires immediate attention, only one can be urgent at a time)",
+    )
     return parser.parse_args(args)
 
 
@@ -172,9 +181,12 @@ Examples:
   sk work-update feat_001 --add-dependency bug_002
   sk work-update feat_001 --milestone "v1.0"
   sk work-update feat_001 --status completed --priority high
+  sk work-update feat_001 --clear-urgent
 
 Valid statuses: not_started, in_progress, blocked, completed
 Valid priorities: critical, high, medium, low
+
+The --clear-urgent flag removes the urgent status from a work item.
 
 💡 View current work item status: sk work-show <work_id>
 💡 For interactive updates in Claude Code, use /work-update
@@ -187,6 +199,11 @@ Valid priorities: critical, high, medium, low
     parser.add_argument("--milestone", help="Update milestone")
     parser.add_argument("--add-dependency", help="Add dependency by ID")
     parser.add_argument("--remove-dependency", help="Remove dependency by ID")
+    parser.add_argument(
+        "--clear-urgent",
+        action="store_true",
+        help="Clear the urgent flag from this work item",
+    )
     return parser.parse_args(args)
 
 
@@ -268,6 +285,7 @@ def route_command(command_name: str, args: list[str]) -> int:
                     title=parsed.title,
                     priority=parsed.priority,
                     dependencies=parsed.dependencies,
+                    urgent=parsed.urgent,
                 )
             elif command_name == "work-update":
                 # Parse arguments
@@ -285,6 +303,8 @@ def route_command(command_name: str, args: list[str]) -> int:
                     kwargs["add_dependency"] = parsed.add_dependency
                 if parsed.remove_dependency:
                     kwargs["remove_dependency"] = parsed.remove_dependency
+                if parsed.clear_urgent:
+                    kwargs["clear_urgent"] = True
 
                 result = method(parsed.work_id, **kwargs)
             else:
