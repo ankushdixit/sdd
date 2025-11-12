@@ -93,6 +93,36 @@ class TestConfirmAction:
         # Assert
         assert result is True
 
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.confirm")
+    def test_confirm_action_handles_eoferror(self, mock_confirm, mock_isatty):
+        """Test that confirm_action handles EOFError gracefully."""
+        # Arrange
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = EOFError()
+        mock_confirm.return_value = mock_result
+
+        # Act
+        result = confirm_action("Confirm?", default=True)
+
+        # Assert
+        assert result is True
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.confirm")
+    def test_confirm_action_handles_keyboard_interrupt(self, mock_confirm, mock_isatty):
+        """Test that confirm_action handles KeyboardInterrupt gracefully."""
+        # Arrange
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = KeyboardInterrupt()
+        mock_confirm.return_value = mock_result
+
+        # Act
+        result = confirm_action("Confirm?", default=False)
+
+        # Assert
+        assert result is False
+
 
 class TestSelectFromList:
     """Test suite for select_from_list function."""
@@ -162,6 +192,70 @@ class TestSelectFromList:
         # Assert
         assert result == "option1"
 
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.select")
+    def test_select_from_list_handles_none_response_with_default(self, mock_select, mock_isatty):
+        """Test that select_from_list handles None response with custom default."""
+        # Arrange
+        choices = ["option1", "option2", "option3"]
+        mock_result = MagicMock()
+        mock_result.ask.return_value = None
+        mock_select.return_value = mock_result
+
+        # Act
+        result = select_from_list("Select one:", choices, default="option3")
+
+        # Assert
+        assert result == "option3"
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.select")
+    def test_select_from_list_handles_eoferror(self, mock_select, mock_isatty):
+        """Test that select_from_list handles EOFError gracefully."""
+        # Arrange
+        choices = ["option1", "option2"]
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = EOFError()
+        mock_select.return_value = mock_result
+
+        # Act
+        result = select_from_list("Select one:", choices)
+
+        # Assert
+        assert result == "option1"
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.select")
+    def test_select_from_list_handles_eoferror_with_default(self, mock_select, mock_isatty):
+        """Test that select_from_list handles EOFError with custom default."""
+        # Arrange
+        choices = ["option1", "option2"]
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = EOFError()
+        mock_select.return_value = mock_result
+
+        # Act
+        result = select_from_list("Select one:", choices, default="option2")
+
+        # Assert
+        assert result == "option2"
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.select")
+    def test_select_from_list_handles_keyboard_interrupt(self, mock_select, mock_isatty):
+        """Test that select_from_list handles KeyboardInterrupt gracefully."""
+        # Arrange
+        choices = ["option1", "option2", "option3"]
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = KeyboardInterrupt()
+        mock_select.return_value = mock_result
+
+        # Act
+        result = select_from_list("Select one:", choices, default="option3")
+
+        # Assert
+        assert result == "option3"
+
 
 class TestMultiSelectList:
     """Test suite for multi_select_list function."""
@@ -203,6 +297,38 @@ class TestMultiSelectList:
         choices = ["option1", "option2"]
         mock_result = MagicMock()
         mock_result.ask.return_value = None
+        mock_checkbox.return_value = mock_result
+
+        # Act
+        result = multi_select_list("Select multiple:", choices)
+
+        # Assert
+        assert result == []
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.checkbox")
+    def test_multi_select_list_handles_eoferror(self, mock_checkbox, mock_isatty):
+        """Test that multi_select_list handles EOFError gracefully."""
+        # Arrange
+        choices = ["option1", "option2", "option3"]
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = EOFError()
+        mock_checkbox.return_value = mock_result
+
+        # Act
+        result = multi_select_list("Select multiple:", choices)
+
+        # Assert
+        assert result == []
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.checkbox")
+    def test_multi_select_list_handles_keyboard_interrupt(self, mock_checkbox, mock_isatty):
+        """Test that multi_select_list handles KeyboardInterrupt gracefully."""
+        # Arrange
+        choices = ["option1", "option2"]
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = KeyboardInterrupt()
         mock_checkbox.return_value = mock_result
 
         # Act
@@ -271,3 +397,33 @@ class TestTextInput:
 
         # Assert
         assert result == "fallback"
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.text")
+    def test_text_input_handles_eoferror(self, mock_text, mock_isatty):
+        """Test that text_input handles EOFError gracefully."""
+        # Arrange
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = EOFError()
+        mock_text.return_value = mock_result
+
+        # Act
+        result = text_input("Enter text:", default="eof default")
+
+        # Assert
+        assert result == "eof default"
+
+    @patch("sys.stdin.isatty", return_value=True)
+    @patch("questionary.text")
+    def test_text_input_handles_keyboard_interrupt(self, mock_text, mock_isatty):
+        """Test that text_input handles KeyboardInterrupt gracefully."""
+        # Arrange
+        mock_result = MagicMock()
+        mock_result.ask.side_effect = KeyboardInterrupt()
+        mock_text.return_value = mock_result
+
+        # Act
+        result = text_input("Enter text:", default="interrupt default")
+
+        # Assert
+        assert result == "interrupt default"

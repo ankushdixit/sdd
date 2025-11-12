@@ -305,3 +305,108 @@ class TestGetWorkItemMetadata:
         assert len(result["dependency_details"]) == 2
         assert result["dependency_details"][0]["id"] == "feature_a"
         assert result["dependency_details"][1]["id"] == "feature_b"
+
+
+class TestMainCLI:
+    """Tests for the main() CLI entry point."""
+
+    def test_main_missing_argument(self, capsys, monkeypatch):
+        """Test main function with missing work_item_id argument."""
+        monkeypatch.setattr("sys.argv", ["get_metadata"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Missing required argument" in captured.err
+
+    def test_main_work_item_not_found(self, work_items_data, capsys, monkeypatch):
+        """Test main function when work item doesn't exist."""
+        tmp_path, _ = work_items_data
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_metadata", "nonexistent_item"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+
+    def test_main_basic_usage(self, work_items_data, capsys, monkeypatch):
+        """Test main function with basic usage."""
+        tmp_path, _ = work_items_data
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_metadata", "feature_auth"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "ID: feature_auth" in captured.out
+        assert "Type: feature" in captured.out
+        assert "Title: Add authentication" in captured.out
+        assert "Status: in_progress" in captured.out
+        assert "Priority: high" in captured.out
+        assert "Milestone: Sprint 1" in captured.out
+
+    def test_main_with_deps_flag(self, work_items_data, capsys, monkeypatch):
+        """Test main function with --with-deps flag."""
+        tmp_path, _ = work_items_data
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_metadata", "feature_auth", "--with-deps"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Dependencies:" in captured.out
+        assert "feature_db" in captured.out
+        assert "Database setup" in captured.out
+
+    def test_main_no_dependencies(self, work_items_data, capsys, monkeypatch):
+        """Test main function for work item with no dependencies."""
+        tmp_path, _ = work_items_data
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_metadata", "feature_db"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Dependencies: (none)" in captured.out
+
+    def test_main_no_milestone(self, work_items_data, capsys, monkeypatch):
+        """Test main function for work item with no milestone."""
+        tmp_path, _ = work_items_data
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_metadata", "feature_db"])
+
+        from solokit.work_items.get_metadata import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Milestone: (none)" in captured.out

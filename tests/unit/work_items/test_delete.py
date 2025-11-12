@@ -324,3 +324,220 @@ class TestDeleteWorkItem:
         work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
         data = json.loads(work_items_file.read_text())
         assert len(data["work_items"]) == 1  # Only feature_isolated remains
+
+    def test_delete_work_item_interactive_keep_spec(self, project_with_work_items, monkeypatch):
+        """Test interactive deletion choosing to keep spec."""
+        spec_file = project_with_work_items / ".session" / "specs" / "feature_isolated.md"
+
+        # Mock user input to choose option 1 (keep spec)
+        monkeypatch.setattr("builtins.input", lambda _: "1")
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is True
+        assert spec_file.exists()  # Spec should be kept
+
+    def test_delete_work_item_interactive_delete_spec(self, project_with_work_items, monkeypatch):
+        """Test interactive deletion choosing to delete spec."""
+        spec_file = project_with_work_items / ".session" / "specs" / "feature_isolated.md"
+
+        # Mock user input to choose option 2 (delete spec)
+        monkeypatch.setattr("builtins.input", lambda _: "2")
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is True
+        assert not spec_file.exists()  # Spec should be deleted
+
+    def test_delete_work_item_interactive_cancel(self, project_with_work_items, monkeypatch):
+        """Test interactive deletion choosing to cancel."""
+        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
+
+        # Mock user input to choose option 3 (cancel)
+        monkeypatch.setattr("builtins.input", lambda _: "3")
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is False
+        # Work item should still exist
+        updated_data = json.loads(work_items_file.read_text())
+        assert "feature_isolated" in updated_data["work_items"]
+
+    def test_delete_work_item_interactive_invalid_choice(
+        self, project_with_work_items, monkeypatch
+    ):
+        """Test interactive deletion with invalid choice."""
+        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
+
+        # Mock user input with invalid choice
+        monkeypatch.setattr("builtins.input", lambda _: "99")
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is False
+        # Work item should still exist
+        updated_data = json.loads(work_items_file.read_text())
+        assert "feature_isolated" in updated_data["work_items"]
+
+    def test_delete_work_item_interactive_keyboard_interrupt(
+        self, project_with_work_items, monkeypatch
+    ):
+        """Test interactive deletion with KeyboardInterrupt."""
+        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
+
+        # Mock user input to raise KeyboardInterrupt
+        def mock_input(_):
+            raise KeyboardInterrupt
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is False
+        # Work item should still exist
+        updated_data = json.loads(work_items_file.read_text())
+        assert "feature_isolated" in updated_data["work_items"]
+
+    def test_delete_work_item_interactive_eof_error(self, project_with_work_items, monkeypatch):
+        """Test interactive deletion with EOFError."""
+        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
+
+        # Mock user input to raise EOFError
+        def mock_input(_):
+            raise EOFError
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        result = delete_work_item(
+            "feature_isolated", delete_spec=None, project_root=project_with_work_items
+        )
+
+        assert result is False
+        # Work item should still exist
+        updated_data = json.loads(work_items_file.read_text())
+        assert "feature_isolated" in updated_data["work_items"]
+
+
+class TestMainFunction:
+    """Tests for the main CLI function."""
+
+    def test_main_successful_deletion(self, project_with_work_items, monkeypatch, capsys):
+        """Test main function with successful deletion."""
+        import sys
+
+        monkeypatch.chdir(project_with_work_items)
+        monkeypatch.setattr(sys, "argv", ["work-delete", "feature_isolated", "--keep-spec"])
+
+        from solokit.work_items.delete import main
+
+        result = main()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Deleted work item" in captured.out
+
+    def test_main_with_delete_spec_flag(self, project_with_work_items, monkeypatch, capsys):
+        """Test main function with --delete-spec flag."""
+        import sys
+
+        monkeypatch.chdir(project_with_work_items)
+        monkeypatch.setattr(sys, "argv", ["work-delete", "feature_isolated", "--delete-spec"])
+
+        from solokit.work_items.delete import main
+
+        result = main()
+
+        assert result == 0
+        spec_file = project_with_work_items / ".session" / "specs" / "feature_isolated.md"
+        assert not spec_file.exists()
+
+    def test_main_work_item_not_found(self, project_with_work_items, monkeypatch, capsys):
+        """Test main function when work item doesn't exist."""
+        import sys
+
+        monkeypatch.chdir(project_with_work_items)
+        monkeypatch.setattr(sys, "argv", ["work-delete", "nonexistent", "--keep-spec"])
+
+        from solokit.work_items.delete import main
+
+        result = main()
+
+        assert result != 0
+        captured = capsys.readouterr()
+        assert "Error" in captured.out
+        # Should show available work items
+        assert "Available work items" in captured.out
+
+    def test_main_conflicting_flags(self, project_with_work_items, monkeypatch):
+        """Test main function with both --keep-spec and --delete-spec."""
+        import sys
+
+        from solokit.core.exceptions import ValidationError
+
+        monkeypatch.chdir(project_with_work_items)
+        monkeypatch.setattr(
+            sys, "argv", ["work-delete", "feature_isolated", "--keep-spec", "--delete-spec"]
+        )
+
+        from solokit.work_items.delete import main
+
+        with pytest.raises(ValidationError) as exc_info:
+            main()
+
+        assert "both --keep-spec and --delete-spec" in exc_info.value.message
+
+    def test_main_no_work_items_file(self, tmp_path, monkeypatch, capsys):
+        """Test main function when work_items.json doesn't exist."""
+        import sys
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(sys, "argv", ["work-delete", "any_item", "--keep-spec"])
+
+        from solokit.work_items.delete import main
+
+        result = main()
+
+        assert result != 0
+        captured = capsys.readouterr()
+        assert "Error" in captured.out
+
+    def test_main_shows_limited_work_items_list(
+        self, project_with_work_items, sample_work_items_data, monkeypatch, capsys
+    ):
+        """Test that main shows only first 5 work items when listing available items."""
+        import sys
+
+        # Add more work items to exceed the limit
+        work_items_file = project_with_work_items / ".session" / "tracking" / "work_items.json"
+        data = json.loads(work_items_file.read_text())
+        for i in range(10):
+            data["work_items"][f"extra_item_{i}"] = {
+                "id": f"extra_item_{i}",
+                "title": f"Extra {i}",
+                "type": "feature",
+                "status": "not_started",
+                "priority": "low",
+                "dependencies": [],
+            }
+        work_items_file.write_text(json.dumps(data))
+
+        monkeypatch.chdir(project_with_work_items)
+        monkeypatch.setattr(sys, "argv", ["work-delete", "nonexistent", "--keep-spec"])
+
+        from solokit.work_items.delete import main
+
+        result = main()
+
+        assert result != 0
+        captured = capsys.readouterr()
+        assert "and" in captured.out and "more" in captured.out  # Shows "... and X more"

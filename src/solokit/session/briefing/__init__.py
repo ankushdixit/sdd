@@ -38,8 +38,8 @@ if str(_parent_module_path) not in sys.path:
 # Import main from the briefing.py module (not package)
 # This is a bit tricky since briefing is now a package, but main() is in briefing.py
 # We need to import the actual module file, not the package
-def main() -> int:
-    """Main entry point - delegates to briefing.py main()."""
+def _get_briefing_module() -> Any:
+    """Get the briefing module (not package) for accessing main() and _cli_main()."""
     # Import the briefing module file (not the package) using importlib
     import importlib.util
     import sys
@@ -56,8 +56,21 @@ def main() -> int:
     sys.modules["solokit.session._briefing_module"] = briefing_module
     spec.loader.exec_module(briefing_module)
 
+    return briefing_module
+
+
+def main() -> int:
+    """Main entry point - delegates to briefing.py main()."""
+    briefing_module = _get_briefing_module()
     # Call the main function from the loaded module
     return briefing_module.main()  # type: ignore[no-any-return]
+
+
+def _cli_main() -> int:
+    """CLI wrapper for main() - delegates to briefing.py _cli_main()."""
+    briefing_module = _get_briefing_module()
+    # Call the _cli_main function from the loaded module
+    return briefing_module._cli_main()  # type: ignore[no-any-return]
 
 
 # Export commonly used functions for backward compatibility
@@ -98,6 +111,7 @@ __all__ = [
     "determine_git_branch_final_status",
     "finalize_previous_work_item_git_status",
     "main",  # Add main to exports
+    "_cli_main",  # Add _cli_main to exports (for testing)
 ]
 
 

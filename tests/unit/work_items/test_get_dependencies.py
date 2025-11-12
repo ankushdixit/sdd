@@ -254,3 +254,118 @@ class TestFilterByRelevance:
         """Test with empty items list."""
         filtered = _filter_by_relevance([], "test")
         assert filtered == []
+
+
+class TestMainCLI:
+    """Tests for the main() CLI entry point."""
+
+    def test_main_basic_usage(self, mock_work_items, capsys, monkeypatch):
+        """Test main function with basic usage."""
+        tmp_path, _ = mock_work_items
+        monkeypatch.setattr("sys.argv", ["get_dependencies"])
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Found" in captured.out
+        assert "available dependencies" in captured.out
+        assert "feature_auth" in captured.out
+
+    def test_main_with_title_filter(self, mock_work_items, capsys, monkeypatch):
+        """Test main function with --title filter."""
+        tmp_path, _ = mock_work_items
+        monkeypatch.setattr("sys.argv", ["get_dependencies", "--title", "authentication"])
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "feature_auth" in captured.out
+
+    def test_main_with_max_results(self, mock_work_items, capsys, monkeypatch):
+        """Test main function with --max parameter."""
+        tmp_path, _ = mock_work_items
+        monkeypatch.setattr("sys.argv", ["get_dependencies", "--max", "1"])
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Found 1 available" in captured.out
+
+    def test_main_with_exclude_status(self, mock_work_items, capsys, monkeypatch):
+        """Test main function with --exclude-status parameter."""
+        tmp_path, _ = mock_work_items
+        monkeypatch.setattr(
+            "sys.argv", ["get_dependencies", "--exclude-status", "completed,blocked"]
+        )
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        # Should only show not_started and in_progress items
+        assert "feature_auth" in captured.out
+        assert "feature_api" in captured.out
+
+    def test_main_no_dependencies_found(self, tmp_path, capsys, monkeypatch):
+        """Test main function when no dependencies are found."""
+        # Create empty work items
+        session_dir = tmp_path / ".session"
+        tracking_dir = session_dir / "tracking"
+        tracking_dir.mkdir(parents=True)
+        work_items_file = tracking_dir / "work_items.json"
+        data = {
+            "work_items": {
+                "feature_done": {
+                    "type": "feature",
+                    "title": "Done",
+                    "status": "completed",
+                    "dependencies": [],
+                }
+            }
+        }
+        work_items_file.write_text(json.dumps(data))
+        monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
+        monkeypatch.setattr("sys.argv", ["get_dependencies"])
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "No available dependencies found" in captured.err
+
+    def test_main_output_format(self, mock_work_items, capsys, monkeypatch):
+        """Test that main output has correct format."""
+        tmp_path, _ = mock_work_items
+        monkeypatch.setattr("sys.argv", ["get_dependencies", "--max", "1"])
+
+        from solokit.work_items.get_dependencies import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        # Check output format includes required fields
+        assert "ID:" in captured.out
+        assert "Type:" in captured.out
+        assert "Title:" in captured.out
+        assert "Status:" in captured.out

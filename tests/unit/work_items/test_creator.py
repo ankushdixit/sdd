@@ -355,3 +355,236 @@ class TestCreateFromArgs:
         assert result is not None
         data = json.loads(creator_with_data.repository.work_items_file.read_text())
         assert "nonexistent_dep" in data["work_items"][result]["dependencies"]
+
+    def test_create_from_args_with_urgent_flag_no_existing(self, creator, tmp_path):
+        """Test creating work item with urgent flag when no urgent item exists."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator.create_from_args("feature", "Urgent Feature", "high", "", urgent=True)
+
+        # Assert
+        assert result is not None
+        data = json.loads(creator.repository.work_items_file.read_text())
+        assert data["work_items"][result]["urgent"] is True
+
+    def test_create_from_args_with_urgent_flag_existing_urgent(
+        self, creator_with_data, tmp_path, monkeypatch
+    ):
+        """Test creating urgent work item when another urgent item exists (user confirms override)."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+        creator_with_data.templates_dir = templates_dir
+
+        # Add existing urgent work item
+        data = json.loads(creator_with_data.repository.work_items_file.read_text())
+        data["work_items"]["feature_foundation"]["urgent"] = True
+        creator_with_data.repository.work_items_file.write_text(json.dumps(data))
+
+        # Mock user input to confirm override
+        monkeypatch.setattr("builtins.input", lambda _: "y")
+
+        # Act
+        result = creator_with_data.create_from_args(
+            "feature", "New Urgent Feature", "high", "", urgent=True
+        )
+
+        # Assert
+        assert result is not None
+        data = json.loads(creator_with_data.repository.work_items_file.read_text())
+        assert data["work_items"][result]["urgent"] is True
+        # Old urgent flag should be cleared
+        assert data["work_items"]["feature_foundation"]["urgent"] is False
+
+    def test_create_from_args_with_urgent_flag_user_declines(
+        self, creator_with_data, tmp_path, monkeypatch
+    ):
+        """Test creating urgent work item when user declines to override existing urgent item."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+        creator_with_data.templates_dir = templates_dir
+
+        # Add existing urgent work item
+        data = json.loads(creator_with_data.repository.work_items_file.read_text())
+        data["work_items"]["feature_foundation"]["urgent"] = True
+        creator_with_data.repository.work_items_file.write_text(json.dumps(data))
+
+        # Mock user input to decline override
+        monkeypatch.setattr("builtins.input", lambda _: "n")
+
+        # Act
+        result = creator_with_data.create_from_args(
+            "feature", "New Feature", "high", "", urgent=True
+        )
+
+        # Assert
+        assert result is not None
+        data = json.loads(creator_with_data.repository.work_items_file.read_text())
+        # New item should NOT be urgent
+        assert data["work_items"][result]["urgent"] is False
+        # Old urgent flag should remain
+        assert data["work_items"]["feature_foundation"]["urgent"] is True
+
+
+class TestCreateSpecFileTemplateReplacement:
+    """Tests for spec file template replacement for all work types."""
+
+    def test_create_spec_file_refactor(self, creator, tmp_path):
+        """Test creating a refactor specification file."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "refactor_spec.md"
+        template_file.write_text("# Refactor: [Refactor Title]\n\nGoals...")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator._create_spec_file("refactor_test", "refactor", "Code Cleanup")
+
+        # Assert
+        assert result == ".session/specs/refactor_test.md"
+        spec_path = creator.specs_dir / "refactor_test.md"
+        assert spec_path.exists()
+        content = spec_path.read_text()
+        assert "Code Cleanup" in content
+        assert "[Refactor Title]" not in content
+
+    def test_create_spec_file_security(self, creator, tmp_path):
+        """Test creating a security specification file."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "security_spec.md"
+        template_file.write_text("# Security: [Name]\n\nVulnerability...")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator._create_spec_file("security_test", "security", "SQL Injection Fix")
+
+        # Assert
+        assert result == ".session/specs/security_test.md"
+        spec_path = creator.specs_dir / "security_test.md"
+        assert spec_path.exists()
+        content = spec_path.read_text()
+        assert "SQL Injection Fix" in content
+        assert "[Name]" not in content
+
+    def test_create_spec_file_integration_test(self, creator, tmp_path):
+        """Test creating an integration_test specification file."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "integration_test_spec.md"
+        template_file.write_text("# Integration Test: [Name]\n\nScope...")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator._create_spec_file(
+            "integration_test_api", "integration_test", "API Integration"
+        )
+
+        # Assert
+        assert result == ".session/specs/integration_test_api.md"
+        spec_path = creator.specs_dir / "integration_test_api.md"
+        assert spec_path.exists()
+        content = spec_path.read_text()
+        assert "API Integration" in content
+        assert "[Name]" not in content
+
+    def test_create_spec_file_deployment(self, creator, tmp_path):
+        """Test creating a deployment specification file."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "deployment_spec.md"
+        template_file.write_text("# Deployment: [Environment]\n\nProcedure...")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator._create_spec_file("deployment_prod", "deployment", "Production")
+
+        # Assert
+        assert result == ".session/specs/deployment_prod.md"
+        spec_path = creator.specs_dir / "deployment_prod.md"
+        assert spec_path.exists()
+        content = spec_path.read_text()
+        assert "Production" in content
+        assert "[Environment]" not in content
+
+    def test_create_spec_file_unknown_type_no_replacement(self, creator, tmp_path):
+        """Test that unknown work type doesn't replace any placeholders."""
+        # Arrange
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "custom_spec.md"
+        template_file.write_text("# Custom: [Placeholder]\n\nContent...")
+        creator.templates_dir = templates_dir
+
+        # Act
+        result = creator._create_spec_file("custom_test", "custom", "Test Title")
+
+        # Assert
+        assert result == ".session/specs/custom_test.md"
+        spec_path = creator.specs_dir / "custom_test.md"
+        assert spec_path.exists()
+        content = spec_path.read_text()
+        # No replacement should occur for unknown types
+        assert "[Placeholder]" in content
+
+
+class TestPrintCreationConfirmation:
+    """Tests for creation confirmation message."""
+
+    def test_print_creation_confirmation_basic(self, creator, capsys):
+        """Test basic confirmation message without dependencies or urgent flag."""
+        # Act
+        creator._print_creation_confirmation(
+            "feature_test", "feature", "high", [], ".session/specs/feature_test.md", False
+        )
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Work item created successfully" in captured.out
+        assert "feature_test" in captured.out
+        assert "feature" in captured.out
+        assert "high" in captured.out
+        assert "not_started" in captured.out
+
+    def test_print_creation_confirmation_with_dependencies(self, creator, capsys):
+        """Test confirmation message with dependencies."""
+        # Act
+        creator._print_creation_confirmation(
+            "feature_test",
+            "feature",
+            "high",
+            ["dep1", "dep2"],
+            ".session/specs/feature_test.md",
+            False,
+        )
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Dependencies: dep1, dep2" in captured.out
+
+    def test_print_creation_confirmation_with_urgent_flag(self, creator, capsys):
+        """Test confirmation message with urgent flag."""
+        # Act
+        creator._print_creation_confirmation(
+            "feature_test", "feature", "high", [], ".session/specs/feature_test.md", True
+        )
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Urgent: YES" in captured.out
+        assert "will be prioritized above all other work items" in captured.out

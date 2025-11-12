@@ -233,3 +233,56 @@ class TestGetDependents:
 
         dependents = get_dependents("feature_a")
         assert len(dependents) == 0
+
+
+class TestMainCLI:
+    """Tests for the main() CLI entry point."""
+
+    def test_main_with_dependents(self, mock_work_items_with_deps, capsys, monkeypatch):
+        """Test main function when work item has dependents."""
+        tmp_path, _ = mock_work_items_with_deps
+        monkeypatch.setattr("sys.argv", ["get_dependents", "feature_base"])
+
+        from solokit.work_items.get_dependents import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        assert "Found 2 work item(s)" in captured.out
+        assert "feature_depends_on_base" in captured.out
+        assert "bug_depends_on_base" in captured.out
+
+    def test_main_with_no_dependents(self, mock_work_items_with_deps, capsys, monkeypatch):
+        """Test main function when work item has no dependents."""
+        tmp_path, _ = mock_work_items_with_deps
+        monkeypatch.setattr("sys.argv", ["get_dependents", "feature_independent"])
+
+        from solokit.work_items.get_dependents import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "No work items depend on" in captured.out
+
+    def test_main_output_format(self, mock_work_items_with_deps, capsys, monkeypatch):
+        """Test that main output has correct format."""
+        tmp_path, _ = mock_work_items_with_deps
+        monkeypatch.setattr("sys.argv", ["get_dependents", "feature_base"])
+
+        from solokit.work_items.get_dependents import main
+
+        # Act
+        main()
+
+        # Assert
+        captured = capsys.readouterr()
+        # Check output format includes required fields
+        assert "ID:" in captured.out
+        assert "Type:" in captured.out
+        assert "Title:" in captured.out
+        assert "Status:" in captured.out

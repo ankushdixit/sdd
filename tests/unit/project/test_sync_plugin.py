@@ -18,6 +18,46 @@ from solokit.core.exceptions import (
 from solokit.project.sync_plugin import PluginSyncer
 
 
+@pytest.fixture(autouse=True, scope="function")
+def setup_logging_for_tests():
+    """Ensure logging is properly configured for tests that check stderr output."""
+    import logging
+    import sys
+
+    # Set up logging to write to sys.stderr
+    # The key is to NOT pass sys.stderr to StreamHandler, so it looks it up dynamically
+    logger = logging.getLogger("solokit")
+    logger.handlers.clear()
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    # StreamHandler() with no args uses sys.stderr dynamically via sys.__stderr__
+    # But we want it to use the current sys.stderr (which capsys will replace)
+    # So we create a custom handler that looks up sys.stderr at write time
+    class DynamicStderrHandler(logging.Handler):
+        def emit(self, record):
+            try:
+                msg = self.format(record)
+                # Look up sys.stderr dynamically each time
+                stream = sys.stderr
+                stream.write(msg + "\n")
+                stream.flush()
+            except Exception:
+                self.handleError(record)
+
+    handler = DynamicStderrHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    yield
+
+    # Cleanup
+    logger.handlers.clear()
+    logger.propagate = True
+
+
 class TestPluginSyncerInit:
     """Tests for PluginSyncer initialization."""
 
@@ -745,3 +785,243 @@ class TestSync:
 
         # But changes should be recorded
         assert len(syncer.changes) > 0
+
+
+class TestMainFunction:
+    """Tests for main() CLI entry point."""
+
+    def test_main_success(self, tmp_path, capsys):
+        """Test successful sync via main function."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+
+        # Create complete main repo structure
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
+        (main_repo / ".claude/commands").mkdir(parents=True)
+        (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
+
+        # Create plugin repo structure
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
+        plugin_json.write_text(json.dumps({"version": "0.5.0"}))
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            from solokit.project.sync_plugin import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        # Assert
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "Sync completed successfully" in captured.err
+
+    def test_main_dry_run(self, tmp_path, capsys):
+        """Test dry run mode via main function."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+
+        # Create complete main repo structure
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
+        (main_repo / ".claude/commands").mkdir(parents=True)
+        (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
+
+        # Create plugin repo structure
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
+        plugin_json.write_text(json.dumps({"version": "0.5.0"}))
+
+        args = [
+            "sync_plugin.py",
+            "--plugin-repo",
+            str(plugin_repo),
+            "--main-repo",
+            str(main_repo),
+            "--dry-run",
+        ]
+
+        # Act
+        with patch("sys.argv", args):
+            from solokit.project.sync_plugin import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        # Assert
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.err
+
+    def test_main_file_not_found_error(self, tmp_path, capsys):
+        """Test main handles FileNotFoundError."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+        # Don't create repos - they don't exist
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            from solokit.project.sync_plugin import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        # Assert
+        assert exc_info.value.code != 0
+        captured = capsys.readouterr()
+        assert "File not found" in captured.err
+
+    def test_main_validation_error(self, tmp_path, capsys):
+        """Test main handles ValidationError."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+        main_repo.mkdir()
+        plugin_repo.mkdir()
+        # Missing expected files
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            from solokit.project.sync_plugin import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        # Assert
+        assert exc_info.value.code != 0
+        captured = capsys.readouterr()
+        assert "Validation error" in captured.err
+
+    def test_main_file_operation_error(self, tmp_path, capsys):
+        """Test main handles FileOperationError."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+
+        # Create complete main repo structure
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
+        (main_repo / ".claude/commands").mkdir(parents=True)
+        (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
+
+        # Create plugin repo structure with read-only plugin.json
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
+        plugin_json.write_text(json.dumps({"version": "0.5.0"}))
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            # Mock json.load to raise error
+            with patch("builtins.open", side_effect=OSError("Permission denied")):
+                from solokit.project.sync_plugin import main
+
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
+
+        # Assert
+        assert exc_info.value.code != 0
+        captured = capsys.readouterr()
+        # Should catch either validation or file operation error
+        assert "error" in captured.err.lower()
+
+    def test_main_unexpected_error(self, tmp_path, capsys):
+        """Test main handles unexpected errors."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+
+        # Create complete main repo structure
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").write_text("cli code")
+        (main_repo / ".claude/commands").mkdir(parents=True)
+        (main_repo / "pyproject.toml").write_text('version = "0.5.7"')
+
+        # Create plugin repo structure
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
+        plugin_json.write_text(json.dumps({"version": "0.5.0"}))
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            with patch(
+                "solokit.project.sync_plugin.PluginSyncer.sync",
+                side_effect=RuntimeError("Unexpected"),
+            ):
+                from solokit.project.sync_plugin import main
+
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
+
+        # Assert
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Unexpected error" in captured.err
+
+    def test_main_default_main_repo(self, tmp_path, capsys):
+        """Test main uses current directory as default main repo."""
+        # Arrange
+        plugin_repo = tmp_path / "plugin"
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        plugin_json = plugin_repo / "solokit/.claude-plugin/plugin.json"
+        plugin_json.write_text(json.dumps({"version": "0.5.0"}))
+
+        # Create a non-existent/invalid main repo path to test default behavior
+        invalid_main_repo = tmp_path / "nonexistent_main"
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo)]
+
+        # Act - Mock Path.cwd() to return invalid directory
+        with patch("sys.argv", args):
+            with patch("pathlib.Path.cwd", return_value=invalid_main_repo):
+                from solokit.project.sync_plugin import main
+
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
+
+        # Assert - will fail validation but shows default path was used
+        assert exc_info.value.code != 0
+
+    def test_main_with_remediation_messages(self, tmp_path, capsys):
+        """Test main displays remediation messages from errors."""
+        # Arrange
+        main_repo = tmp_path / "main"
+        plugin_repo = tmp_path / "plugin"
+        main_repo.mkdir()
+        (main_repo / "pyproject.toml").write_text('[tool.poetry]\nname = "solokit"\n')  # No version
+        plugin_repo.mkdir()
+        (plugin_repo / "solokit/.claude-plugin").mkdir(parents=True)
+        (plugin_repo / "solokit/.claude-plugin/plugin.json").write_text(json.dumps({}))
+
+        # Create minimal structure to pass repo validation
+        (main_repo / "src/solokit").mkdir(parents=True)
+        (main_repo / "src/solokit/cli.py").touch()
+        (main_repo / ".claude/commands").mkdir(parents=True)
+
+        args = ["sync_plugin.py", "--plugin-repo", str(plugin_repo), "--main-repo", str(main_repo)]
+
+        # Act
+        with patch("sys.argv", args):
+            from solokit.project.sync_plugin import main
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        # Assert
+        assert exc_info.value.code != 0
+        captured = capsys.readouterr()
+        assert "Remediation" in captured.err or "error" in captured.err.lower()
