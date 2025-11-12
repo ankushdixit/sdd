@@ -4,7 +4,6 @@ This module tests the WorkItemScheduler class which handles work item
 prioritization and next item selection, including urgent item prioritization.
 """
 
-import json
 import pytest
 
 from solokit.work_items.repository import WorkItemRepository
@@ -52,12 +51,7 @@ class TestUrgentPrioritization:
         # Arrange
         repository.add_work_item("feature_foundation", "feature", "Foundation", "high", [])
         repository.add_work_item(
-            "bug_urgent",
-            "bug",
-            "Urgent Bug",
-            "high",
-            ["feature_foundation"],
-            urgent=True
+            "bug_urgent", "bug", "Urgent Bug", "high", ["feature_foundation"], urgent=True
         )
 
         # Act

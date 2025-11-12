@@ -61,7 +61,7 @@ class WorkItemScheduler:
             output.info(f"Priority: {urgent_item.get('priority', 'unknown')}")
             output.info("\nThis item requires immediate attention and overrides normal priority.")
             output.info(f"To start: /start {urgent_item.get('id', '')}\n")
-            return urgent_item  # type: ignore[return-value]
+            return urgent_item
 
         # Filter to not_started items
         not_started = {

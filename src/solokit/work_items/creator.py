@@ -70,7 +70,9 @@ class WorkItemCreator:
             ValidationError: If work type is invalid
             WorkItemAlreadyExistsError: If work item with generated ID already exists
         """
-        logger.info("Creating work item from args: type=%s, title=%s, urgent=%s", work_type, title, urgent)
+        logger.info(
+            "Creating work item from args: type=%s, title=%s, urgent=%s", work_type, title, urgent
+        )
 
         # Validate work type
         if work_type not in self.WORK_ITEM_TYPES:
@@ -134,7 +136,9 @@ class WorkItemCreator:
         )
 
         # Confirm
-        self._print_creation_confirmation(work_id, work_type, priority, dep_list, spec_file, should_set_urgent)
+        self._print_creation_confirmation(
+            work_id, work_type, priority, dep_list, spec_file, should_set_urgent
+        )
 
         return work_id
 
@@ -214,9 +218,7 @@ class WorkItemCreator:
         existing_id = existing_urgent.get("id", "unknown")
         existing_title = existing_urgent.get("title", "Unknown Title")
 
-        output.warning(
-            f"\nWork item '{existing_id}' is currently marked urgent: {existing_title}"
-        )
+        output.warning(f"\nWork item '{existing_id}' is currently marked urgent: {existing_title}")
         response = input("Clear and set new urgent item? (y/N): ").strip().lower()
 
         if response == "y":

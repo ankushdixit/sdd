@@ -316,6 +316,7 @@ class TestMilestones:
         assert data["milestones"]["v1.0"]["title"] == "Version 1.0"
         assert data["milestones"]["v1.0"]["target_date"] == "2025-06-01"
 
+
 class TestUrgentFlag:
     """Tests for urgent flag operations."""
 
@@ -330,14 +331,7 @@ class TestUrgentFlag:
     def test_get_urgent_work_item_when_exists(self, repository):
         """Test getting urgent item when one is marked urgent."""
         # Arrange
-        repository.add_work_item(
-            "bug_critical",
-            "bug",
-            "Critical Bug",
-            "high",
-            [],
-            urgent=True
-        )
+        repository.add_work_item("bug_critical", "bug", "Critical Bug", "high", [], urgent=True)
 
         # Act
         urgent = repository.get_urgent_work_item()
@@ -405,12 +399,7 @@ class TestUrgentFlag:
         """Test adding work item with urgent flag set."""
         # Act
         repository.add_work_item(
-            "feature_urgent",
-            "feature",
-            "Urgent Feature",
-            "critical",
-            [],
-            urgent=True
+            "feature_urgent", "feature", "Urgent Feature", "critical", [], urgent=True
         )
 
         # Assert
@@ -420,13 +409,7 @@ class TestUrgentFlag:
     def test_add_work_item_without_urgent_flag(self, repository):
         """Test adding work item without urgent flag (defaults to False)."""
         # Act
-        repository.add_work_item(
-            "feature_normal",
-            "feature",
-            "Normal Feature",
-            "high",
-            []
-        )
+        repository.add_work_item("feature_normal", "feature", "Normal Feature", "high", [])
 
         # Assert
         data = json.loads(repository.work_items_file.read_text())
@@ -441,7 +424,7 @@ class TestUrgentFlag:
         session_dir.mkdir()
         tracking_dir = session_dir / "tracking"
         tracking_dir.mkdir()
-        
+
         work_items_file = tracking_dir / "work_items.json"
         data = {
             "work_items": {
@@ -451,14 +434,14 @@ class TestUrgentFlag:
                     "type": "feature",
                     "status": "not_started",
                     "priority": "high",
-                    "dependencies": []
+                    "dependencies": [],
                 }
             },
             "milestones": {},
-            "metadata": {}
+            "metadata": {},
         }
         work_items_file.write_text(json.dumps(data, indent=2))
-        
+
         repository = WorkItemRepository(session_dir)
 
         # Act

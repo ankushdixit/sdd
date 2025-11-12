@@ -5,6 +5,7 @@ including auto-clear on completion and manual clearing.
 """
 
 import json
+
 import pytest
 
 from solokit.work_items.repository import WorkItemRepository

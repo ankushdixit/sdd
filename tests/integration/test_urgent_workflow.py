@@ -8,15 +8,11 @@ This module tests the complete workflow of urgent flag operations including:
 """
 
 import json
-import pytest
-from pathlib import Path
 
-from solokit.work_items.creator import WorkItemCreator
+import pytest
+
 from solokit.work_items.manager import WorkItemManager
 from solokit.work_items.repository import WorkItemRepository
-from solokit.work_items.scheduler import WorkItemScheduler
-from solokit.work_items.updater import WorkItemUpdater
-from solokit.work_items.validator import WorkItemValidator
 
 
 @pytest.fixture
@@ -36,11 +32,9 @@ def test_project(tmp_path):
 
     # Initialize work_items.json
     work_items_file = tracking_dir / "work_items.json"
-    work_items_file.write_text(json.dumps({
-        "work_items": {},
-        "milestones": {},
-        "metadata": {}
-    }, indent=2))
+    work_items_file.write_text(
+        json.dumps({"work_items": {}, "milestones": {}, "metadata": {}}, indent=2)
+    )
 
     return project_root
 
@@ -62,7 +56,7 @@ class TestUrgentWorkflowEndToEnd:
             title="Critical Production Bug",
             priority="critical",
             dependencies="",
-            urgent=True
+            urgent=True,
         )
 
         # Assert - Verify it's marked urgent in repository
@@ -76,11 +70,7 @@ class TestUrgentWorkflowEndToEnd:
         # Arrange - Create critical non-urgent and low urgent items
         manager.creator.create_from_args("bug", "Critical Bug", "critical", "", urgent=False)
         urgent_id = manager.creator.create_from_args(
-            "feature",
-            "Low Priority Urgent",
-            "low",
-            "",
-            urgent=True
+            "feature", "Low Priority Urgent", "low", "", urgent=True
         )
 
         # Act - Get next work item
@@ -95,13 +85,7 @@ class TestUrgentWorkflowEndToEnd:
     def test_auto_clear_urgent_on_completion(self, manager):
         """Test that urgent flag is automatically cleared when work item is completed."""
         # Arrange - Create urgent work item
-        work_id = manager.creator.create_from_args(
-            "bug",
-            "Urgent Bug Fix",
-            "high",
-            "",
-            urgent=True
-        )
+        work_id = manager.creator.create_from_args("bug", "Urgent Bug Fix", "high", "", urgent=True)
 
         # Act - Mark as completed
         manager.updater.update(work_id, status="completed")
@@ -118,11 +102,7 @@ class TestUrgentWorkflowEndToEnd:
         """Test manually clearing urgent flag via work-update."""
         # Arrange - Create urgent work item
         work_id = manager.creator.create_from_args(
-            "feature",
-            "Urgent Feature",
-            "high",
-            "",
-            urgent=True
+            "feature", "Urgent Feature", "high", "", urgent=True
         )
 
         # Act - Clear urgent flag manually
@@ -139,19 +119,10 @@ class TestUrgentWorkflowEndToEnd:
     def test_urgent_ignores_dependencies(self, manager):
         """Test that urgent items are returned by work-next even with unmet dependencies."""
         # Arrange - Create dependency and urgent item that depends on it
-        dep_id = manager.creator.create_from_args(
-            "feature",
-            "Base Feature",
-            "high",
-            ""
-        )
+        dep_id = manager.creator.create_from_args("feature", "Base Feature", "high", "")
 
         urgent_id = manager.creator.create_from_args(
-            "bug",
-            "Urgent Dependent Bug",
-            "high",
-            dep_id,
-            urgent=True
+            "bug", "Urgent Dependent Bug", "high", dep_id, urgent=True
         )
 
         # Act - Get next work item
@@ -167,24 +138,10 @@ class TestUrgentWorkflowEndToEnd:
         repository = WorkItemRepository(test_project / ".session")
 
         # Arrange - Create first urgent item
-        repository.add_work_item(
-            "bug_urgent_1",
-            "bug",
-            "First Urgent",
-            "high",
-            [],
-            urgent=True
-        )
+        repository.add_work_item("bug_urgent_1", "bug", "First Urgent", "high", [], urgent=True)
 
         # Act - Create second urgent item (should clear first)
-        repository.add_work_item(
-            "bug_urgent_2",
-            "bug",
-            "Second Urgent",
-            "high",
-            [],
-            urgent=False
-        )
+        repository.add_work_item("bug_urgent_2", "bug", "Second Urgent", "high", [], urgent=False)
         repository.set_urgent_flag("bug_urgent_2", clear_others=True)
 
         # Assert - Only second item should be urgent
@@ -217,11 +174,7 @@ class TestUrgentWorkflowEndToEnd:
         manager.creator.create_from_args("feature", "Low Priority", "low", "")
         manager.creator.create_from_args("feature", "High Priority", "high", "")
         urgent_id = manager.creator.create_from_args(
-            "bug",
-            "Medium Urgent",
-            "medium",
-            "",
-            urgent=True
+            "bug", "Medium Urgent", "medium", "", urgent=True
         )
 
         # Act & Assert Step 1 - Urgent is returned first
@@ -249,11 +202,11 @@ class TestUrgentWorkflowEndToEnd:
                     "title": "Old Feature",
                     "status": "not_started",
                     "priority": "high",
-                    "dependencies": []
+                    "dependencies": [],
                 }
             },
             "milestones": {},
-            "metadata": {}
+            "metadata": {},
         }
         work_items_file.write_text(json.dumps(data, indent=2))
 
@@ -275,13 +228,7 @@ class TestUrgentEdgeCases:
     def test_multiple_status_changes_preserve_urgent_until_completed(self, manager):
         """Test that urgent flag persists through status changes until completion."""
         # Arrange - Create urgent item
-        work_id = manager.creator.create_from_args(
-            "bug",
-            "Urgent Bug",
-            "high",
-            "",
-            urgent=True
-        )
+        work_id = manager.creator.create_from_args("bug", "Urgent Bug", "high", "", urgent=True)
 
         # Act - Change status to in_progress
         manager.updater.update(work_id, status="in_progress")
@@ -312,11 +259,7 @@ class TestUrgentEdgeCases:
         dep2 = manager.creator.create_from_args("feature", "Dep 2", "high", "")
 
         urgent_id = manager.creator.create_from_args(
-            "bug",
-            "Urgent with Deps",
-            "high",
-            f"{dep1},{dep2}",
-            urgent=True
+            "bug", "Urgent with Deps", "high", f"{dep1},{dep2}", urgent=True
         )
 
         # Act - Get next work item
