@@ -979,5 +979,182 @@ class TestMilestones:
         assert "Target" in captured.out
 
 
+class TestMainCLI:
+    """Tests for the main() CLI entry point."""
+
+    def test_main_missing_type_and_title(self, tmp_path, capsys, monkeypatch):
+        """Test main function with missing required arguments."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr("sys.argv", ["manager"])
+
+        from solokit.work_items.manager import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit):
+            main()
+
+    def test_main_missing_title(self, tmp_path, capsys, monkeypatch):
+        """Test main function with missing title argument."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr("sys.argv", ["manager", "--type", "feature"])
+
+        from solokit.work_items.manager import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit):
+            main()
+
+    def test_main_missing_type(self, tmp_path, capsys, monkeypatch):
+        """Test main function with missing type argument."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr("sys.argv", ["manager", "--title", "Test Feature"])
+
+        from solokit.work_items.manager import main
+
+        # Act & Assert
+        with pytest.raises(SystemExit):
+            main()
+
+    def test_main_successful_creation(self, tmp_path, monkeypatch):
+        """Test main function successfully creates work item."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+        (session_dir / "specs").mkdir()
+
+        # Create templates
+        templates_dir = tmp_path / "project" / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["manager", "--type", "feature", "--title", "Test Feature", "--priority", "high"],
+        )
+
+        from solokit.work_items.manager import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+
+    def test_main_with_dependencies(self, tmp_path, monkeypatch):
+        """Test main function with dependencies argument."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        tracking_dir = session_dir / "tracking"
+        tracking_dir.mkdir()
+        (session_dir / "specs").mkdir()
+
+        # Create work_items.json with existing dependency
+        work_items_file = tracking_dir / "work_items.json"
+        data = {
+            "work_items": {
+                "feature_base": {
+                    "id": "feature_base",
+                    "type": "feature",
+                    "title": "Base Feature",
+                    "status": "completed",
+                    "priority": "high",
+                    "dependencies": [],
+                }
+            },
+            "metadata": {},
+            "milestones": {},
+        }
+        work_items_file.write_text(json.dumps(data))
+
+        # Create templates
+        templates_dir = tmp_path / "project" / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "manager",
+                "--type",
+                "feature",
+                "--title",
+                "Dependent Feature",
+                "--dependencies",
+                "feature_base",
+            ],
+        )
+
+        from solokit.work_items.manager import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0
+
+    def test_main_with_invalid_priority(self, tmp_path, monkeypatch):
+        """Test main function with invalid priority (should default to high)."""
+        project_root = tmp_path / "project"
+        project_root.mkdir()
+        session_dir = project_root / ".session"
+        session_dir.mkdir()
+        (session_dir / "tracking").mkdir()
+        (session_dir / "specs").mkdir()
+
+        # Create templates
+        templates_dir = tmp_path / "project" / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "feature_spec.md"
+        template_file.write_text("# Feature: [Feature Name]")
+
+        monkeypatch.chdir(project_root)
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "manager",
+                "--type",
+                "feature",
+                "--title",
+                "Test Feature",
+                "--priority",
+                "invalid",
+            ],
+        )
+
+        from solokit.work_items.manager import main
+
+        # Act
+        result = main()
+
+        # Assert
+        assert result == 0  # Should succeed with default priority
+
+
 # TestGetStatusIcon moved to test_query.py
 # Tests for _get_status_icon are now in test_query.py since it's a private method of WorkItemQuery
