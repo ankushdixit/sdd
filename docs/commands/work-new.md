@@ -14,7 +14,7 @@ The `work-new` command creates new work items through an interactive flow that:
 
 ## Interactive Flow
 
-The command asks 4 questions using interactive UI:
+The command asks 5 questions using interactive UI:
 
 ### 1. Work Item Type
 
@@ -50,7 +50,26 @@ Select "Type something" to enter your custom title.
 - **medium** - Normal priority work
 - **low** - Nice to have, can be deferred
 
-### 4. Dependencies
+### 4. Urgent Status
+
+**Question:** "Does this work item require immediate attention?"
+
+**⚠️ Important:** Only ONE work item can be urgent at a time. Urgent items:
+- Override all priority levels and dependencies
+- Are always returned first by `/work-next`
+- Are displayed with ⚠️ indicator in `/work-list`
+- Automatically clear when marked as completed
+
+**Options:**
+- **No** - Normal workflow (prioritized by priority level and dependencies)
+- **Yes** - Mark as urgent (will override all other priority and be worked on immediately)
+
+**If an urgent item already exists:**
+- You'll be prompted to confirm clearing the existing urgent flag
+- Select "Yes" to make this the new urgent item
+- Select "No" to keep the existing urgent item
+
+### 5. Dependencies
 
 **Question:** "Does this work item depend on other work items?"
 
@@ -200,6 +219,54 @@ Next steps:
 1. Complete the specification file
 2. Wait for dependencies to complete
 3. Start working when ready: /sk:start bug_session_timeout
+```
+
+### Creating an Urgent Work Item
+
+```bash
+/sk:work-new
+```
+
+**Interactive flow:**
+
+```
+What type of work item would you like to create?
+○ feature
+● bug
+○ refactor
+○ security
+
+Enter a brief, descriptive title:
+> Critical production hotfix
+
+What is the priority level?
+● critical
+○ high
+○ medium
+○ low
+
+Does this work item require immediate attention?
+○ No
+● Yes
+
+⚠️ Work item 'feature_user_dashboard' is currently marked urgent
+Clear and set new urgent item? (y/N): y
+
+Cleared urgent flag from 'feature_user_dashboard'
+
+Work item created successfully!
+
+ID: bug_critical_production_hotfix
+Type: bug
+Priority: critical
+Status: not_started
+⚠️ Urgent: YES (will be prioritized above all other work items)
+
+Specification file: .session/specs/bug_critical_production_hotfix.md
+
+Next steps:
+1. Complete the specification file
+2. Start working immediately: /sk:start bug_critical_production_hotfix
 ```
 
 ## Work Item ID Generation
