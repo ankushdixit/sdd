@@ -67,22 +67,35 @@ Solokit is a **complete development framework for solo developers building produ
 
 ### Installation
 
-**PyPI (Coming Soon):**
+**PyPI:**
 ```bash
-pip install solokit
+# macOS/Linux
+pip3 install solokit
+
+# Windows
+py -m pip install solokit
 ```
+
+> **First-time macOS users:** When you run `pip3` for the first time, macOS will prompt you to install Command Line Tools. This is normal and required - the installation takes 5-10 minutes.
 
 **From Source:**
 ```bash
 git clone https://github.com/ankushdixit/solokit.git
 cd solokit
-pip install -e .
+
+# macOS/Linux
+pip3 install -e .
+
+# Windows
+py -m pip install -e .
 ```
 
 **Verify Installation:**
 ```bash
-sk --help
+sk status
 ```
+
+See the [README](../../README.md#troubleshooting) for troubleshooting common installation issues.
 
 ---
 

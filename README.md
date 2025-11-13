@@ -54,8 +54,14 @@ Solo developers using AI assistants face critical challenges:
 ### 1. Install Solokit
 
 ```bash
-pip install solokit
+# macOS/Linux
+pip3 install solokit
+
+# Windows
+py -m pip install solokit
 ```
+
+> **First-time macOS users:** When you run `pip3` for the first time, macOS will prompt you to install Command Line Tools. This is normal and required - the installation takes 5-10 minutes.
 
 ### 2. Initialize Your Project
 
@@ -478,32 +484,28 @@ graph TD
 
 ## Installation
 
-### Option 1: PyPI (Recommended)
-
-```bash
-pip install solokit
-```
-
-### Option 2: From Source
-
-```bash
-git clone https://github.com/ankushdixit/solokit.git
-cd solokit
-pip install -e .
-```
-
-### Verify Installation
-
-```bash
-sk status
-```
-
 ### Prerequisites
 
+**Required:**
 - **Python 3.9+** - Core runtime
-- **pip** - Package installer
+- **pip/pip3** - Package installer (see OS-specific notes below)
 - **Git** - Version control
 - **Claude Code** - *Strongly recommended* for slash command integration and optimal workflow experience. While Solokit can be used via CLI alone, Claude Code provides the richest experience with interactive prompts, context continuity, and intelligent assistance.
+
+**OS-Specific Requirements:**
+
+**macOS:**
+- Use `pip3` instead of `pip` on fresh installations
+- **Command Line Tools** - macOS will prompt you to install these automatically when you first run `pip3` (5-10 minute installation, completely normal)
+- **PATH Setup** - You may need to add the install location to your PATH (see Troubleshooting below)
+
+**Windows:**
+- Use `py -m pip` instead of `pip` for reliable installation
+- Ensure Python is added to PATH during Python installation
+
+**Linux:**
+- Use `pip3` for Python 3.x installations
+- May need to install `python3-pip` package first: `sudo apt install python3-pip` (Debian/Ubuntu) or `sudo dnf install python3-pip` (Fedora/RHEL)
 
 **Optional Tools** (for quality gates):
 - Testing: `pytest` (Python), `jest` (JS/TS)
@@ -513,6 +515,151 @@ sk status
 - Visualization: `graphviz` (dependency graphs)
 
 Quality gates gracefully skip when tools aren't available.
+
+### Option 1: PyPI (Recommended)
+
+```bash
+# macOS/Linux
+pip3 install solokit
+
+# Windows
+py -m pip install solokit
+```
+
+**Post-Installation (macOS):**
+
+If you see a warning that `sk` is not on PATH, add it to your shell configuration:
+
+```bash
+# For zsh (default on modern macOS)
+echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# For bash
+echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+> **Note:** Adjust the Python version (3.9) to match your installed version if different.
+
+### Option 2: From Source
+
+```bash
+git clone https://github.com/ankushdixit/solokit.git
+cd solokit
+
+# macOS/Linux
+pip3 install -e .
+
+# Windows
+py -m pip install -e .
+```
+
+### Verify Installation
+
+```bash
+sk status
+```
+
+If `sk` command is not found, see the Troubleshooting section below.
+
+## Troubleshooting
+
+### Common Installation Issues
+
+#### "command not found: sk"
+
+**macOS/Linux:**
+The `sk` command is installed in your Python user bin directory, which may not be on your PATH.
+
+**Solution:**
+```bash
+# Find where sk is installed
+pip3 show solokit
+
+# Add to PATH (example for macOS with zsh)
+echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# Verify
+sk status
+```
+
+**Windows:**
+```powershell
+# Add Python Scripts to PATH
+# Go to System Properties > Environment Variables
+# Add: C:\Users\YourUsername\AppData\Local\Programs\Python\Python39\Scripts
+```
+
+#### "command not found: pip" (macOS)
+
+**Problem:** Fresh macOS installations only have `pip3`, not `pip`.
+
+**Solution:** Use `pip3` instead:
+```bash
+pip3 install solokit
+```
+
+#### "xcode-select: note: No developer tools were found"
+
+**This is normal on fresh macOS!** When you run `pip3` for the first time, macOS needs to install Command Line Tools.
+
+**Solution:**
+- Click "Install" when prompted
+- Wait 5-10 minutes for the installation to complete
+- Then retry: `pip3 install solokit`
+
+#### "WARNING: You are using pip version X.X.X"
+
+**This warning is safe to ignore.** Solokit works with older pip versions. If you want to update pip:
+
+```bash
+# macOS/Linux
+pip3 install --upgrade pip
+
+# Windows
+py -m pip install --upgrade pip
+```
+
+#### Python Version Issues
+
+**Problem:** Solokit requires Python 3.9 or higher.
+
+**Check your Python version:**
+```bash
+python3 --version
+```
+
+**Solution:** If you have an older version, install Python 3.9+ from [python.org](https://www.python.org/downloads/)
+
+#### Permission Errors on Linux
+
+**Problem:** `Permission denied` when installing packages.
+
+**Solution:** Use `--user` flag to install in your user directory:
+```bash
+pip3 install --user solokit
+```
+
+Or use a virtual environment (recommended):
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip3 install solokit
+```
+
+### Getting Help
+
+If you encounter issues not covered here:
+
+1. **Check existing issues:** [GitHub Issues](https://github.com/ankushdixit/solokit/issues)
+2. **Run diagnostics:** `sk doctor` (after installation)
+3. **Open a new issue:** Include:
+   - Operating system and version
+   - Python version (`python3 --version`)
+   - Error message (full output)
+   - Steps to reproduce
 
 ## Configuration
 
