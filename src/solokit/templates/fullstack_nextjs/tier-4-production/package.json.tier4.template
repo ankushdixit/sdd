@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -72,6 +72,7 @@
     "patch-package": "8.0.1",
     "@next/bundle-analyzer": "16.0.1",
     "@lhci/cli": "0.15.1",
-    "dotenv-cli": "11.0.0"
+    "dotenv-cli": "11.0.0",
+    "ts-node": "10.9.2"
   }
 }

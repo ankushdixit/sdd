@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -47,6 +47,7 @@
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
     "husky": "9.1.7",
-    "lint-staged": "16.2.6"
+    "lint-staged": "16.2.6",
+    "ts-node": "10.9.2"
   }
 }
