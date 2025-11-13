@@ -51,6 +51,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated docs/guides/troubleshooting.md to reference `sk doctor` as first troubleshooting step
 
 ### Fixed
+- **Critical: Next.js 16 Template Initialization Issues**
+  - Fixed missing ts-node dependency causing Jest to fail parsing TypeScript config files
+    - Added `"ts-node": "10.9.2"` to devDependencies in all 15 Next.js package.json templates
+    - Affects all 3 Next.js templates (saas_t3, fullstack_nextjs, dashboard_refine) × 5 tiers each
+    - Resolves error: `Jest: 'ts-node' is required for the TypeScript configuration files`
+  - Fixed deprecated `next lint` command removed in Next.js 16
+    - Changed `"lint": "next lint"` to `"lint": "eslint . --ext .ts,.tsx,.js,.jsx"` in all 15 templates
+    - Updated `"lint:fix"` script in dashboard_refine templates to use direct ESLint
+    - Resolves cryptic error: `Invalid project directory provided, no such directory: .../lint`
+  - Fixed linting validation being skipped during quality gates check
+    - Updated `src/solokit/init/session_structure.py` to include linting commands in quality gates config
+    - Added `commands` section with language-specific linting commands (python, javascript, typescript)
+    - Validation now properly runs `npm run lint` instead of reporting "no command for typescript"
+  - Impact: All 3 Next.js templates now work correctly across all quality tiers (base through tier-4)
+  - Users can successfully initialize projects without manual workarounds
+  - Quality gates validation (`/validate`, `/end`) now properly check linting instead of skipping
+  - All 2,936 tests passing with zero regressions
+
 - **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**
   - Fixed `.session/` directory causing uncommitted changes warnings (#9 - Critical)
     - Added `.session/` to .gitignore in all 4 stack templates (saas_t3, ml_ai_fastapi, dashboard_refine, fullstack_nextjs)

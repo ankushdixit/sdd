@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -63,6 +63,7 @@
     "playwright": "1.56.1",
     "@axe-core/playwright": "4.11.0",
     "eslint-plugin-jest-dom": "5.5.0",
-    "eslint-plugin-testing-library": "7.13.3"
+    "eslint-plugin-testing-library": "7.13.3",
+    "ts-node": "10.9.2"
   }
 }

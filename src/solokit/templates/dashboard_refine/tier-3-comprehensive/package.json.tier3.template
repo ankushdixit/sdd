@@ -8,8 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
@@ -74,6 +74,7 @@
     "playwright": "1.56.1",
     "@axe-core/playwright": "4.11.0",
     "eslint-plugin-jest-dom": "5.5.0",
-    "eslint-plugin-testing-library": "7.13.3"
+    "eslint-plugin-testing-library": "7.13.3",
+    "ts-node": "10.9.2"
   }
 }

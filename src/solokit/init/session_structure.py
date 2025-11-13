@@ -148,7 +148,16 @@ def initialize_tracking_files(
             "tier": tier,
             "coverage_threshold": coverage_target,
             "test_execution": {"enabled": True, "required": True},
-            "linting": {"enabled": True, "required": True},
+            "linting": {
+                "enabled": True,
+                "required": True,
+                "commands": {
+                    "python": "ruff check .",
+                    "javascript": "npm run lint",
+                    "typescript": "npm run lint",
+                },
+                "auto_fix": False,
+            },
             "formatting": {"enabled": True, "required": True},
             "security": {"enabled": True, "required": True},
             "documentation": {
