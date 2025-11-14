@@ -51,6 +51,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated docs/guides/troubleshooting.md to reference `sk doctor` as first troubleshooting step
 
 ### Fixed
+- **High: Urgent Flag Not Cleared on Session Completion**
+  - Fixed urgent flag persisting on completed work items when using `sk end` command
+    - Session completion now uses WorkItemUpdater instead of direct JSON manipulation
+    - Ensures urgent flag is automatically cleared when work item status changes to completed
+    - Behavior now consistent with `sk work-update <id> --status completed`
+    - Updated `src/solokit/session/complete.py` to use repository pattern for status updates
+  - Added `--set-urgent` flag to `sk work-update` command for setting urgent status
+    - Allows promoting existing work items to urgent status
+    - Automatically clears urgent flag from other items (single-item constraint)
+    - Complements existing `--clear-urgent` flag for complete CLI control
+    - Updated `src/solokit/work_items/updater.py` with set_urgent field handling
+  - Updated help documentation for urgent flags
+    - Added `--set-urgent` and `--clear-urgent` to work-update command help
+    - Added `--urgent` flag to work-new command help examples
+    - Updated `src/solokit/commands/help.py` with complete option descriptions
+    - Updated `.claude/commands/work-update.md` and template version
+  - Added integration test for urgent flag clearing on session completion
+    - New test: `test_auto_clear_urgent_on_session_completion` in test_urgent_workflow.py
+    - Verifies end-to-end workflow with session completion
+    - All 12 urgent workflow integration tests passing
+  - Impact: Work lists now correctly show/hide ⚠️ symbol based on actual urgent status
+  - Users no longer need manual cleanup after completing urgent work items
+  - Complete CLI support for urgent flag lifecycle (create, set, clear, auto-clear)
+
 - **Critical: Next.js 16 Template Initialization Issues**
   - Fixed missing ts-node dependency causing Jest to fail parsing TypeScript config files
     - Added `"ts-node": "10.9.2"` to devDependencies in all 15 Next.js package.json templates

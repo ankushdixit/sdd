@@ -181,11 +181,13 @@ Examples:
   sk work-update feat_001 --add-dependency bug_002
   sk work-update feat_001 --milestone "v1.0"
   sk work-update feat_001 --status completed --priority high
+  sk work-update feat_001 --set-urgent
   sk work-update feat_001 --clear-urgent
 
 Valid statuses: not_started, in_progress, blocked, completed
 Valid priorities: critical, high, medium, low
 
+The --set-urgent flag marks an item as urgent (only one item can be urgent at a time).
 The --clear-urgent flag removes the urgent status from a work item.
 
 💡 View current work item status: sk work-show <work_id>
@@ -199,6 +201,11 @@ The --clear-urgent flag removes the urgent status from a work item.
     parser.add_argument("--milestone", help="Update milestone")
     parser.add_argument("--add-dependency", help="Add dependency by ID")
     parser.add_argument("--remove-dependency", help="Remove dependency by ID")
+    parser.add_argument(
+        "--set-urgent",
+        action="store_true",
+        help="Mark this item as urgent (only one item can be urgent at a time)",
+    )
     parser.add_argument(
         "--clear-urgent",
         action="store_true",
@@ -303,6 +310,8 @@ def route_command(command_name: str, args: list[str]) -> int:
                     kwargs["add_dependency"] = parsed.add_dependency
                 if parsed.remove_dependency:
                     kwargs["remove_dependency"] = parsed.remove_dependency
+                if parsed.set_urgent:
+                    kwargs["set_urgent"] = True
                 if parsed.clear_urgent:
                     kwargs["clear_urgent"] = True
 
