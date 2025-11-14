@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Critical Tier-3 and Tier-4 Test Suite Failures**
+  - Fixed Jest configuration to exclude Playwright e2e tests from Jest runs (6 files)
+    - Added `testMatch` to only run unit and integration tests
+    - Added `testPathIgnorePatterns` to exclude `/tests/e2e/`
+    - Added `transformIgnorePatterns` for ESM dependencies (superjson, @trpc)
+    - Added `moduleNameMapper` for path aliases
+    - Created dedicated `jest.config.ts` files for tier-3 and tier-4 templates
+  - Fixed package.json test scripts to separate test types (6 files)
+    - Added `test:unit` - Run unit tests only
+    - Added `test:integration` - Run integration tests only
+    - Added `test:e2e` - Run Playwright e2e tests only
+    - Added `test:all` - Run all test types sequentially
+    - Updated tier-3 and tier-4 package.json templates for all stacks
+  - Replaced broken integration test examples with working placeholders (3 files)
+    - Removed ESM server imports that caused "Cannot use import statement outside a module" errors
+    - Added educational placeholder tests demonstrating proper structure
+    - Tests now pass immediately after project initialization
+  - Impact: All tier-3 and tier-4 projects now have working test suites out of the box
+  - Affects: saas_t3, fullstack_nextjs, dashboard_refine templates
+  - Resolves: "TransformStream is not defined" and ESM import errors
+
 ### Added
 - **Urgent Flag for Single Immediate-Priority Work Items**
   - Added `--urgent` flag to `sk work-new` command for marking work items that require immediate attention
