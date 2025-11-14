@@ -1,26 +1,36 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import globals from "globals";
+import jestDomPlugin from "eslint-plugin-jest-dom";
+import testingLibraryPlugin from "eslint-plugin-testing-library";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+export default [
+  js.configs.recommended,
   {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        React: "readonly",
+      },
+    },
     plugins: {
-      "jest-dom": (await import("eslint-plugin-jest-dom")).default,
-      "testing-library": (await import("eslint-plugin-testing-library")).default,
+      "@typescript-eslint": tseslint,
+      "jest-dom": jestDomPlugin,
+      "testing-library": testingLibraryPlugin,
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_" },
-      ],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
       // jest-dom rules
       "jest-dom/prefer-checked": "error",
@@ -34,6 +44,23 @@ const eslintConfig = [
       "testing-library/prefer-screen-queries": "error",
     },
   },
+  {
+    files: ["**/*.test.{js,jsx,ts,tsx}", "tests/**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  },
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "dist/**",
+      "build/**",
+      ".session/**",
+      "coverage/**",
+    ],
+  },
 ];
-
-export default eslintConfig;

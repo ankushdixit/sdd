@@ -54,7 +54,10 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-64 flex-col border-r bg-background">
       <div className="flex h-14 items-center border-b px-4">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 font-semibold"
+        >
           <LayoutDashboard className="h-6 w-6" />
           <span>Dashboard</span>
         </Link>
@@ -68,7 +71,7 @@ export function Sidebar() {
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
               route.active
                 ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground"
+                : "text-muted-foreground",
             )}
             aria-current={route.active ? "page" : undefined}
           >
