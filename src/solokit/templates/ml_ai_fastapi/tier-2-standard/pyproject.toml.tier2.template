@@ -47,6 +47,15 @@ packages = ["src"]
 line-length = 100
 target-version = "py311"
 
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "alembic",
+    ".pytest_cache",
+]
+
+[tool.ruff.lint]
 # Only enable specific rule sets (ERA is NOT included)
 select = [
     "E",  # pycodestyle errors
@@ -60,8 +69,10 @@ select = [
 ]
 
 ignore = [
-    "E501",  # line too long (handled by formatter)
-    "S101",  # assert used (we use asserts in tests)
+    "E501",    # line too long (handled by formatter)
+    "S101",    # assert used (we use asserts in tests)
+    "UP007",   # use X | Y for type annotations (Optional[X] is still valid)
+    "UP017",   # use datetime.UTC alias (timezone.utc is more explicit)
 ]
 
 # Explicitly extend ignore to disable any default-enabled ERA rules
@@ -69,24 +80,16 @@ extend-ignore = [
     "ERA",   # eradicate - commented-out code (allowed in alembic migrations)
 ]
 
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "alembic",
-    ".pytest_cache",
-]
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"alembic/*" = ["ERA001"]  # Allow commented code in alembic migrations
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-
-[tool.ruff.isort]
-known-first-party = ["src"]
-
-[tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]
-"alembic/*" = ["ERA001"]  # Allow commented code in alembic migrations
 
 # Pytest configuration
 [tool.pytest.ini_options]
