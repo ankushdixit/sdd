@@ -78,6 +78,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Linting works out-of-the-box with ESLint 9 flat config
   - All 2,936 tests passing with zero regressions
 
+- **Critical: CI/CD Workflow Failures in Template Projects**
+  - Fixed CodeQL permission error causing Security workflow to fail on push to main
+    - Added `actions: read` permission to CodeQL jobs in all template security.yml files
+    - Resolves error: "Resource not accessible by integration" when accessing workflow metadata
+    - Affects: saas_t3, fullstack_nextjs, dashboard_refine templates
+  - Fixed CodeQL and secrets-scan jobs running on pull requests without required permissions
+    - Added `if: github.event_name != 'pull_request'` conditional to skip on PRs
+    - These jobs require write permissions not available in PRs from forks
+    - Prevents workflow failures on external contributions
+    - Affects: saas_t3, fullstack_nextjs, dashboard_refine templates
+  - Fixed dependency-review failing on repositories without GitHub Advanced Security
+    - Added `continue-on-error: true` to dependency-review step
+    - Allows workflow to pass even when Advanced Security is not available (free repositories)
+    - Resolves error: "Dependency review is not supported on this repository"
+    - Affects: saas_t3, fullstack_nextjs, dashboard_refine templates
+  - Fixed Deploy workflow failures when production secrets are not configured
+    - Added conditionals to skip deployment steps when secrets are empty/missing
+    - Database migrations: `if: ${{ secrets.DATABASE_URL != '' }}`
+    - Vercel deployment: `if: ${{ secrets.VERCEL_TOKEN != '' }}`
+    - Sentry releases: `if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}`
+    - Lighthouse CI: `if: ${{ secrets.LHCI_GITHUB_APP_TOKEN != '' }}`
+    - Python templates: STAGING_DATABASE_URL, RAILWAY_TOKEN, DOCKER_REGISTRY, DEPLOY_KEY
+    - Affects: saas_t3, fullstack_nextjs, dashboard_refine, ml_ai_fastapi templates
+  - Fixed missing npm script errors in test and build workflows
+    - Changed to `npm run --if-present test:integration` for integration tests
+    - Changed to `npm run --if-present test:e2e` for E2E tests
+    - Changed to `npm run --if-present analyze` for bundle analysis
+    - Scripts gracefully skip if not defined in package.json (tier-1/tier-2 projects)
+    - Resolves errors: "Missing script: test:integration/test:e2e/analyze"
+    - Affects: saas_t3, fullstack_nextjs, dashboard_refine templates
+  - Impact: New projects can now merge PRs without CI failures
+  - All CI workflows pass on tier-1-essential projects (base configuration)
+  - Deploy workflows gracefully skip steps when production infrastructure isn't configured yet
+  - Users can set up production secrets and advanced test suites incrementally without errors
+  - Fixed 11 workflow files across 4 templates (security.yml, deploy.yml, test.yml, build.yml)
+
 - **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**
   - Fixed `.session/` directory causing uncommitted changes warnings (#9 - Critical)
     - Added `.session/` to .gitignore in all 4 stack templates (saas_t3, ml_ai_fastapi, dashboard_refine, fullstack_nextjs)

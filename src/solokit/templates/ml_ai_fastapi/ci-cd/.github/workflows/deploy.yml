@@ -31,11 +31,13 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run database migrations
+        if: ${{ secrets.STAGING_DATABASE_URL != '' }}
         run: alembic upgrade head
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
 
       - name: Deploy to staging (Railway)
+        if: ${{ secrets.RAILWAY_TOKEN != '' }}
         run: |
           # Example: Deploy to Railway
           # npm install -g @railway/cli
@@ -67,16 +69,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build Docker image
+        if: ${{ secrets.DOCKER_REGISTRY != '' }}
         run: |
           docker build -t ${{ secrets.DOCKER_REGISTRY }}/app:${{ github.ref_name }} .
           docker push ${{ secrets.DOCKER_REGISTRY }}/app:${{ github.ref_name }}
 
       - name: Run database migrations
+        if: ${{ secrets.PRODUCTION_DATABASE_URL != '' }}
         run: alembic upgrade head
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
 
       - name: Deploy to production
+        if: ${{ secrets.DEPLOY_KEY != '' }}
         run: |
           # Example: Deploy to AWS, GCP, Azure, or other providers
           # Use your deployment tool here (e.g., kubectl, terraform, etc.)
@@ -85,6 +90,7 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
       - name: Create Sentry release
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
         run: |
           # Example: Create Sentry release
           # curl -sL https://sentry.io/get-cli/ | bash
