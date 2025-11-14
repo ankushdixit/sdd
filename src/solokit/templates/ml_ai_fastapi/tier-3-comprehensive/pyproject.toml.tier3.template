@@ -56,6 +56,7 @@ packages = ["src"]
 line-length = 100
 target-version = "py311"
 
+# Only enable specific rule sets (ERA is NOT included)
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -70,6 +71,10 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "S101",  # assert used (we use asserts in tests)
+]
+
+# Explicitly extend ignore to disable any default-enabled ERA rules
+extend-ignore = [
     "ERA",   # eradicate - commented-out code (allowed in alembic migrations)
 ]
 
