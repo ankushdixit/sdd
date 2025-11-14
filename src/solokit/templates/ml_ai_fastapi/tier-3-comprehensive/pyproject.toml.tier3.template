@@ -12,6 +12,7 @@ dependencies = [
     "sqlmodel==0.0.25",
     "sqlalchemy==2.0.37",
     "psycopg2-binary==2.9.10",
+    "greenlet==3.1.1",
     "alembic==1.14.0",
     "python-dotenv==1.2.1",
     "asyncpg==0.30.0",
