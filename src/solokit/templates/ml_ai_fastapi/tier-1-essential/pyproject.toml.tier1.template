@@ -119,7 +119,3 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
-
-# Scripts (use with: python -m <command>)
-[project.scripts]
-dev = "uvicorn src.main:app --reload --host 0.0.0.0 --port 8000"
