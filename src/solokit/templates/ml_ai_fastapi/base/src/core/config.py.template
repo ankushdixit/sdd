@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/{project_name}_db"
 
     # Security
-    SECRET_KEY: str = "change-this-to-a-random-secret-key"
+    SECRET_KEY: str = "change-this-to-a-random-secret-key"  # noqa: S105
     ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 
     # CORS
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "json"
 
     # Server
-    HOST: str = "0.0.0.0"  # nosec B104 - Binding to all interfaces is intentional for development
+    HOST: str = "0.0.0.0"  # noqa: S104  # nosec B104 - Binding to all interfaces is intentional for development
     PORT: int = 8000
 
 

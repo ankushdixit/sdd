@@ -9,6 +9,7 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration  # type: ignore[i
 from sentry_sdk.integrations.sqlalchemy import (
     SqlalchemyIntegration,  # type: ignore[import-not-found]
 )
+
 from src.core.config import settings  # type: ignore[import-not-found]
 
 # HTTP status codes

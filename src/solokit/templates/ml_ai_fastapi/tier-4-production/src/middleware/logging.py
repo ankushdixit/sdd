@@ -3,11 +3,12 @@ Request/Response logging middleware
 """
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, Response  # type: ignore[import-not-found]
-from src.core.logging import logger  # type: ignore[import-not-found]
 from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore[import-not-found]
+
+from src.core.logging import logger  # type: ignore[import-not-found]
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
