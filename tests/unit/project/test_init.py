@@ -147,11 +147,10 @@ class TestPromptAdditionalOptions:
             mock_select.return_value = [
                 "CI/CD - GitHub Actions workflows",
                 "Docker - Container support with docker-compose",
-                "Pre-commit - Automated quality checks before commits",
                 "Env Templates - .env files and .editorconfig",
             ]
             result = prompt_additional_options()
-            assert result == ["ci_cd", "docker", "pre_commit", "env_templates"]
+            assert result == ["ci_cd", "docker", "env_templates"]
 
     def test_prompt_additional_options_partial_selected(self):
         """Test selecting some additional options."""
@@ -369,7 +368,7 @@ class TestMainFunction:
                                     mock_template.return_value = "fullstack_nextjs"
                                     mock_tier.return_value = "tier-4-production"
                                     mock_coverage.return_value = 60
-                                    mock_options.return_value = ["docker", "pre_commit"]
+                                    mock_options.return_value = ["docker", "env_templates"]
                                     mock_confirm.return_value = True
                                     mock_init.return_value = 0
 
@@ -381,7 +380,7 @@ class TestMainFunction:
                                     assert "fullstack_nextjs" in captured.out
                                     assert "tier-4-production" in captured.out
                                     assert "60%" in captured.out
-                                    assert "docker, pre_commit" in captured.out
+                                    assert "docker, env_templates" in captured.out
 
     def test_main_init_orchestrator_returns_error(self):
         """Test main propagates error from init orchestrator."""
@@ -414,7 +413,7 @@ class TestMainFunction:
             "--coverage",
             "80",
             "--options",
-            "ci_cd, docker, pre_commit",
+            "ci_cd, docker, env_templates",
         ]
 
         with patch("sys.argv", args):
@@ -426,7 +425,7 @@ class TestMainFunction:
                 # Check that spaces are stripped
                 mock_init.assert_called_once()
                 call_args = mock_init.call_args[1]
-                assert call_args["additional_options"] == ["ci_cd", "docker", "pre_commit"]
+                assert call_args["additional_options"] == ["ci_cd", "docker", "env_templates"]
 
     def test_main_welcome_message_interactive(self, capsys):
         """Test main displays welcome message in interactive mode."""

@@ -113,15 +113,13 @@ def prompt_additional_options() -> list[str]:
     choices = [
         "CI/CD - GitHub Actions workflows",
         "Docker - Container support with docker-compose",
-        "Pre-commit - Automated quality checks before commits",
         "Env Templates - .env files and .editorconfig",
     ]
 
     option_map = {
         choices[0]: "ci_cd",
         choices[1]: "docker",
-        choices[2]: "pre_commit",
-        choices[3]: "env_templates",
+        choices[2]: "env_templates",
     }
 
     print("\n⚙️  Select additional options (use space to select, enter to confirm):\n")

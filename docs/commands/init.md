@@ -30,7 +30,7 @@ You'll be prompted to select:
 1. **Template** - Project type (saas_t3, fullstack_nextjs, dashboard_refine, ml_ai_fastapi)
 2. **Tier** - Quality level (tier-1-essential through tier-4-production)
 3. **Coverage** - Test coverage target (60%, 70%, 80%, 90%)
-4. **Options** - Additional features (ci_cd, docker, pre_commit, env_templates)
+4. **Options** - Additional features (ci_cd, docker, env_templates)
 
 ### Command Line Mode
 
@@ -41,7 +41,7 @@ sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
-  --options=ci_cd,docker,pre_commit,env_templates
+  --options=ci_cd,docker,env_templates
 ```
 
 ## Options
@@ -77,7 +77,7 @@ Select the quality tier for your project.
 **Tier capabilities:**
 
 - **Tier 1**: Unit tests, linting, type checking
-- **Tier 2**: + Formatting, security scanning, pre-commit hooks
+- **Tier 2**: + Formatting, security scanning, git hooks (Husky)
 - **Tier 3**: + E2E tests, performance monitoring, code quality
 - **Tier 4**: + Error tracking, analytics, production monitoring
 
@@ -102,7 +102,6 @@ Comma-separated list of additional features to include.
 
 - `ci_cd` - GitHub Actions workflows for CI/CD
 - `docker` - Docker and docker-compose configuration
-- `pre_commit` - Git pre-commit hooks for quality checks
 - `env_templates` - Environment variable templates for all environments
 
 ```bash
@@ -164,7 +163,7 @@ sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
-  --options=ci_cd,docker,pre_commit,env_templates
+  --options=ci_cd,docker,env_templates
 ```
 
 **Result:**
