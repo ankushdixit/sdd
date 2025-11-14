@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Analyze bundle
-        run: npm run analyze
+        run: npm run --if-present analyze
         env:
           ANALYZE: true
 

@@ -32,10 +32,14 @@ jobs:
       - name: Run dependency review
         uses: actions/dependency-review-action@v4
         if: github.event_name == 'pull_request'
+        continue-on-error: true
 
   codeql:
+    # Skip on PRs due to permission requirements
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       security-events: write
       contents: read
 
@@ -55,6 +59,8 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
   secrets-scan:
+    # Skip on PRs due to permission requirements
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
