@@ -9,7 +9,6 @@ This module tests the complete workflow of urgent flag operations including:
 """
 
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -160,17 +159,29 @@ Test urgent flag clearing on session completion
         with patch("solokit.session.complete.check_uncommitted_changes", return_value=True):
             with patch("solokit.session.complete.run_quality_gates") as mock_gates:
                 mock_gates.return_value = ({"tests": {"status": "passed"}}, True, [])
-                with patch("solokit.session.complete.extract_learnings_from_session", return_value=[]):
-                    with patch("solokit.session.complete.generate_commit_message", return_value="Test commit"):
+                with patch(
+                    "solokit.session.complete.extract_learnings_from_session", return_value=[]
+                ):
+                    with patch(
+                        "solokit.session.complete.generate_commit_message",
+                        return_value="Test commit",
+                    ):
                         with patch("solokit.session.complete.complete_git_workflow") as mock_git:
                             mock_git.return_value = {"success": True, "message": "Success"}
                             with patch("solokit.session.complete.record_session_commits"):
-                                with patch("solokit.session.complete.auto_extract_learnings", return_value=0):
+                                with patch(
+                                    "solokit.session.complete.auto_extract_learnings",
+                                    return_value=0,
+                                ):
                                     # Patch update_all_tracking to avoid subprocess calls
                                     with patch("solokit.session.complete.update_all_tracking"):
-                                        with patch("solokit.session.complete.trigger_curation_if_needed"):
+                                        with patch(
+                                            "solokit.session.complete.trigger_curation_if_needed"
+                                        ):
                                             # Act - Complete session with --complete flag
-                                            with patch("sys.argv", ["session_complete.py", "--complete"]):
+                                            with patch(
+                                                "sys.argv", ["session_complete.py", "--complete"]
+                                            ):
                                                 result = session_complete_main()
 
         # Assert - Session completed successfully
