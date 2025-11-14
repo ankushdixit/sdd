@@ -15,7 +15,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not
 from src.api.dependencies import get_db  # type: ignore[import-not-found]
 from src.main import app  # type: ignore[import-not-found]
 
-
 # Test database URL (use in-memory SQLite for testing)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
