@@ -23,7 +23,13 @@ describe("API Route: /api/example", () => {
   describe("GET", () => {
     it("should return a greeting message and users", async () => {
       const mockUsers = [
-        { id: 1, name: "John Doe", email: "john@example.com", createdAt: new Date(), updatedAt: new Date() },
+        {
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       ];
 
       (prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers);

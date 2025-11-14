@@ -57,16 +57,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Affects all 3 Next.js templates (saas_t3, fullstack_nextjs, dashboard_refine) × 5 tiers each
     - Resolves error: `Jest: 'ts-node' is required for the TypeScript configuration files`
   - Fixed deprecated `next lint` command removed in Next.js 16
-    - Changed `"lint": "next lint"` to `"lint": "eslint . --ext .ts,.tsx,.js,.jsx"` in all 15 templates
+    - Changed `"lint": "next lint"` to `"lint": "eslint ."` in all 15 templates
     - Updated `"lint:fix"` script in dashboard_refine templates to use direct ESLint
     - Resolves cryptic error: `Invalid project directory provided, no such directory: .../lint`
+  - Fixed ESLint 9 incompatibility with legacy config format
+    - Replaced `.eslintrc.json` (legacy) with `eslint.config.mjs` (flat config) in all 3 templates
+    - Added `"globals": "16.5.0"` package to tier-1-essential in all 3 templates
+    - Configured proper globals for Node.js, browser, React, and Jest environments
+    - Resolves error: `ESLint couldn't find an eslint.config.(js|mjs|cjs) file`
   - Fixed linting validation being skipped during quality gates check
     - Updated `src/solokit/init/session_structure.py` to include linting commands in quality gates config
     - Added `commands` section with language-specific linting commands (python, javascript, typescript)
     - Validation now properly runs `npm run lint` instead of reporting "no command for typescript"
+  - Fixed linting errors in template example code
+    - Removed unused `ctx` parameters from tRPC example router (saas_t3 template)
+    - Template code now passes linting without errors after initialization
   - Impact: All 3 Next.js templates now work correctly across all quality tiers (base through tier-4)
   - Users can successfully initialize projects without manual workarounds
   - Quality gates validation (`/validate`, `/end`) now properly check linting instead of skipping
+  - Linting works out-of-the-box with ESLint 9 flat config
   - All 2,936 tests passing with zero regressions
 
 - **Critical: Phase 2 Terminal Testing - Final 11 UX Issues (All 18 Issues Now Complete)**

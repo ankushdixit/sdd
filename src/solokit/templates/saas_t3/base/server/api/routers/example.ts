@@ -12,7 +12,7 @@ export const exampleRouter = createTRPCRouter({
 
   create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       // This is a placeholder - you'll need to implement your database logic
       return {
         id: "1",
@@ -21,7 +21,7 @@ export const exampleRouter = createTRPCRouter({
       };
     }),
 
-  getAll: publicProcedure.query(async ({ ctx }) => {
+  getAll: publicProcedure.query(async () => {
     // This is a placeholder - you'll need to implement your database logic
     return [];
   }),

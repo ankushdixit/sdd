@@ -65,7 +65,7 @@ describe("API Integration Tests", () => {
 
     it("should handle database connection errors", async () => {
       (prisma.user.findMany as jest.Mock).mockRejectedValue(
-        new Error("Database connection failed")
+        new Error("Database connection failed"),
       );
 
       const response = await GET();
@@ -144,7 +144,7 @@ describe("API Integration Tests", () => {
 
     it("should handle database creation errors", async () => {
       (prisma.user.create as jest.Mock).mockRejectedValue(
-        new Error("Duplicate email")
+        new Error("Duplicate email"),
       );
 
       const request = new NextRequest("http://localhost:3000/api/example", {

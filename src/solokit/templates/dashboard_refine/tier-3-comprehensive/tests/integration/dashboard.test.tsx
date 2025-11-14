@@ -19,7 +19,9 @@ jest.mock("next/navigation", () => ({
 
 // Mock Refine hooks
 jest.mock("@refinedev/core", () => ({
-  Refine: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Refine: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   useList: () => ({
     data: {
       data: [
@@ -38,7 +40,7 @@ describe("Dashboard Integration", () => {
     const { container } = render(
       <RefineProvider>
         <div>Test Content</div>
-      </RefineProvider>
+      </RefineProvider>,
     );
 
     expect(container).toBeInTheDocument();
@@ -53,7 +55,7 @@ describe("Dashboard Integration", () => {
     render(
       <RefineProvider>
         <TestComponent />
-      </RefineProvider>
+      </RefineProvider>,
     );
 
     expect(screen.getByText("Refine is working")).toBeInTheDocument();
@@ -79,7 +81,7 @@ describe("Dashboard Integration", () => {
     render(
       <RefineProvider>
         <TestComponent />
-      </RefineProvider>
+      </RefineProvider>,
     );
 
     await waitFor(() => {

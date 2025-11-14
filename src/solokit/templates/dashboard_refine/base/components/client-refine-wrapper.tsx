@@ -8,8 +8,11 @@ import React from "react";
  * Uses dynamic import with ssr: false to avoid SSR/SSG issues with Refine's useSearchParams
  */
 const RefineProvider = dynamic(
-  () => import("@/providers/refine-provider").then((mod) => ({ default: mod.RefineProvider })),
-  { ssr: false }
+  () =>
+    import("@/providers/refine-provider").then((mod) => ({
+      default: mod.RefineProvider,
+    })),
+  { ssr: false },
 );
 
 type Props = {

@@ -18,7 +18,9 @@ import { PlusCircle } from "lucide-react";
  * Example of a Refine resource page with data fetching
  */
 export default function UsersPage() {
-  const { query: { data, isLoading } } = useList({
+  const {
+    query: { data, isLoading },
+  } = useList({
     resource: "users",
   });
 
