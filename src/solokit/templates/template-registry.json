@@ -25,7 +25,12 @@
       },
       "supports_docker": true,
       "supports_ci_cd": true,
-      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "tiers": [
+        "tier-1-essential",
+        "tier-2-standard",
+        "tier-3-comprehensive",
+        "tier-4-production"
+      ],
       "known_issues": [
         {
           "package": "@sentry/nextjs",
@@ -61,7 +66,12 @@
       },
       "supports_docker": true,
       "supports_ci_cd": true,
-      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "tiers": [
+        "tier-1-essential",
+        "tier-2-standard",
+        "tier-3-comprehensive",
+        "tier-4-production"
+      ],
       "known_issues": [
         {
           "package": "locust",
@@ -98,7 +108,12 @@
       },
       "supports_docker": true,
       "supports_ci_cd": true,
-      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "tiers": [
+        "tier-1-essential",
+        "tier-2-standard",
+        "tier-3-comprehensive",
+        "tier-4-production"
+      ],
       "known_issues": [
         {
           "package": "@sentry/nextjs",
@@ -136,7 +151,12 @@
       },
       "supports_docker": true,
       "supports_ci_cd": true,
-      "tiers": ["tier-1-essential", "tier-2-standard", "tier-3-comprehensive", "tier-4-production"],
+      "tiers": [
+        "tier-1-essential",
+        "tier-2-standard",
+        "tier-3-comprehensive",
+        "tier-4-production"
+      ],
       "known_issues": [
         {
           "package": "@sentry/nextjs",
@@ -236,7 +256,12 @@
     "ci_cd": {
       "name": "GitHub Actions CI/CD",
       "description": "Automated testing and deployment workflows",
-      "files_created": [".github/workflows/quality-check.yml", ".github/workflows/test.yml", ".github/workflows/security.yml", ".github/workflows/deploy.yml"]
+      "files_created": [
+        ".github/workflows/quality-check.yml",
+        ".github/workflows/test.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/deploy.yml"
+      ]
     },
     "docker": {
       "name": "Docker Support",

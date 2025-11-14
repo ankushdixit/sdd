@@ -9,6 +9,7 @@ Record insights, gotchas, and best practices discovered during development.
 ## Step 1: Analyze Session and Generate Learning Suggestions
 
 Review what was accomplished in the current session:
+
 - What code was written/changed
 - What problems were solved
 - What patterns or approaches were used
@@ -16,6 +17,7 @@ Review what was accomplished in the current session:
 - What gotchas or edge cases were encountered
 
 Generate 2-3 learning suggestions based on the session work. Good learnings are:
+
 - Specific technical insights (not generic)
 - Actionable and memorable
 - About tools, patterns, or gotchas encountered
@@ -26,6 +28,7 @@ Generate 2-3 learning suggestions based on the session work. Good learnings are:
 Use `AskUserQuestion` with multi-select to let user choose learnings:
 
 **Question: Select Learnings from This Session**
+
 - Question: "I've identified some potential learnings from this session. Select all that apply, or add your own:"
 - Header: "Learnings"
 - Multi-select: true
@@ -36,6 +39,7 @@ Use `AskUserQuestion` with multi-select to let user choose learnings:
   - Option 4: [Your generated learning suggestion 4] (if applicable)
 
 **Example Options:**
+
 - "TypeScript enums are type-safe at compile time but add runtime overhead"
 - "Zod schemas can be inferred as TypeScript types using z.infer<>"
 - "React useCallback dependencies must include all values used inside the callback"
@@ -45,6 +49,7 @@ Use `AskUserQuestion` with multi-select to let user choose learnings:
 For each learning the user selected (or entered), automatically suggest the most appropriate category:
 
 **Categories:**
+
 - `architecture_patterns` - Design decisions, patterns used, architectural approaches
 - `gotchas` - Edge cases, pitfalls, bugs discovered
 - `best_practices` - Effective approaches, recommended patterns
@@ -69,11 +74,13 @@ sk learn add-learning \
 ```
 
 Replace:
+
 - `{{content}}` with the learning content (use quotes, escape if needed)
 - `{{category}}` with the auto-assigned category
 - `{{current_session}}` with session number from status_update.json
 
 **Optional flags:**
+
 - Add `--tags "tag1,tag2"` if relevant tags can be inferred from the learning
 - Add `--context "..."` if there's specific file/session context
 
@@ -93,10 +100,12 @@ All learnings will be auto-curated and made available in future sessions.
 **Scenario:** User runs `/learn` after working on FastAPI CORS configuration
 
 **Step 1:** Claude analyzes session and generates suggestions:
+
 - "FastAPI middleware order matters for CORS - app.add_middleware() calls must be in reverse order of execution"
 - "CORSMiddleware must be added after other middleware to work correctly"
 
 **Step 2:** AskUserQuestion shows:
+
 ```
 I've identified some potential learnings from this session. Select all that apply, or add your own:
 
@@ -108,10 +117,12 @@ I've identified some potential learnings from this session. Select all that appl
 User selects first two options.
 
 **Step 3:** Claude auto-categorizes:
+
 - Learning 1 → `gotchas` (middleware ordering gotcha)
 - Learning 2 → `best_practices` (correct configuration approach)
 
 **Step 4:** Claude runs commands:
+
 ```bash
 sk learn add-learning \
   --content "FastAPI middleware order matters for CORS - app.add_middleware() calls must be in reverse order of execution" \
@@ -127,6 +138,7 @@ sk learn add-learning \
 ```
 
 **Output to user:**
+
 ```
 ✓ Captured 2 learnings:
   1. [gotchas] FastAPI middleware order matters for CORS - app.add_middleware() calls must be in reverse order of execution

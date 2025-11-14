@@ -348,6 +348,7 @@ def install_template(
     tier: str,
     additional_options: list[str],
     project_root: Path | None = None,
+    coverage_target: int | None = None,
 ) -> dict[str, Any]:
     """
     Install complete template with base + tier + options.
@@ -357,6 +358,7 @@ def install_template(
         tier: Quality tier (e.g., "tier-2-standard")
         additional_options: List of option names (e.g., ["ci-cd", "docker"])
         project_root: Project root directory (defaults to current directory)
+        coverage_target: Test coverage target percentage (e.g., 60, 80, 90)
 
     Returns:
         Installation summary dictionary with file counts and paths
@@ -378,6 +380,7 @@ def install_template(
         "project_description": f"A {template_info['display_name']} project",
         "template_id": template_id,
         "template_name": template_info["display_name"],
+        "coverage_target": str(coverage_target) if coverage_target is not None else "80",
     }
 
     total_files = 0

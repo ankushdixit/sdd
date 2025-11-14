@@ -61,13 +61,14 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "S101",  # assert used (we use asserts in tests)
+    "ERA",   # eradicate - commented-out code (allowed in alembic migrations)
 ]
 
 exclude = [
     ".git",
     ".venv",
     "__pycache__",
-    "alembic/versions",
+    "alembic",
     ".pytest_cache",
 ]
 
@@ -80,6 +81,7 @@ known-first-party = ["src"]
 
 [tool.ruff.per-file-ignores]
 "tests/*" = ["S101"]
+"alembic/*" = ["ERA001"]  # Allow commented code in alembic migrations
 
 # Pytest configuration
 [tool.pytest.ini_options]
@@ -94,7 +96,7 @@ addopts = [
     "--tb=short",
     "--cov=src",
     "--cov-report=term-missing",
-    "--cov-fail-under=80",
+    "--cov-fail-under={coverage_target}",
 ]
 
 # Coverage configuration

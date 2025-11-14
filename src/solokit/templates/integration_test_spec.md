@@ -17,9 +17,11 @@ TEMPLATE INSTRUCTIONS:
 Define which components are being integrated and tested.
 
 **Example:**
+
 > This integration test validates the end-to-end order processing flow, including the Order API, Payment Service, Inventory Service, and Notification Service. It tests the happy path, error scenarios, and ensures data consistency across all services.
 
 **Components:**
+
 - Order API: `v2.3.0` (receives order requests, orchestrates workflow)
 - Payment Service: `v1.8.2` (processes payments via Stripe)
 - Inventory Service: `v2.1.0` (checks and reserves inventory)
@@ -28,6 +30,7 @@ Define which components are being integrated and tested.
 - Message Queue: RabbitMQ `3.11` (async communication)
 
 **Integration Points:**
+
 - REST API: Order API → Payment Service (`POST /api/payments`)
 - REST API: Order API → Inventory Service (`POST /api/inventory/reserve`)
 - Message Queue: Order API → Notification Service (queue: `order.completed`)
@@ -41,9 +44,11 @@ Define which components are being integrated and tested.
 ### Scenario 1: Successful Order Processing (Happy Path)
 
 **Description:**
+
 > Customer places an order for an in-stock item. Payment is processed successfully, inventory is reserved, and confirmation email is sent.
 
 **Sequence Diagram:**
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -73,6 +78,7 @@ sequenceDiagram
 ```
 
 **Setup:**
+
 - All services running (Order API on 8001, Payment on 8002, Inventory on 8003, Notification on 8004)
 - PostgreSQL database seeded with test data:
   - Product ID `prod_123` with stock quantity 50
@@ -82,21 +88,26 @@ sequenceDiagram
 - Mock SMTP server running
 
 **Actions:**
+
 1. Send POST request to `/api/orders` with payload:
+
 ```json
 {
   "customer_id": "cust_456",
-  "items": [{"product_id": "prod_123", "quantity": 2}],
+  "items": [{ "product_id": "prod_123", "quantity": 2 }],
   "payment_method": "card",
   "card_token": "tok_visa_test"
 }
 ```
+
 2. Wait for order processing (max 5 seconds)
 3. Check order status via `GET /api/orders/{order_id}`
 4. Verify email sent via SMTP mock
 
 **Expected Results:**
+
 - HTTP 201 response with order details:
+
 ```json
 {
   "order_id": "ord_789",
@@ -106,6 +117,7 @@ sequenceDiagram
   "reservation_id": "res_456"
 }
 ```
+
 - Database state:
   - Order record created with status `completed`
   - Payment record created
@@ -120,9 +132,11 @@ sequenceDiagram
 ### Scenario 2: Insufficient Inventory (Error Handling)
 
 **Description:**
+
 > Customer attempts to order more items than available in stock. Order should fail gracefully without charging payment or corrupting data.
 
 **Sequence Diagram:**
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -141,15 +155,19 @@ sequenceDiagram
 ```
 
 **Setup:**
+
 - Product ID `prod_789` with stock quantity 5
 - Customer requests quantity 10
 
 **Actions:**
+
 1. Send POST request with `quantity: 10` for product with stock 5
 2. Observe order creation and inventory check
 
 **Expected Results:**
+
 - HTTP 409 Conflict response:
+
 ```json
 {
   "error": "insufficient_stock",
@@ -159,6 +177,7 @@ sequenceDiagram
   "requested": 10
 }
 ```
+
 - Database state:
   - Order record created with status `failed`
   - Inventory unchanged (still 5)
@@ -171,6 +190,7 @@ sequenceDiagram
 <!-- Define quantitative performance requirements for the integration -->
 
 **Response Time Requirements:**
+
 - p50 (median): < 500ms
 - p95: < 2000ms
 - p99: < 5000ms
@@ -179,11 +199,13 @@ sequenceDiagram
 **Example:** Order processing should complete within 2 seconds for 95% of requests under normal load.
 
 **Throughput Requirements:**
+
 - Minimum: 50 orders/minute (baseline for production)
 - Target: 200 orders/minute (target for peak traffic)
 - Maximum tested: 500 orders/minute (stress test)
 
 **Resource Limits:**
+
 - CPU: < 70% utilization per service (average under load)
 - Memory: < 1GB per service (Order API, Payment, Inventory, Notification)
 - Database connections: < 50 active connections
@@ -191,21 +213,23 @@ sequenceDiagram
 - Disk I/O: < 50MB/s
 
 **Load Test Configuration:**
+
 ```yaml
 load_test:
-  ramp_up: 5 minutes        # Gradually increase load
-  sustained: 15 minutes     # Maintain peak load
-  ramp_down: 5 minutes      # Gradually decrease load
+  ramp_up: 5 minutes # Gradually increase load
+  sustained: 15 minutes # Maintain peak load
+  ramp_down: 5 minutes # Gradually decrease load
   scenarios:
     - name: "happy_path"
-      weight: 80%           # 80% of requests are successful orders
+      weight: 80% # 80% of requests are successful orders
     - name: "insufficient_stock"
-      weight: 15%           # 15% fail due to stock issues
+      weight: 15% # 15% fail due to stock issues
     - name: "payment_failure"
-      weight: 5%            # 5% fail due to payment issues
+      weight: 5% # 5% fail due to payment issues
 ```
 
 **Acceptance Criteria:**
+
 - [ ] p95 response time < 2000ms under 200 orders/minute
 - [ ] No errors under sustained load for 15 minutes
 - [ ] All services recover gracefully after spike (500 orders/minute for 1 minute)
@@ -217,10 +241,12 @@ load_test:
 <!-- Document all API contracts between services to ensure compatibility -->
 
 **Order API → Payment Service:**
+
 - Contract file: `contracts/order-to-payment.yaml`
 - Version: 2.1.0
 - Breaking changes: None allowed without major version bump
 - Example request:
+
 ```json
 POST /api/payments
 {
@@ -231,7 +257,9 @@ POST /api/payments
   "card_token": "tok_visa_test"
 }
 ```
+
 - Example response:
+
 ```json
 {
   "payment_id": "pay_123",
@@ -241,9 +269,11 @@ POST /api/payments
 ```
 
 **Order API → Inventory Service:**
+
 - Contract file: `contracts/order-to-inventory.yaml`
 - Version: 1.8.0
 - Example request:
+
 ```json
 POST /api/inventory/reserve
 {
@@ -254,6 +284,7 @@ POST /api/inventory/reserve
 ```
 
 **Database Schema:**
+
 - Schema file: `schemas/integration_test_schema.sql`
 - Tables: `orders`, `payments`, `inventory_reservations`, `notifications`
 - Migrations: `migrations/014_add_order_processing.sql`
@@ -263,6 +294,7 @@ POST /api/inventory/reserve
 <!-- List all services, configuration, and infrastructure needed to run the integration tests -->
 
 **Services Required:**
+
 - order-api:2.3.0 (port 8001)
 - payment-service:1.8.2 (port 8002)
 - inventory-service:2.1.0 (port 8003)
@@ -272,9 +304,11 @@ POST /api/inventory/reserve
 - smtp-mock:latest (port 1025) - for email testing
 
 **Configuration:**
+
 - Environment: `integration-test`
 - Config files: `config/integration-test/*.yaml`
 - Environment variables loaded from `.env.integration-test`:
+
 ```bash
 DATABASE_URL=postgresql://test:test@localhost:5432/integration_test
 RABBITMQ_URL=amqp://guest:guest@localhost:5672
@@ -285,9 +319,11 @@ LOG_LEVEL=debug
 ```
 
 **Infrastructure:**
+
 - Docker Compose file: `docker-compose.integration-test.yml`
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   postgres:
     image: postgres:14.2
@@ -306,22 +342,26 @@ services:
 
   # ... other services
 ```
+
 - Network: `integration-test-network`
 - Volumes: `postgres-data`, `rabbitmq-data`
 
 **Test Data Fixtures:**
+
 - Location: `tests/fixtures/integration_test_data.sql`
 - Includes: 10 test products, 5 test customers, sample inventory levels
 
 ## Dependencies
 
 **Work Item Dependencies:**
+
 - [ ] Component A implementation complete
 - [ ] Component B implementation complete
 - [ ] Integration test infrastructure ready
 - [ ] Test data fixtures created
 
 **Service Dependencies:**
+
 - Component A depends on Component B API
 - Component B depends on PostgreSQL database
 - Both components depend on Redis cache
@@ -331,6 +371,7 @@ services:
 <!-- Specific, measurable criteria that must be met for this integration test to pass -->
 
 **Functional:**
+
 - [ ] All integration test scenarios passing (100% success rate)
 - [ ] Happy path (Scenario 1) completes successfully in <span>< 2000ms (p95)</span>
 - [ ] Error handling scenarios validated (Scenario 2: insufficient stock handled correctly)
@@ -340,6 +381,7 @@ services:
 - [ ] Message queue processing works reliably (notifications delivered)
 
 **Performance:**
+
 - [ ] All performance benchmarks met (p95 < 2000ms under 200 orders/minute)
 - [ ] No performance regression from baseline (<10% slower than previous version)
 - [ ] Resource utilization within limits (CPU < 70%, Memory < 1GB per service)
@@ -349,6 +391,7 @@ services:
 - [ ] Database connection pool doesn't exhaust
 
 **Contracts:**
+
 - [ ] API contracts validated (no breaking changes detected)
 - [ ] Database schema matches expected version (migration 014 applied)
 - [ ] Contract tests passing for all integration points (Order→Payment, Order→Inventory)
@@ -356,6 +399,7 @@ services:
 - [ ] External API contracts verified (Stripe API integration works)
 
 **Documentation:**
+
 - [ ] Integration architecture diagram created (shows all services and connections)
 - [ ] Sequence diagrams for all scenarios (mermaid diagrams in spec)
 - [ ] API contract documentation updated (YAML files current)

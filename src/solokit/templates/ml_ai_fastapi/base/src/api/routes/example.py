@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/items", response_model=ItemRead, status_code=status.HTTP_201_CREATED)
 async def create_item(
     item: ItemCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> Item:
     """
     Create a new item.
@@ -35,7 +35,7 @@ async def create_item(
 async def list_items(
     skip: int = 0,
     limit: int = 100,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> list[Item]:
     """
     List all items with pagination.
@@ -55,7 +55,7 @@ async def list_items(
 @router.get("/items/{item_id}", response_model=ItemRead)
 async def get_item(
     item_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> Item:
     """
     Get a specific item by ID.
@@ -84,7 +84,7 @@ async def get_item(
 async def update_item(
     item_id: int,
     item_update: ItemUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> Item:
     """
     Update an item.
@@ -113,7 +113,7 @@ async def update_item(
 @router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(
     item_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> None:
     """
     Delete an item.

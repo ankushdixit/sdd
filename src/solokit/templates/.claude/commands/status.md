@@ -11,6 +11,7 @@ sk status
 ```
 
 The status includes:
+
 - **Current Work Item**: What you're currently working on (title, type, priority)
 - **Time Elapsed**: How long the current session has been running
 - **Files Changed**: Number of files modified during this session

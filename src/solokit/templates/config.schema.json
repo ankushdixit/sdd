@@ -12,54 +12,54 @@
         "test": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"},
-            "command": {"type": "string"},
-            "timeout": {"type": "integer", "minimum": 1}
+            "required": { "type": "boolean" },
+            "command": { "type": "string" },
+            "timeout": { "type": "integer", "minimum": 1 }
           },
           "required": ["required"]
         },
         "lint": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"},
-            "command": {"type": "string"},
-            "timeout": {"type": "integer", "minimum": 1}
+            "required": { "type": "boolean" },
+            "command": { "type": "string" },
+            "timeout": { "type": "integer", "minimum": 1 }
           },
           "required": ["required"]
         },
         "security": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"},
+            "required": { "type": "boolean" },
             "severity": {
               "type": "string",
               "enum": ["critical", "high", "medium", "low"]
             },
-            "timeout": {"type": "integer", "minimum": 1}
+            "timeout": { "type": "integer", "minimum": 1 }
           },
           "required": ["required"]
         },
         "format": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"},
-            "auto_fix": {"type": "boolean"},
-            "command": {"type": "string"},
-            "timeout": {"type": "integer", "minimum": 1}
+            "required": { "type": "boolean" },
+            "auto_fix": { "type": "boolean" },
+            "command": { "type": "string" },
+            "timeout": { "type": "integer", "minimum": 1 }
           }
         },
         "documentation": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"},
-            "check_changelog": {"type": "boolean"},
-            "check_docstrings": {"type": "boolean"}
+            "required": { "type": "boolean" },
+            "check_changelog": { "type": "boolean" },
+            "check_docstrings": { "type": "boolean" }
           }
         },
         "spec_completeness": {
           "type": "object",
           "properties": {
-            "required": {"type": "boolean"}
+            "required": { "type": "boolean" }
           }
         }
       }
@@ -108,26 +108,30 @@
         "pre_deployment_checks": {
           "type": "object",
           "properties": {
-            "integration_tests": {"type": "boolean"},
-            "security_scans": {"type": "boolean"},
-            "environment_validation": {"type": "boolean"}
+            "integration_tests": { "type": "boolean" },
+            "security_scans": { "type": "boolean" },
+            "environment_validation": { "type": "boolean" }
           }
         },
         "smoke_tests": {
           "type": "object",
           "properties": {
-            "enabled": {"type": "boolean"},
-            "timeout": {"type": "integer", "minimum": 1},
-            "retry_count": {"type": "integer", "minimum": 0}
+            "enabled": { "type": "boolean" },
+            "timeout": { "type": "integer", "minimum": 1 },
+            "retry_count": { "type": "integer", "minimum": 0 }
           }
         },
         "rollback": {
           "type": "object",
           "properties": {
-            "automatic": {"type": "boolean"},
-            "on_smoke_test_failure": {"type": "boolean"},
-            "on_error_threshold": {"type": "boolean"},
-            "error_threshold_percent": {"type": "integer", "minimum": 0, "maximum": 100}
+            "automatic": { "type": "boolean" },
+            "on_smoke_test_failure": { "type": "boolean" },
+            "on_error_threshold": { "type": "boolean" },
+            "error_threshold_percent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
           }
         },
         "environments": {
@@ -137,8 +141,8 @@
             ".*": {
               "type": "object",
               "properties": {
-                "auto_deploy": {"type": "boolean"},
-                "require_approval": {"type": "boolean"}
+                "auto_deploy": { "type": "boolean" },
+                "require_approval": { "type": "boolean" }
               }
             }
           }

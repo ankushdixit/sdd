@@ -17,9 +17,11 @@ TEMPLATE INSTRUCTIONS:
 Define what is being deployed and to which environment.
 
 **Example:**
+
 > Deploy the Order Processing API v2.5.0 to production. This release includes performance improvements, bug fixes for payment processing, and new inventory integration features. Zero-downtime deployment using blue-green strategy.
 
 **Application/Service:**
+
 - Name: order-processing-api
 - Version: 2.5.0
 - Repository: https://github.com/company/order-api
@@ -28,6 +30,7 @@ Define what is being deployed and to which environment.
 - Docker Image: `order-api:2.5.0-abc123`
 
 **Target Environment:**
+
 - Environment: Production
 - Cloud Provider: AWS
 - Region/Zone: us-east-1 (primary), us-west-2 (replica)
@@ -36,6 +39,7 @@ Define what is being deployed and to which environment.
 - Deployment Strategy: Blue-Green (zero downtime)
 
 **Scope of Changes:**
+
 - Backend API code changes (15 files modified)
 - Database migration: Add `order_metadata` column
 - Configuration updates: New Stripe API key
@@ -63,6 +67,7 @@ Define what is being deployed and to which environment.
 - [ ] Backup of current production state completed
 
 **Pre-Deployment Commands:**
+
 ```bash
 # 1. Verify staging deployment successful
 curl https://staging-api.example.com/health
@@ -86,6 +91,7 @@ curl -X POST https://api.datadoghq.com/api/v1/events \
 <!-- Execute these steps in order during the deployment window -->
 
 **Step 1: Prepare New Version (Blue Environment)**
+
 ```bash
 # Pull latest Docker image
 docker pull order-api:2.5.0-abc123
@@ -95,6 +101,7 @@ docker inspect order-api:2.5.0-abc123 | grep Created
 ```
 
 **Step 2: Run Database Migrations**
+
 ```bash
 # Connect to production database (read-write connection)
 psql postgresql://admin:${DB_PASSWORD}@prod-db.example.com:5432/orders
@@ -113,6 +120,7 @@ SELECT COUNT(*) FROM orders;
 ```
 
 **Step 3: Deploy to Blue Environment**
+
 ```bash
 # Update ECS task definition with new image
 aws ecs register-task-definition \
@@ -132,6 +140,7 @@ aws ecs wait services-stable \
 ```
 
 **Step 4: Run Smoke Tests on Blue**
+
 ```bash
 # Execute smoke test suite against blue environment
 npm run smoke-test -- --url https://blue.order-api.internal
@@ -145,6 +154,7 @@ npm run smoke-test -- --url https://blue.order-api.internal
 ```
 
 **Step 5: Switch Traffic (Blue-Green Cutover)**
+
 ```bash
 # Update load balancer to route traffic to Blue
 aws elbv2 modify-rule \
@@ -157,6 +167,7 @@ watch -n 5 'aws elbv2 describe-target-health \
 ```
 
 **Step 6: Monitor New Version**
+
 ```bash
 # Watch error rate in real-time (should stay < 1%)
 watch -n 10 'curl -s "https://api.datadoghq.com/api/v1/query?query=sum:api.errors{service:order-api}.as_rate()" -H "DD-API-KEY: ${DD_API_KEY}"'
@@ -188,6 +199,7 @@ kubectl logs -n production -l app=order-api --tail=100 -f
 - [ ] Old version (Green) scaled down after 1 hour soak time
 
 **Post-Deployment Commands:**
+
 ```bash
 # Tag successful deployment in monitoring
 curl -X POST https://api.datadoghq.com/api/v1/events \
@@ -206,6 +218,7 @@ aws ecs update-service \
 <!-- Document all environment variables, secrets, and infrastructure dependencies -->
 
 **Required Environment Variables:**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://app_user:${DB_PASSWORD}@prod-db.example.com:5432/orders
@@ -237,6 +250,7 @@ DATADOG_ENV=production
 ```
 
 **Required Secrets (stored in AWS Secrets Manager):**
+
 - `prod/order-api/db-password` - Database password
 - `prod/order-api/redis-password` - Redis password
 - `prod/order-api/stripe-api-key` - Stripe production API key
@@ -244,11 +258,13 @@ DATADOG_ENV=production
 - `prod/order-api/datadog-api-key` - DataDog API key
 
 **Secrets Rotation Policy:**
+
 - Database password: Rotate every 90 days
 - API keys: Rotate every 180 days
 - Webhook secrets: Rotate on compromise only
 
 **Infrastructure Dependencies:**
+
 - Database: PostgreSQL 14.2 (RDS instance: `prod-orders-db.cqx7.us-east-1.rds.amazonaws.com`)
 - Cache: Redis 7.0 (ElastiCache cluster: `prod-orders-cache`)
 - Load Balancer: ALB `order-api-prod` (arn:aws:elasticloadbalancing:...)
@@ -258,6 +274,7 @@ DATADOG_ENV=production
 - Logging: CloudWatch Logs group `/aws/ecs/order-api`
 
 **Resource Limits:**
+
 - CPU: 2 vCPU per task
 - Memory: 4 GB per task
 - Disk: 20 GB ephemeral storage
@@ -270,12 +287,14 @@ DATADOG_ENV=production
 ### Rollback Triggers
 
 **Automatic Rollback (if enabled):**
+
 - Smoke tests fail (any test fails)
 - Error rate exceeds 5% for 5 consecutive minutes
 - Response time p95 > 1000ms for 5 minutes
 - Health check failures > 50% of instances
 
 **Manual Rollback Decision:**
+
 - Critical bug discovered in production
 - Data corruption detected
 - Performance degradation > 50%
@@ -287,6 +306,7 @@ DATADOG_ENV=production
 **IMPORTANT: Rollback must be executed within 30 minutes of deployment**
 
 **Step 1: Stop New Deployments**
+
 ```bash
 # Pause auto-scaling to prevent new tasks
 aws application-autoscaling register-scalable-target \
@@ -297,6 +317,7 @@ aws application-autoscaling register-scalable-target \
 ```
 
 **Step 2: Switch Traffic Back to Green (Previous Version)**
+
 ```bash
 # Immediate cutover back to old version
 aws elbv2 modify-rule \
@@ -309,6 +330,7 @@ curl https://api.example.com/health
 ```
 
 **Step 3: Rollback Database Migration (if needed)**
+
 ```bash
 # ONLY if migration caused issues
 psql postgresql://admin:${DB_PASSWORD}@prod-db.example.com:5432/orders
@@ -323,6 +345,7 @@ WHERE table_name = 'orders' AND column_name = 'order_metadata';
 ```
 
 **Step 4: Scale Down Failed Version**
+
 ```bash
 # Stop Blue environment (failed version)
 aws ecs update-service \
@@ -332,6 +355,7 @@ aws ecs update-service \
 ```
 
 **Step 5: Verify Rollback Success**
+
 ```bash
 # Run smoke tests against rolled-back version
 npm run smoke-test -- --url https://api.example.com
@@ -342,6 +366,7 @@ npm run smoke-test -- --url https://api.example.com
 ```
 
 **Step 6: Post-Rollback Actions**
+
 - [ ] Notify team of rollback via Slack
 - [ ] Create incident post-mortem
 - [ ] Document root cause
@@ -349,6 +374,7 @@ npm run smoke-test -- --url https://api.example.com
 - [ ] Schedule fix deployment
 
 ### Rollback Time Estimate
+
 - Traffic switch: < 1 minute
 - Full rollback (with DB): < 5 minutes
 - Verification: < 10 minutes
@@ -359,6 +385,7 @@ npm run smoke-test -- --url https://api.example.com
 <!-- Critical tests that must pass for deployment to be considered successful -->
 
 ### Test 1: Health Check
+
 ```bash
 curl https://api.example.com/health
 # Expected: {"status": "healthy", "version": "2.5.0", "database": "connected"}
@@ -366,6 +393,7 @@ curl https://api.example.com/health
 ```
 
 ### Test 2: Create Order (End-to-End)
+
 ```bash
 curl -X POST https://api.example.com/api/orders \
   -H "Authorization: Bearer ${TEST_TOKEN}" \
@@ -381,6 +409,7 @@ curl -X POST https://api.example.com/api/orders \
 ```
 
 ### Test 3: Retrieve Order
+
 ```bash
 curl https://api.example.com/api/orders/test_order_123 \
   -H "Authorization: Bearer ${TEST_TOKEN}"
@@ -389,6 +418,7 @@ curl https://api.example.com/api/orders/test_order_123 \
 ```
 
 ### Test 4: Database Connectivity
+
 ```bash
 curl https://api.example.com/api/internal/db-check \
   -H "X-Internal-Token: ${INTERNAL_TOKEN}"
@@ -397,6 +427,7 @@ curl https://api.example.com/api/internal/db-check \
 ```
 
 ### Smoke Test Execution
+
 ```bash
 # Automated smoke test suite
 npm run smoke-test -- \
@@ -422,6 +453,7 @@ npm run smoke-test -- \
 **Dashboard:** https://app.datadoghq.com/dashboard/order-api-production
 
 **Key Metrics:**
+
 - Error rate (target: < 1%, alert: > 5%)
 - Response time p95 (target: < 500ms, alert: > 1000ms)
 - Throughput (baseline: 100 req/min, alert: < 50 req/min)
@@ -430,12 +462,14 @@ npm run smoke-test -- \
 - CPU usage (target: < 70%, alert: > 85%)
 
 **Alerts:**
+
 - High error rate: > 5% for 5 minutes → Page on-call
 - Slow responses: p95 > 1000ms for 5 minutes → Slack alert
 - Health check failures: > 50% instances → Page on-call
 - Database connection exhaustion: > 90% → Page on-call
 
 **Log Queries:**
+
 ```bash
 # View recent errors
 aws logs tail /aws/ecs/order-api --follow --filter-pattern "ERROR"
@@ -466,12 +500,14 @@ aws logs tail /aws/ecs/order-api --follow --filter-pattern "deployment" --since 
 **Soak Time:** 1 hour (monitor new version before scaling down old)
 
 **Monitoring checklist (during soak time):**
+
 - [ ] 0-15 min: Watch error rate and response time closely
 - [ ] 15-30 min: Verify no alerts, check logs for warnings
 - [ ] 30-45 min: Verify database performance, check slow queries
 - [ ] 45-60 min: Final check of all metrics, prepare to scale down old version
 
 **If issues detected during soak time:**
+
 1. Evaluate severity (critical vs minor)
 2. Decide: rollback vs hotfix vs acceptable
 3. If rollback: execute rollback procedure

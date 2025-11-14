@@ -18,7 +18,7 @@ from src.main import app  # type: ignore[import-not-found]
 INTEGRATION_DATABASE_URL = "sqlite+aiosqlite:///./test_integration.db"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 async def integration_db_engine() -> AsyncGenerator[Any, None]:
     """Create a test database engine for integration tests."""
     engine = create_async_engine(
@@ -38,7 +38,7 @@ async def integration_db_engine() -> AsyncGenerator[Any, None]:
     await engine.dispose()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 async def integration_db_session(
     integration_db_engine: Any,
 ) -> AsyncGenerator[AsyncSession, None]:
@@ -53,7 +53,7 @@ async def integration_db_session(
         yield session
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 async def integration_client(
     integration_db_session: AsyncSession,
 ) -> AsyncGenerator[AsyncClient, None]:

@@ -38,6 +38,7 @@ EOF
 ```
 
 **What makes a good learning:**
+
 - Technical insights discovered during implementation
 - Gotchas or edge cases encountered
 - Best practices or patterns that worked well
@@ -50,6 +51,7 @@ EOF
 Before completing the session, ask the user about the work item completion status using `AskUserQuestion`:
 
 **Question: Work Item Completion Status**
+
 - Question: "Is this work item complete?"
 - Header: "Completion"
 - Multi-select: false
@@ -65,20 +67,24 @@ Before completing the session, ask the user about the work item completion statu
 Based on the user's selection:
 
 **If "Yes - Mark as completed" selected:**
+
 ```bash
 sk end --complete --learnings-file .session/temp_learnings.txt
 ```
 
 **If "No - Keep as in-progress" selected:**
+
 ```bash
 sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
 **If "Cancel" selected:**
+
 - Show message: "Session end cancelled. You can continue working."
 - Exit without calling command
 
 This script validates quality gates:
+
 - All tests pass
 - Linting passes
 - Git changes are committed
@@ -90,6 +96,7 @@ The script automatically updates project context files (stack.py and tree.py) af
 ## Step 4: Show Results
 
 Show the user:
+
 - Session summary with work accomplished
 - **Commit details** (full messages + file change statistics) - Enhancement #11
 - Quality gate results (pass/fail for each check)
@@ -102,6 +109,7 @@ If any quality gates fail, display the specific errors and guide the user on wha
 ## Enhanced Session Summaries (Enhancement #11)
 
 Session summaries now include comprehensive commit details:
+
 - **Full commit messages** (multi-line messages preserved)
 - **File change statistics** from `git diff --stat` (files changed, insertions, deletions)
 - Each commit listed with short SHA and message

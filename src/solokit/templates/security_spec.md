@@ -16,6 +16,7 @@ TEMPLATE INSTRUCTIONS:
 Describe the security concern, vulnerability, or improvement.
 
 **Example:**
+
 > SQL injection vulnerability in the user search endpoint (`/api/users/search`). The search query parameter is directly concatenated into the SQL query without proper sanitization or parameterization, allowing attackers to execute arbitrary SQL commands and potentially access or modify sensitive user data.
 
 ## Severity
@@ -34,6 +35,7 @@ Choose one severity level based on exploitability and impact:
 - [ ] Low - Minor security improvement
 
 **Impact Assessment:**
+
 - **Confidentiality:** High (full database access possible)
 - **Integrity:** High (data modification possible)
 - **Availability:** Medium (DoS via resource-intensive queries)
@@ -52,12 +54,14 @@ Choose one severity level based on exploitability and impact:
 ## Threat Model
 
 ### Assets at Risk
+
 - User database containing 1.2M user records
 - Personal Identifiable Information (PII): names, emails, phone numbers, addresses
 - Authentication credentials (hashed passwords)
 - Session tokens
 
 ### Threat Actors
+
 - **External Attackers:** Opportunistic attackers scanning for SQL injection vulnerabilities
 - **Malicious Insiders:** Users with legitimate API access attempting privilege escalation
 - **Automated Bots:** Scripts scanning for common vulnerabilities
@@ -65,21 +69,27 @@ Choose one severity level based on exploitability and impact:
 ### Attack Scenarios
 
 **Scenario 1: Data Exfiltration**
+
 ```
 GET /api/users/search?q=admin' UNION SELECT id,email,password FROM users--
 ```
+
 Attacker retrieves entire user database including hashed passwords.
 
 **Scenario 2: Privilege Escalation**
+
 ```
 GET /api/users/search?q=test'; UPDATE users SET role='admin' WHERE id=1337;--
 ```
+
 Attacker elevates their own account to admin role.
 
 **Scenario 3: Data Destruction**
+
 ```
 GET /api/users/search?q='; DROP TABLE users;--
 ```
+
 Attacker destroys user data (DoS attack).
 
 ## Attack Vector
@@ -87,6 +97,7 @@ Attacker destroys user data (DoS attack).
 <!-- Detailed description of how the vulnerability could be exploited -->
 
 **Example:**
+
 > The vulnerability exists in the `searchUsers()` method which constructs SQL queries using string concatenation:
 
 ```typescript
@@ -101,12 +112,14 @@ async searchUsers(query: string): Promise<User[]> {
 ```
 
 **Exploitation Steps:**
+
 1. Attacker crafts malicious SQL payload in the `q` parameter
 2. Backend concatenates user input directly into SQL query
 3. Database executes the malicious SQL command
 4. Attacker receives unauthorized data or modifies the database
 
 **Proof of Concept:**
+
 ```bash
 # List all users (bypassing pagination/filtering)
 curl "https://api.example.com/api/users/search?q=admin' OR '1'='1"
@@ -143,17 +156,18 @@ async searchUsers(query: string): Promise<User[]> {
 **Defense in Depth Measures:**
 
 1. **Input Validation:**
+
 ```typescript
 // Add input validation
 function validateSearchQuery(query: string): string {
   // Max length
   if (query.length > 100) {
-    throw new ValidationError('Search query too long');
+    throw new ValidationError("Search query too long");
   }
 
   // Allowed characters only
   if (!/^[a-zA-Z0-9\s@.-]+$/.test(query)) {
-    throw new ValidationError('Invalid characters in search query');
+    throw new ValidationError("Invalid characters in search query");
   }
 
   return query;
@@ -184,34 +198,37 @@ function validateSearchQuery(query: string): string {
 <!-- Comprehensive security testing checklist -->
 
 ### Automated Security Testing
+
 - [ ] SAST (Static Analysis): Run Semgrep/SonarQube to detect SQL injection patterns
 - [ ] DAST (Dynamic Analysis): Run OWASP ZAP against search endpoint
 - [ ] Dependency scan: Check for vulnerable database driver versions
 - [ ] Regression test: Verify fix prevents all known attack vectors
 
 ### Manual Security Testing
+
 - [ ] Penetration test: Attempt SQL injection with various payloads
 - [ ] Authentication bypass test: Verify no privilege escalation possible
 - [ ] Data exfiltration test: Confirm only authorized data accessible
 - [ ] DoS test: Verify rate limiting prevents resource exhaustion
 
 ### Test Cases
+
 ```typescript
-describe('User Search Security', () => {
-  it('prevents SQL injection via UNION', async () => {
+describe("User Search Security", () => {
+  it("prevents SQL injection via UNION", async () => {
     const maliciousQuery = "admin' UNION SELECT password FROM users--";
     const results = await searchUsers(maliciousQuery);
     // Should return no results or safe results, not passwords
-    expect(results.every(r => !r.password)).toBe(true);
+    expect(results.every((r) => !r.password)).toBe(true);
   });
 
-  it('prevents SQL injection via comment', async () => {
+  it("prevents SQL injection via comment", async () => {
     const maliciousQuery = "admin'--";
     await expect(searchUsers(maliciousQuery)).not.toThrow();
   });
 
-  it('rejects queries with excessive length', async () => {
-    const longQuery = 'a'.repeat(1000);
+  it("rejects queries with excessive length", async () => {
+    const longQuery = "a".repeat(1000);
     await expect(searchUsers(longQuery)).rejects.toThrow(ValidationError);
   });
 });

@@ -125,6 +125,10 @@ npm run type-check
 """
     else:  # Python
         readme_content += """```bash
+# IMPORTANT: Activate virtual environment first
+source venv/bin/activate  # Unix
+# or: venv\\Scripts\\activate  # Windows
+
 # Run tests
 pytest
 
@@ -137,6 +141,9 @@ ruff check .
 # Run type checking
 pyright
 ```
+
+**Note**: Session commands (`sk validate`, `sk end`) automatically use the virtual environment, so activation is optional when using those commands.
+
 """
 
     # Add additional options documentation

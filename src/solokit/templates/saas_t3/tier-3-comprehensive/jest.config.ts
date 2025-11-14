@@ -19,11 +19,7 @@ const config: Config = {
   ],
 
   // Exclude e2e tests (run separately with Playwright)
-  testPathIgnorePatterns: [
-    "/node_modules/",
-    "/.next/",
-    "/tests/e2e/",
-  ],
+  testPathIgnorePatterns: ["/node_modules/", "/.next/", "/tests/e2e/"],
 
   // Allow testing of app, components, lib directories
   moduleNameMapper: {
@@ -31,9 +27,7 @@ const config: Config = {
   },
 
   // ESM transformation for dependencies that need it
-  transformIgnorePatterns: [
-    "node_modules/(?!(superjson|@trpc)/)",
-  ],
+  transformIgnorePatterns: ["node_modules/(?!(superjson|@trpc)/)"],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

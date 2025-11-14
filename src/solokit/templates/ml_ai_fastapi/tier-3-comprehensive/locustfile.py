@@ -5,6 +5,9 @@ https://docs.locust.io/
 
 from locust import HttpUser, between, task  # type: ignore[import-not-found]
 
+# HTTP status codes
+HTTP_NOT_FOUND = 404
+
 
 class FastAPIUser(HttpUser):
     """
@@ -49,7 +52,7 @@ class FastAPIUser(HttpUser):
         # Note: This assumes item with ID 1 exists
         # In production, you'd create items first
         with self.client.get("/api/v1/items/1", catch_response=True) as response:
-            if response.status_code == 404:
+            if response.status_code == HTTP_NOT_FOUND:
                 response.success()  # Mark as success even if not found
 
     def on_start(self) -> None:

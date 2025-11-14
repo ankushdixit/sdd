@@ -91,8 +91,21 @@ class LintingChecker(QualityChecker):
             elif self.language in ["javascript", "typescript"]:
                 command += " --fix"
 
+        # For Python projects, use venv executables if available
+        command_parts = command.split()
+        if self.language == "python" and command_parts[0] in ["ruff", "pylint", "flake8", "mypy", "pyright"]:
+            venv_bin = self.project_root / "venv" / "bin" / command_parts[0]
+            venv_scripts = self.project_root / "venv" / "Scripts" / f"{command_parts[0]}.exe"
+
+            if venv_bin.exists():
+                command_parts[0] = str(venv_bin)
+                logger.debug(f"Using venv executable: {venv_bin}")
+            elif venv_scripts.exists():
+                command_parts[0] = str(venv_scripts)
+                logger.debug(f"Using venv executable: {venv_scripts}")
+
         # Run linter
-        result = self.runner.run(command.split(), timeout=QUALITY_CHECK_VERY_LONG_TIMEOUT)
+        result = self.runner.run(command_parts, timeout=QUALITY_CHECK_VERY_LONG_TIMEOUT)
 
         execution_time = time.time() - start_time
 

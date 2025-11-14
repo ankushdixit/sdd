@@ -24,6 +24,8 @@
     "test:e2e:debug": "playwright test --debug",
     "test:a11y": "playwright test --grep @a11y",
     "test:mutation": "stryker run",
+    "setup": "playwright install --with-deps",
+    "setup:browsers": "playwright install",
     "check:duplication": "jscpd .",
     "check:types": "type-coverage",
     "check:unused": "ts-prune",

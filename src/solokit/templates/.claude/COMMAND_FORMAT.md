@@ -19,6 +19,7 @@ argument-hint: [optional arguments]
 Natural instructions for Claude on how to execute this command.
 
 Include specific guidance on:
+
 - How to run the command (with code blocks)
 - What parameters to use
 - What the command does
@@ -33,15 +34,18 @@ Include specific guidance on:
 **YAML frontmatter** enclosed in `---` delimiters at the top of the file.
 
 **Required fields:**
+
 - `description`: Brief description shown in `/help` command
 
 **Optional fields:**
+
 - `argument-hint`: Helps autocomplete (e.g., `[work_item_id]`, `<pr-number> [priority]`)
 - `allowed-tools`: Restrict tools Claude can use (e.g., `Bash(git add:*)`)
 - `model`: Override model for this command
 - `disable-model-invocation`: Prevent SlashCommand tool from calling this
 
 **Example:**
+
 ```yaml
 ---
 description: Create a new work item interactively
@@ -49,6 +53,7 @@ description: Create a new work item interactively
 ```
 
 **Example with arguments:**
+
 ```yaml
 ---
 description: Show detailed information about a specific work item
@@ -57,6 +62,7 @@ argument-hint: <work_item_id>
 ```
 
 **Example with git tools:**
+
 ```yaml
 ---
 description: Create a git commit
@@ -78,26 +84,30 @@ Use a markdown `# Heading` after frontmatter for clarity:
 **Write as natural instructions for Claude**, not imperative commands.
 
 **Good style:**
-```markdown
+
+````markdown
 Run the initialization script to set up Session-Driven Development infrastructure:
 
 ```bash
 python3 scripts/init_project.py
 ```
+````
 
 This script will create:
+
 - `.session/` directory structure with all subdirectories
 - Tracking files: `work_items.json`, `learnings.json`, `status_update.json`
 
 After running the script, show the user the success message and explain next steps.
-```
+
+````
 
 **Bad style (avoid):**
 ```markdown
 Execute: `python3 scripts/init_project.py`
 
 Display the success message to the user.
-```
+````
 
 The bad style uses imperative commands ("Execute:", "Display:") rather than natural instructions.
 
@@ -109,13 +119,16 @@ Use these placeholders for dynamic values:
 - `$1`, `$2`, `$3` - Individual positional arguments
 
 **Example:**
-```markdown
+
+````markdown
 The work item ID is provided in $ARGUMENTS.
 
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().show_work_item('$ARGUMENTS')"
 ```
-```
+````
+
+````
 
 **Example with positional args:**
 ```markdown
@@ -126,8 +139,9 @@ When field and value are provided (e.g., `--status completed`), parse $ARGUMENTS
 Then run:
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item('$1', field_name='value')"
-```
-```
+````
+
+````
 
 ### 5. Bash Command Execution (Optional)
 
@@ -146,7 +160,7 @@ allowed-tools: Bash(git status:*)
 ## Your task
 
 Based on the above changes, create a single git commit.
-```
+````
 
 ### 6. File References (Optional)
 
@@ -162,7 +176,7 @@ Compare @src/old-version.js with @src/new-version.js
 
 ### Simple Command (init.md)
 
-```markdown
+````markdown
 ---
 description: Initialize a new Session-Driven Development project
 ---
@@ -174,14 +188,17 @@ Run the initialization script to set up Session-Driven Development infrastructur
 ```bash
 python3 scripts/init_project.py
 ```
+````
 
 This script will create:
+
 - `.session/` directory structure with all subdirectories
 - Tracking files: `work_items.json`, `learnings.json`, `status_update.json`
 - Project context files: `stack.txt` and `tree.txt`
 
 After running the script, show the user the success message and explain the next steps for getting started with the session-driven workflow.
-```
+
+````
 
 ### Command with Arguments (work-show.md)
 
@@ -197,11 +214,12 @@ Display detailed information for a specific work item by running:
 
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().show_work_item('$ARGUMENTS')"
-```
+````
 
 The work item ID is provided in $ARGUMENTS.
 
 This displays comprehensive details:
+
 - **Work Item Info**: Type, status, priority, creation date
 - **Dependencies**: List of dependencies with their current status
 - **Session History**: All sessions where this work item was worked on
@@ -210,7 +228,8 @@ This displays comprehensive details:
 - **Next Steps**: Suggested actions based on current status
 
 Show all information to the user in a clear, formatted display. This helps understand the full context of a work item before starting work on it.
-```
+
+````
 
 ### Command with Multiple Modes (work-update.md)
 
@@ -230,9 +249,10 @@ When only the work item ID is provided, start an interactive update session:
 
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item_interactive('$ARGUMENTS')"
-```
+````
 
 The script will prompt the user to choose what to update:
+
 1. Status (not_started, in_progress, blocked, completed)
 2. Priority (critical, high, medium, low)
 3. Milestone (assign or change milestone)
@@ -242,16 +262,19 @@ The script will prompt the user to choose what to update:
 ## Direct Update Mode
 
 When field and value are provided (e.g., `--status completed`), parse $ARGUMENTS to extract:
+
 - Work item ID (first argument: $1)
 - Field name and value (remaining arguments)
 
 Then run:
+
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().update_work_item('$1', field_name='value')"
 ```
 
 After updating, display the changes made showing old → new values. All updates are automatically tracked in the work item's update_history.
-```
+
+````
 
 ### Command with Filters (work-list.md)
 
@@ -268,20 +291,23 @@ List all work items, optionally filtered by status, type, or milestone.
 **Without filters**, run:
 ```bash
 python3 -c "from scripts.work_item_manager import WorkItemManager; WorkItemManager().list_work_items()"
-```
+````
 
 **With filters**, parse $ARGUMENTS and pass to the function. For example:
+
 - `--status not_started` → `status_filter='not_started'`
 - `--type feature` → `type_filter='feature'`
 - `--milestone phase_2_mvp` → `milestone_filter='phase_2_mvp'`
 
 Available filter values:
+
 - **Status**: `not_started`, `in_progress`, `blocked`, `completed`
 - **Type**: `feature`, `bug`, `refactor`, `security`, `integration_test`, `deployment`
 - **Milestone**: Any milestone name from the project
 
 Display the color-coded work item list with priority indicators (🔴 critical, 🟠 high, 🟡 medium, 🟢 low) and dependency status markers (✓ ready, 🚫 blocked).
-```
+
+````
 
 ## Key Differences from Previous Format
 
@@ -292,10 +318,11 @@ Initialize a new Session-Driven Development project.
 Execute: `python3 scripts/init_project.py`
 
 Display the success message to the user.
-```
+````
 
 ### ✅ New Format (Correct)
-```markdown
+
+````markdown
 ---
 description: Initialize a new Session-Driven Development project
 ---
@@ -307,8 +334,10 @@ Run the initialization script to set up Session-Driven Development infrastructur
 ```bash
 python3 scripts/init_project.py
 ```
+````
 
 After running the script, show the user the success message and explain the next steps.
+
 ```
 
 **Key improvements:**
@@ -338,10 +367,12 @@ Before committing a command file:
 For plugins, commands in `commands/` directory follow the same format. Commands are namespaced by the plugin name:
 
 ```
+
 commands/
-  init.md           → /sk:init
-  work-new.md       → /sk:work-new
-  work-list.md      → /sk:work-list
+init.md → /sk:init
+work-new.md → /sk:work-new
+work-list.md → /sk:work-list
+
 ```
 
 Commands are automatically namespaced by plugin name (e.g., `/sk:command-name`).
@@ -351,3 +382,4 @@ Commands are automatically namespaced by plugin name (e.g., `/sk:command-name`).
 - [Official Slash Commands Documentation](https://docs.claude.com/en/docs/claude-code/slash-commands)
 - [Custom Slash Commands](https://docs.claude.com/en/docs/claude-code/slash-commands#custom-slash-commands)
 - [Plugin Commands](https://docs.claude.com/en/docs/claude-code/slash-commands#plugin-commands)
+```

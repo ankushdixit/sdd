@@ -1,5 +1,6 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
+import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 /**
  * Dashboard Load Test
@@ -52,19 +53,7 @@ export default function () {
 
 export function handleSummary(data) {
   return {
-    "summary.json": JSON.stringify(data),
     stdout: textSummary(data, { indent: " ", enableColors: true }),
+    "reports/dashboard-load-test-summary.json": JSON.stringify(data),
   };
-}
-
-function textSummary(data, options) {
-  // Simple text summary
-  return `
-Dashboard Load Test Results
-===========================
-Total Requests: ${data.metrics.http_reqs.values.count}
-Failed Requests: ${data.metrics.http_req_failed.values.rate * 100}%
-Average Duration: ${data.metrics.http_req_duration.values.avg.toFixed(2)}ms
-95th Percentile: ${data.metrics.http_req_duration.values["p(95)"].toFixed(2)}ms
-`;
 }

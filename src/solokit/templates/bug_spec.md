@@ -16,6 +16,7 @@ TEMPLATE INSTRUCTIONS:
 Clear description of the bug and its impact.
 
 **Example:**
+
 > User authentication fails intermittently when logging in from mobile devices. Users see a "Session expired" error even though they just created a new session. This affects approximately 15% of mobile login attempts based on error logs.
 
 ## Steps to Reproduce
@@ -27,6 +28,7 @@ Clear description of the bug and its impact.
 3. Step 3
 
 **Example:**
+
 1. Open the app on a mobile device (iOS or Android)
 2. Navigate to the login screen
 3. Enter valid credentials (test@example.com / Test123!)
@@ -36,6 +38,7 @@ Clear description of the bug and its impact.
 7. Bug occurs roughly 1 in 7 attempts
 
 **Environment:**
+
 - Device: iPhone 14 Pro, Samsung Galaxy S23
 - OS Version: iOS 17.0, Android 13
 - App Version: 2.3.1
@@ -46,6 +49,7 @@ Clear description of the bug and its impact.
 <!-- What should happen when the user performs the steps above -->
 
 **Example:**
+
 > User should be successfully authenticated and redirected to the dashboard. A valid session cookie should be set and remain valid for 7 days or until the user logs out.
 
 ## Actual Behavior
@@ -53,9 +57,11 @@ Clear description of the bug and its impact.
 <!-- What actually happens, including error messages, logs, screenshots -->
 
 **Example:**
+
 > User sees an error toast: "Session expired. Please try again."
 
 **Error Log:**
+
 ```
 [ERROR] 2025-10-18 14:23:45 - SessionManager: Session validation failed
   sessionId: 7f8a9b2c-4d3e-4a1b-9c8d-1e2f3a4b5c6d
@@ -83,6 +89,7 @@ Clear description of the bug and its impact.
 <!-- Document what you did to investigate: logs reviewed, code analyzed, experiments run -->
 
 **Example:**
+
 1. Reviewed application logs for past 7 days (10,427 login attempts, 1,563 failures)
 2. Identified pattern: failures only occur on mobile devices
 3. Checked Redis cache metrics: intermittent connection timeouts to session store
@@ -91,6 +98,7 @@ Clear description of the bug and its impact.
 6. Reproduced locally with added latency to Redis connection
 
 **Key Findings:**
+
 - Mobile devices have ~200ms additional latency compared to web
 - Session write to Redis times out after 100ms (too aggressive)
 - When timeout occurs, client receives session ID but server hasn't finished writing
@@ -101,9 +109,11 @@ Clear description of the bug and its impact.
 <!-- The underlying technical cause of the bug -->
 
 **Example:**
+
 > Race condition in `SessionManager.createSession()` method. The method returns the session ID to the client before confirming the session was successfully written to Redis. On mobile devices with higher latency, the Redis write often exceeds the 100ms timeout, but the client already received a session ID and attempts to use it immediately.
 
 **Code:**
+
 ```typescript
 // Current buggy code in auth/SessionManager.ts:47-52
 async createSession(userId: string): Promise<string> {
@@ -119,9 +129,11 @@ async createSession(userId: string): Promise<string> {
 <!-- Why was this bug introduced? What can we learn? -->
 
 **Example:**
+
 > The original implementation used fire-and-forget for Redis writes to optimize for perceived latency (avoiding await). This worked fine in the local development environment but failed to account for higher latency in production, especially on mobile networks.
 
 **Contributing Factors:**
+
 - Insufficient integration testing with realistic network latency
 - No monitoring/alerting on Redis write timeouts
 - Timeout value (100ms) too aggressive for production conditions
@@ -132,9 +144,11 @@ async createSession(userId: string): Promise<string> {
 <!-- How will this bug be fixed? Include code changes if relevant -->
 
 **Example:**
+
 > Await Redis write completion before returning session ID. Increase Redis timeout to 500ms. Add retry logic for failed writes. Add monitoring for session creation failures.
 
 **Code Changes:**
+
 ```typescript
 // Fixed code in auth/SessionManager.ts:47-58
 async createSession(userId: string): Promise<string> {
@@ -160,6 +174,7 @@ async createSession(userId: string): Promise<string> {
 ```
 
 **Files Modified:**
+
 - `src/auth/SessionManager.ts` - Fix race condition
 - `src/config/redis.ts` - Increase default timeout to 500ms
 - `src/monitoring/metrics.ts` - Add session creation metrics
@@ -178,6 +193,7 @@ async createSession(userId: string): Promise<string> {
 - [ ] Documentation updated if behavior changed
 
 **Example criteria for a specific bug:**
+
 - [ ] Mobile login success rate improves to >99% (currently ~85%)
 - [ ] Session creation completes within 500ms on high-latency networks
 - [ ] Redis write failures are properly handled and logged
@@ -188,12 +204,14 @@ async createSession(userId: string): Promise<string> {
 <!-- Comprehensive testing to verify the fix and prevent regression -->
 
 ### Regression Tests
+
 - [ ] Add unit test for session creation with simulated Redis latency
 - [ ] Add integration test for mobile login flow with 200ms+ latency
 - [ ] Add test to verify session immediately usable after creation
 - [ ] Add test for Redis write failure handling
 
 ### Manual Verification
+
 - [ ] Test on iPhone 14 Pro with test account
 - [ ] Test on Samsung Galaxy S23 with test account
 - [ ] Test on simulated slow network (3G, high latency)
@@ -201,6 +219,7 @@ async createSession(userId: string): Promise<string> {
 - [ ] Confirm login success rate improves to >99%
 
 ### Edge Cases
+
 - [ ] Test with Redis temporarily unavailable
 - [ ] Test with very high latency (1000ms+)
 - [ ] Test concurrent login attempts from same device
@@ -211,6 +230,7 @@ async createSession(userId: string): Promise<string> {
 <!-- How can we prevent similar bugs in the future? -->
 
 **Example:**
+
 - Add integration tests with simulated network latency (100ms, 500ms, 1000ms)
 - Set up monitoring/alerting for Redis operation timeouts
 - Code review checklist: verify all async operations are properly awaited

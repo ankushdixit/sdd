@@ -65,7 +65,7 @@ jobs:
       - name: Check coverage threshold
         run: |
           pip install coverage
-          coverage report --fail-under=80
+          coverage report --fail-under={coverage_target}
 
   mutation-test:
     runs-on: ubuntu-latest

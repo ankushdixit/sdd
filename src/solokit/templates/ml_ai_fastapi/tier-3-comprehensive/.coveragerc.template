@@ -27,7 +27,7 @@ skip_covered = False
 sort = Cover
 
 # Fail if coverage is below threshold
-fail_under = 80
+fail_under = {coverage_target}
 
 exclude_lines =
     # Default exclude patterns

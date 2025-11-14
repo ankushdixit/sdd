@@ -2,6 +2,7 @@
 FastAPI application entry point for {project_name}
 """
 
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -12,15 +13,20 @@ from src.api.routes import example, health
 from src.core.config import settings
 from src.core.database import create_db_and_tables
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
     """
     Application lifespan manager - handles startup and shutdown events.
+
+    Args:
+        app: FastAPI application instance (required by lifespan protocol)
     """
     # Startup
-    print(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    print(f"Environment: {settings.ENVIRONMENT}")
+    logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
+    logger.info("Environment: %s", settings.ENVIRONMENT)
 
     # Create database tables
     await create_db_and_tables()
@@ -28,7 +34,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # Shutdown
-    print(f"Shutting down {settings.APP_NAME}")
+    logger.info("Shutting down %s", settings.APP_NAME)
 
 
 # Create FastAPI application

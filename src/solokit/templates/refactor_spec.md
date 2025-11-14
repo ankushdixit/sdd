@@ -16,6 +16,7 @@ TEMPLATE INSTRUCTIONS:
 What is being refactored and why?
 
 **Example:**
+
 > Refactor the UserService class to use dependency injection instead of direct instantiation of dependencies. This will improve testability, reduce coupling, and make the codebase more maintainable as we scale.
 
 ## Current State
@@ -23,9 +24,11 @@ What is being refactored and why?
 <!-- Description of the current implementation with code examples -->
 
 **Example:**
+
 > The `UserService` class directly instantiates its dependencies (DatabaseClient, EmailService, CacheManager), making it difficult to test and tightly coupled to specific implementations.
 
 **Current Code:**
+
 ```typescript
 // src/services/UserService.ts (BEFORE)
 class UserService {
@@ -41,7 +44,7 @@ class UserService {
   }
 
   async createUser(data: UserData): Promise<User> {
-    const user = await this.db.insert('users', data);
+    const user = await this.db.insert("users", data);
     await this.email.sendWelcomeEmail(user.email);
     await this.cache.set(`user:${user.id}`, user);
     return user;
@@ -60,10 +63,11 @@ class UserService {
 - **No Interface Contracts:** Dependencies don't implement interfaces, making swapping implementations impossible
 
 **Test Difficulty Example:**
+
 ```typescript
 // Current test - requires real dependencies!
-describe('UserService', () => {
-  it('creates a user', async () => {
+describe("UserService", () => {
+  it("creates a user", async () => {
     const service = new UserService(); // Can't inject mocks!
     // Test requires real database, email server, Redis...
   });
@@ -77,9 +81,11 @@ describe('UserService', () => {
 <!-- Description of the refactored implementation with code examples -->
 
 **Example:**
+
 > Introduce dependency injection using constructor injection with interface-based dependencies. Create interfaces for each dependency and inject them through the constructor.
 
 **Refactored Code:**
+
 ```typescript
 // src/interfaces/IDatabase.ts (NEW)
 interface IDatabase {
@@ -103,13 +109,13 @@ class UserService {
   constructor(
     private db: IDatabase,
     private email: IEmailService,
-    private cache: ICacheManager
+    private cache: ICacheManager,
   ) {
     // Dependencies injected - easy to test!
   }
 
   async createUser(data: UserData): Promise<User> {
-    const user = await this.db.insert('users', data);
+    const user = await this.db.insert("users", data);
     await this.email.sendWelcomeEmail(user.email);
     await this.cache.set(`user:${user.id}`, user);
     return user;
@@ -118,11 +124,7 @@ class UserService {
 
 // src/container.ts (NEW) - Dependency injection container
 export const container = {
-  userService: new UserService(
-    new DatabaseClient(config.database),
-    new EmailService(config.email),
-    new CacheManager(config.redis)
-  )
+  userService: new UserService(new DatabaseClient(config.database), new EmailService(config.email), new CacheManager(config.redis)),
 };
 ```
 
@@ -137,16 +139,17 @@ export const container = {
 - **Single Responsibility:** Constructor only receives dependencies, doesn't create them
 
 **Testing Improvement:**
+
 ```typescript
 // New test - easy to mock dependencies!
-describe('UserService', () => {
-  it('creates a user', async () => {
-    const mockDb = { insert: jest.fn().mockResolvedValue({ id: '123' }) };
+describe("UserService", () => {
+  it("creates a user", async () => {
+    const mockDb = { insert: jest.fn().mockResolvedValue({ id: "123" }) };
     const mockEmail = { sendWelcomeEmail: jest.fn() };
     const mockCache = { set: jest.fn() };
 
     const service = new UserService(mockDb, mockEmail, mockCache);
-    await service.createUser({ name: 'Test' });
+    await service.createUser({ name: "Test" });
 
     expect(mockDb.insert).toHaveBeenCalled();
     expect(mockEmail.sendWelcomeEmail).toHaveBeenCalled();
@@ -239,6 +242,7 @@ describe('UserService', () => {
 - [ ] Documentation updated to reflect new structure
 
 **Example criteria for a specific refactor:**
+
 - [ ] UserService uses dependency injection with interface-based contracts
 - [ ] All UserService dependencies injected through constructor
 - [ ] Unit test code reduced by >30% due to improved mockability
@@ -250,18 +254,21 @@ describe('UserService', () => {
 <!-- How to verify the refactor doesn't break anything -->
 
 ### Automated Tests
+
 - [ ] All existing UserService tests pass with new implementation
 - [ ] New tests added for previously untestable scenarios
 - [ ] Integration tests verify end-to-end functionality
 - [ ] Performance tests show no regression (< 5% latency increase)
 
 ### Manual Testing
+
 - [ ] User creation flow works end-to-end
 - [ ] Error handling works correctly
 - [ ] Email notifications are sent
 - [ ] Cache is populated correctly
 
 ### Code Quality Metrics
+
 - [ ] Cyclomatic complexity reduced by at least 20%
 - [ ] Test coverage increased from 65% to 85%+
 - [ ] No new linting errors introduced

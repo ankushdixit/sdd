@@ -61,7 +61,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             # Add custom headers
             response.headers["X-Process-Time"] = str(duration)
 
-            return response
+            return response  # noqa: TRY300
 
         except Exception as e:
             # Calculate duration

@@ -17,6 +17,7 @@ sk validate --fix
 ```
 
 The validation checks:
+
 - **Tests**: All test suites pass
 - **Linting**: Code passes linting rules (auto-fixable with --fix)
 - **Formatting**: Code is properly formatted (auto-fixable with --fix)
