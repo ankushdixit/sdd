@@ -37,8 +37,6 @@ templates/
     ├── docker/                         # Docker files (optional)
     │   ├── Dockerfile
     │   └── docker-compose.yml
-    ├── pre-commit/                     # Pre-commit hooks (optional)
-    │   └── .pre-commit-config.yaml
     └── env-templates/                  # Environment templates (optional)
         ├── .env.local.example
         └── .env.production.example
@@ -156,7 +154,6 @@ Register your template in `template-registry.json`:
       "additional_options": [
         "ci_cd",
         "docker",
-        "pre_commit",
         "env_templates"
       ],
       "tech_stack": {
@@ -190,7 +187,7 @@ Register your template in `template-registry.json`:
 **Should include:**
 - Code formatter (Prettier/Black)
 - Security scanning (npm audit/bandit)
-- Git hooks (husky/pre-commit)
+- Git hooks (Husky + lint-staged)
 - Commit linting
 - License checking
 

@@ -197,15 +197,6 @@ Production-ready Docker configuration:
 - Optimized image layers
 - Health checks
 
-### Pre-commit Hooks
-**Option:** `pre_commit`
-
-Git hooks that run before each commit:
-- Code formatting
-- Linting
-- Type checking
-- Test verification (optional)
-
 ### Environment Templates
 **Option:** `env_templates`
 
@@ -237,7 +228,7 @@ sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
-  --options=ci_cd,docker,pre_commit,env_templates
+  --options=ci_cd,docker,env_templates
 ```
 
 ---

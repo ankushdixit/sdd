@@ -42,7 +42,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
    **Description**: "Linting, formatting, type-check, basic tests (fastest setup)"
 
 2. **Label**: "Standard"
-   **Description**: "+ Pre-commit hooks, security scanning (recommended for most projects)"
+   **Description**: "+ Git hooks (Husky), security scanning (recommended for most projects)"
 
 3. **Label**: "Comprehensive"
    **Description**: "+ Coverage reports, integration tests, mutation testing (production-ready)"
@@ -83,10 +83,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 2. **Label**: "Docker Support"
    **Description**: "Containerization with docker-compose"
 
-3. **Label**: "Pre-commit Hooks"
-   **Description**: "Automated code quality checks before commits"
-
-4. **Label**: "Environment Templates"
+3. **Label**: "Environment Templates"
    **Description**: ".env files and .editorconfig for all editors"
 
 ---
@@ -122,10 +119,9 @@ sk init --template=<category> --tier=<tier> --coverage=<coverage> --options=<opt
 **Options mapping:**
 - "GitHub Actions CI/CD" → `ci_cd`
 - "Docker Support" → `docker`
-- "Pre-commit Hooks" → `pre_commit`
 - "Environment Templates" → `env_templates`
 
-Combine multiple options with commas: `--options=ci_cd,docker,pre_commit`
+Combine multiple options with commas: `--options=ci_cd,docker,env_templates`
 
 **Important:** The Python command handles ALL validation and setup deterministically:
 - Pre-flight checks (blank project, git init, environment validation)

@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Pre-commit Option Conflict with Tier-2+ Templates**
+  - Removed redundant "Pre-commit" additional option from initialization
+  - Tier-2+ templates already include Husky git hooks built-in (.husky/pre-commit)
+  - Python pre-commit framework option was creating duplicate hook systems
+  - Deleted all template `pre-commit/` directories (saas_t3, ml_ai_fastapi, fullstack_nextjs, dashboard_refine)
+  - Updated init.py to show only 3 additional options: CI/CD, Docker, Env Templates
+  - Updated template-registry.json and template_installer.py
+  - Updated all documentation and command files to reflect the change
+  - Updated all test files to remove pre_commit from test cases
+  - Impact: Cleaner user experience, no conflicting hook systems, tier-1 users can upgrade to tier-2 for git hooks
+  - Affects: All templates, all tiers
+  - Rationale: Tier-2+ already has Husky (90% of users), tier-1 users can upgrade to tier-2, advanced users can manually install Python pre-commit if needed
+
 - **Critical Tier-3 and Tier-4 Test Suite Failures**
   - Fixed Jest configuration to exclude Playwright e2e tests from Jest runs (6 files)
     - Added `testMatch` to only run unit and integration tests

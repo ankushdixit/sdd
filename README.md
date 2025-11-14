@@ -29,7 +29,7 @@ Solo developers using AI assistants face critical challenges:
 - 4 validated project templates (T3 Stack, FastAPI, Refine, Next.js)
 - 4 quality tiers (Essential → Production-Ready)
 - All dependencies version-pinned and compatibility-tested
-- CI/CD, Docker, pre-commit hooks included
+- CI/CD, Docker, environment templates included
 
 **✨ Perfect Context Continuity**
 - Comprehensive AI briefings restore full project state
@@ -81,7 +81,7 @@ Select your **quality tier**:
 - **Comprehensive** (90% coverage + E2E + mutation) - Mission-critical
 - **Production-Ready** (+ monitoring + observability) - Enterprise-grade
 
-Options: CI/CD workflows, Docker support, pre-commit hooks, environment templates
+Options: CI/CD workflows, Docker support, environment templates
 
 ### 3. Start Building
 

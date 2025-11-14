@@ -404,7 +404,6 @@ def install_template(
         option_dir_map = {
             "ci_cd": "ci-cd",
             "docker": "docker",
-            "pre_commit": "pre-commit",
             "env_templates": "env-templates",
         }
         option_dir = option_dir_map.get(option, option)

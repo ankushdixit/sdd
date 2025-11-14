@@ -243,11 +243,6 @@
       "description": "Containerization with docker-compose",
       "files_created": ["Dockerfile", ".dockerignore", "docker-compose.yml"]
     },
-    "pre_commit": {
-      "name": "Pre-commit Hooks",
-      "description": "Automated code quality checks before commits",
-      "files_created": [".pre-commit-config.yaml", ".husky/"]
-    },
     "env_templates": {
       "name": "Environment Templates",
       "description": ".env files and .editorconfig for all editors",

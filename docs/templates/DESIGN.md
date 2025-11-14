@@ -116,7 +116,7 @@ After installation, python3.11 binary will be auto-detected.
    **Description**: "Linting, formatting, type-check, basic tests (fastest setup)"
 
 2. **Label**: "Standard"
-   **Description**: "+ Type checking, pre-commit hooks (recommended for most projects)"
+   **Description**: "+ Type checking, git hooks (Husky) (recommended for most projects)"
 
 3. **Label**: "Comprehensive"
    **Description**: "+ Coverage reports, integration tests (production-ready)"
@@ -135,7 +135,6 @@ After installation, python3.11 binary will be auto-detected.
 - ✓ Type checking (TypeScript strict mode, Pyright/mypy)
 - ✓ Basic unit tests (Jest/Vitest for JS/TS, pytest for Python)
 - ✓ Test coverage minimum (80%)
-- ✓ Basic pre-commit hooks
 
 **Related Enhancements**: Current implementation
 
@@ -151,7 +150,7 @@ After installation, python3.11 binary will be auto-detected.
   - Basic SAST (ESLint security rules, bandit)
   - License compliance checking
   
-- ✓ **Enhanced Pre-commit** (Husky + lint-staged + security checks)
+- ✓ **Git Hooks** (Husky + lint-staged + security checks)
 - ✓ **Git Workflow Integration**
   - Automatic branch naming
   - Commit message validation
@@ -276,10 +275,7 @@ After installation, python3.11 binary will be auto-detected.
 2. **Label**: "Docker Support"
    **Description**: "Containerization with docker-compose"
 
-3. **Label**: "Pre-commit Hooks"
-   **Description**: "Automated code quality checks before commits"
-
-4. **Label**: "Environment Templates"
+3. **Label**: "Environment Templates"
    **Description**: ".env files and .editorconfig for all editors"
 
 **Note**: "Type something" automatically added by AskUserQuestion for custom input
@@ -987,7 +983,7 @@ def init_project() -> int:
     #     "template_id": "saas-t3",
     #     "quality_tier": "tier-2",
     #     "coverage_target": 80,
-    #     "additional_options": ["ci-cd", "docker", "pre-commit", "vscode"]
+    #     "additional_options": ["ci-cd", "docker", "env-templates"]
     # }
 
     # 4. INSTALL TEMPLATE (NEW)
@@ -1374,7 +1370,7 @@ A SaaS Application built with the T3 stack.
 - ✓ Linting and formatting
 - ✓ Type checking
 - ✓ Unit tests with 80% coverage
-- ✓ Pre-commit hooks
+- ✓ Git hooks (Husky) for code quality
 - ✓ Security scanning
 
 ## Getting Started
@@ -1605,7 +1601,7 @@ chore: Initialize project with Solokit template system
 Template: SaaS Application (saas-t3)
 Quality Tier: Standard
 Coverage Target: 80%
-Additional Options: GitHub Actions CI/CD, Pre-commit Hooks, Environment Templates
+Additional Options: GitHub Actions CI/CD, Environment Templates
 
 Stack:
 - Next.js: 16.0.1
@@ -1619,7 +1615,7 @@ Generated files:
 - Project configuration (15 files)
 - Quality gate configs (Standard tier)
 - CI/CD workflows (4 workflows)
-- Pre-commit hooks configured
+- Git hooks (Husky) configured
 - Environment templates created
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -1784,7 +1780,7 @@ All design decisions have been finalized through stakeholder input and technical
 ### User Experience Decisions
 
 5. **Pre-selected Options**: Yes
-   - **Default selections**: GitHub Actions CI/CD, Pre-commit Hooks, Environment Templates
+   - **Default selections**: GitHub Actions CI/CD, Environment Templates
    - **Rationale**: Encourages best practices, user can uncheck
 
 6. **Default Coverage**: 80% (Standard)

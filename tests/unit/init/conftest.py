@@ -98,7 +98,7 @@ def mock_template_registry():
             "tier-2-standard": {
                 "name": "Tier 2: Standard",
                 "includes": ["Everything in Tier 1"],
-                "adds": ["Type checking", "Pre-commit hooks"],
+                "adds": ["Type checking", "Git hooks (Husky)"],
             },
         },
     }
