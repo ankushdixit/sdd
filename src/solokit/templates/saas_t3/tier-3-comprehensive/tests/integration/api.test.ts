@@ -3,9 +3,9 @@
  *
  * Tests API endpoints via HTTP requests.
  * For tier-3+, these tests validate the full request/response flow.
+ *
+ * @jest-environment jsdom
  */
-
-import { describe, it, expect } from "@jest/globals";
 
 describe("API Integration Tests", () => {
   // Example: Health check endpoint

@@ -2,9 +2,9 @@
  * Integration Tests
  *
  * Tests component integration with data providers.
+ *
+ * @jest-environment jsdom
  */
-
-import { describe, it, expect } from "@jest/globals";
 
 describe("Dashboard Integration Tests", () => {
   it("should render components with data", () => {

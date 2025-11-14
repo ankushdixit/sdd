@@ -2,9 +2,9 @@
  * Integration Tests
  *
  * Tests API endpoints via HTTP requests.
+ *
+ * @jest-environment jsdom
  */
-
-import { describe, it, expect } from "@jest/globals";
 
 describe("API Integration Tests", () => {
   it("should validate API endpoint structure", () => {
