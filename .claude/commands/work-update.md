@@ -17,12 +17,13 @@ The work item ID and field are provided in `$ARGUMENTS` and passed through `"$@"
 
 ## Supported Fields
 
+- **status** - Update status (not_started/in_progress/blocked/completed)
 - **priority** - Change priority level (critical/high/medium/low)
 - **milestone** - Set or update milestone
 - **add-dependency** - Add dependency relationships
 - **remove-dependency** - Remove existing dependencies
-
-**Note:** Status is managed by session workflow (`/start`, `/end`) and cannot be changed directly.
+- **set-urgent** - Mark work item as urgent (only one item can be urgent at a time)
+- **clear-urgent** - Remove urgent flag from work item
 
 ## What It Does
 
@@ -36,20 +37,29 @@ The command will:
 ## Examples
 
 ```bash
-sk work-update bug_timeout priority
-sk work-update feature_search milestone
-sk work-update integration_test_api add-dependency
-sk work-update feature_dashboard remove-dependency
+sk work-update feat_001 --status in_progress
+sk work-update feat_001 --priority critical
+sk work-update feat_001 --add-dependency bug_002
+sk work-update feat_001 --milestone "v1.0"
+sk work-update feat_001 --status completed --priority high
+sk work-update feat_001 --set-urgent
+sk work-update feat_001 --clear-urgent
 ```
 
 ## Field-Specific Behavior
 
-**Priority:** Select from critical, high, medium, or low
+**Status:** Update to not_started, in_progress, blocked, or completed
 
-**Milestone:** Enter milestone name (e.g., "Sprint 1", "Q1 2025")
+**Priority:** Change to critical, high, medium, or low
 
-**Add-dependency:** Select one or more work items to add as dependencies
+**Milestone:** Set milestone name (e.g., "Sprint 1", "v1.0", "Q1 2025")
 
-**Remove-dependency:** Select one or more existing dependencies to remove
+**Add-dependency:** Add work item IDs as dependencies (comma-separated)
+
+**Remove-dependency:** Remove work item IDs from dependencies (comma-separated)
+
+**Set-urgent:** Mark this item as urgent (requires immediate attention). Only ONE item can be urgent at a time. If another item is already urgent, it will be automatically cleared.
+
+**Clear-urgent:** Remove the urgent flag from this work item
 
 Show all command output to the user in a clear, formatted display.

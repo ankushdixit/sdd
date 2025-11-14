@@ -50,7 +50,7 @@ class WorkItemUpdater:
 
         Args:
             work_id: ID of the work item to update
-            **updates: Field updates (status, priority, milestone, add_dependency, remove_dependency)
+            **updates: Field updates (status, priority, milestone, add_dependency, remove_dependency, set_urgent, clear_urgent)
 
         Raises:
             FileOperationError: If work_items.json doesn't exist
@@ -142,6 +142,27 @@ class WorkItemUpdater:
                         changes.append(f"  removed dependency: {dep_id}")
 
                 item["dependencies"] = deps
+
+            elif field == "set_urgent":
+                if not item.get("urgent", False):
+                    # Check if another item is already urgent
+                    existing_urgent = self.repository.get_urgent_work_item()
+                    if existing_urgent and existing_urgent["id"] != work_id:
+                        # Clear the existing urgent item
+                        self.repository.clear_urgent_flag(existing_urgent["id"])
+                        output.info(
+                            f"Cleared urgent flag from '{existing_urgent['id']}' "
+                            f"({existing_urgent['title']})"
+                        )
+
+                    item["urgent"] = True
+                    changes.append("  urgent flag: set")
+                    self.repository.set_urgent_flag(
+                        work_id, clear_others=False
+                    )  # Already cleared above
+                    logger.info("Set urgent flag on work item: %s", work_id)
+                else:
+                    output.warning("Work item is already marked as urgent (no change made)")
 
             elif field == "clear_urgent":
                 if item.get("urgent", False):

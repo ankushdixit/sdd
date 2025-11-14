@@ -4,13 +4,17 @@ This module tests the complete workflow of urgent flag operations including:
 - Creating urgent work items with confirmation prompts
 - Prioritization by work-next
 - Auto-clearing on completion
+- Auto-clearing on session completion via sk end
 - Manual clearing via work-update
 """
 
 import json
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
+from solokit.session.complete import main as session_complete_main
 from solokit.work_items.manager import WorkItemManager
 from solokit.work_items.repository import WorkItemRepository
 
@@ -97,6 +101,89 @@ class TestUrgentWorkflowEndToEnd:
         item = manager.repository.get_work_item(work_id)
         assert item["status"] == "completed"
         assert item["urgent"] is False
+
+    def test_auto_clear_urgent_on_session_completion(self, test_project, monkeypatch):
+        """Test that urgent flag is automatically cleared when session is completed via sk end."""
+        # Arrange - Setup project directory
+        monkeypatch.chdir(test_project)
+
+        session_dir = test_project / ".session"
+        tracking_dir = session_dir / "tracking"
+        history_dir = session_dir / "history"
+        history_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create urgent work item
+        work_id = "bug_urgent_session_test"
+        work_items_data = {
+            "work_items": {
+                work_id: {
+                    "id": work_id,
+                    "type": "bug",
+                    "title": "Urgent Bug for Session Test",
+                    "status": "in_progress",
+                    "priority": "critical",
+                    "urgent": True,  # Mark as urgent
+                    "dependencies": [],
+                }
+            },
+            "milestones": {},
+            "metadata": {"total_items": 1, "completed": 0, "in_progress": 1, "blocked": 0},
+        }
+        work_items_file = tracking_dir / "work_items.json"
+        work_items_file.write_text(json.dumps(work_items_data, indent=2))
+
+        # Create session status
+        status_data = {
+            "current_session": 1,
+            "current_work_item": work_id,
+            "status": "active",
+        }
+        status_file = tracking_dir / "status_update.json"
+        status_file.write_text(json.dumps(status_data, indent=2))
+
+        # Create a minimal spec file
+        specs_dir = session_dir / "specs"
+        specs_dir.mkdir(exist_ok=True)
+        spec_file = specs_dir / f"{work_id}.md"
+        spec_file.write_text(
+            """# Bug: Urgent Bug for Session Test
+
+## Description
+Test urgent flag clearing on session completion
+
+## Acceptance Criteria
+- [ ] Test passes
+"""
+        )
+
+        # Mock external dependencies
+        with patch("solokit.session.complete.check_uncommitted_changes", return_value=True):
+            with patch("solokit.session.complete.run_quality_gates") as mock_gates:
+                mock_gates.return_value = ({"tests": {"status": "passed"}}, True, [])
+                with patch("solokit.session.complete.extract_learnings_from_session", return_value=[]):
+                    with patch("solokit.session.complete.generate_commit_message", return_value="Test commit"):
+                        with patch("solokit.session.complete.complete_git_workflow") as mock_git:
+                            mock_git.return_value = {"success": True, "message": "Success"}
+                            with patch("solokit.session.complete.record_session_commits"):
+                                with patch("solokit.session.complete.auto_extract_learnings", return_value=0):
+                                    # Patch update_all_tracking to avoid subprocess calls
+                                    with patch("solokit.session.complete.update_all_tracking"):
+                                        with patch("solokit.session.complete.trigger_curation_if_needed"):
+                                            # Act - Complete session with --complete flag
+                                            with patch("sys.argv", ["session_complete.py", "--complete"]):
+                                                result = session_complete_main()
+
+        # Assert - Session completed successfully
+        assert result == 0
+
+        # Assert - Urgent flag should be cleared
+        repository = WorkItemRepository(session_dir)
+        urgent_item = repository.get_urgent_work_item()
+        assert urgent_item is None, "Urgent flag should be cleared after session completion"
+
+        item = repository.get_work_item(work_id)
+        assert item["status"] == "completed", "Work item should be marked as completed"
+        assert item["urgent"] is False, "Urgent flag should be False after completion"
 
     def test_manual_clear_urgent_flag(self, manager):
         """Test manually clearing urgent flag via work-update."""

@@ -78,7 +78,7 @@ COMMAND_DETAILS: dict[str, dict[str, Any]] = {
     },
     "work-new": {
         "description": "Create a new work item with title, type, and priority.",
-        "usage": "sk work-new --type TYPE --title TITLE --priority PRIORITY [--dependencies DEPS]",
+        "usage": "sk work-new --type TYPE --title TITLE --priority PRIORITY [--dependencies DEPS] [--urgent]",
         "options": [
             (
                 "--type, -t",
@@ -87,11 +87,13 @@ COMMAND_DETAILS: dict[str, dict[str, Any]] = {
             ("--title, -T", "Work item title (required)"),
             ("--priority, -p", "Priority level (critical, high, medium, low)"),
             ("--dependencies, -d", "Comma-separated list of dependency work item IDs"),
+            ("--urgent", "Mark as urgent (only one item can be urgent at a time)"),
         ],
         "examples": [
             'sk work-new --type feature --title "Add user auth" --priority high',
             'sk work-new -t bug -T "Fix login error" -p critical',
             'sk work-new -t refactor -T "Improve queries" -p medium --dependencies feat_001',
+            'sk work-new -t bug -T "Critical hotfix" -p critical --urgent',
         ],
     },
     "work-update": {
@@ -103,11 +105,15 @@ COMMAND_DETAILS: dict[str, dict[str, Any]] = {
             ("--milestone", "Update milestone"),
             ("--add-dependency", "Add a dependency by work item ID"),
             ("--remove-dependency", "Remove a dependency by work item ID"),
+            ("--set-urgent", "Mark item as urgent (only one can be urgent at a time)"),
+            ("--clear-urgent", "Remove urgent flag from item"),
         ],
         "examples": [
             "sk work-update feat_001 --status in_progress",
             "sk work-update feat_001 --priority critical",
             "sk work-update feat_001 --add-dependency bug_002",
+            "sk work-update feat_001 --set-urgent",
+            "sk work-update feat_001 --clear-urgent",
         ],
     },
     "work-delete": {

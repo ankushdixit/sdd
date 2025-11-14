@@ -31,7 +31,9 @@ from solokit.core.logging_config import get_logger
 from solokit.core.output import get_output
 from solokit.core.types import WorkItemStatus, WorkItemType
 from solokit.quality.gates import QualityGates
+from solokit.work_items.repository import WorkItemRepository
 from solokit.work_items.spec_parser import parse_spec_file
+from solokit.work_items.updater import WorkItemUpdater
 
 logger = get_logger(__name__)
 output = get_output()
@@ -1098,40 +1100,54 @@ def main() -> int:
         output.info("For Claude Code users: Use /end slash command for interactive UI")
         return 1
 
-    # Track changes for update_history
-    changes = []
+    # Use WorkItemUpdater for status updates (includes auto-clear urgent flag)
+    session_dir = Path(".session")
+    repository = WorkItemRepository(session_dir)
+    updater = WorkItemUpdater(repository)
+
     previous_status = work_items_data["work_items"][work_item_id]["status"]
 
-    # Update work item status
+    # Update work item status using updater
     if is_complete:
         new_status = WorkItemStatus.COMPLETED.value
-        work_items_data["work_items"][work_item_id]["status"] = new_status
-        if "metadata" not in work_items_data["work_items"][work_item_id]:
-            work_items_data["work_items"][work_item_id]["metadata"] = {}
-        work_items_data["work_items"][work_item_id]["metadata"]["completed_at"] = (
+
+        # Use updater to handle status change (auto-clears urgent flag)
+        updater.update(work_item_id, status=new_status)
+
+        # Add completion metadata using repository (to avoid reload/save issues)
+        work_items_data_temp = repository.load_all()
+        if "metadata" not in work_items_data_temp["work_items"][work_item_id]:
+            work_items_data_temp["work_items"][work_item_id]["metadata"] = {}
+        work_items_data_temp["work_items"][work_item_id]["metadata"]["completed_at"] = (
             datetime.now().isoformat()
         )
+        repository.save_all(work_items_data_temp)
 
-        # Record changes
-        if previous_status != new_status:
-            changes.append(f"  status: {previous_status} → {new_status}")
-        changes.append(f"  metadata.completed_at: {datetime.now().isoformat()}")
+        logger.info(
+            "Updated work item %s status: %s → %s (urgent flag auto-cleared if set)",
+            work_item_id,
+            previous_status,
+            new_status,
+        )
     else:
         new_status = WorkItemStatus.IN_PROGRESS.value
-        work_items_data["work_items"][work_item_id]["status"] = new_status
 
-        # Record changes
-        if previous_status != new_status:
-            changes.append(f"  status: {previous_status} → {new_status}")
+        # Use updater for consistency
+        updater.update(work_item_id, status=new_status)
 
-    # Add update_history entry if changes were made
-    if changes:
-        if "update_history" not in work_items_data["work_items"][work_item_id]:
-            work_items_data["work_items"][work_item_id]["update_history"] = []
-
-        work_items_data["work_items"][work_item_id]["update_history"].append(
-            {"timestamp": datetime.now().isoformat(), "changes": changes}
+        logger.info(
+            "Updated work item %s status: %s → %s",
+            work_item_id,
+            previous_status,
+            new_status,
         )
+
+    # Reload work items to get all updated data before calculating metadata counters
+    # Use repository.load_all() instead of load_work_items() to avoid mock issues in tests
+    work_items_data = repository.load_all()
+
+    # Note: updater.update() handles update_history automatically
+    # No need to manually append changes
 
     # Update metadata counters
     work_items = work_items_data.get("work_items", {})
