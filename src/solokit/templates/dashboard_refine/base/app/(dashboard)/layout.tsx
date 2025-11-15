@@ -5,11 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
  * Dashboard layout
  * Provides consistent header and sidebar for all dashboard pages
  */
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

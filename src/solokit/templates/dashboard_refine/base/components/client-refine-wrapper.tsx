@@ -12,7 +12,14 @@ const RefineProvider = dynamic(
     import("@/providers/refine-provider").then((mod) => ({
       default: mod.RefineProvider,
     })),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    ),
+  }
 );
 
 type Props = {

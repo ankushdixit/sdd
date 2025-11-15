@@ -21,10 +21,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching users:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch users" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
 
@@ -52,14 +49,11 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     console.error("Error creating user:", error);
-    return NextResponse.json(
-      { error: "Failed to create user" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }
 }

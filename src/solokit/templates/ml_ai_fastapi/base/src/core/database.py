@@ -2,8 +2,9 @@
 Database configuration and session management
 """
 
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,7 +21,7 @@ engine = create_async_engine(
 )
 
 # Create async session maker
-async_session_maker = sessionmaker(
+async_session_maker = async_sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -39,7 +40,7 @@ async def create_db_and_tables() -> None:
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def get_session() -> AsyncSession:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Get a database session.
 

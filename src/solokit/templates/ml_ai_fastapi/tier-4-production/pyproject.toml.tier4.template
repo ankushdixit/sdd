@@ -27,6 +27,7 @@ dev = [
     "aiosqlite==0.20.0",
     "ruff==0.9.2",
     "pyright==1.1.396",
+    "mypy==1.18.2",
 ]
 
 security = [
@@ -161,6 +162,31 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+# Mypy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+plugins = []
+
+# Ignore missing imports for packages without type stubs
+[[tool.mypy.overrides]]
+module = [
+    "sqlmodel",
+    "sqlmodel.*",
+    "sentry_sdk.*",
+    "opentelemetry.*",
+]
+ignore_missing_imports = true
 
 # Bandit security configuration
 [tool.bandit]

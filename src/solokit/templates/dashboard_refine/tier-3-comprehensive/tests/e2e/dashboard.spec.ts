@@ -8,12 +8,10 @@ import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Dashboard Page", () => {
   test("should display dashboard with stats cards", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Check that dashboard title is visible
-    await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
     // Check that stat cards are present
     const cards = page.locator('[class*="grid"] > div');
@@ -27,7 +25,7 @@ test.describe("Dashboard Page", () => {
   });
 
   test("should have working navigation in sidebar", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Check sidebar navigation links
     const sidebar = page.locator("aside");
@@ -35,11 +33,11 @@ test.describe("Dashboard Page", () => {
 
     // Click on Users link
     await page.getByRole("link", { name: "Users" }).click();
-    await expect(page).toHaveURL("/dashboard/users");
+    await expect(page).toHaveURL("/users");
   });
 
   test("should have accessible search functionality", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Find search input by aria-label
     const searchInput = page.getByLabel("Search");
@@ -52,7 +50,7 @@ test.describe("Dashboard Page", () => {
   });
 
   test("should pass accessibility checks", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Run accessibility scan
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -66,12 +64,10 @@ test.describe("Dashboard Page", () => {
   test("should be responsive on mobile", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Check that content is visible on mobile
-    await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
     // Sidebar should be hidden on mobile
     const sidebar = page.locator("aside");
@@ -79,16 +75,14 @@ test.describe("Dashboard Page", () => {
   });
 
   test("should have keyboard navigation support", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/");
 
     // Tab through focusable elements
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
 
     // Verify focused element is visible
-    const focusedElement = await page.evaluate(
-      () => document.activeElement?.tagName,
-    );
+    const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
   });
 });

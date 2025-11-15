@@ -5,14 +5,14 @@ OpenTelemetry tracing middleware
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import Request, Response  # type: ignore[import-not-found]
-from opentelemetry import trace  # type: ignore[import-not-found]
+from fastapi import Request, Response
+from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import (
-    FastAPIInstrumentor,  # type: ignore[import-not-found]
+    FastAPIInstrumentor,
 )
-from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore[import-not-found]
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.core.config import settings  # type: ignore[import-not-found]
+from src.core.config import settings
 
 
 class TracingMiddleware(BaseHTTPMiddleware):
@@ -41,7 +41,7 @@ class TracingMiddleware(BaseHTTPMiddleware):
                 "http.client": request.client.host if request.client else "unknown",
             },
         ) as span:
-            response = await call_next(request)
+            response: Response = await call_next(request)
 
             # Add response attributes to span
             span.set_attribute("http.status_code", response.status_code)

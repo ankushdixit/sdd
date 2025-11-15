@@ -5,10 +5,10 @@ Request/Response logging middleware
 import time
 from collections.abc import Callable
 
-from fastapi import Request, Response  # type: ignore[import-not-found]
-from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore[import-not-found]
+from fastapi import Request, Response
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.core.logging import logger  # type: ignore[import-not-found]
+from src.core.logging import logger
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -45,7 +45,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         # Process request
         try:
-            response = await call_next(request)
+            response: Response = await call_next(request)
 
             # Calculate duration
             duration = time.time() - start_time

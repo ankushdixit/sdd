@@ -33,7 +33,7 @@ export default function () {
     JSON.stringify({ text: "load test" }),
     {
       headers: { "Content-Type": "application/json" },
-    },
+    }
   );
   check(apiRes, {
     "API status is 200": (r) => r.status === 200,

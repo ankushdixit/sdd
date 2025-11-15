@@ -8,7 +8,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test.describe("User Management", () => {
   test("should display users list page", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Check page title
     await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
@@ -18,7 +18,7 @@ test.describe("User Management", () => {
   });
 
   test("should display user table with data", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Wait for table to load
     const table = page.locator("table");
@@ -26,27 +26,21 @@ test.describe("User Management", () => {
 
     // Check table headers
     await expect(page.getByRole("columnheader", { name: "ID" })).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "Name" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "Email" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "Actions" }),
-    ).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Email" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Actions" })).toBeVisible();
   });
 
   test("should handle loading state", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
-    // Check for loading state (may appear briefly)
-    const loadingOrTable = page.locator('table, :text("Loading")');
-    await expect(loadingOrTable).toBeVisible();
+    // With mock data, loading is instant, so just verify the table renders
+    const table = page.locator("table");
+    await expect(table).toBeVisible({ timeout: 10000 });
   });
 
   test("should have accessible table structure", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Wait for table
     await page.waitForSelector("table");
@@ -61,15 +55,15 @@ test.describe("User Management", () => {
   });
 
   test("should navigate back to dashboard", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Click dashboard link in sidebar
     await page.getByRole("link", { name: "Dashboard" }).first().click();
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL("/");
   });
 
   test("should pass full page accessibility audit", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Wait for page to fully load
     await page.waitForLoadState("networkidle");
@@ -83,7 +77,7 @@ test.describe("User Management", () => {
     if (accessibilityScanResults.violations.length > 0) {
       console.log(
         "Accessibility violations:",
-        JSON.stringify(accessibilityScanResults.violations, null, 2),
+        JSON.stringify(accessibilityScanResults.violations, null, 2)
       );
     }
 
@@ -91,7 +85,7 @@ test.describe("User Management", () => {
   });
 
   test("should support keyboard navigation in table", async ({ page }) => {
-    await page.goto("/dashboard/users");
+    await page.goto("/users");
 
     // Wait for table
     await page.waitForSelector("table");

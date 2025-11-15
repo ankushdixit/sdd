@@ -6,9 +6,7 @@ test.describe("Home Page", () => {
     await page.goto("/");
 
     // Check for the main heading
-    await expect(
-      page.getByRole("heading", { name: /full-stack.*next\.js/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /full-stack.*next\.js/i })).toBeVisible();
   });
 
   test("should display example component", async ({ page }) => {

@@ -70,7 +70,11 @@ describe("Utility Functions", () => {
     const { cn } = require("@/lib/utils");
 
     expect(cn("px-2 py-1", "bg-blue-500")).toBe("px-2 py-1 bg-blue-500");
-    expect(cn("px-2", false && "py-1")).toBe("px-2");
-    expect(cn("px-2", true && "py-1")).toBe("px-2 py-1");
+
+    // Test conditional class merging
+    const isActive = false;
+    const isHighlighted = true;
+    expect(cn("px-2", isActive && "py-1")).toBe("px-2");
+    expect(cn("px-2", isHighlighted && "py-1")).toBe("px-2 py-1");
   });
 });

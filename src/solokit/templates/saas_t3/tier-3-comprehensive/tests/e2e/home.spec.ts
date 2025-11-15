@@ -6,9 +6,7 @@ test.describe("Home Page", () => {
     await page.goto("/");
 
     // Check for the main heading
-    await expect(
-      page.getByRole("heading", { name: /create.*t3.*app/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /create.*t3.*app/i })).toBeVisible();
   });
 
   test("should display tRPC query result", async ({ page }) => {

@@ -13,6 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
+interface User {
+  id: number | string;
+  name: string;
+  email: string;
+}
+
 /**
  * Users management page
  * Example of a Refine resource page with data fetching
@@ -20,7 +26,7 @@ import { PlusCircle } from "lucide-react";
 export default function UsersPage() {
   const {
     query: { data, isLoading },
-  } = useList({
+  } = useList<User>({
     resource: "users",
   });
 
@@ -57,7 +63,7 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user: any) => (
+                {users.map((user: User) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.id}</TableCell>
                     <TableCell>{user.name}</TableCell>

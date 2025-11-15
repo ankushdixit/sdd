@@ -40,7 +40,7 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
     """
     try:
         # Test database connection
-        await db.exec(text("SELECT 1"))
+        await db.execute(text("SELECT 1"))
     except Exception as e:
         return {
             "status": "not ready",

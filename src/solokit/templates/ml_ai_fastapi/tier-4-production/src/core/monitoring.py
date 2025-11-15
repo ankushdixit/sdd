@@ -2,8 +2,8 @@
 Prometheus metrics setup for monitoring
 """
 
-from fastapi import Response  # type: ignore[import-not-found]
-from prometheus_client import (  # type: ignore[import-not-found]
+from fastapi import Response
+from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
     Counter,

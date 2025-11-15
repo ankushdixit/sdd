@@ -88,7 +88,6 @@ npm run dev
 ```
 
 Visit http://localhost:3000
-
 """
     else:  # Python
         readme_content += """```bash
@@ -102,7 +101,6 @@ uvicorn main:app --reload
 ```
 
 Visit http://localhost:8000
-
 """
 
     # Add testing section
@@ -143,7 +141,6 @@ pyright
 ```
 
 **Note**: Session commands (`sk validate`, `sk end`) automatically use the virtual environment, so activation is optional when using those commands.
-
 """
 
     # Add additional options documentation
@@ -168,7 +165,8 @@ pyright
                 )
 
     # Add Session-Driven Development section
-    readme_content += """## Session-Driven Development
+    readme_content += """
+## Session-Driven Development
 
 This project uses Session-Driven Development (Solokit) for organized, AI-augmented development.
 
@@ -185,11 +183,11 @@ This project uses Session-Driven Development (Solokit) for organized, AI-augment
 ### Documentation
 
 See `.session/` directory for:
+
 - Work item specifications (`.session/specs/`)
 - Session briefings (`.session/briefings/`)
 - Session summaries (`.session/history/`)
 - Captured learnings (`.session/tracking/learnings.json`)
-
 """
 
     # Add footer

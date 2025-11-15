@@ -6,10 +6,10 @@ import logging
 import sys
 from typing import Any
 
-import structlog  # type: ignore[import-not-found]
-from structlog.types import EventDict, Processor  # type: ignore[import-not-found]
+import structlog
+from structlog.types import EventDict, Processor
 
-from src.core.config import settings  # type: ignore[import-not-found]
+from src.core.config import settings
 
 
 def add_app_context(logger: Any, method_name: str, event_dict: EventDict) -> EventDict:  # noqa: ARG001
@@ -34,10 +34,10 @@ def configure_logging() -> None:
     Configure structured logging with structlog.
     """
     # Determine log level
-    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)  # type: ignore[attr-defined]
+    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
     # Configure standard library logging
-    logging.basicConfig(  # type: ignore[attr-defined]
+    logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
         level=log_level,

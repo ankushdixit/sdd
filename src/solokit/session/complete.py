@@ -217,7 +217,7 @@ def update_all_tracking(session_num: int) -> bool:
     try:
         result = runner.run(
             [
-                "python",
+                sys.executable,
                 str(project_dir / "stack.py"),
                 "--session",
                 str(session_num),
@@ -245,7 +245,7 @@ def update_all_tracking(session_num: int) -> bool:
     try:
         result = runner.run(
             [
-                "python",
+                sys.executable,
                 str(project_dir / "tree.py"),
                 "--session",
                 str(session_num),
