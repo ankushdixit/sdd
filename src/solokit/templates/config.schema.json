@@ -9,23 +9,29 @@
       "type": "object",
       "description": "Quality gate configuration",
       "properties": {
-        "test": {
+        "test_execution": {
           "type": "object",
           "properties": {
-            "required": { "type": "boolean" },
-            "command": { "type": "string" },
-            "timeout": { "type": "integer", "minimum": 1 }
-          },
-          "required": ["required"]
+            "enabled": { "type": "boolean" },
+            "required": { "type": "boolean" }
+          }
         },
-        "lint": {
+        "linting": {
           "type": "object",
           "properties": {
+            "enabled": { "type": "boolean" },
             "required": { "type": "boolean" },
-            "command": { "type": "string" },
+            "auto_fix": { "type": "boolean" },
+            "commands": {
+              "type": "object",
+              "properties": {
+                "python": { "type": "string" },
+                "javascript": { "type": "string" },
+                "typescript": { "type": "string" }
+              }
+            },
             "timeout": { "type": "integer", "minimum": 1 }
-          },
-          "required": ["required"]
+          }
         },
         "security": {
           "type": "object",
@@ -39,12 +45,20 @@
           },
           "required": ["required"]
         },
-        "format": {
+        "formatting": {
           "type": "object",
           "properties": {
+            "enabled": { "type": "boolean" },
             "required": { "type": "boolean" },
             "auto_fix": { "type": "boolean" },
-            "command": { "type": "string" },
+            "commands": {
+              "type": "object",
+              "properties": {
+                "python": { "type": "string" },
+                "javascript": { "type": "string" },
+                "typescript": { "type": "string" }
+              }
+            },
             "timeout": { "type": "integer", "minimum": 1 }
           }
         },

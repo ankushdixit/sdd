@@ -158,7 +158,16 @@ def initialize_tracking_files(
                 },
                 "auto_fix": False,
             },
-            "formatting": {"enabled": True, "required": True},
+            "formatting": {
+                "enabled": True,
+                "required": True,
+                "commands": {
+                    "python": "ruff format .",
+                    "javascript": "npx prettier .",
+                    "typescript": "npx prettier .",
+                },
+                "auto_fix": False,
+            },
             "security": {"enabled": True, "required": True},
             "documentation": {
                 "enabled": True,

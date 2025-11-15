@@ -122,7 +122,6 @@ npm run lint
 # Run type checking
 npm run type-check
 ```
-
 """
     else:  # Python
         readme_content += """```bash
