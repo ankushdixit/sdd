@@ -364,6 +364,71 @@ def route_command(command_name: str, args: list[str]) -> int:
         ) from e
 
 
+def parse_global_flags(argv: list[str]) -> tuple[argparse.Namespace, list[str]]:
+    """
+    Parse only global flags that appear before the command name.
+
+    This function manually parses global flags to ensure that flags appearing
+    after the command name are passed to the command's own argument parser.
+    This fixes the issue where `sk command --help` would show general help
+    instead of command-specific help.
+
+    Args:
+        argv: Command-line arguments (typically sys.argv[1:])
+
+    Returns:
+        Tuple of (parsed_args, remaining_args) where:
+        - parsed_args: Namespace with global flag values
+        - remaining_args: Command name and its arguments (including flags)
+
+    Examples:
+        >>> parse_global_flags(['--verbose', 'work-list', '--status', 'done'])
+        (Namespace(verbose=True, ...), ['work-list', '--status', 'done'])
+
+        >>> parse_global_flags(['work-delete', '--help'])
+        (Namespace(verbose=False, ...), ['work-delete', '--help'])
+    """
+    global_flags = argparse.Namespace(
+        verbose=False,
+        log_file=None,
+        version=False,
+        help=False,
+    )
+    remaining = []
+    i = 0
+
+    while i < len(argv):
+        arg = argv[i]
+
+        # Stop at first non-flag argument (the command)
+        if not arg.startswith("-"):
+            remaining = argv[i:]  # Everything from command onwards
+            break
+
+        # Parse global flags
+        if arg in ("--verbose", "-v"):
+            global_flags.verbose = True
+        elif arg in ("--version", "-V"):
+            global_flags.version = True
+        elif arg in ("--help", "-h"):
+            global_flags.help = True
+        elif arg == "--log-file":
+            i += 1
+            if i < len(argv):
+                global_flags.log_file = argv[i]
+            else:
+                # Missing value for --log-file, will be caught later
+                remaining = argv[i - 1 :]
+                break
+        else:
+            # Unknown flag - might be for subcommand, keep everything from here
+            remaining = argv[i:]
+            break
+        i += 1
+
+    return global_flags, remaining
+
+
 def main() -> int:
     """
     Main entry point for CLI with centralized error handling.
@@ -379,37 +444,9 @@ def main() -> int:
         Exit code (0 for success, non-zero for errors)
     """
     try:
-        # Parse global flags first
-        parser = argparse.ArgumentParser(
-            description="Session-Driven Development CLI",
-            add_help=False,  # Don't show help yet, let commands handle it
-        )
-        parser.add_argument(
-            "--verbose",
-            "-v",
-            action="store_true",
-            help="Enable verbose (DEBUG) logging",
-        )
-        parser.add_argument(
-            "--log-file",
-            type=str,
-            help="Write logs to file",
-        )
-        parser.add_argument(
-            "--version",
-            "-V",
-            action="store_true",
-            help="Show version information",
-        )
-        parser.add_argument(
-            "--help",
-            "-h",
-            action="store_true",
-            help="Show help message",
-        )
-
-        # Parse known args (global flags) and leave rest for command routing
-        args, remaining = parser.parse_known_args()
+        # Parse global flags that appear before the command
+        # This ensures flags after the command (like --help) are passed to the command
+        args, remaining = parse_global_flags(sys.argv[1:])
 
         # Handle global --version flag
         if args.version:
