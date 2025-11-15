@@ -93,7 +93,13 @@ class LintingChecker(QualityChecker):
 
         # For Python projects, use venv executables if available
         command_parts = command.split()
-        if self.language == "python" and command_parts[0] in ["ruff", "pylint", "flake8", "mypy", "pyright"]:
+        if self.language == "python" and command_parts[0] in [
+            "ruff",
+            "pylint",
+            "flake8",
+            "mypy",
+            "pyright",
+        ]:
             venv_bin = self.project_root / "venv" / "bin" / command_parts[0]
             venv_scripts = self.project_root / "venv" / "Scripts" / f"{command_parts[0]}.exe"
 

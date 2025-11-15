@@ -2884,6 +2884,11 @@ class TestQualityGatesAdditionalCoverage:
         # Act
         # Create pyproject.toml to pass Python project check
         (temp_dir / "pyproject.toml").touch()
+        # Create fake venv structure so docstring check doesn't skip
+        venv_dir = temp_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(
             doc_config, temp_dir, work_item=work_item, runner=mock_runner
         )

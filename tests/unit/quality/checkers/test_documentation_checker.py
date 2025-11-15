@@ -251,6 +251,11 @@ class TestDocumentationCheckerDocstrings:
     ):
         """Test docstring check passes when no issues found."""
         (temp_project_dir / "pyproject.toml").touch()
+        # Create fake venv structure so check doesn't skip
+        venv_dir = temp_project_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
@@ -270,6 +275,11 @@ class TestDocumentationCheckerDocstrings:
     ):
         """Test docstring check fails when issues found."""
         (temp_project_dir / "pyproject.toml").touch()
+        # Create fake venv structure so check doesn't skip
+        venv_dir = temp_project_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
         mock_runner.run.return_value = CommandResult(
@@ -412,6 +422,11 @@ class TestDocumentationCheckerIntegration:
     def test_run_passes_all_checks(self, doc_config, temp_project_dir, mock_runner):
         """Test run() passes when all checks pass."""
         (temp_project_dir / "pyproject.toml").touch()
+        # Create fake venv structure so docstring check doesn't skip
+        venv_dir = temp_project_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
         # Mock successful responses
@@ -451,6 +466,11 @@ class TestDocumentationCheckerIntegration:
     def test_run_fails_when_any_check_fails(self, doc_config, temp_project_dir, mock_runner):
         """Test run() fails when any check fails."""
         (temp_project_dir / "pyproject.toml").touch()
+        # Create fake venv structure so docstring check doesn't skip
+        venv_dir = temp_project_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(doc_config, temp_project_dir, runner=mock_runner)
 
         # Mock mixed responses
