@@ -88,6 +88,7 @@ npm run dev
 ```
 
 Visit http://localhost:3000
+
 """
     else:  # Python
         readme_content += """```bash
@@ -101,6 +102,7 @@ uvicorn main:app --reload
 ```
 
 Visit http://localhost:8000
+
 """
 
     # Add testing section
@@ -120,6 +122,7 @@ npm run lint
 # Run type checking
 npm run type-check
 ```
+
 """
     else:  # Python
         readme_content += """```bash
@@ -188,10 +191,8 @@ See `.session/` directory for:
 - Session briefings (`.session/briefings/`)
 - Session summaries (`.session/history/`)
 - Captured learnings (`.session/tracking/learnings.json`)
-"""
 
-    # Add footer
-    readme_content += """---
+---
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 """
