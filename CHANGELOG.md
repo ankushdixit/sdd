@@ -319,7 +319,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updated fixtures in `test_core_session_workflow.py`, `test_learning_system.py`, `test_work_item_system.py`
     - Fixtures now manually create `.session` directory structure instead of calling deprecated `sk init`
     - Added all required tracking files with proper structure (work_items.json, learnings.json, status_update.json, stack.txt, tree.txt)
-  - Test suite results: **2,391 tests passing, 0 failed, 0 skipped** (previously 2,368 passing, 35 skipped)
+  - Test suite results: **2,954 tests passing, 0 failed, 0 skipped** (previously 2,368 passing, 35 skipped)
   - Quality checks: All ruff linting passed, all 247 files formatted, all mypy checks passed (106 source files)
   - Benefits: Clean codebase with modern Python type hints, zero legacy code, 100% test success rate
 
@@ -1026,7 +1026,7 @@ Phase mapping to public release versions:
   - Phase 5.7: Spec-first architecture
   - Phase 5.8: Marketplace plugin support
   - Phase 5.9: Standard Python src/ layout & PyPI publishing
-- **v0.1.2** = Current release ✅ **Current**
+- **v0.1.3** = Current release ✅ **Current**
 - v0.1.1 = Previous release (UX improvements & bug fixes)
 - v0.2.0+ = Future enhancements (planned)
 - v1.0.0 = Stable API release (planned)
