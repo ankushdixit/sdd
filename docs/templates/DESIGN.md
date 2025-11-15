@@ -513,7 +513,7 @@ pip install --upgrade pip
 pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" pydantic==2.12.4 \
   sqlmodel==0.0.25 sqlalchemy==2.0.37 psycopg2-binary==2.9.10 alembic==1.14.0 \
   pytest==8.3.4 pytest-cov==6.0.0 pytest-asyncio==0.25.2 httpx==0.28.1 \
-  ruff==0.9.2 pyright==1.1.396
+  ruff==0.9.2 pyright==1.1.407
 ```
 
 **Tier 2: Standard**:

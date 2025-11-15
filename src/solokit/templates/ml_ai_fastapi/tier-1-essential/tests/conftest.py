@@ -7,8 +7,10 @@ from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient  # type: ignore[import-not-found]
-from sqlalchemy.ext.asyncio import create_async_engine  # type: ignore[import-not-found]
-from sqlalchemy.orm import sessionmaker  # type: ignore[import-not-found]
+from sqlalchemy.ext.asyncio import (  # type: ignore[import-not-found]
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlmodel import SQLModel  # type: ignore[import-not-found]
 from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
 
@@ -42,13 +44,13 @@ async def db_engine() -> AsyncGenerator[Any, None]:
 @pytest.fixture
 async def db_session(db_engine: Any) -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session."""
-    async_session_maker = sessionmaker(
+    session_maker = async_sessionmaker(
         db_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
 
-    async with async_session_maker() as session:
+    async with session_maker() as session:
         yield session
 
 

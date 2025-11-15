@@ -35,7 +35,7 @@ async def create_db_and_tables() -> None:
     """
     async with engine.begin() as conn:
         # Import all models here to ensure they are registered
-        from src.models import Item  # noqa: F401
+        from src.models import Item  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
         await conn.run_sync(SQLModel.metadata.create_all)
 
