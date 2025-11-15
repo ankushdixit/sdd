@@ -8,6 +8,7 @@ import pytest
 from solokit.cli import (
     COMMANDS,
     main,
+    parse_global_flags,
     parse_work_list_args,
     parse_work_new_args,
     parse_work_show_args,
@@ -16,6 +17,105 @@ from solokit.cli import (
 )
 from solokit.core.exceptions import ErrorCode
 from solokit.core.exceptions import SystemError as SolokitSystemError
+
+
+class TestGlobalFlagParsing:
+    """Test parse_global_flags function."""
+
+    def test_parse_no_flags(self):
+        """Test parsing with no flags, just command."""
+        args, remaining = parse_global_flags(["work-list"])
+        assert args.verbose is False
+        assert args.log_file is None
+        assert args.version is False
+        assert args.help is False
+        assert remaining == ["work-list"]
+
+    def test_parse_global_verbose_before_command(self):
+        """Test --verbose flag before command."""
+        args, remaining = parse_global_flags(["--verbose", "work-list"])
+        assert args.verbose is True
+        assert remaining == ["work-list"]
+
+    def test_parse_global_verbose_short_before_command(self):
+        """Test -v flag before command."""
+        args, remaining = parse_global_flags(["-v", "work-list"])
+        assert args.verbose is True
+        assert remaining == ["work-list"]
+
+    def test_parse_global_help_before_command(self):
+        """Test --help flag before command."""
+        args, remaining = parse_global_flags(["--help"])
+        assert args.help is True
+        assert remaining == []
+
+    def test_parse_global_help_with_command(self):
+        """Test --help before command name."""
+        args, remaining = parse_global_flags(["--help", "work-list"])
+        assert args.help is True
+        assert remaining == ["work-list"]
+
+    def test_parse_command_help_flag_preserved(self):
+        """Test that --help after command is NOT consumed as global flag."""
+        args, remaining = parse_global_flags(["work-delete", "--help"])
+        assert args.help is False  # Global help should NOT be set
+        assert remaining == ["work-delete", "--help"]  # --help preserved for command
+
+    def test_parse_command_with_multiple_flags_preserved(self):
+        """Test command with multiple flags are all preserved."""
+        args, remaining = parse_global_flags(["work-list", "--status", "in_progress"])
+        assert args.verbose is False
+        assert remaining == ["work-list", "--status", "in_progress"]
+
+    def test_parse_global_version_flag(self):
+        """Test --version flag."""
+        args, remaining = parse_global_flags(["--version"])
+        assert args.version is True
+        assert remaining == []
+
+    def test_parse_global_version_short_flag(self):
+        """Test -V flag."""
+        args, remaining = parse_global_flags(["-V"])
+        assert args.version is True
+        assert remaining == []
+
+    def test_parse_log_file_flag(self):
+        """Test --log-file flag with value."""
+        args, remaining = parse_global_flags(["--log-file", "/tmp/test.log", "work-list"])
+        assert args.log_file == "/tmp/test.log"
+        assert remaining == ["work-list"]
+
+    def test_parse_multiple_global_flags(self):
+        """Test multiple global flags before command."""
+        args, remaining = parse_global_flags(
+            ["--verbose", "--log-file", "/tmp/test.log", "work-list"]
+        )
+        assert args.verbose is True
+        assert args.log_file == "/tmp/test.log"
+        assert remaining == ["work-list"]
+
+    def test_parse_mixed_global_and_command_flags(self):
+        """Test global flags before command, command flags after."""
+        args, remaining = parse_global_flags(
+            ["--verbose", "work-update", "feat_001", "--status", "completed"]
+        )
+        assert args.verbose is True
+        assert remaining == ["work-update", "feat_001", "--status", "completed"]
+
+    def test_parse_unknown_flag_stops_parsing(self):
+        """Test that unknown flag stops global flag parsing."""
+        args, remaining = parse_global_flags(["--unknown-flag", "work-list"])
+        assert args.verbose is False
+        assert remaining == ["--unknown-flag", "work-list"]
+
+    def test_parse_empty_argv(self):
+        """Test parsing with empty argv."""
+        args, remaining = parse_global_flags([])
+        assert args.verbose is False
+        assert args.log_file is None
+        assert args.version is False
+        assert args.help is False
+        assert remaining == []
 
 
 class TestArgumentParsing:
@@ -400,3 +500,38 @@ class TestMainFunction:
             assert class_name is None or isinstance(class_name, str)
             assert isinstance(func_name, str)
             assert isinstance(needs_argparse, bool)
+
+    def test_command_help_flag_shows_command_help(self, capsys):
+        """Test that 'sk command --help' shows command-specific help, not general help."""
+        with patch.object(sys, "argv", ["sk", "work-delete", "--help"]):
+            with pytest.raises(SystemExit):  # argparse --help exits with 0
+                main()
+
+            captured = capsys.readouterr()
+            # Should show work-delete specific help, not general help
+            assert "work_item_id" in captured.out or "work_item_id" in captured.err
+            assert "--keep-spec" in captured.out or "--keep-spec" in captured.err
+            # Should NOT show general help content
+            assert "Work Items Management:" not in captured.out
+            assert "Session Management:" not in captured.out
+
+    def test_global_help_flag_shows_general_help(self, capsys):
+        """Test that 'sk --help' shows general help."""
+        with patch.object(sys, "argv", ["sk", "--help"]):
+            result = main()
+
+            captured = capsys.readouterr()
+            # Should show general help
+            assert "Work Items Management:" in captured.out
+            assert "Session Management:" in captured.out
+            assert result == 0
+
+    def test_help_command_shows_command_help(self, capsys):
+        """Test that 'sk help command' shows command-specific help."""
+        with patch.object(sys, "argv", ["sk", "help", "work-delete"]):
+            result = main()
+
+            captured = capsys.readouterr()
+            # Should show work-delete specific help from help command
+            assert "work-delete" in captured.out
+            assert result == 0
