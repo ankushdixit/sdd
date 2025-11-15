@@ -1285,9 +1285,7 @@ class TestQualityGatesDocumentation:
         }
 
         # Act
-        checker = DocumentationChecker(
-            config=doc_config, project_root=temp_dir, runner=mock_runner
-        )
+        checker = DocumentationChecker(config=doc_config, project_root=temp_dir, runner=mock_runner)
         result = checker._check_python_docstrings()
 
         # Assert
