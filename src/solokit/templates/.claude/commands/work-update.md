@@ -28,6 +28,7 @@ The work item ID and field are provided in `$ARGUMENTS` and passed through `"$@"
 ## What It Does
 
 The command will:
+
 - Display current work item details
 - Prompt for the new value based on field type
 - Show available options for selection (priority, dependencies, etc.)

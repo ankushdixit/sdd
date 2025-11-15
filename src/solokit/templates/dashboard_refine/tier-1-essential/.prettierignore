@@ -42,3 +42,10 @@ reports
 test-results
 playwright-report
 playwright/.cache
+
+# ci/cd
+.github
+
+# solokit
+.session
+.claude

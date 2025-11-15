@@ -26,12 +26,33 @@ export default [
     },
     plugins: {
       "@typescript-eslint": tseslint,
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    files: [
+      "**/*.test.{js,jsx,ts,tsx}",
+      "tests/unit/**/*.{js,jsx,ts,tsx}",
+      "tests/integration/**/*.{js,jsx,ts,tsx}",
+      "tests/setup.{js,jsx,ts,tsx}",
+      "jest.setup.{js,jsx,ts,tsx}",
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+    plugins: {
       "jest-dom": jestDomPlugin,
       "testing-library": testingLibraryPlugin,
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "warn",
       // jest-dom rules
       "jest-dom/prefer-checked": "error",
       "jest-dom/prefer-enabled-disabled": "error",
@@ -45,10 +66,10 @@ export default [
     },
   },
   {
-    files: ["**/*.test.{js,jsx,ts,tsx}", "tests/**/*.{js,jsx,ts,tsx}"],
+    files: ["tests/e2e/**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       globals: {
-        ...globals.jest,
+        ...globals.node,
       },
     },
   },

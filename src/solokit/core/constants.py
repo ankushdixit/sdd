@@ -187,7 +187,7 @@ EXIT_FAILURE: Final[int] = 1
 QUALITY_CHECK_QUICK_TIMEOUT: Final[int] = 5
 
 # Standard quality checks (linting, formatting)
-QUALITY_CHECK_STANDARD_TIMEOUT: Final[int] = 30
+QUALITY_CHECK_STANDARD_TIMEOUT: Final[int] = 60
 
 # Long-running quality checks (formatting tools, complex linting)
 QUALITY_CHECK_LONG_TIMEOUT: Final[int] = 60

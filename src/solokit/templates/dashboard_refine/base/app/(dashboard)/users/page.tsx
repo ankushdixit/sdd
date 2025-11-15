@@ -13,6 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
+interface User {
+  id: number | string;
+  name: string;
+  email: string;
+}
+
 /**
  * Users management page
  * Example of a Refine resource page with data fetching
@@ -20,7 +26,7 @@ import { PlusCircle } from "lucide-react";
 export default function UsersPage() {
   const {
     query: { data, isLoading },
-  } = useList({
+  } = useList<User>({
     resource: "users",
   });
 
@@ -44,20 +50,30 @@ export default function UsersPage() {
           <CardTitle>All Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : (
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    Loading...
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user: any) => (
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user: User) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.id}</TableCell>
                     <TableCell>{user.name}</TableCell>
@@ -68,10 +84,10 @@ export default function UsersPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

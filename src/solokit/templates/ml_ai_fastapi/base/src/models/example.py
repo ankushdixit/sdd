@@ -31,7 +31,7 @@ class Item(ItemBase, table=True):
         updated_at: Timestamp when item was last updated
     """
 
-    __tablename__ = "items"
+    __tablename__ = "items"  # pyright: ignore[reportAssignmentType]
 
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)

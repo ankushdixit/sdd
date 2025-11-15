@@ -1256,14 +1256,19 @@ class TestQualityGatesDocumentation:
         # Assert
         assert result is True
 
-    @patch("solokit.quality.gates.CommandRunner")
-    def test_check_python_docstrings_missing(self, mock_run):
+    def test_check_python_docstrings_missing(self, temp_dir):
         """Test checking Python docstrings when some are missing."""
         # Arrange
         from solokit.quality.checkers.documentation import DocumentationChecker
 
-        mock_runner = Mock()
+        # Create pyproject.toml to indicate Python project
+        (temp_dir / "pyproject.toml").touch()
+        # Create fake venv structure so check doesn't skip
+        venv_dir = temp_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
 
+        mock_runner = Mock()
         mock_runner.run.return_value = CommandResult(
             returncode=1,
             stdout="Missing docstrings",
@@ -1272,15 +1277,15 @@ class TestQualityGatesDocumentation:
             duration_seconds=0.1,
         )
 
-        mock_run.return_value = mock_runner
-
-        with patch.object(Path, "exists", return_value=False):
-            gates = QualityGates()
+        doc_config = {
+            "enabled": True,
+            "check_changelog": False,
+            "check_docstrings": True,
+            "check_readme": False,
+        }
 
         # Act
-        checker = DocumentationChecker(
-            config=gates.config.documentation.__dict__, runner=mock_runner
-        )
+        checker = DocumentationChecker(config=doc_config, project_root=temp_dir, runner=mock_runner)
         result = checker._check_python_docstrings()
 
         # Assert
@@ -2884,6 +2889,11 @@ class TestQualityGatesAdditionalCoverage:
         # Act
         # Create pyproject.toml to pass Python project check
         (temp_dir / "pyproject.toml").touch()
+        # Create fake venv structure so docstring check doesn't skip
+        venv_dir = temp_dir / "venv" / "bin"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "python").touch()
+
         checker = DocumentationChecker(
             doc_config, temp_dir, work_item=work_item, runner=mock_runner
         )

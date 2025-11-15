@@ -119,7 +119,9 @@ def run_template_based_init(
 
     # Step 6: Install template files (base + tier + options)
     logger.info("Step 6: Installing template files...")
-    install_result = install_template(template_id, tier, additional_options, project_root)
+    install_result = install_template(
+        template_id, tier, additional_options, project_root, coverage_target
+    )
     logger.info(f"✓ Installed {install_result['files_installed']} template files\n")
 
     # Step 7: Generate README.md

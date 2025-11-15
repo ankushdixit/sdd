@@ -18,6 +18,7 @@ The work item ID is provided in `$ARGUMENTS` and passed through `"$@"`.
 ## What It Does
 
 The command will:
+
 - Display work item details and check for dependents
 - Warn if other work items depend on this one
 - Prompt for confirmation with options:

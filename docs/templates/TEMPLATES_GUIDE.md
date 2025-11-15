@@ -158,6 +158,8 @@ Each template supports 4 quality tiers. Choose based on your project phase and r
 **Coverage requirement:** 80%
 **Installation time:** +5-13 minutes
 
+**Note:** Requires one-time browser setup for E2E tests: `npm run setup` (see Next Steps below)
+
 ### Tier 4: Production (Enterprise Ready)
 **Best for:** Enterprise applications, high-traffic sites, critical systems
 
@@ -171,6 +173,8 @@ Each template supports 4 quality tiers. Choose based on your project phase and r
 
 **Coverage requirement:** 80%
 **Installation time:** +3-5 minutes
+
+**Note:** Requires one-time browser setup for E2E tests: `npm run setup` (see Next Steps below)
 
 ---
 
@@ -330,8 +334,13 @@ After initialization:
 
 1. **Review the README.md** in your project for specific getting started instructions
 2. **Set up environment variables** from `.env.example`
-3. **Create your first work item:** `/sk:work-new`
-4. **Start a development session:** `/sk:start`
+3. **For Tier-3 & Tier-4 only:** Install Playwright browsers for E2E tests
+   ```bash
+   npm run setup  # Installs browsers (~400MB, one-time setup)
+   ```
+   This is required before running `npm run test:e2e` or `npm run test:all`
+4. **Create your first work item:** `/sk:work-new`
+5. **Start a development session:** `/sk:start`
 
 ---
 
@@ -357,6 +366,15 @@ Most templates require environment setup:
 2. Fill in required values
 3. For database templates, ensure PostgreSQL is running
 4. Run `npm install` or `pip install -e .` again
+
+**For Tier-3 & Tier-4 E2E test failures:**
+
+If you see `Error: browserType.launch: Executable doesn't exist`, run:
+```bash
+npm run setup  # Installs Playwright browsers
+```
+
+This is a one-time setup required for E2E tests with Playwright.
 
 ### Build fails
 

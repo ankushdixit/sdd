@@ -16,6 +16,7 @@ TEMPLATE INSTRUCTIONS:
 Brief description of what this feature does and why it's needed.
 
 **Example:**
+
 > This feature adds real-time notifications to the dashboard, alerting users when important events occur. It uses WebSocket connections to push updates without requiring page refreshes, improving user experience and reducing server load from polling.
 
 ## User Story
@@ -25,6 +26,7 @@ Brief description of what this feature does and why it's needed.
 As a [type of user], I want [goal] so that [benefit].
 
 **Example:**
+
 > As a dashboard user, I want to receive real-time notifications when my tasks are updated so that I can respond quickly without constantly refreshing the page.
 
 ## Rationale
@@ -34,6 +36,7 @@ As a [type of user], I want [goal] so that [benefit].
 Why is this feature important? What problem does it solve?
 
 **Consider:**
+
 - What pain point does this address?
 - What business value does it provide?
 - What happens if we don't build this?
@@ -59,6 +62,7 @@ Why is this feature important? What problem does it solve?
 <!-- High-level technical approach and key design decisions -->
 
 **Example:**
+
 > We'll implement WebSocket connections using Socket.IO for bidirectional communication. The server will emit events when tasks are updated, and the client will listen for these events and update the UI. We'll use a notification queue on the backend to handle high-volume scenarios and ensure delivery.
 
 ### LLM/Processing Configuration
@@ -70,10 +74,11 @@ Why is this feature important? What problem does it solve?
 
 **For LLM-based features:**
 
-```markdown
+````markdown
 **Type:** LLM-based (DSPy)
 
 **DSPy Signature:**
+
 ```python
 class ExampleSignature(dspy.Signature):
     """Description of what this signature does."""
@@ -81,14 +86,17 @@ class ExampleSignature(dspy.Signature):
     input_field = dspy.InputField(desc="Description of input")
     output_field = dspy.OutputField(desc="Description of output")
 ```
+````
 
 **LLM Provider:** Google AI Studio (Gemini 2.5 Flash)
 
 **LLM Usage:**
+
 - Analyzes input data to extract key information
 - Generates structured output based on learned patterns
 - Fallback to rule-based processing if LLM unavailable
-```
+
+````
 
 **For deterministic/non-LLM features:**
 
@@ -100,7 +108,7 @@ class ExampleSignature(dspy.Signature):
 - Transform data through validation pipeline
 - Apply business logic rules to generate output
 - Use algorithm X for data aggregation
-```
+````
 
 **For external API integration:**
 
@@ -110,6 +118,7 @@ class ExampleSignature(dspy.Signature):
 **API Provider:** [Provider name]
 
 **Processing Type:**
+
 - Make API calls to external service
 - Transform API responses to internal format
 - Handle rate limiting and retries
@@ -191,6 +200,7 @@ CREATE TABLE notifications (
 ```
 
 **Migration:**
+
 - File: `migrations/2025_10_add_notifications_table.sql`
 - Rollback: Drop table and indexes
 
@@ -199,18 +209,21 @@ CREATE TABLE notifications (
 <!-- Comprehensive testing approach for this feature -->
 
 ### Unit Tests
+
 - NotificationCenter component rendering and interaction
 - WebSocket connection lifecycle management
 - Notification service message handling
 - Database query functions
 
 ### Integration Tests
+
 - End-to-end WebSocket communication
 - Notification creation and retrieval flow
 - Multi-tab notification synchronization
 - Notification history pagination
 
 ### Manual Testing
+
 - [ ] Test on Chrome, Firefox, Safari
 - [ ] Test with slow network connection
 - [ ] Test with WebSocket connection drops and reconnects

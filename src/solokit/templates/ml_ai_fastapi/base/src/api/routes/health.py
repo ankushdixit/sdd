@@ -5,7 +5,6 @@ Health check endpoints for monitoring and load balancers
 from fastapi import APIRouter, Depends
 from sqlmodel import text
 from sqlmodel.ext.asyncio.session import AsyncSession
-
 from src.api.dependencies import get_db
 from src.core.config import settings
 
@@ -28,7 +27,7 @@ async def health_check() -> dict[str, str]:
 
 
 @router.get("/health/ready")
-async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, str]:  # noqa: B008
     """
     Readiness check - verifies database connectivity.
 
@@ -40,16 +39,17 @@ async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
     """
     try:
         # Test database connection
-        await db.exec(text("SELECT 1"))
-        return {
-            "status": "ready",
-            "database": "connected",
-        }
+        await db.execute(text("SELECT 1"))
     except Exception as e:
         return {
             "status": "not ready",
             "database": "disconnected",
             "error": str(e),
+        }
+    else:
+        return {
+            "status": "ready",
+            "database": "connected",
         }
 
 

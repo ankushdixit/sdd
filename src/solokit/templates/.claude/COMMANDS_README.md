@@ -29,17 +29,20 @@ commands/                  ← Full documentation (not used by Claude Code)
 ## Two Types of Files
 
 ### `.claude/commands/*.md` (This Directory)
+
 **Purpose**: Executable instructions for Claude Code
 **Content**: Concise, actionable steps Claude follows
 **Format**: Natural language instructions + code snippets
 **Length**: Short (typically 20-50 lines)
 **Example**:
+
 ```markdown
 Execute: `python3 scripts/work_item_manager.py`
 Display results to user.
 ```
 
 ### `commands/*.md` (Documentation Directory)
+
 **Purpose**: Comprehensive documentation for developers
 **Content**: Full specifications, examples, behavior details
 **Format**: Structured documentation with examples
@@ -49,6 +52,7 @@ Display results to user.
 ## Available Commands
 
 ### Session Management
+
 - `/sk:init` - Initialize project with Session-Driven Development
 - `/sk:start` - Begin work session with comprehensive briefing
 - `/sk:end` - Complete session with quality gates
@@ -56,6 +60,7 @@ Display results to user.
 - `/sk:status` - Quick session overview
 
 ### Work Item Management
+
 - `/sk:work-new` - Create new work item interactively
 - `/sk:work-list` - List work items with filtering
 - `/sk:work-show` - Show detailed work item information
@@ -64,6 +69,7 @@ Display results to user.
 - `/sk:work-graph` - Generate dependency graph visualization
 
 ### Learning System
+
 - `/sk:learn` - Capture a learning during development session
 - `/sk:learn-show` - Browse and filter learnings
 - `/sk:learn-search` - Search learnings by keyword
@@ -79,6 +85,7 @@ Display results to user.
 ## Context is NOT Lost
 
 The `.claude/commands/` files are **concise by design**. Full context exists in:
+
 - `commands/*.md` - Detailed command documentation
 - `scripts/*.py` - Complete implementation with comments
 - `docs/*.md` - Methodology and framework documentation
@@ -91,6 +98,7 @@ Think of them as "quick reference cards" not "full manuals".
 ## Testing Commands
 
 To test in a new session:
+
 1. Open Claude Code in this project
 2. Type `/help` to see all commands
 3. Commands appear with "(project)" label
@@ -99,6 +107,7 @@ To test in a new session:
 ## Adding New Commands
 
 To add a new command:
+
 1. Create `.claude/commands/your-command.md`
 2. Write concise instructions for Claude
 3. Include Python/bash commands to execute

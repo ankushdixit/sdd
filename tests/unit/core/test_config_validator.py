@@ -295,8 +295,8 @@ class TestSolokitConfigValidation:
         # Arrange
         config = {
             "quality_gates": {
-                "test": {"required": True, "command": "pytest tests/", "timeout": 300},
-                "lint": {"required": False, "command": "ruff check .", "timeout": 60},
+                "test_execution": {"enabled": True, "required": True},
+                "linting": {"enabled": True, "required": False, "timeout": 60},
                 "security": {"required": True, "severity": "high", "timeout": 120},
             },
             "learning": {
@@ -354,7 +354,7 @@ class TestSolokitConfigValidation:
         """Test that Solokit config raises ConfigValidationError for timeout value less than minimum."""
         # Arrange
         config = {
-            "quality_gates": {"test": {"required": True, "timeout": 0}}  # Min is 1
+            "quality_gates": {"linting": {"timeout": 0}}  # Min is 1
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
@@ -370,10 +370,10 @@ class TestSolokitConfigValidation:
         # Arrange
         config = {
             "quality_gates": {
-                "test": {
-                    # Missing 'required' field which is required
-                    "command": "pytest tests/",
-                    "timeout": 300,
+                "security": {
+                    # Missing 'required' field which is required for security gate
+                    "severity": "high",
+                    "timeout": 120,
                 }
             }
         }
@@ -390,7 +390,7 @@ class TestSolokitConfigValidation:
         """Test that Solokit config schema allows additional custom properties."""
         # Arrange
         config = {
-            "quality_gates": {"test": {"required": True}},
+            "quality_gates": {"test_execution": {"enabled": True, "required": True}},
             "custom_section": {"custom_field": "value"},  # Additional property
         }
         config_path = tmp_path / "config.json"

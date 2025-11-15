@@ -1,4 +1,6 @@
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+/**
+ * @jest-environment node
+ */
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/example/route";
 

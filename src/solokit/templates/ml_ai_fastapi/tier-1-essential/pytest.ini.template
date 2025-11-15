@@ -20,7 +20,13 @@ addopts =
     --cov-report=term-missing
     --cov-report=html
     --cov-report=xml
-    --cov-fail-under=80
+    --cov-fail-under={coverage_target}
+
+# Filter warnings
+filterwarnings =
+    ignore::DeprecationWarning:fastapi.applications
+    ignore::DeprecationWarning:fastapi.openapi.utils
+    ignore:You probably want to use:DeprecationWarning
 
 # Markers for organizing tests
 markers =

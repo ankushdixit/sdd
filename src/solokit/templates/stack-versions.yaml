@@ -154,7 +154,8 @@ stacks:
       pytest-asyncio: "0.25.2"
       httpx: "0.28.1"
       ruff: "0.9.2"
-      pyright: "1.1.396"
+      pyright: "1.1.407"
+      mypy: "1.18.2"
       aiosqlite: "0.20.0"
 
     tier2_standard:
@@ -197,9 +198,9 @@ stacks:
 
       commands:
         # Incremental installation matching tier structure
-        base: "pip install fastapi==0.115.6 'uvicorn[standard]==0.34.0' pydantic==2.12.4 sqlmodel==0.0.25 sqlalchemy==2.0.37 psycopg2-binary==2.9.10 asyncpg==0.30.0 alembic==1.14.0"
+        base: "pip install fastapi==0.115.6 'uvicorn[standard]==0.34.0' pydantic==2.12.4 pydantic-settings==2.11.0 python-dotenv==1.2.1 sqlmodel==0.0.25 sqlalchemy==2.0.37 psycopg2-binary==2.9.10 greenlet==3.2.4 asyncpg==0.30.0 alembic==1.14.0"
 
-        tier1: "pip install pytest==8.3.4 pytest-cov==6.0.0 pytest-asyncio==0.25.2 httpx==0.28.1 ruff==0.9.2 pyright==1.1.396 aiosqlite==0.20.0"
+        tier1: "pip install pytest==8.3.4 pytest-cov==6.0.0 pytest-asyncio==0.25.2 httpx==0.28.1 ruff==0.9.2 pyright==1.1.407 mypy==1.18.2 aiosqlite==0.20.0"
 
         tier2: "pip install detect-secrets==1.5.0 pip-audit==2.7.3 'bandit[toml]==1.8.0' pre-commit==4.0.1"
 
@@ -207,7 +208,7 @@ stacks:
 
         tier4_dev: "pip install prometheus-client==0.23.1 statsd==4.0.1 structlog==25.5.0 python-json-logger==4.0.0"
 
-        tier4_prod: "pip install fastapi-health==0.4.0 pydantic-settings==2.11.0 python-dotenv==1.2.1 opentelemetry-api==1.38.0 opentelemetry-instrumentation==0.59b0 opentelemetry-instrumentation-fastapi==0.59b0"
+        tier4_prod: "pip install fastapi-health==0.4.0 opentelemetry-api==1.38.0 opentelemetry-instrumentation==0.59b0 opentelemetry-instrumentation-fastapi==0.59b0"
 
         security_fixes: "pip install --upgrade setuptools starlette"
 

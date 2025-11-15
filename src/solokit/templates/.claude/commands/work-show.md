@@ -14,6 +14,7 @@ sk work-show "$@"
 The work item ID is provided in `$ARGUMENTS` and passed through `"$@"`.
 
 This displays comprehensive details:
+
 - **Work Item Info**: Type, status, priority, creation date
 - **Dependencies**: List of dependencies with their current status
 - **Session History**: All sessions where this work item was worked on

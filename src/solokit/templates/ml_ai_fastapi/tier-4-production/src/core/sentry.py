@@ -4,12 +4,17 @@ Sentry error tracking integration
 
 from typing import Any
 
-import sentry_sdk  # type: ignore[import-not-found]
-from sentry_sdk.integrations.fastapi import FastApiIntegration  # type: ignore[import-not-found]
-from sentry_sdk.integrations.sqlalchemy import (
-    SqlalchemyIntegration,  # type: ignore[import-not-found]
+import sentry_sdk  # pyright: ignore[reportMissingImports]
+from sentry_sdk.integrations.fastapi import (  # pyright: ignore[reportMissingImports]
+    FastApiIntegration,
 )
-from src.core.config import settings  # type: ignore[import-not-found]
+from sentry_sdk.integrations.sqlalchemy import (  # pyright: ignore[reportMissingImports]
+    SqlalchemyIntegration,
+)
+from src.core.config import settings
+
+# HTTP status codes
+HTTP_NOT_FOUND = 404
 
 
 def initialize_sentry() -> None:
@@ -57,10 +62,12 @@ def before_send_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str,
     # Filter out specific exceptions or add custom logic
     # Example: Don't send 404 errors
     if "exc_info" in hint:
-        exc_type, exc_value, tb = hint["exc_info"]
-        if exc_type.__name__ == "HTTPException":
-            # Don't send HTTP 404 errors
-            if hasattr(exc_value, "status_code") and exc_value.status_code == 404:
-                return None
+        exc_type, exc_value, _tb = hint["exc_info"]
+        if (
+            exc_type.__name__ == "HTTPException"
+            and hasattr(exc_value, "status_code")
+            and exc_value.status_code == HTTP_NOT_FOUND
+        ):
+            return None
 
     return event

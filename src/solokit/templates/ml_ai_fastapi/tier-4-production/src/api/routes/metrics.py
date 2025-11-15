@@ -2,8 +2,8 @@
 Prometheus metrics endpoint
 """
 
-from fastapi import APIRouter, Response  # type: ignore[import-not-found]
-from src.core.monitoring import get_metrics  # type: ignore[import-not-found]
+from fastapi import APIRouter, Response
+from src.core.monitoring import get_metrics
 
 router = APIRouter()
 

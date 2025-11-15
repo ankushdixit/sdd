@@ -4,7 +4,6 @@ Unit tests for example service
 
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
-
 from src.models.example import ItemCreate, ItemUpdate  # type: ignore[import-not-found]
 from src.services.example import ItemService  # type: ignore[import-not-found]
 
@@ -37,6 +36,7 @@ class TestItemService:
         # Create an item first
         item_data = ItemCreate(name="Test Item", price=9.99)
         created_item = await service.create_item(item_data)
+        assert created_item.id is not None
 
         # Retrieve the item
         retrieved_item = await service.get_item(created_item.id)
@@ -74,6 +74,7 @@ class TestItemService:
         # Create an item
         item_data = ItemCreate(name="Original Name", price=10.0)
         created_item = await service.create_item(item_data)
+        assert created_item.id is not None
 
         # Update the item
         update_data = ItemUpdate(name="Updated Name", price=15.0)
@@ -97,6 +98,7 @@ class TestItemService:
         # Create an item
         item_data = ItemCreate(name="To Delete", price=10.0)
         created_item = await service.create_item(item_data)
+        assert created_item.id is not None
 
         # Delete the item
         success = await service.delete_item(created_item.id)

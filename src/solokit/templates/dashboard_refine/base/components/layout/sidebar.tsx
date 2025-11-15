@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  ShoppingCart,
-  Package,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Package, Settings } from "lucide-react";
 
 /**
  * Dashboard sidebar navigation
@@ -22,42 +16,39 @@ export function Sidebar() {
     {
       label: "Dashboard",
       icon: LayoutDashboard,
-      href: "/dashboard",
-      active: pathname === "/dashboard",
+      href: "/",
+      active: pathname === "/",
     },
     {
       label: "Users",
       icon: Users,
-      href: "/dashboard/users",
-      active: pathname === "/dashboard/users",
+      href: "/users",
+      active: pathname === "/users",
     },
     {
       label: "Orders",
       icon: ShoppingCart,
-      href: "/dashboard/orders",
-      active: pathname === "/dashboard/orders",
+      href: "/orders",
+      active: pathname === "/orders",
     },
     {
       label: "Products",
       icon: Package,
-      href: "/dashboard/products",
-      active: pathname === "/dashboard/products",
+      href: "/products",
+      active: pathname === "/products",
     },
     {
       label: "Settings",
       icon: Settings,
-      href: "/dashboard/settings",
-      active: pathname === "/dashboard/settings",
+      href: "/settings",
+      active: pathname === "/settings",
     },
   ];
 
   return (
     <aside className="hidden md:flex w-64 flex-col border-r bg-background">
       <div className="flex h-14 items-center border-b px-4">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 font-semibold"
-        >
+        <Link href="/" className="flex items-center gap-2 font-semibold">
           <LayoutDashboard className="h-6 w-6" />
           <span>Dashboard</span>
         </Link>
@@ -69,9 +60,7 @@ export function Sidebar() {
             href={route.href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
-              route.active
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground",
+              route.active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
             )}
             aria-current={route.active ? "page" : undefined}
           >

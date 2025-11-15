@@ -125,6 +125,10 @@ npm run type-check
 """
     else:  # Python
         readme_content += """```bash
+# IMPORTANT: Activate virtual environment first
+source venv/bin/activate  # Unix
+# or: venv\\Scripts\\activate  # Windows
+
 # Run tests
 pytest
 
@@ -137,6 +141,8 @@ ruff check .
 # Run type checking
 pyright
 ```
+
+**Note**: Session commands (`sk validate`, `sk end`) automatically use the virtual environment, so activation is optional when using those commands.
 """
 
     # Add additional options documentation
@@ -161,7 +167,8 @@ pyright
                 )
 
     # Add Session-Driven Development section
-    readme_content += """## Session-Driven Development
+    readme_content += """
+## Session-Driven Development
 
 This project uses Session-Driven Development (Solokit) for organized, AI-augmented development.
 
@@ -178,15 +185,13 @@ This project uses Session-Driven Development (Solokit) for organized, AI-augment
 ### Documentation
 
 See `.session/` directory for:
+
 - Work item specifications (`.session/specs/`)
 - Session briefings (`.session/briefings/`)
 - Session summaries (`.session/history/`)
 - Captured learnings (`.session/tracking/learnings.json`)
 
-"""
-
-    # Add footer
-    readme_content += """---
+---
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 """

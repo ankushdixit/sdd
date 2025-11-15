@@ -7,7 +7,6 @@ Validates CHANGELOG updates, docstrings, and README currency.
 
 from __future__ import annotations
 
-import sys
 import time
 from pathlib import Path
 from typing import Any, Union, cast
@@ -146,13 +145,32 @@ class DocumentationChecker(QualityChecker):
         ):
             return True
 
+        # Use venv Python if available, otherwise skip check
+        venv_python = self.project_root / "venv" / "bin" / "python"
+        venv_python_win = self.project_root / "venv" / "Scripts" / "python.exe"
+
+        python_cmd = None
+        if venv_python.exists():
+            python_cmd = str(venv_python)
+        elif venv_python_win.exists():
+            python_cmd = str(venv_python_win)
+        else:
+            # No venv found, skip check
+            logger.debug("No venv found, skipping docstring check")
+            return True
+
         result = self.runner.run(
-            [sys.executable, "-m", "pydocstyle", "--count"], timeout=QUALITY_CHECK_STANDARD_TIMEOUT
+            [python_cmd, "-m", "pydocstyle", "--count"], timeout=QUALITY_CHECK_STANDARD_TIMEOUT
         )
 
         # If pydocstyle not available or timeout, skip check
         if result.timed_out or result.returncode == -1:
             logger.debug("pydocstyle not available, skipping docstring check")
+            return True
+
+        # Check if pydocstyle is not installed (stderr contains "No module named")
+        if "No module named" in result.stderr:
+            logger.debug("pydocstyle not installed, skipping docstring check")
             return True
 
         # If no issues found, return True

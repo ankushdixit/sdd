@@ -74,6 +74,22 @@ export default [
     },
   },
   {
+    files: ["k6/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        __ENV: "readonly",
+        __VU: "readonly",
+        __ITER: "readonly",
+        open: "readonly",
+      },
+    },
+    rules: {
+      "no-undef": ["error", { typeof: true }],
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
@@ -82,6 +98,7 @@ export default [
       "build/**",
       ".session/**",
       "coverage/**",
+      "reports/**",
     ],
   },
 ];

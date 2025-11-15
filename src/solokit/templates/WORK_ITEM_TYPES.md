@@ -5,25 +5,33 @@ This document defines the work item types supported by the Session-Driven Develo
 ## Standard Work Item Types
 
 ### feature
+
 Standard feature development work items.
+
 - **Template:** Feature specification
 - **Typical sessions:** 2-4
 - **Validation:** Tests pass, linting pass, documentation updated
 
 ### bug
+
 Bug fix work items.
+
 - **Template:** Bug report
 - **Typical sessions:** 1-2
 - **Validation:** Tests pass, regression tests added, root cause documented
 
 ### refactor
+
 Code refactoring work items.
+
 - **Template:** Refactor plan
 - **Typical sessions:** 1-3
 - **Validation:** Tests pass, no functionality changes, code quality improved
 
 ### security
+
 Security-focused work items for vulnerabilities, hardening, and compliance.
+
 - **Template:** `templates/security_task.md`
 - **Typical sessions:** 1-2
 - **Priority:** Critical (by default)
@@ -34,6 +42,7 @@ Security-focused work items for vulnerabilities, hardening, and compliance.
   - No new vulnerabilities introduced
 
 **Usage:**
+
 ```json
 {
   "type": "security",
@@ -50,7 +59,9 @@ Security-focused work items for vulnerabilities, hardening, and compliance.
 ## Integration & Deployment Types (Phase 1.8)
 
 ### integration_test
+
 Integration testing work items that validate multiple components working together.
+
 - **Template:** `templates/integration_test_spec.md`
 - **Typical sessions:** 1-2
 - **Validation:**
@@ -61,6 +72,7 @@ Integration testing work items that validate multiple components working togethe
 - **Dependencies:** Required (must specify what components are being integrated)
 
 **Usage:**
+
 ```json
 {
   "type": "integration_test",
@@ -76,7 +88,9 @@ Integration testing work items that validate multiple components working togethe
 ```
 
 ### deployment
+
 Deployment work items for releasing code to environments.
+
 - **Template:** `templates/deployment_spec.md`
 - **Typical sessions:** 1
 - **Validation:**
@@ -88,6 +102,7 @@ Deployment work items for releasing code to environments.
 - **Dependencies:** Required (must specify what features/fixes are being deployed)
 
 **Usage:**
+
 ```json
 {
   "type": "deployment",
@@ -106,17 +121,20 @@ Deployment work items for releasing code to environments.
 ## Validation Rules
 
 ### All Types
+
 - Must have a title
 - Must have a type from the list above
 - Must have a status (not_started, in_progress, completed)
 - Must have a priority (critical, high, medium, low)
 
 ### security
+
 - **Priority should be critical or high** - Security issues are high priority by default
 - **Security validation required** - Must pass security scans and reviews
 - **May require external review** - Security team or penetration testing
 
 ### integration_test and deployment
+
 - **Must have dependencies** - Cannot be created without specifying dependencies
 - **Phase-specific validation** - Additional validation criteria enforced
 - **Typical workflow:**
@@ -135,6 +153,7 @@ not_started → in_progress → completed
 ```
 
 **Status definitions:**
+
 - `not_started` - Ready to begin, dependencies satisfied
 - `in_progress` - Currently being worked on
 - `blocked` - Waiting on dependency or external factor

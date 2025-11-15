@@ -1,14 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { injectAxe, checkA11y } from "axe-playwright";
+import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Home Page", () => {
   test("should load the home page", async ({ page }) => {
     await page.goto("/");
 
     // Check for the main heading
-    await expect(
-      page.getByRole("heading", { name: /create.*t3.*app/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /create.*t3.*app/i })).toBeVisible();
   });
 
   test("should display tRPC query result", async ({ page }) => {
@@ -21,16 +19,13 @@ test.describe("Home Page", () => {
   test("should have no accessibility violations", async ({ page }) => {
     await page.goto("/");
 
-    // Inject axe-core
-    await injectAxe(page);
+    // Run accessibility scan
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
 
-    // Check for accessibility violations
-    await checkA11y(page, undefined, {
-      detailedReport: true,
-      detailedReportOptions: {
-        html: true,
-      },
-    });
+    // Assert no accessibility violations
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
   test("should navigate between sections", async ({ page }) => {
