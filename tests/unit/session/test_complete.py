@@ -1879,3 +1879,118 @@ class TestMain:
         with open(work_items_file) as f:
             updated_data = json.load(f)
         assert updated_data["work_items"]["feature-001"]["status"] == "completed"
+
+    @patch("solokit.session.complete.auto_extract_learnings")
+    @patch("solokit.session.complete.record_session_commits")
+    @patch("solokit.session.complete.complete_git_workflow")
+    @patch("solokit.session.complete.generate_commit_message")
+    @patch("solokit.session.complete.extract_learnings_from_session")
+    @patch("solokit.session.complete.trigger_curation_if_needed")
+    @patch("solokit.session.complete.update_all_tracking")
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
+    def test_main_incomplete_flag_skips_quality_gate_enforcement(
+        self,
+        mock_load_status,
+        mock_load_work_items,
+        mock_check_changes,
+        mock_run_gates,
+        mock_update_tracking,
+        mock_trigger_curation,
+        mock_extract_learnings,
+        mock_generate_commit,
+        mock_complete_git,
+        mock_record_commits,
+        mock_auto_extract,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Test main with --incomplete flag skips quality gate enforcement."""
+        # Arrange
+        monkeypatch.chdir(tmp_path)
+        session_dir = tmp_path / ".session"
+        tracking_dir = session_dir / "tracking"
+        history_dir = session_dir / "history"
+        tracking_dir.mkdir(parents=True)
+        history_dir.mkdir(parents=True)
+
+        status_data = {"current_session": 5, "current_work_item": "feature-001", "status": "active"}
+        work_items_data = {
+            "work_items": {
+                "feature-001": {"title": "Test", "type": "feature", "status": "in_progress"}
+            },
+            "metadata": {"total_items": 1, "completed": 0, "in_progress": 1, "blocked": 0},
+        }
+
+        work_items_file = tracking_dir / "work_items.json"
+        work_items_file.write_text(json.dumps(work_items_data))
+
+        status_file = tracking_dir / "status_update.json"
+        status_file.write_text(json.dumps(status_data))
+
+        mock_load_status.return_value = status_data
+        mock_load_work_items.return_value = work_items_data
+        mock_check_changes.return_value = True
+        # Quality gates FAIL but should not block with --incomplete
+        mock_run_gates.return_value = ({"tests": {"status": "failed"}}, False, ["tests"])
+        mock_extract_learnings.return_value = []
+        mock_generate_commit.return_value = "Commit"
+        mock_complete_git.return_value = {"success": True}
+        mock_auto_extract.return_value = 0
+
+        # Act
+        with patch("sys.argv", ["session_complete.py", "--incomplete"]):
+            result = main()
+
+        # Assert - Should succeed even though quality gates failed
+        assert result == 0
+        # Check work item was kept as in-progress
+        with open(work_items_file) as f:
+            updated_data = json.load(f)
+        assert updated_data["work_items"]["feature-001"]["status"] == "in_progress"
+
+    @patch("solokit.session.complete.run_quality_gates")
+    @patch("solokit.session.complete.check_uncommitted_changes")
+    @patch("solokit.session.complete.load_work_items")
+    @patch("solokit.session.complete.load_status")
+    def test_main_complete_flag_enforces_quality_gates(
+        self,
+        mock_load_status,
+        mock_load_work_items,
+        mock_check_changes,
+        mock_run_gates,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Test main with --complete flag enforces quality gates (fails if gates fail)."""
+        # Arrange
+        monkeypatch.chdir(tmp_path)
+        session_dir = tmp_path / ".session"
+        tracking_dir = session_dir / "tracking"
+        tracking_dir.mkdir(parents=True)
+
+        status_data = {"current_session": 5, "current_work_item": "feature-001", "status": "active"}
+        work_items_data = {
+            "work_items": {
+                "feature-001": {"title": "Test", "type": "feature", "status": "in_progress"}
+            },
+            "metadata": {"total_items": 1, "completed": 0, "in_progress": 1, "blocked": 0},
+        }
+
+        work_items_file = tracking_dir / "work_items.json"
+        work_items_file.write_text(json.dumps(work_items_data))
+
+        mock_load_status.return_value = status_data
+        mock_load_work_items.return_value = work_items_data
+        mock_check_changes.return_value = True
+        # Quality gates FAIL and should block with --complete
+        mock_run_gates.return_value = ({"tests": {"status": "failed"}}, False, ["tests"])
+
+        # Act
+        with patch("sys.argv", ["session_complete.py", "--complete"]):
+            result = main()
+
+        # Assert - Should fail because quality gates failed
+        assert result == 1

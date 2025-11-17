@@ -1016,19 +1016,33 @@ def main() -> int:
         return 1
 
     output.info("Completing session...\n")
-    output.info("Running comprehensive quality gates...\n")
+
+    # Determine if quality gates should be enforced based on flags
+    # --incomplete skips quality gate enforcement (gates still run but don't block)
+    # --complete enforces quality gates (gates must pass)
+    enforce_quality_gates = args.complete
+
+    if enforce_quality_gates:
+        output.info("Running comprehensive quality gates...\n")
+    else:
+        output.info("Running quality gates (non-blocking for incomplete work)...\n")
 
     # Run quality gates with work item context
     gate_results, all_passed, failed_gates = run_quality_gates(work_item)
 
-    if not all_passed:
+    if not all_passed and enforce_quality_gates:
         logger.error(f"Quality gates failed: {failed_gates}")
         output.info("\n❌ Required quality gates failed. Fix issues before completing session.")
         output.info(f"Failed gates: {', '.join(failed_gates)}")
         return 1
 
-    logger.info("All required quality gates passed")
-    output.info("\n✓ All required quality gates PASSED\n")
+    if all_passed:
+        logger.info("All required quality gates passed")
+        output.info("\n✓ All required quality gates PASSED\n")
+    elif not enforce_quality_gates:
+        logger.warning(f"Quality gates failed but not enforced (--incomplete): {failed_gates}")
+        output.info(f"\n⚠ Quality gates failed but not blocking (--incomplete flag)")
+        output.info(f"Failed gates: {', '.join(failed_gates)}\n")
 
     # Update all tracking (stack, tree)
     update_all_tracking(session_num)
