@@ -65,3 +65,6 @@ landing/
 
 # Marketing and promotion materials
 marketing-copy/
+
+# Analysis and testing documentation (generated artifacts)
+analysis-docs/
