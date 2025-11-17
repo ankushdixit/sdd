@@ -38,7 +38,6 @@ EOF
 ```
 
 **What makes a good learning:**
-
 - Technical insights discovered during implementation
 - Gotchas or edge cases encountered
 - Best practices or patterns that worked well
@@ -51,7 +50,6 @@ EOF
 Before completing the session, ask the user about the work item completion status using `AskUserQuestion`:
 
 **Question: Work Item Completion Status**
-
 - Question: "Is this work item complete?"
 - Header: "Completion"
 - Multi-select: false
@@ -67,36 +65,36 @@ Before completing the session, ask the user about the work item completion statu
 Based on the user's selection:
 
 **If "Yes - Mark as completed" selected:**
-
 ```bash
 sk end --complete --learnings-file .session/temp_learnings.txt
 ```
 
-**If "No - Keep as in-progress" selected:**
+**Quality gate behavior:** Enforced/blocking - all gates must pass to end session.
 
+**If "No - Keep as in-progress" selected:**
 ```bash
 sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
-**If "Cancel" selected:**
+**Quality gate behavior:** Non-blocking - gates run and show warnings but don't prevent session end. This is extremely useful when running out of Claude context with failing quality gates, allowing you to checkpoint your work-in-progress.
 
+**If "Cancel" selected:**
 - Show message: "Session end cancelled. You can continue working."
 - Exit without calling command
 
-This script validates quality gates:
-
-- All tests pass
-- Linting passes
-- Git changes are committed
+**Quality gates checked (behavior depends on --complete vs --incomplete):**
+- All tests pass (enforced in --complete, warned in --incomplete)
+- Linting passes (enforced in --complete, warned in --incomplete)
+- Git changes are committed (enforced in --complete, warned in --incomplete)
+- Coverage threshold met (enforced in --complete, warned in --incomplete)
 - Work item status is updated
 - Learnings are captured
 
-The script automatically updates project context files (stack.py and tree.py) after validation passes.
+The script automatically updates project context files (stack.txt and tree.txt) after validation.
 
 ## Step 4: Show Results
 
 Show the user:
-
 - Session summary with work accomplished
 - **Commit details** (full messages + file change statistics) - Enhancement #11
 - Quality gate results (pass/fail for each check)
@@ -104,12 +102,13 @@ Show the user:
 - Work item completion status (completed or in-progress)
 - Suggested next steps
 
-If any quality gates fail, display the specific errors and guide the user on what needs to be fixed before the session can be completed. Do not proceed with session completion until all quality gates pass.
+**For --complete mode:** If any quality gates fail, display the specific errors and guide the user on what needs to be fixed before the session can be completed. Do not proceed with session completion until all quality gates pass.
+
+**For --incomplete mode:** If any quality gates fail, display warnings but allow the session to complete. Inform the user that these issues can be addressed in the next session when they resume the work item.
 
 ## Enhanced Session Summaries (Enhancement #11)
 
 Session summaries now include comprehensive commit details:
-
 - **Full commit messages** (multi-line messages preserved)
 - **File change statistics** from `git diff --stat` (files changed, insertions, deletions)
 - Each commit listed with short SHA and message
