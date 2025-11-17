@@ -1041,7 +1041,7 @@ def main() -> int:
         output.info("\n✓ All required quality gates PASSED\n")
     elif not enforce_quality_gates:
         logger.warning(f"Quality gates failed but not enforced (--incomplete): {failed_gates}")
-        output.info(f"\n⚠ Quality gates failed but not blocking (--incomplete flag)")
+        output.info("\n⚠ Quality gates failed but not blocking (--incomplete flag)")
         output.info(f"Failed gates: {', '.join(failed_gates)}\n")
 
     # Update all tracking (stack, tree)
