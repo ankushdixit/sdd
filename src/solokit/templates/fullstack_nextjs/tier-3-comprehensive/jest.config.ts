@@ -12,8 +12,12 @@ const config: Config = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 
-  // Only run unit and integration tests with Jest
-  testMatch: ["**/tests/unit/**/*.test.{ts,tsx}", "**/tests/integration/**/*.test.{ts,tsx}"],
+  // Only run unit, api, and integration tests with Jest
+  testMatch: [
+    "**/tests/api/**/*.test.{ts,tsx}",
+    "**/tests/unit/**/*.test.{ts,tsx}",
+    "**/tests/integration/**/*.test.{ts,tsx}",
+  ],
 
   // Exclude e2e tests (run separately with Playwright)
   testPathIgnorePatterns: ["/node_modules/", "/.next/", "/tests/e2e/"],

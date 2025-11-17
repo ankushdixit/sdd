@@ -24,13 +24,14 @@ describe("API Route: /api/example", () => {
 
   describe("GET", () => {
     it("should return a greeting message and users", async () => {
+      const mockDate = new Date("2024-01-01T00:00:00.000Z");
       const mockUsers = [
         {
           id: 1,
           name: "John Doe",
           email: "john@example.com",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: mockDate,
+          updatedAt: mockDate,
         },
       ];
 
@@ -42,7 +43,16 @@ describe("API Route: /api/example", () => {
       expect(response.status).toBe(200);
       expect(data).toHaveProperty("message");
       expect(data).toHaveProperty("users");
-      expect(data.users).toEqual(mockUsers);
+      // Date objects are serialized to ISO strings in JSON
+      expect(data.users).toEqual([
+        {
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          createdAt: mockDate.toISOString(),
+          updatedAt: mockDate.toISOString(),
+        },
+      ]);
     });
 
     it("should handle database errors", async () => {
@@ -58,12 +68,13 @@ describe("API Route: /api/example", () => {
 
   describe("POST", () => {
     it("should create a new user with valid data", async () => {
+      const mockDate = new Date("2024-01-01T00:00:00.000Z");
       const mockUser = {
         id: 1,
         name: "Jane Doe",
         email: "jane@example.com",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: mockDate,
+        updatedAt: mockDate,
       };
 
       (prisma.user.create as jest.Mock).mockResolvedValue(mockUser);
@@ -77,7 +88,14 @@ describe("API Route: /api/example", () => {
       const data = await response.json();
 
       expect(response.status).toBe(201);
-      expect(data).toEqual(mockUser);
+      // Date objects are serialized to ISO strings in JSON
+      expect(data).toEqual({
+        id: 1,
+        name: "Jane Doe",
+        email: "jane@example.com",
+        createdAt: mockDate.toISOString(),
+        updatedAt: mockDate.toISOString(),
+      });
     });
 
     it("should return validation error for invalid data", async () => {
