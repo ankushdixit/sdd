@@ -38,7 +38,6 @@ EOF
 ```
 
 **What makes a good learning:**
-
 - Technical insights discovered during implementation
 - Gotchas or edge cases encountered
 - Best practices or patterns that worked well
@@ -51,7 +50,6 @@ EOF
 Before completing the session, ask the user about the work item completion status using `AskUserQuestion`:
 
 **Question: Work Item Completion Status**
-
 - Question: "Is this work item complete?"
 - Header: "Completion"
 - Multi-select: false
@@ -67,7 +65,6 @@ Before completing the session, ask the user about the work item completion statu
 Based on the user's selection:
 
 **If "Yes - Mark as completed" selected:**
-
 ```bash
 sk end --complete --learnings-file .session/temp_learnings.txt
 ```
@@ -75,7 +72,6 @@ sk end --complete --learnings-file .session/temp_learnings.txt
 **Quality gate behavior:** Enforced/blocking - all gates must pass to end session.
 
 **If "No - Keep as in-progress" selected:**
-
 ```bash
 sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
@@ -83,12 +79,10 @@ sk end --incomplete --learnings-file .session/temp_learnings.txt
 **Quality gate behavior:** Non-blocking - gates run and show warnings but don't prevent session end. This is extremely useful when running out of Claude context with failing quality gates, allowing you to checkpoint your work-in-progress.
 
 **If "Cancel" selected:**
-
 - Show message: "Session end cancelled. You can continue working."
 - Exit without calling command
 
 **Quality gates checked (behavior depends on --complete vs --incomplete):**
-
 - All tests pass (enforced in --complete, warned in --incomplete)
 - Linting passes (enforced in --complete, warned in --incomplete)
 - Git changes are committed (enforced in --complete, warned in --incomplete)
@@ -101,7 +95,6 @@ The script automatically updates project context files (stack.txt and tree.txt) 
 ## Step 4: Show Results
 
 Show the user:
-
 - Session summary with work accomplished
 - **Commit details** (full messages + file change statistics) - Enhancement #11
 - Quality gate results (pass/fail for each check)
@@ -116,7 +109,6 @@ Show the user:
 ## Enhanced Session Summaries (Enhancement #11)
 
 Session summaries now include comprehensive commit details:
-
 - **Full commit messages** (multi-line messages preserved)
 - **File change statistics** from `git diff --stat` (files changed, insertions, deletions)
 - Each commit listed with short SHA and message
