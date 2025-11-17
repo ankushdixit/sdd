@@ -235,13 +235,23 @@ Claude receives:
 /end
 ```
 
-Automatically:
-- ✅ Runs all enabled quality gates
+The `/end` command asks whether the work item is complete and runs quality gates accordingly:
+
+**Complete mode** (`--complete`):
+- ✅ Runs all enabled quality gates (enforced/blocking)
+- ✅ Quality gates must pass to end session
+- ✅ Marks work item as "completed"
+
+**Incomplete mode** (`--incomplete`):
+- ✅ Runs quality gates but doesn't block session end (non-blocking)
+- ✅ Useful when running out of context with failing gates
+- ✅ Keeps work item as "in_progress" for later resumption
+
+Both modes automatically:
 - ✅ Updates stack/tree tracking
 - ✅ Extracts learnings from work
 - ✅ Commits with standardized message
 - ✅ Pushes to remote
-- ✅ Updates work item status
 - ✅ Generates session summary
 
 <details>

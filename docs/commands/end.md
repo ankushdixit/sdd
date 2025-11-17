@@ -103,13 +103,27 @@ The command asks you about work item completion:
 
 ### Step 2: Quality Gates
 
-The command runs quality gates:
+The command runs quality gates with different behavior based on your completion choice:
 
-1. **Tests** - All tests must pass
-2. **Linting** - No linting errors
-3. **Type Checking** - No type errors (for TypeScript projects)
-4. **Git Commits** - All changes must be committed
-5. **Coverage** - Meets project coverage threshold (if configured)
+**When marking work item as "Complete" (`--complete` flag):**
+- Quality gates are **enforced/blocking**
+- All gates must pass to end the session
+- If any gate fails, session end is aborted
+- You must fix issues before completing
+
+**When keeping work item "In-Progress" (`--incomplete` flag):**
+- Quality gates **run but are non-blocking**
+- Gates show warnings but don't prevent session end
+- Useful when running out of Claude context
+- Allows checkpointing work-in-progress
+- Can resume work later without losing progress
+
+**Quality gates checked:**
+1. **Tests** - All tests must pass (or warned)
+2. **Linting** - No linting errors (or warned)
+3. **Type Checking** - No type errors (or warned, for TypeScript projects)
+4. **Git Commits** - All changes must be committed (or warned)
+5. **Coverage** - Meets project coverage threshold (or warned, if configured)
 
 ### Step 3: Update Context
 
@@ -208,7 +222,7 @@ NEXT STEPS:
 - View learnings: /sk:learn-show
 ```
 
-### Keeping Work In Progress
+### Keeping Work In Progress (Non-Blocking Gates)
 
 ```bash
 /sk:end
@@ -228,7 +242,7 @@ Is this work item complete?
 
 → Selected: No - Keep as in-progress
 
-Running quality gates...
+Running quality gates (non-blocking)...
 ✓ All tests passed (12/12)
 ✓ Linting passed
 ✓ All changes committed (2 commits)
@@ -239,9 +253,41 @@ When you run /sk:start next time, this work item will auto-resume
 with full context from this session.
 ```
 
-## Quality Gate Failures
+**Example with failing gates (non-blocking):**
 
-If any quality gates fail, the command displays specific errors and guidance:
+```
+Is this work item complete?
+
+○ Yes - Mark as completed
+
+● No - Keep as in-progress
+  Work is ongoing. Will auto-resume when you run /start in the next session.
+
+○ Cancel
+
+→ Selected: No - Keep as in-progress
+
+Running quality gates (non-blocking)...
+⚠️  Tests: 2/15 tests failed (WARNING - not blocking)
+⚠️  Coverage: 72.3% (threshold: 80%) (WARNING - not blocking)
+✓ Linting passed
+✓ All changes committed (2 commits)
+
+Session ended with warnings. Work item remains in-progress.
+
+Quality gate warnings (fix in next session):
+  - 2 failing tests need attention
+  - Coverage needs 7.7% increase
+
+When you run /sk:start next time, this work item will auto-resume
+with full context from this session.
+```
+
+## Quality Gate Failures (Complete Mode Only)
+
+When using `--complete` mode, quality gates are enforced. If any gates fail, the session end is aborted and you must fix the issues:
+
+**Note:** In `--incomplete` mode, these same checks run but only show warnings - they do not block session end.
 
 ### Test Failures
 
@@ -295,6 +341,55 @@ sk end --incomplete --learnings-file .session/temp_learnings.txt
 ```
 
 But you don't need to specify these - the interactive flow handles it.
+
+## When to Use `--incomplete` Mode
+
+The `--incomplete` flag is extremely useful in these scenarios:
+
+### Running Out of Claude Context
+
+**Problem:** You're nearing the end of your Claude Code context window and quality gates are failing, but you want to checkpoint your work.
+
+**Solution:**
+```bash
+/sk:end
+# Select: "No - Keep as in-progress"
+```
+
+This allows you to:
+- Save all your work and learnings
+- End the session gracefully
+- Resume later with full context
+- Continue fixing quality issues in next session
+
+### Work-in-Progress Checkpoint
+
+**Problem:** You need to take a break but aren't done with the work item, and some tests are still failing.
+
+**Solution:** Use `--incomplete` to checkpoint without fixing all issues immediately.
+
+**Example workflow:**
+```
+Session 1 (2 hours):
+  - Implement 70% of feature
+  - Some tests failing
+  - Running out of time
+  → /sk:end --incomplete  (checkpoints work)
+
+Session 2 (next day):
+  - Resume with full context
+  - Fix remaining tests
+  - Complete feature
+  → /sk:end --complete  (enforces quality gates)
+```
+
+### Key Benefits of `--incomplete`
+
+1. **No Data Loss**: All commits, learnings, and context saved
+2. **Flexible Workflow**: Don't need to fix everything immediately
+3. **Context Preservation**: Resume exactly where you left off
+4. **Quality Visibility**: Still see what needs fixing, just not blocked
+5. **Progress Tracking**: Work item stays "in_progress" for auto-resume
 
 ## Learning Auto-Extraction
 

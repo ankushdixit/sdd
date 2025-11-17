@@ -6,13 +6,15 @@
 
 ## Overview
 
-The `validate` command runs pre-flight checks to ensure your work meets quality standards before completing the session. It's like a dry-run of `/sk:end` without actually ending the session.
+The `validate` command runs pre-flight checks to ensure your work meets quality standards before completing the session. It's like a dry-run of `/sk:end --complete` without actually ending the session.
 
 **Key benefits:**
 - Catch issues early during development
 - Avoid failed session completion
 - Auto-fix linting and formatting issues
 - Verify readiness before `/sk:end`
+
+**Important:** Unlike `/sk:end --incomplete` which runs non-blocking quality gates, `/sk:validate` always enforces quality gates (blocking mode). This helps you verify your work meets standards before deciding whether to use `--complete` or `--incomplete` when ending your session.
 
 ## Usage
 
@@ -428,6 +430,26 @@ After adding tests:
 # ... fix issues ...
 /sk:validate              # Verify fixes
 /sk:end                   # Complete session
+```
+
+### Running Out of Context Workflow
+
+```bash
+/sk:start feature_xyz     # Begin work
+# ... make changes, implement most of feature ...
+/sk:validate              # Check quality
+# ⚠️  Some tests still failing, coverage below threshold
+# But running out of Claude context...
+/sk:end                   # Select "No - Keep as in-progress"
+# Quality gates run but don't block (non-blocking)
+# Session ends, work checkpointed
+
+# Next session
+/sk:start                 # Auto-resumes feature_xyz
+# ... fix remaining tests ...
+/sk:validate              # Now passes!
+/sk:end                   # Select "Yes - Mark as completed"
+# Quality gates enforced (blocking)
 ```
 
 ### Fix-Validate Loop

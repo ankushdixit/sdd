@@ -330,6 +330,66 @@ sk work-update US-0-1
 
 ---
 
+### Running Out of Context with Failing Quality Gates
+
+**Symptom:** You're near the end of your Claude Code context window, quality gates are failing, but you want to save your work and end the session.
+
+**Cause:** Quality gates require fixes but you don't have enough context remaining to debug and fix the issues.
+
+**Solution: Use `--incomplete` mode to checkpoint your work**
+
+The `/sk:end` command supports two modes:
+
+**Complete mode (`--complete`):**
+- Quality gates are enforced/blocking
+- All gates must pass to end session
+- Use when work is truly complete
+
+**Incomplete mode (`--incomplete`):**
+- Quality gates run but are non-blocking
+- Shows warnings but doesn't prevent session end
+- Allows checkpointing work-in-progress
+- Perfect for running out of context
+
+**Example workflow:**
+
+```bash
+# You're running out of context...
+/sk:end
+
+# Interactive prompt appears:
+# "Is this work item complete?"
+# → Select: "No - Keep as in-progress"
+
+# Quality gates run (non-blocking):
+Running quality gates (non-blocking)...
+⚠️  Tests: 2/15 tests failed (WARNING - not blocking)
+⚠️  Coverage: 72.3% (threshold: 80%) (WARNING - not blocking)
+✓ Linting passed
+✓ All changes committed (2 commits)
+
+Session ended with warnings. Work item remains in-progress.
+
+Quality gate warnings (fix in next session):
+  - 2 failing tests need attention
+  - Coverage needs 7.7% increase
+
+# Next session - resume with full context
+/sk:start  # Auto-resumes the in-progress work item
+# ... fix the failing tests and coverage ...
+/sk:validate  # Verify all gates pass
+/sk:end  # Select "Yes - Mark as completed"
+```
+
+**Key Benefits:**
+1. **No Data Loss**: All commits, learnings, and context are saved
+2. **Flexible Workflow**: Don't need to fix everything immediately
+3. **Context Preservation**: Resume exactly where you left off
+4. **Quality Visibility**: Still see what needs fixing
+5. **Progress Tracking**: Work item stays "in_progress" for auto-resume
+
+---
+
 ## Getting Help
 
 If you encounter issues not covered here:

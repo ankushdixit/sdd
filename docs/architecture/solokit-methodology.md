@@ -384,7 +384,7 @@ mcp__context7__get-library-docs "/facebook/react" --topic "hooks"
    - Ensure all quality checks pass
    - Update relevant documentation
    - Capture learnings if discovered new patterns
-4. **On completion**: All quality gates must pass (or explicitly override)
+4. **On completion**: Quality gates run with behavior depending on completion mode
 
 ### Quality Gate Order
 
@@ -396,7 +396,20 @@ Session completion runs checks in this order:
 5. **Documentation**: Updated as needed
 6. **Library Verification**: All libraries checked via Context7
 
-If any gate fails and `fail_on_error` is true, session cannot complete without `--force` flag.
+### Completion Modes
+
+**Complete Mode (`sk end --complete`):**
+- Quality gates are **enforced/blocking**
+- All gates must pass to end session
+- Work item marked as "completed"
+- Use when work is truly finished
+
+**Incomplete Mode (`sk end --incomplete`):**
+- Quality gates **run but are non-blocking**
+- Shows warnings but doesn't prevent session end
+- Work item stays "in_progress" for resumption
+- Extremely useful when running out of Claude context with failing gates
+- Allows checkpointing work-in-progress without losing progress
 ```
 
 #### 3. `work_items.json` - Work Tracking
