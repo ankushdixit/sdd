@@ -68,6 +68,12 @@ class FormattingChecker(QualityChecker):
             return "javascript"
         return "python"  # default
 
+    def _is_solokit_project(self) -> bool:
+        """Check if we're running on the solokit project itself."""
+        # Solokit has a specific directory structure with src/solokit/
+        solokit_marker = self.project_root / "src" / "solokit"
+        return solokit_marker.exists() and solokit_marker.is_dir()
+
     def run(self) -> CheckResult:
         """Run formatting checks."""
         start_time = time.time()
@@ -95,8 +101,13 @@ class FormattingChecker(QualityChecker):
                 command += " --check"
 
         # For Python projects, use venv executables if available
+        # Skip venv auto-detection for solokit itself (development tool)
         command_parts = command.split()
-        if self.language == "python" and command_parts[0] in ["ruff", "black", "autopep8", "yapf"]:
+        if (
+            self.language == "python"
+            and command_parts[0] in ["ruff", "black", "autopep8", "yapf"]
+            and not self._is_solokit_project()
+        ):
             venv_bin = self.project_root / "venv" / "bin" / command_parts[0]
             venv_scripts = self.project_root / "venv" / "Scripts" / f"{command_parts[0]}.exe"
 
