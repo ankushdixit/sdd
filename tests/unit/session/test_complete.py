@@ -18,6 +18,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
+
 from solokit.core.command_runner import CommandResult
 from solokit.session.complete import (
     auto_extract_learnings,

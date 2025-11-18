@@ -10,6 +10,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+
 from solokit.core.exceptions import ErrorCode, ValidationError
 from solokit.quality.env_validator import EnvironmentValidator, main
 

@@ -11,7 +11,6 @@ from sentry_sdk.integrations.fastapi import (  # pyright: ignore[reportMissingIm
 from sentry_sdk.integrations.sqlalchemy import (  # pyright: ignore[reportMissingImports]
     SqlalchemyIntegration,
 )
-
 from src.core.config import settings
 
 # HTTP status codes

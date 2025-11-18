@@ -13,6 +13,7 @@ This module tests environment validation functionality including:
 import os
 
 import pytest
+
 from solokit.core.exceptions import ValidationError
 from solokit.quality.env_validator import EnvironmentValidator
 

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
+
 from solokit.core.exceptions import FileOperationError
 from solokit.session.briefing.learning_loader import LearningLoader
 

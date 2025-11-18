@@ -7,6 +7,7 @@ and persistence for work items and milestones.
 import json
 
 import pytest
+
 from solokit.work_items.repository import WorkItemRepository
 
 

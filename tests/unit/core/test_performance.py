@@ -4,6 +4,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+
 from solokit.core.performance import Timer, measure_time
 
 

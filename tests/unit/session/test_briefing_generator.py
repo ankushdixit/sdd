@@ -22,6 +22,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
 from solokit.core.exceptions import ErrorCode, GitError, SpecValidationError
 from solokit.session import briefing as briefing_generator
 

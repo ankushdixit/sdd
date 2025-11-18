@@ -7,6 +7,7 @@ ID generation, spec file creation, and interactive prompts.
 import json
 
 import pytest
+
 from solokit.core.exceptions import (
     ErrorCode,
     ValidationError,

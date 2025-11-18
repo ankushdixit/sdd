@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from solokit.core.exceptions import FileOperationError
 from solokit.init.docs_structure import create_docs_structure
 

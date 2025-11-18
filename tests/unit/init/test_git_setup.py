@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
 from solokit.core.exceptions import ErrorCode, GitError, ValidationError
 from solokit.init.git_setup import (
     check_blank_project_or_exit,

@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import pytest
 import yaml
+
 from solokit.core.exceptions import (
     FileNotFoundError as SolokitFileNotFoundError,
 )

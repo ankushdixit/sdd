@@ -12,6 +12,7 @@ import json
 from unittest.mock import Mock, patch
 
 import pytest
+
 from solokit.core.command_runner import CommandResult
 from solokit.core.exceptions import (
     FileNotFoundError as SolokitFileNotFoundError,

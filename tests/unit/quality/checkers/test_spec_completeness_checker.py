@@ -6,6 +6,7 @@ Tests for the SpecCompletenessChecker class which validates specification files.
 from unittest.mock import patch
 
 import pytest
+
 from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 from solokit.core.exceptions import SpecValidationError
 from solokit.quality.checkers.spec_completeness import SpecCompletenessChecker

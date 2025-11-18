@@ -6,6 +6,7 @@ Tests for the DocumentationChecker class which validates CHANGELOG, docstrings, 
 from unittest.mock import Mock
 
 import pytest
+
 from solokit.core.command_runner import CommandResult, CommandRunner
 from solokit.quality.checkers.documentation import DocumentationChecker
 

@@ -5,6 +5,7 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from solokit.commands.doctor import (
     DiagnosticCheck,
     check_config_valid,

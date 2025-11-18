@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+
 from solokit.work_items.get_next_recommendations import get_ready_work_items
 
 
