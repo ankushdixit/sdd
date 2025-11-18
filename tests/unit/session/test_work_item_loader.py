@@ -13,7 +13,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from solokit.core.types import Priority, WorkItemStatus
 from solokit.session.briefing.work_item_loader import WorkItemLoader
 
@@ -285,9 +284,9 @@ class TestGetNextWorkItem:
         """Test get_next_work_item skips items with unmet dependencies."""
         # Arrange
         # Make WORK-002 not_started and dependent on WORK-001 (not completed)
-        sample_work_items_data["work_items"]["WORK-002"]["status"] = (
-            WorkItemStatus.NOT_STARTED.value
-        )
+        sample_work_items_data["work_items"]["WORK-002"][
+            "status"
+        ] = WorkItemStatus.NOT_STARTED.value
         loader = WorkItemLoader()
 
         # Act

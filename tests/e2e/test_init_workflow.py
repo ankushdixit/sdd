@@ -172,18 +172,18 @@ class TestProjectStructure:
         """
         # Assert
         assert (solokit_initialized_project / ".session").exists(), ".session directory not created"
-        assert (solokit_initialized_project / ".session" / "tracking").exists(), (
-            ".session/tracking directory missing"
-        )
-        assert (solokit_initialized_project / ".session" / "specs").exists(), (
-            ".session/specs directory missing"
-        )
-        assert (solokit_initialized_project / ".session" / "briefings").exists(), (
-            ".session/briefings directory missing"
-        )
-        assert (solokit_initialized_project / ".session" / "history").exists(), (
-            ".session/history directory missing"
-        )
+        assert (
+            solokit_initialized_project / ".session" / "tracking"
+        ).exists(), ".session/tracking directory missing"
+        assert (
+            solokit_initialized_project / ".session" / "specs"
+        ).exists(), ".session/specs directory missing"
+        assert (
+            solokit_initialized_project / ".session" / "briefings"
+        ).exists(), ".session/briefings directory missing"
+        assert (
+            solokit_initialized_project / ".session" / "history"
+        ).exists(), ".session/history directory missing"
 
     @pytest.mark.skipif("CI" in os.environ, reason="Skipped in CI - requires initialized project")
     def test_session_directory_accessible_on_real_project(self):
@@ -340,6 +340,6 @@ class TestProjectMetadata:
         has_package = Path("package.json").exists()
 
         # Assert
-        assert has_pyproject or has_setup or has_package, (
-            "No project metadata file found (pyproject.toml, setup.py, or package.json)"
-        )
+        assert (
+            has_pyproject or has_setup or has_package
+        ), "No project metadata file found (pyproject.toml, setup.py, or package.json)"

@@ -5,7 +5,6 @@ including validation of integration tests and deployments.
 """
 
 import pytest
-
 from solokit.core.exceptions import FileNotFoundError, SpecValidationError
 from solokit.testing.integration_runner import IntegrationTestRunner
 from solokit.work_items.manager import WorkItemManager

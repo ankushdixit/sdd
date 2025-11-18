@@ -12,7 +12,6 @@ Target: 90%+ coverage
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.core.exceptions import FileOperationError, TemplateNotFoundError
 from solokit.init.claude_commands_installer import install_claude_commands
 

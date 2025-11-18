@@ -10,7 +10,6 @@ This module tests the integration of quality gates for deployment work items:
 """
 
 import pytest
-
 from solokit.quality.gates import QualityGates
 
 

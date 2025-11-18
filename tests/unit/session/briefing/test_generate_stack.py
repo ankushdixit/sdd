@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.core.exceptions import FileOperationError
 from solokit.project.stack import StackGenerator
 

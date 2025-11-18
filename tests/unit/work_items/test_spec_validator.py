@@ -11,7 +11,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from solokit.core.exceptions import FileNotFoundError, SpecValidationError
 from solokit.quality.gates import QualityGates
 from solokit.work_items.spec_validator import (

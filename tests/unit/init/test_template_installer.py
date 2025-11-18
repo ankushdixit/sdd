@@ -17,7 +17,6 @@ from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
-
 from solokit.core.exceptions import FileOperationError, TemplateNotFoundError
 from solokit.init.template_installer import (
     copy_directory_tree,

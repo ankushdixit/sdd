@@ -4,7 +4,6 @@ import subprocess
 import time
 
 import pytest
-
 from solokit.core.error_handlers import (
     ErrorContext,
     convert_file_errors,

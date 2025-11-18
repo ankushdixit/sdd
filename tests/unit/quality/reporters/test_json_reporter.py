@@ -6,7 +6,6 @@ Tests for the JSONReporter class which generates JSON-formatted reports.
 import json
 
 import pytest
-
 from solokit.quality.reporters.json_reporter import JSONReporter
 
 

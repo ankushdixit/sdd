@@ -281,9 +281,9 @@ class TestWorkItemCreation:
         )
 
         # Assert
-        assert result.returncode == 0, (
-            f"Failed to create work item with dependency: {result.stderr}"
-        )
+        assert (
+            result.returncode == 0
+        ), f"Failed to create work item with dependency: {result.stderr}"
 
         work_items_file = project_dir / ".session/tracking/work_items.json"
         work_items_data = json.loads(work_items_file.read_text())
@@ -296,9 +296,9 @@ class TestWorkItemCreation:
                 break
 
         assert dependent_item is not None, "Dependent work item not found"
-        assert base_work_id in dependent_item["dependencies"], (
-            f"Dependency not recorded: {base_work_id}"
-        )
+        assert (
+            base_work_id in dependent_item["dependencies"]
+        ), f"Dependency not recorded: {base_work_id}"
 
 
 # ============================================================================

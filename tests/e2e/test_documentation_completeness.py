@@ -93,9 +93,9 @@ class TestDocumentationUpdates:
 
         content_lower = content.lower()
         for concept in key_concepts:
-            assert concept.lower() in content_lower, (
-                f"solokit-methodology.md should mention: {concept}"
-            )
+            assert (
+                concept.lower() in content_lower
+            ), f"solokit-methodology.md should mention: {concept}"
 
     def test_command_documentation_updated_for_spec_workflow(self):
         """Test that command documentation emphasizes spec-first workflow."""
@@ -108,9 +108,9 @@ class TestDocumentationUpdates:
         # Assert - /start command mentions spec-first workflow
         assert "spec file" in start_content.lower(), "start.md should mention spec file"
         assert "source of truth" in start_content.lower(), "start.md should mention source of truth"
-        assert "Spec-First Architecture" in start_content, (
-            "start.md should have Spec-First Architecture section"
-        )
+        assert (
+            "Spec-First Architecture" in start_content
+        ), "start.md should have Spec-First Architecture section"
 
         # Arrange & Act - Check /work-new command
         work_new_cmd_path = project_root / ".claude" / "commands" / "work-new.md"
@@ -119,15 +119,15 @@ class TestDocumentationUpdates:
         work_new_content = work_new_cmd_path.read_text(encoding="utf-8")
 
         # Assert - /work-new command mentions spec file workflow
-        assert "fill out the spec file" in work_new_content.lower(), (
-            "work-new.md should mention filling out spec file"
-        )
-        assert "Next Step: Fill Out the Spec File" in work_new_content, (
-            "work-new.md should have spec file section"
-        )
-        assert "writing-specs.md" in work_new_content, (
-            "work-new.md should reference writing-specs.md"
-        )
+        assert (
+            "fill out the spec file" in work_new_content.lower()
+        ), "work-new.md should mention filling out spec file"
+        assert (
+            "Next Step: Fill Out the Spec File" in work_new_content
+        ), "work-new.md should have spec file section"
+        assert (
+            "writing-specs.md" in work_new_content
+        ), "work-new.md should reference writing-specs.md"
 
     def test_readme_mentions_spec_architecture(self):
         """Test that README.md mentions the spec-first architecture."""
@@ -142,6 +142,6 @@ class TestDocumentationUpdates:
 
         # Assert - README mentions spec files
         content_lower = content.lower()
-        assert "spec" in content_lower or "specification" in content_lower, (
-            "README.md should mention specs or specifications"
-        )
+        assert (
+            "spec" in content_lower or "specification" in content_lower
+        ), "README.md should mention specs or specifications"

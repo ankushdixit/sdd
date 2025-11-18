@@ -11,7 +11,6 @@ from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
-
 from solokit.core.command_runner import CommandResult
 from solokit.core.exceptions import SpecValidationError
 from solokit.quality.gates import QualityGates

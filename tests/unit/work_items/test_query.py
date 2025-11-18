@@ -7,7 +7,6 @@ sorting, and displaying work items.
 import json
 
 import pytest
-
 from solokit.work_items.query import WorkItemQuery
 from solokit.work_items.repository import WorkItemRepository
 

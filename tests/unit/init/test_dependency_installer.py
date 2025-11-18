@@ -16,7 +16,6 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 import yaml
-
 from solokit.core.exceptions import CommandExecutionError, FileOperationError
 from solokit.init.dependency_installer import (
     get_installation_commands,

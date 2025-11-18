@@ -13,7 +13,6 @@ import sys
 from unittest.mock import patch
 
 import pytest
-
 from solokit.project.init import main
 
 

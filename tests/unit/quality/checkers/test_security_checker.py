@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.core.command_runner import CommandResult, CommandRunner
 from solokit.quality.checkers.security import SecurityChecker
 

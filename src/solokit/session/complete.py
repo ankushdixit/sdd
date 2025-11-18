@@ -1132,9 +1132,9 @@ def main() -> int:
         work_items_data_temp = repository.load_all()
         if "metadata" not in work_items_data_temp["work_items"][work_item_id]:
             work_items_data_temp["work_items"][work_item_id]["metadata"] = {}
-        work_items_data_temp["work_items"][work_item_id]["metadata"]["completed_at"] = (
-            datetime.now().isoformat()
-        )
+        work_items_data_temp["work_items"][work_item_id]["metadata"][
+            "completed_at"
+        ] = datetime.now().isoformat()
         repository.save_all(work_items_data_temp)
 
         logger.info(

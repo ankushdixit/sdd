@@ -10,7 +10,6 @@ Tests the work_item_manager.py module's integration test validation including:
 from pathlib import Path
 
 import pytest
-
 from solokit.core.exceptions import SpecValidationError
 from solokit.work_items.manager import WorkItemManager
 
@@ -305,9 +304,9 @@ Some test scenarios.
         # The spec is missing: Performance Benchmarks, API Contracts,
         # Environment Requirements, Dependencies, Acceptance Criteria
         errors = exc_info.value.context["validation_errors"]
-        assert len(errors) >= 3, (
-            f"Should identify multiple missing sections, got {len(errors)} errors: {errors}"
-        )
+        assert (
+            len(errors) >= 3
+        ), f"Should identify multiple missing sections, got {len(errors)} errors: {errors}"
 
     def test_integration_test_with_minimal_required_content(
         self, temp_session_env, work_item_manager

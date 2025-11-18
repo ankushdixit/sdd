@@ -8,7 +8,6 @@ documentation, and rollback procedure testing.
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.core.command_runner import CommandRunner
 from solokit.quality.checkers.base import CheckResult
 from solokit.quality.checkers.deployment import DeploymentChecker

@@ -9,7 +9,6 @@ and display functionality.
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.learning.reporter import LearningReporter
 
 
