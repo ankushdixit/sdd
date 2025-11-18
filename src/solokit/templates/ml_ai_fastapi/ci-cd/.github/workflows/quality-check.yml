@@ -38,6 +38,16 @@ jobs:
       - name: Type check with Pyright
         run: pyright src/ tests/
 
+      - name: Check for code duplication
+        run: |
+          pip install pylint
+          pylint --rcfile=.pylintrc src/
+
+      - name: Check type coverage
+        run: |
+          pip install mypy
+          mypy src/ --disallow-untyped-defs --disallow-incomplete-defs --warn-return-any --warn-redundant-casts
+
       - name: Check complexity with Radon
         run: |
           pip install radon

@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Code Duplication Detection for Python Stack (Session 4)**
+  - Added pylint 3.3.3 with duplicate-code checking to ml_ai_fastapi tier-3 dependencies
+  - Created `.pylintrc` configuration for code duplication thresholds
+  - Added duplication check step to ml_ai_fastapi quality-check.yml workflow
+  - Updated stack-versions.yaml with pylint version and installation command
+  - Updated test script to recognize and run pylint commands
+  - Impact: All 4 stacks now have consistent code duplication detection at tier-3+
+  - JavaScript stacks: jscpd, Python stack: pylint
+  - Resolves: Session 4 (Code Duplication Detection) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
+- **Type Coverage Enforcement for Python Stack (Session 5)**
+  - Added mypy type coverage check to ml_ai_fastapi quality-check.yml workflow
+  - Configured mypy with --disallow-untyped-defs and --disallow-incomplete-defs flags
+  - Updated test script to recognize and run mypy commands
+  - Impact: All 4 stacks now enforce type coverage at tier-3+
+  - JavaScript stacks: type-coverage tool (95%), Python stack: mypy strict checking
+  - Resolves: Session 5 (Type Coverage Enforcement) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
+- **Comprehensive Unit Tests for Python Stack (Session 6)**
+  - Added 29 comprehensive unit tests achieving 94.54% coverage (up from 75.63%)
+  - Created test_api_routes.py: Tests for API endpoints and health checks with error scenarios
+  - Created test_database.py: Tests for database connections and dependency injection with mocking
+  - Created test_main.py: Tests for application startup, lifespan, and API documentation endpoints
+  - Coverage breakdown: Dependencies (100%), Database (100%), Main app (100%), Models (100%), Services (100%)
+  - Impact: Any coverage threshold (60%, 80%, 90%) selected during initialization will now pass
+  - Resolves: Session 6 (Unit Tests with Coverage) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`

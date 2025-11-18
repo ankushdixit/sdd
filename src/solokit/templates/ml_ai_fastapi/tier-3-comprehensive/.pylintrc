@@ -1,0 +1,19 @@
+[MASTER]
+jobs=1
+
+[SIMILARITIES]
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+ignore-signatures=yes
+
+[MESSAGES CONTROL]
+# Only enable duplicate-code check for this config
+disable=all
+enable=duplicate-code
+
+[REPORTS]
+output-format=text
+reports=no
+score=no
