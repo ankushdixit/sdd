@@ -35,6 +35,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.jest,
+        NodeJS: "readonly",
       },
     },
   },

@@ -68,20 +68,21 @@ Create a new work item using rich interactive UI components.
    - If more than 3 relevant items exist, user can select "Type something" to enter comma-separated IDs manually
    - If NO incomplete work items exist (script returns "No available dependencies found"), only show "No dependencies" option
 
-2. **Validate inputs:**
+3. **Validate inputs:**
    - Ensure type is one of: feature, bug, refactor, security, integration_test, deployment
    - Ensure title is not empty
    - Ensure priority is one of: critical, high, medium, low
    - Dependencies can be empty (no dependencies)
    - Urgent should be converted to boolean: "Yes" → add --urgent flag, "No" → omit flag
 
-3. **Create the work item** by running:
+4. **Create the work item** by running:
 
 ```bash
 sk work-new --type <type> --title "<title>" --priority <priority> --dependencies "<dep1,dep2>" [--urgent]
 ```
 
 Examples:
+
 ```bash
 # Normal work item with dependencies
 sk work-new --type feature --title "Add user authentication" --priority high --dependencies "feature_database_setup,bug_session_timeout"
@@ -103,6 +104,7 @@ sk work-new --type bug --title "Critical security fix" --priority critical --urg
 ## Error Handling
 
 If the command fails:
+
 - Check the error message
 - If dependency doesn't exist: Re-prompt with valid dependencies list
 - If work item already exists: Suggest using a different title or updating the existing item
@@ -120,6 +122,7 @@ If the command fails:
 The spec file is the **single source of truth** for work item content. All implementation details, acceptance criteria, and testing strategies should be documented in the spec file, not in `work_items.json`.
 
 For guidance on writing effective specs, see:
+
 - `docs/guides/writing-specs.md` - Best practices and examples
 - `docs/reference/spec-template-structure.md` - Template structure reference
 - `src/solokit/templates/{type}_spec.md` - Template examples for each work item type

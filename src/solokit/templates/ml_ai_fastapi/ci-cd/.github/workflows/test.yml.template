@@ -90,8 +90,6 @@ jobs:
 
       - name: Run mutation tests
         run: mutmut run --paths-to-mutate=src/
-        continue-on-error: true
 
       - name: Show mutation results
         run: mutmut results
-        continue-on-error: true

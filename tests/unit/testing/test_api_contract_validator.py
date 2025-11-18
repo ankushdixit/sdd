@@ -90,7 +90,8 @@ class TestContractFileValidation:
         validator = APIContractValidator(work_item)
 
         valid_yaml = tmp_path / "valid-api.yaml"
-        valid_yaml.write_text("""
+        valid_yaml.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -102,7 +103,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act - method now returns None on success (no exception = success)
         validator._validate_contract_file(str(valid_yaml))
@@ -145,12 +147,14 @@ paths:
         validator = APIContractValidator(work_item)
 
         invalid_yaml = tmp_path / "invalid-api.yaml"
-        invalid_yaml.write_text("""
+        invalid_yaml.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
   version: 1.0.0
-""")
+"""
+        )
 
         # Act & Assert
         with pytest.raises(SchemaValidationError) as exc_info:
@@ -180,7 +184,8 @@ info:
         validator = APIContractValidator(work_item)
 
         invalid_yaml = tmp_path / "no-openapi.yaml"
-        invalid_yaml.write_text("""
+        invalid_yaml.write_text(
+            """
 info:
   title: Test API
   version: 1.0.0
@@ -188,7 +193,8 @@ paths:
   /users:
     get:
       summary: Get users
-""")
+"""
+        )
 
         # Act & Assert
         with pytest.raises(InvalidOpenAPISpecError) as exc_info:
@@ -209,7 +215,8 @@ class TestBreakingChangeDetection:
         validator = APIContractValidator(work_item)
 
         v1_contract = tmp_path / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 info:
   version: 1.0.0
@@ -224,10 +231,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2_contract = tmp_path / "api-v2.yaml"
-        v2_contract.write_text("""
+        v2_contract.write_text(
+            """
 openapi: 3.0.0
 info:
   version: 2.0.0
@@ -237,7 +246,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(v2_contract), str(v1_contract))
@@ -255,7 +265,8 @@ paths:
         validator = APIContractValidator(work_item)
 
         v1_contract = tmp_path / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -267,10 +278,12 @@ paths:
       responses:
         '201':
           description: Created
-""")
+"""
+        )
 
         v2_contract = tmp_path / "api-v2.yaml"
-        v2_contract.write_text("""
+        v2_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -278,7 +291,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(v2_contract), str(v1_contract))
@@ -296,7 +310,8 @@ paths:
         validator = APIContractValidator(work_item)
 
         v1_contract = tmp_path / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -308,10 +323,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2_contract = tmp_path / "api-v2.yaml"
-        v2_contract.write_text("""
+        v2_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -320,7 +337,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(v2_contract), str(v1_contract))
@@ -337,7 +355,8 @@ paths:
         validator = APIContractValidator(work_item)
 
         v1_contract = tmp_path / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -346,10 +365,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2_contract = tmp_path / "api-v2.yaml"
-        v2_contract.write_text("""
+        v2_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -361,7 +382,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(v2_contract), str(v1_contract))
@@ -378,7 +400,8 @@ paths:
         validator = APIContractValidator(work_item)
 
         v1_contract = tmp_path / "api-v1.yaml"
-        v1_contract.write_text("""
+        v1_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -390,10 +413,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2_contract = tmp_path / "api-v2.yaml"
-        v2_contract.write_text("""
+        v2_contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -405,7 +430,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(v2_contract), str(v1_contract))
@@ -422,7 +448,8 @@ paths:
         validator = APIContractValidator(work_item)
 
         contract = tmp_path / "api.yaml"
-        contract.write_text("""
+        contract.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -430,7 +457,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         # Act
         changes = validator._detect_breaking_changes(str(contract), str(contract))
@@ -587,7 +615,8 @@ class TestContractValidation:
         """Test validation succeeds when all contracts are valid."""
         # Arrange
         contract = tmp_path / "api.yaml"
-        contract.write_text("""
+        contract.write_text(
+            """
 openapi: 3.0.0
 info:
   title: Test API
@@ -598,7 +627,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         work_item = {"id": "INTEG-020", "api_contracts": [{"contract_file": str(contract)}]}
         validator = APIContractValidator(work_item)
@@ -615,7 +645,8 @@ paths:
         """Test validation fails when breaking changes detected and not allowed."""
         # Arrange
         v1 = tmp_path / "v1.yaml"
-        v1.write_text("""
+        v1.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -628,10 +659,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2 = tmp_path / "v2.yaml"
-        v2.write_text("""
+        v2.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -639,7 +672,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         work_item = {
             "id": "INTEG-021",
@@ -664,7 +698,8 @@ paths:
         """Test validation succeeds when breaking changes allowed."""
         # Arrange
         v1 = tmp_path / "v1.yaml"
-        v1.write_text("""
+        v1.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -677,10 +712,12 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         v2 = tmp_path / "v2.yaml"
-        v2.write_text("""
+        v2.write_text(
+            """
 openapi: 3.0.0
 paths:
   /users:
@@ -688,7 +725,8 @@ paths:
       responses:
         '200':
           description: Success
-""")
+"""
+        )
 
         work_item = {
             "id": "INTEG-022",

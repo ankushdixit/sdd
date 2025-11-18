@@ -31,8 +31,8 @@ test.describe("Home Page", () => {
   test("should navigate between sections", async ({ page }) => {
     await page.goto("/");
 
-    // Check that both cards are visible
-    await expect(page.getByText(/first steps/i)).toBeVisible();
-    await expect(page.getByText(/documentation/i)).toBeVisible();
+    // Check that both cards are visible using more reliable selectors
+    await expect(page.getByRole("heading", { name: /first steps/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /documentation/i })).toBeVisible();
   });
 });

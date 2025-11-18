@@ -32,9 +32,9 @@ test.describe("Home Page", () => {
   test("should navigate and display cards", async ({ page }) => {
     await page.goto("/");
 
-    // Check that both cards are visible
-    await expect(page.getByText(/api routes/i)).toBeVisible();
-    await expect(page.getByText(/database/i)).toBeVisible();
+    // Check that both cards are visible using more reliable selectors
+    await expect(page.getByRole("heading", { name: /api routes/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /database/i })).toBeVisible();
   });
 
   test("should have working increment button", async ({ page }) => {

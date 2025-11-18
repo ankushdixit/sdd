@@ -34,8 +34,6 @@ jobs:
 
       - name: Check for duplicated code
         run: npm run check:duplication
-        continue-on-error: true
 
       - name: Check type coverage
         run: npm run check:types
-        continue-on-error: true

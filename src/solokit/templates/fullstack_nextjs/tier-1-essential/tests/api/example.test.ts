@@ -110,5 +110,26 @@ describe("API Route: /api/example", () => {
       expect(response.status).toBe(400);
       expect(data).toHaveProperty("error", "Validation failed");
     });
+
+    it("should handle database errors during creation", async () => {
+      const { prisma } = require("@/lib/prisma");
+      prisma.user.create.mockRejectedValue(new Error("Database connection failed"));
+
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+      const request = new NextRequest("http://localhost:3000/api/example", {
+        method: "POST",
+        body: JSON.stringify({ name: "John Doe", email: "john@example.com" }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data).toHaveProperty("error", "Failed to create user");
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+    });
   });
 });

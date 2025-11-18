@@ -100,7 +100,7 @@ class TestMain:
             "--template=saas_t3",
             "--tier=tier-1-essential",
             "--coverage=60",
-            "--options=ci_cd,docker,env_templates",
+            "--options=ci_cd,docker,env_templates,a11y",
         ]
 
         with patch.object(sys, "argv", test_args):
@@ -110,7 +110,12 @@ class TestMain:
                 main()
 
                 call_args = mock_run.call_args
-                assert call_args[1]["additional_options"] == ["ci_cd", "docker", "env_templates"]
+                assert call_args[1]["additional_options"] == [
+                    "ci_cd",
+                    "docker",
+                    "env_templates",
+                    "a11y",
+                ]
 
     def test_template_choices_validation(self):
         """Test that template choices are validated by argparse."""

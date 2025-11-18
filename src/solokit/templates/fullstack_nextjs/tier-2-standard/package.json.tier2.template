@@ -9,12 +9,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "prepare": "husky install",
     "audit": "npm audit --audit-level=moderate"
   },
@@ -47,8 +48,15 @@
     "jest-environment-jsdom": "30.2.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/user-event": "14.5.2",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
     "ts-node": "10.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "rimraf": "^5.0.10",
+    "inflight": "npm:@nothing/inflight@^1.0.0"
   }
 }

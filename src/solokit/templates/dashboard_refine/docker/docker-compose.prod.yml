@@ -13,8 +13,6 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - SENTRY_DSN=${SENTRY_DSN}
-      - SENTRY_ORG=${SENTRY_ORG}
-      - SENTRY_PROJECT=${SENTRY_PROJECT}
     ports:
       - '3000:3000'
     networks:

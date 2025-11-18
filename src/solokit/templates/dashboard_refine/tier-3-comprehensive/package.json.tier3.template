@@ -69,6 +69,8 @@
     "jest-environment-jsdom": "30.2.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/user-event": "14.5.2",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
     "jscpd": "4.0.5",
@@ -82,5 +84,10 @@
     "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-testing-library": "7.13.3",
     "ts-node": "10.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "rimraf": "^5.0.10",
+    "inflight": "npm:@nothing/inflight@^1.0.0"
   }
 }

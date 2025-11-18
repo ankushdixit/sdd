@@ -32,26 +32,31 @@ sk learn-show "$@"
 ### Examples
 
 Show all learnings:
+
 ```bash
 sk learn-show
 ```
 
 Show only gotchas:
+
 ```bash
 sk learn-show --category gotchas
 ```
 
 Show learnings tagged with "fastapi":
+
 ```bash
 sk learn-show --tag fastapi
 ```
 
 Show learnings from session 5:
+
 ```bash
 sk learn-show --session 5
 ```
 
 Combine filters (gotchas from session 5):
+
 ```bash
 sk learn-show --category gotchas --session 5
 ```
@@ -59,6 +64,7 @@ sk learn-show --category gotchas --session 5
 ## Display Format
 
 The command will display learnings in organized format showing:
+
 - Category grouping
 - Learning content
 - Tags (if any)

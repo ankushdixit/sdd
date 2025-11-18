@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Template Type Check Failures Across All Stacks**
+  - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`
+    - Updated `lib/__tests__/refine.test.tsx` to use correct Pagination interface
+  - Fixed fullstack_nextjs: TypeScript read-only property errors in test environment setup
+    - Updated `lib/__tests__/prisma.test.ts` to use type assertions for `process.env.NODE_ENV`
+  - Fixed ml_ai_fastapi: Pyright unable to resolve imports (missing venv configuration)
+    - Added `venvPath` and `venv` settings to `pyrightconfig.json`
+  - Fixed import ordering issues in ml_ai_fastapi template files (13 files)
+  - Impact: All CI/CD type checks now pass for tier-4-production across all stacks
+  - Affects: All templates (dashboard_refine, fullstack_nextjs, saas_t3, ml_ai_fastapi), all tiers
+  - Resolves: Session 2 (Type Checking) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 - **Pre-commit Option Conflict with Tier-2+ Templates**
   - Removed redundant "Pre-commit" additional option from initialization
   - Tier-2+ templates already include Husky git hooks built-in (.husky/pre-commit)

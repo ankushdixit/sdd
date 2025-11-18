@@ -12,8 +12,12 @@ const config: Config = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 
-  // Only run unit and integration tests with Jest
-  testMatch: ["**/tests/unit/**/*.test.{ts,tsx}", "**/tests/integration/**/*.test.{ts,tsx}"],
+  // Only run unit, api, and integration tests with Jest
+  testMatch: [
+    "**/tests/unit/**/*.test.{ts,tsx}",
+    "**/tests/api/**/*.test.{ts,tsx}",
+    "**/tests/integration/**/*.test.{ts,tsx}",
+  ],
 
   // Exclude e2e tests (run separately with Playwright)
   testPathIgnorePatterns: ["/node_modules/", "/.next/", "/tests/e2e/"],
@@ -24,7 +28,16 @@ const config: Config = {
   },
 
   // ESM transformation for dependencies that need it
-  transformIgnorePatterns: ["node_modules/(?!(superjson|@trpc)/)"],
+
+  // Coverage thresholds - enforced during test runs
+  coverageThreshold: {
+    global: {
+      branches: {coverage_target},
+      functions: {coverage_target},
+      lines: {coverage_target},
+      statements: {coverage_target},
+    },
+  },
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

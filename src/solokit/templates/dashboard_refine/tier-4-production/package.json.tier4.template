@@ -29,12 +29,11 @@
     "check:duplication": "jscpd .",
     "check:types": "type-coverage",
     "check:unused": "ts-prune",
-    "prepare": "husky install",
+    "prepare": "husky install && patch-package",
     "audit": "npm audit --audit-level=moderate",
     "analyze": "ANALYZE=true npm run build",
     "lighthouse": "lhci autorun",
-    "load:test": "k6 run k6/dashboard-load-test.js",
-    "postinstall": "patch-package"
+    "load-test": "k6 run k6/load-test.js"
   },
   "dependencies": {
     "next": "16.0.1",
@@ -75,6 +74,8 @@
     "jest-environment-jsdom": "30.2.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/user-event": "14.5.2",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
     "jscpd": "4.0.5",
@@ -92,5 +93,10 @@
     "@lhci/cli": "0.15.1",
     "dotenv-cli": "11.0.0",
     "ts-node": "10.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "rimraf": "^5.0.10",
+    "inflight": "npm:@nothing/inflight@^1.0.0"
   }
 }

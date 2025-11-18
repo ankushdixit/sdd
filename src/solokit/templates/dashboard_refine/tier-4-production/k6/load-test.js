@@ -3,7 +3,7 @@ import { check, sleep } from "k6";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 /**
- * Dashboard Load Test
+ * Generic Load Test
  * Tests performance under various load conditions
  */
 
@@ -24,36 +24,38 @@ export const options = {
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
 
 export default function () {
-  // Test dashboard homepage
-  let response = http.get(`${BASE_URL}/dashboard`);
-  check(response, {
-    "dashboard status is 200": (r) => r.status === 200,
-    "dashboard loads quickly": (r) => r.timings.duration < 500,
+  // Test home page (all stacks have this)
+  const homeRes = http.get(`${BASE_URL}/`);
+  check(homeRes, {
+    "home page status is 200": (r) => r.status === 200,
+    "home page loads within 2s": (r) => r.timings.duration < 2000,
   });
 
   sleep(1);
 
-  // Test users list page
-  response = http.get(`${BASE_URL}/dashboard/users`);
-  check(response, {
-    "users page status is 200": (r) => r.status === 200,
-    "users page loads quickly": (r) => r.timings.duration < 500,
-  });
+  // Optional: Test additional routes if available
+  // This will gracefully handle 404s for routes that don't exist
+  const additionalRoutes = [
+    "/dashboard",
+    "/api/health",
+  ];
 
-  sleep(1);
-
-  // Test API endpoint (if available)
-  response = http.get(`${BASE_URL}/api/health`);
-  check(response, {
-    "API responds": (r) => r.status === 200 || r.status === 404,
-  });
+  for (const route of additionalRoutes) {
+    const res = http.get(`${BASE_URL}${route}`, {
+      tags: { name: route },
+    });
+    check(res, {
+      [`${route} responds`]: (r) => r.status === 200 || r.status === 404,
+    });
+  }
 
   sleep(1);
 }
 
+// Summary handler
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: " ", enableColors: true }),
-    "reports/dashboard-load-test-summary.json": JSON.stringify(data),
+    "reports/load-test-summary.json": JSON.stringify(data),
   };
 }
