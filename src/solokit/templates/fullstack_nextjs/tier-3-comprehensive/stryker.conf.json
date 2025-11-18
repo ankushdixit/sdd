@@ -12,6 +12,8 @@
   "mutate": [
     "app/**/*.ts",
     "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
     "lib/**/*.ts",
     "!**/*.test.ts",
     "!**/*.test.tsx",

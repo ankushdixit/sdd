@@ -8,6 +8,8 @@
     "dist",
     "alembic/versions"
   ],
+  "venvPath": ".",
+  "venv": "venv",
   "defineConstant": {
     "DEBUG": true
   },

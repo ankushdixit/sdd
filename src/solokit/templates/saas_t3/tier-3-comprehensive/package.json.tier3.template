@@ -9,24 +9,28 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:unit": "jest --testMatch='**/tests/unit/**/*.test.{ts,tsx}'",
     "test:integration": "jest --testMatch='**/tests/integration/**/*.test.{ts,tsx}'",
     "test:e2e": "playwright test",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
-    "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:a11y": "playwright test --grep @a11y",
     "test:mutation": "stryker run",
     "setup": "playwright install --with-deps",
     "setup:browsers": "playwright install",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "prepare": "husky install",
-    "audit": "npm audit --audit-level=moderate",
     "check:duplication": "jscpd .",
-    "check:types": "type-coverage"
+    "check:types": "type-coverage",
+    "check:unused": "ts-prune",
+    "prepare": "husky install",
+    "audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
     "next": "16.0.1",
@@ -63,6 +67,8 @@
     "jest-environment-jsdom": "30.2.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/user-event": "14.5.2",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
     "jscpd": "4.0.5",
@@ -76,5 +82,10 @@
     "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-testing-library": "7.13.3",
     "ts-node": "10.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "rimraf": "^5.0.10",
+    "inflight": "npm:@nothing/inflight@^1.0.0"
   }
 }

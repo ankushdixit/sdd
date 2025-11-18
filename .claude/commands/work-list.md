@@ -14,11 +14,13 @@ sk work-list "$@"
 ```
 
 The CLI will automatically parse and handle filters from `$ARGUMENTS`:
+
 - `--status not_started` → Filters by status
 - `--type feature` → Filters by type
 - `--milestone phase_2_mvp` → Filters by milestone
 
 Available filter values:
+
 - **Status**: `not_started`, `in_progress`, `blocked`, `completed`
 - **Type**: `feature`, `bug`, `refactor`, `security`, `integration_test`, `deployment`
 - **Milestone**: Any milestone name from the project

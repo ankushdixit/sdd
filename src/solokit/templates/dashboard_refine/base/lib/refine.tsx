@@ -8,9 +8,32 @@ import type { DataProvider, BaseKey } from "@refinedev/core";
 
 /**
  * Mock data provider for development/testing
- * Replace with a real data provider when you have a backend API
- * Example: import dataProvider from "@refinedev/simple-rest";
- * Then: export const refineDataProvider = dataProvider(API_URL);
+ *
+ * ⚠️ IMPORTANT: This is a mock data provider for demonstration purposes only.
+ * Replace with a real data provider when you have a backend API.
+ *
+ * Migration Path:
+ *
+ * 1. Choose a data provider based on your backend:
+ *    - REST API: @refinedev/simple-rest
+ *    - GraphQL: @refinedev/graphql
+ *    - Strapi: @refinedev/strapi-v4
+ *    - Supabase: @refinedev/supabase
+ *    - Custom: Implement your own DataProvider interface
+ *
+ * 2. Install the data provider package:
+ *    npm install @refinedev/simple-rest
+ *
+ * 3. Replace the mock provider:
+ *    import dataProvider from "@refinedev/simple-rest";
+ *    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+ *    export const refineDataProvider = dataProvider(API_URL);
+ *
+ * 4. Update your resources to match your API endpoints
+ *
+ * 5. Remove the mockDataProvider code below
+ *
+ * Documentation: https://refine.dev/docs/data/data-provider/
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const mockDataProvider: DataProvider = {

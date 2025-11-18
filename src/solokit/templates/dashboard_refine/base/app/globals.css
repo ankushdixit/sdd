@@ -1,3 +1,14 @@
+/*
+ * Dashboard Refine Global Styles
+ *
+ * This template uses the comprehensive shadcn/ui CSS variables system for theming.
+ * The extensive color palette and CSS variables enable consistent styling across
+ * all shadcn/ui components (button, card, table, etc.) used in this dashboard.
+ *
+ * Note: This differs from other templates that use minimal CSS variables,
+ * as those don't require the full shadcn/ui theming system.
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

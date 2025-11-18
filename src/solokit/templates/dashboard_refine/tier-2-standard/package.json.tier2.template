@@ -14,9 +14,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    
-    "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "prepare": "husky install",
     "audit": "npm audit --audit-level=moderate"
   },
@@ -57,8 +56,15 @@
     "jest-environment-jsdom": "30.2.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/user-event": "14.5.2",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
     "ts-node": "10.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "rimraf": "^5.0.10",
+    "inflight": "npm:@nothing/inflight@^1.0.0"
   }
 }

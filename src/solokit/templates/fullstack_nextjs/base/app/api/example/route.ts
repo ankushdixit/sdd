@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { createUserSchema } from "@/lib/validations";
 import { z } from "zod";
 
+interface ZodErrorLike extends Error {
+  name: string;
+  issues: Array<{ message: string }>;
+}
+
 /**
  * GET /api/example
  * Returns a simple greeting message
@@ -46,9 +51,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof z.ZodError || (error as ZodErrorLike).name === "ZodError") {
       return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
+        { error: "Validation failed", details: (error as ZodErrorLike).issues },
         { status: 400 }
       );
     }

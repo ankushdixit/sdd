@@ -41,7 +41,7 @@ sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
-  --options=ci_cd,docker,env_templates
+  --options=ci_cd,docker,env_templates,a11y
 ```
 
 ## Options
@@ -163,7 +163,7 @@ sk init \
   --template=saas_t3 \
   --tier=tier-4-production \
   --coverage=80 \
-  --options=ci_cd,docker,env_templates
+  --options=ci_cd,docker,env_templates,a11y
 ```
 
 **Result:**

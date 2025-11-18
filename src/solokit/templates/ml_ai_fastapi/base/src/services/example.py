@@ -3,7 +3,6 @@ Item service - handles business logic for items
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -38,7 +37,7 @@ class ItemService:
         await self.db.refresh(item)
         return item
 
-    async def get_item(self, item_id: int) -> Optional[Item]:
+    async def get_item(self, item_id: int) -> Item | None:
         """
         Get an item by ID.
 
@@ -67,7 +66,7 @@ class ItemService:
         result = await self.db.exec(statement)
         return list(result.all())
 
-    async def update_item(self, item_id: int, item_update: ItemUpdate) -> Optional[Item]:
+    async def update_item(self, item_id: int, item_update: ItemUpdate) -> Item | None:
         """
         Update an item.
 

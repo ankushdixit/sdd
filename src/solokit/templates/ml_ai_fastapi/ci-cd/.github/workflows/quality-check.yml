@@ -37,16 +37,13 @@ jobs:
 
       - name: Type check with Pyright
         run: pyright src/ tests/
-        continue-on-error: true
 
       - name: Check complexity with Radon
         run: |
           pip install radon
           radon cc src/ -a -nb
-        continue-on-error: true
 
       - name: Check for dead code with Vulture
         run: |
           pip install vulture
           vulture src/ --min-confidence 80
-        continue-on-error: true

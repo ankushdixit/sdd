@@ -17,6 +17,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 **Multi-Select**: false
 
 **Options**:
+
 1. **Label**: "SaaS Application"
    **Description**: "T3 stack with Next.js, Prisma, tRPC - Full-featured web apps with auth, payments, multi-tenancy"
 
@@ -38,6 +39,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 **Multi-Select**: false
 
 **Options**:
+
 1. **Label**: "Essential"
    **Description**: "Linting, formatting, type-check, basic tests (fastest setup)"
 
@@ -59,6 +61,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 **Multi-Select**: false
 
 **Options**:
+
 1. **Label**: "Basic (60%)"
    **Description**: "Minimal coverage for prototypes and MVPs"
 
@@ -77,6 +80,7 @@ Use the **AskUserQuestion tool** to collect all configuration:
 **Multi-Select**: true
 
 **Options** (all optional, user can select multiple):
+
 1. **Label**: "GitHub Actions CI/CD"
    **Description**: "Automated testing and deployment workflows"
 
@@ -99,31 +103,37 @@ sk init --template=<category> --tier=<tier> --coverage=<coverage> --options=<opt
 **Mapping user selections to CLI arguments:**
 
 **Category mapping:**
+
 - "SaaS Application" → `--template=saas_t3`
 - "ML/AI Tooling" → `--template=ml_ai_fastapi`
 - "Internal Dashboard" → `--template=dashboard_refine`
 - "Full-Stack Product" → `--template=fullstack_nextjs`
 
 **Tier mapping:**
+
 - "Essential" → `--tier=tier-1-essential`
 - "Standard" → `--tier=tier-2-standard`
 - "Comprehensive" → `--tier=tier-3-comprehensive`
 - "Production-Ready" → `--tier=tier-4-production`
 
 **Coverage mapping:**
+
 - "Basic (60%)" → `--coverage=60`
 - "Standard (80%)" → `--coverage=80`
 - "Strict (90%)" → `--coverage=90`
 - Custom value from "Type something" → `--coverage=<value>`
 
 **Options mapping:**
+
 - "GitHub Actions CI/CD" → `ci_cd`
 - "Docker Support" → `docker`
 - "Environment Templates" → `env_templates`
+- "Accessibility Testing" → `a11y`
 
-Combine multiple options with commas: `--options=ci_cd,docker,env_templates`
+Combine multiple options with commas: `--options=ci_cd,docker,env_templates,a11y`
 
 **Important:** The Python command handles ALL validation and setup deterministically:
+
 - Pre-flight checks (blank project, git init, environment validation)
 - Template installation
 - Dependency installation
@@ -138,6 +148,7 @@ Show the user the success output from the script, then explain:
 "Your project is now set up with production-ready tooling!
 
 **Next steps:**
+
 1. Review `README.md` for stack-specific getting started guide
 2. Create your first work item: `/sk:work-new`
 3. Start working: `/sk:start`"
@@ -147,6 +158,7 @@ Show the user the success output from the script, then explain:
 ## Error Handling
 
 If the `sk init` command fails, show the error message from the CLI output. The Python script provides clear error messages for common issues:
+
 - Already initialized
 - Not a blank project
 - Missing environment requirements

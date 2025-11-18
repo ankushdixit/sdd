@@ -11,12 +11,14 @@ sk work-next
 ```
 
 The recommendation algorithm analyzes:
+
 - **Available Work Items**: All items with `not_started` status
 - **Dependency Blocking**: Filters out items blocked by incomplete dependencies
 - **Priority Sorting**: Ranks by priority (critical > high > medium > low)
 - **Smart Selection**: Recommends the highest priority unblocked item
 
 Display to the user:
+
 - **Recommended Work Item**: Full details (ID, title, type, priority)
 - **Selection Rationale**: Why this item was chosen
 - **Dependency Status**: Confirmation that all dependencies are satisfied

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { db } from "@/server/db";
 
 export const exampleRouter = createTRPCRouter({
   hello: publicProcedure.input(z.object({ text: z.string() })).query(({ input }) => {
@@ -9,18 +10,23 @@ export const exampleRouter = createTRPCRouter({
   }),
 
   create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
+    .input(z.object({ name: z.string().min(1), email: z.string().email() }))
     .mutation(async ({ input }) => {
-      // This is a placeholder - you'll need to implement your database logic
-      return {
-        id: "1",
-        name: input.name,
-        createdAt: new Date(),
-      };
+      // Example: Create a new user in the database
+      const user = await db.user.create({
+        data: {
+          name: input.name,
+          email: input.email,
+        },
+      });
+      return user;
     }),
 
   getAll: publicProcedure.query(async () => {
-    // This is a placeholder - you'll need to implement your database logic
-    return [];
+    // Example: Fetch all users from the database
+    const users = await db.user.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return users;
   }),
 });
