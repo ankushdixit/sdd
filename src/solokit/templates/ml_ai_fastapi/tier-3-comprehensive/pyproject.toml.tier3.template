@@ -44,6 +44,7 @@ quality = [
     "locust==2.42.2",
     "semgrep==1.142.1",
     "coverage[toml]==7.11.1",
+    "pylint==3.3.3",
 ]
 
 [build-system]
