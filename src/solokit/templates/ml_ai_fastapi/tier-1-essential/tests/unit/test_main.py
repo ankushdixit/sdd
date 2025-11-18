@@ -4,7 +4,6 @@ Unit tests for main application
 
 import pytest
 from httpx import AsyncClient
-from src.main import app  # type: ignore[import-not-found]
 
 
 @pytest.mark.unit
@@ -36,13 +35,14 @@ class TestMainApp:
 
     async def test_app_lifespan(self) -> None:
         """Test application lifespan startup and shutdown."""
-        from unittest.mock import patch, AsyncMock
-        from src.main import lifespan
+        from unittest.mock import AsyncMock, patch
+
         from src.main import app as test_app
+        from src.main import lifespan
 
         # Mock create_db_and_tables
-        with patch('src.main.create_db_and_tables', new_callable=AsyncMock) as mock_create_db:
-            with patch('src.main.logger') as mock_logger:
+        with patch("src.main.create_db_and_tables", new_callable=AsyncMock) as mock_create_db:
+            with patch("src.main.logger") as mock_logger:
                 # Run the lifespan context manager
                 async with lifespan(test_app):
                     # Verify startup was called
@@ -50,6 +50,7 @@ class TestMainApp:
                     assert mock_logger.info.called
 
                 # After exiting, shutdown logging should have been called
-                shutdown_calls = [call for call in mock_logger.info.call_args_list
-                                if 'Shutting down' in str(call)]
+                shutdown_calls = [
+                    call for call in mock_logger.info.call_args_list if "Shutting down" in str(call)
+                ]
                 assert len(shutdown_calls) > 0

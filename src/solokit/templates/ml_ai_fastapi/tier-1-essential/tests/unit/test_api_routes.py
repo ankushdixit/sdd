@@ -4,8 +4,7 @@ Unit tests for API routes
 
 import pytest
 from fastapi import status
-from httpx import AsyncClient, ASGITransport
-from src.main import app  # type: ignore[import-not-found]
+from httpx import AsyncClient
 
 
 @pytest.mark.unit
@@ -155,9 +154,10 @@ class TestHealthRoutes:
 
     async def test_readiness_check_database_error(self) -> None:
         """Test readiness check when database connection fails."""
-        from unittest.mock import AsyncMock, patch
-        from src.api.routes.health import readiness_check
+        from unittest.mock import AsyncMock
+
         from sqlmodel.ext.asyncio.session import AsyncSession
+        from src.api.routes.health import readiness_check
 
         # Create a mock session that raises an exception
         mock_session = AsyncMock(spec=AsyncSession)

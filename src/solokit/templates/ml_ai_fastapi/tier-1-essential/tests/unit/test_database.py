@@ -2,8 +2,9 @@
 Unit tests for database and dependencies
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from sqlmodel.ext.asyncio.session import AsyncSession  # type: ignore[import-not-found]
 from src.api.dependencies import get_db  # type: ignore[import-not-found]
 
@@ -20,10 +21,9 @@ class TestDatabase:
 
     async def test_get_db_function_directly(self) -> None:
         """Test get_db function directly."""
-        from src.api.dependencies import get_db
 
         # Mock the async_session_maker to avoid real DB connection
-        with patch('src.api.dependencies.async_session_maker') as mock_maker:
+        with patch("src.api.dependencies.async_session_maker") as mock_maker:
             mock_session = AsyncMock(spec=AsyncSession)
             mock_maker.return_value.__aenter__.return_value = mock_session
             mock_maker.return_value.__aexit__.return_value = None
@@ -36,13 +36,14 @@ class TestDatabase:
 
     async def test_create_db_and_tables(self) -> None:
         """Test database table creation with mock."""
-        with patch('src.core.database.engine') as mock_engine:
+        with patch("src.core.database.engine") as mock_engine:
             # Create mock connection
             mock_conn = AsyncMock()
             mock_engine.begin.return_value.__aenter__.return_value = mock_conn
 
             # Import and call the function
             from src.core.database import create_db_and_tables
+
             await create_db_and_tables()
 
             # Verify run_sync was called
@@ -50,7 +51,7 @@ class TestDatabase:
 
     async def test_get_session(self) -> None:
         """Test get_session function."""
-        with patch('src.core.database.async_session_maker') as mock_maker:
+        with patch("src.core.database.async_session_maker") as mock_maker:
             # Create mock session
             mock_session = AsyncMock(spec=AsyncSession)
             mock_maker.return_value.__aenter__.return_value = mock_session
