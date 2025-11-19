@@ -6,16 +6,22 @@
  */
 
 describe("Prisma Client", () => {
-  let originalEnv: string | undefined;
+  const originalEnv = process.env.NODE_ENV;
 
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV;
     // Clear module cache to test fresh imports
     jest.resetModules();
   });
 
   afterEach(() => {
-    (process.env as any).NODE_ENV = originalEnv;
+    // Restore original NODE_ENV
+    if (originalEnv !== undefined) {
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true,
+        configurable: true,
+      });
+    }
   });
 
   it("exports prisma client instance", () => {
@@ -31,7 +37,11 @@ describe("Prisma Client", () => {
   });
 
   it("returns same instance on multiple imports in development", () => {
-    (process.env as any).NODE_ENV = "development";
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: "development",
+      writable: true,
+      configurable: true,
+    });
     jest.resetModules();
 
     const { prisma: prisma1 } = require("../prisma");
@@ -62,13 +72,21 @@ describe("Prisma Client", () => {
 describe("Prisma Client Configuration", () => {
   it("should configure logging based on environment", () => {
     // Test development environment
-    (process.env as any).NODE_ENV = "development";
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: "development",
+      writable: true,
+      configurable: true,
+    });
     jest.resetModules();
     const { prisma: devPrisma } = require("../prisma");
     expect(devPrisma).toBeDefined();
 
     // Test production environment
-    (process.env as any).NODE_ENV = "production";
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: "production",
+      writable: true,
+      configurable: true,
+    });
     jest.resetModules();
     const { prisma: prodPrisma } = require("../prisma");
     expect(prodPrisma).toBeDefined();
