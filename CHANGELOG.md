@@ -124,6 +124,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: saas_t3, dashboard_refine, fullstack_nextjs (tier-4-production, a11y option)
   - Resolves: Session 14 (Lighthouse CI) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Complexity Analysis Enforcement (Session 15)**
+  - Added ESLint complexity rules to all JavaScript stack tier-3 and tier-4 configs
+  - JavaScript complexity rules: cyclomatic (max 10), max-depth (4), max-nested-callbacks (4), max-lines-per-function (100)
+  - Test files exempted from max-nested-callbacks and max-lines-per-function (describe/it blocks naturally nest deeply)
+  - Updated Python Radon check to enforce thresholds: `radon cc --max B` fails build if complexity exceeds grade B
+  - ESLint handles both linting and complexity for JavaScript (industry standard approach)
+  - Radon provides separate complexity analysis for Python (distinct from ruff linting)
+  - Impact: All stacks at tier-3+ now enforce code complexity standards to maintain readability
+  - JavaScript: Complexity violations show as ESLint errors during `npm run lint`
+  - Python: Complexity violations fail `radon cc` step in quality-check.yml workflow
+  - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), tier-3+
+  - Resolves: Session 15 (Complexity Analysis) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`
