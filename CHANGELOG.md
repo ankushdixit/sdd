@@ -55,6 +55,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: fullstack_nextjs template, all tiers
   - Resolves: Session 8 (E2E Tests) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Mutation Testing Configuration Consistency (Session 9)**
+  - Fixed ml_ai_fastapi mutation testing to match JavaScript stack tiering pattern
+  - Replaced mutmut with Cosmic Ray 8.4.3 (mutmut incompatible with src/ directory layouts)
+  - Removed [cosmic-ray] configuration from base, tier-1, and tier-2 templates
+  - Updated tier-3 and tier-4 pyproject.toml to use cosmic-ray==8.4.3 in quality dependencies
+  - Deleted obsolete mutmut_config.py.template from tier-3-comprehensive
+  - Updated CI/CD workflow to use cosmic-ray commands (cosmic-ray init/exec/cr-report)
+  - Updated stack-versions.yaml with cosmic-ray 8.4.3
+  - Verified cosmic-ray session creation (200 mutation jobs) on test projects
+  - Added __tests__ pattern to Jest testMatch in 6 JavaScript configs for better test discovery
+  - Enhanced saas_t3 test coverage to 92.85% function coverage
+  - Impact: Mutation testing now introduced in tier-3, inherited by tier-4 (consistent across all stacks)
+  - Affects: ml_ai_fastapi (all tiers), saas_t3/dashboard_refine/fullstack_nextjs (tier-3/tier-4)
+  - Resolves: Session 9 (Mutation Testing) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`

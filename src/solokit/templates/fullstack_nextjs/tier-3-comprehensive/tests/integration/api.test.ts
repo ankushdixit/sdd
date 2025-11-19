@@ -2,8 +2,6 @@
  * Integration Tests
  *
  * Tests API endpoints via HTTP requests.
- *
- * @jest-environment jsdom
  */
 
 describe("API Integration Tests", () => {
