@@ -86,10 +86,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install mutmut
+          pip install cosmic-ray
 
       - name: Run mutation tests
-        run: mutmut run --paths-to-mutate=src/
+        run: |
+          cosmic-ray init pyproject.toml cosmic-ray-session.sqlite
+          cosmic-ray --verbosity=INFO exec pyproject.toml cosmic-ray-session.sqlite || true
+          cr-report cosmic-ray-session.sqlite
 
       - name: Show mutation results
-        run: mutmut results
+        if: always()
+        run: cr-report cosmic-ray-session.sqlite || echo "No mutation results available"

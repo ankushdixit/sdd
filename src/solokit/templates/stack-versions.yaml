@@ -167,7 +167,7 @@ stacks:
     tier3_comprehensive:
       radon: "6.0.1"
       vulture: "2.14"
-      mutmut: "3.3.1"
+      cosmic-ray: "8.4.3"
       locust: "2.42.2"  # Requires Python >=3.10
       semgrep: "1.142.1"
       coverage: "7.11.1"  # with [toml] extra
@@ -205,7 +205,7 @@ stacks:
 
         tier2: "pip install detect-secrets==1.5.0 pip-audit==2.7.3 'bandit[toml]==1.8.0' pre-commit==4.0.1"
 
-        tier3: "pip install radon==6.0.1 vulture==2.14 mutmut==3.3.1 locust==2.42.2 semgrep==1.142.1 'coverage[toml]==7.11.1' pylint==3.3.3"
+        tier3: "pip install radon==6.0.1 vulture==2.14 cosmic-ray==8.4.3 locust==2.42.2 semgrep==1.142.1 'coverage[toml]==7.11.1' pylint==3.3.3"
 
         tier4_dev: "pip install prometheus-client==0.23.1 statsd==4.0.1 structlog==25.5.0 python-json-logger==4.0.0"
 

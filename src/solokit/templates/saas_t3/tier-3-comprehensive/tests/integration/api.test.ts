@@ -3,8 +3,6 @@
  *
  * Tests API endpoints via HTTP requests.
  * For tier-3+, these tests validate the full request/response flow.
- *
- * @jest-environment jsdom
  */
 
 describe("API Integration Tests", () => {

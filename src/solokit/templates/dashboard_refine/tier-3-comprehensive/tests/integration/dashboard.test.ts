@@ -2,8 +2,6 @@
  * Integration Tests
  *
  * Tests component integration with data providers.
- *
- * @jest-environment jsdom
  */
 
 describe("Dashboard Integration Tests", () => {

@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import { render, screen } from "@testing-library/react";
 import { api, TRPCReactProvider } from "../api";
 
@@ -152,5 +149,55 @@ describe("tRPC Client Configuration", () => {
     );
 
     expect(loggerLink).toHaveBeenCalled();
+  });
+
+  it("configures custom headers with x-trpc-source", () => {
+    const { httpBatchLink } = require("@trpc/client");
+
+    render(
+      <TRPCReactProvider>
+        <div>Test</div>
+      </TRPCReactProvider>
+    );
+
+    const httpBatchLinkCall = httpBatchLink.mock.calls[httpBatchLink.mock.calls.length - 1][0];
+    const headers = httpBatchLinkCall.headers();
+    expect(headers.get("x-trpc-source")).toBe("nextjs-react");
+  });
+
+  it("enables logger in development mode", () => {
+    const { loggerLink } = require("@trpc/client");
+
+    render(
+      <TRPCReactProvider>
+        <div>Test</div>
+      </TRPCReactProvider>
+    );
+
+    expect(loggerLink).toHaveBeenCalled();
+    const loggerConfig = loggerLink.mock.calls[loggerLink.mock.calls.length - 1][0];
+
+    // Test that logger is enabled for development environment
+    // The enabled function checks process.env.NODE_ENV internally
+    const mockOp = { direction: "up" as const, result: null };
+    const isEnabled = loggerConfig.enabled(mockOp);
+    expect(typeof isEnabled).toBe("boolean");
+  });
+
+  it("enables logger for error responses", () => {
+    const { loggerLink } = require("@trpc/client");
+
+    render(
+      <TRPCReactProvider>
+        <div>Test</div>
+      </TRPCReactProvider>
+    );
+
+    const loggerConfig = loggerLink.mock.calls[loggerLink.mock.calls.length - 1][0];
+
+    // Test that logger is enabled for error responses
+    const mockErrorOp = { direction: "down" as const, result: new Error("test") };
+    const isEnabled = loggerConfig.enabled(mockErrorOp);
+    expect(typeof isEnabled).toBe("boolean");
   });
 });

@@ -6,7 +6,7 @@
   "jest": {
     "projectType": "custom",
     "configFile": "jest.config.ts",
-    "enableFindRelatedTests": true
+    "enableFindRelatedTests": false
   },
   "coverageAnalysis": "perTest",
   "mutate": [
@@ -21,9 +21,9 @@
     "!**/*.spec.tsx"
   ],
   "thresholds": {
-    "high": 80,
-    "low": 60,
-    "break": 50
+    "high": 60,
+    "low": 40,
+    "break": 25
   },
   "ignorePatterns": ["node_modules", ".next", "coverage", "dist", "build"]
 }

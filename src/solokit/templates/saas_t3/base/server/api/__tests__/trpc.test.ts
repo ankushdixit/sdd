@@ -110,16 +110,37 @@ describe("tRPC Configuration", () => {
   });
 
   describe("Error Formatting", () => {
-    it("formats ZodError in error response", async () => {
+    it("configures error formatter with ZodError support", () => {
       const { z } = require("zod");
 
+      // Create a router with input validation
       const testRouter = createTRPCRouter({
-        test: publicProcedure
+        validateInput: publicProcedure
           .input(z.object({ text: z.string() }))
           .query(({ input }) => input),
       });
 
-      // This validates that the error formatter is configured
+      // Verify router is properly configured with error formatting
+      expect(testRouter).toBeDefined();
+      expect(typeof testRouter).toBe("object");
+    });
+
+    it("handles procedure with complex validation", () => {
+      const { z } = require("zod");
+
+      const testRouter = createTRPCRouter({
+        complexValidation: publicProcedure
+          .input(
+            z.object({
+              email: z.string().email(),
+              age: z.number().min(0).max(120),
+              name: z.string().min(1),
+            })
+          )
+          .mutation(({ input }) => input),
+      });
+
+      // Verify complex validation schema is configured
       expect(testRouter).toBeDefined();
     });
   });
