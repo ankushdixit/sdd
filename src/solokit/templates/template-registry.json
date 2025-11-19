@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "metadata": {
-    "last_updated": "2025-11-07",
+    "last_updated": "2025-11-19",
     "total_templates": 4,
     "validation_source": "stack-versions.yaml"
   },
@@ -225,31 +225,39 @@
       "best_for": "Production SaaS, growing teams, mission-critical apps",
       "extends": "tier-2-standard",
       "adds": [
-        "Code complexity enforcement",
-        "Code duplication detection",
-        "Dead code detection",
-        "Type coverage enforcement",
+        "Code complexity enforcement (ESLint/Radon)",
+        "Code duplication detection (jscpd/pylint)",
+        "Dead code detection (ts-prune/vulture)",
+        "Type coverage enforcement (>90%)",
         "Mutation testing (>75% score)",
         "Integration tests required",
-        "E2E tests (Playwright)",
-        "Performance regression tests"
-      ]
+        "E2E tests (Playwright for JS stacks)",
+        "Unit test coverage (>80%)"
+      ],
+      "stack_specific": {
+        "javascript": ["ts-prune", "jscpd", "ESLint complexity rules", "Playwright E2E"],
+        "python": ["vulture", "pylint duplication", "Radon complexity", "cosmic-ray mutation"]
+      }
     },
     "tier-4-production": {
       "name": "Production-Ready",
-      "description": "Comprehensive + Operations + Deployment",
+      "description": "Comprehensive + Operations + Monitoring + Performance",
       "best_for": "Enterprise applications, regulated industries, high-scale",
       "extends": "tier-3-comprehensive",
       "adds": [
         "Health check endpoints",
         "Metrics and observability",
         "Error tracking (Sentry)",
-        "Structured logging",
-        "Deployment dry-run",
-        "Breaking change detection",
-        "Performance benchmarks",
-        "Security monitoring"
-      ]
+        "Structured logging (structlog/winston)",
+        "Bundle analysis (@next/bundle-analyzer for JS)",
+        "Lighthouse CI (performance + accessibility)",
+        "Production build validation",
+        "Security scanning (no continue-on-error)"
+      ],
+      "stack_specific": {
+        "javascript": ["Bundle analysis", "Lighthouse CI (90% scores)", "Sentry integration"],
+        "python": ["Structured logging with structlog", "Performance profiling", "Load testing with Locust"]
+      }
     }
   },
   "additional_options": {
