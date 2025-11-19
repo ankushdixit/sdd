@@ -137,6 +137,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), tier-3+
   - Resolves: Session 15 (Complexity Analysis) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Dead Code Detection (Session 16)**
+  - Added ts-prune check to all JavaScript stack quality-check.yml workflows
+  - JavaScript: `npm run check:unused` runs ts-prune to detect unused exports
+  - ts-prune already installed in tier-3 package.json (version 0.10.3) with check:unused script
+  - Updated Python Vulture configuration to reduce false positives
+  - Increased Vulture min-confidence from 80 to 90 (fewer false positives)
+  - Added explicit excludes for tests, __pycache__, and alembic/versions
+  - Added ignore-names for common protocol parameters (method_name, logger) required by frameworks
+  - Fixed test script to use shlex.split() instead of str.split() for proper handling of quoted arguments
+  - Impact: All stacks at tier-3+ now detect and prevent dead/unused code
+  - JavaScript: ts-prune detects unused exports during quality checks
+  - Python: Vulture detects unused code in src/ with 90% confidence threshold
+  - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), tier-3+
+  - Resolves: Session 16 (Dead Code Detection) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`

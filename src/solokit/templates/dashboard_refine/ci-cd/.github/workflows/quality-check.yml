@@ -38,5 +38,8 @@ jobs:
       - name: Check type coverage
         run: npm run check:types
 
+      - name: Check for unused exports
+        run: npm run check:unused
+
       - name: Production build
         run: npm run build
