@@ -17,7 +17,7 @@ test.describe("Home Page", () => {
     await expect(page.getByText(/count:/i)).toBeVisible();
   });
 
-  test("should have no accessibility violations", async ({ page }) => {
+  test("should have no accessibility violations @a11y", async ({ page }) => {
     await page.goto("/");
 
     // Run accessibility scan

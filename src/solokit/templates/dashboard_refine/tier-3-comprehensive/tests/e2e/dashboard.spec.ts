@@ -58,7 +58,7 @@ test.describe("Dashboard Page", () => {
     await expect(searchInput).toHaveValue("test query");
   });
 
-  test("should pass accessibility checks", async ({ page }) => {
+  test("should pass accessibility checks @a11y", async ({ page }) => {
     await page.goto("/");
 
     // Run accessibility scan

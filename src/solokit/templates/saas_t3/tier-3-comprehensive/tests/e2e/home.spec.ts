@@ -16,7 +16,7 @@ test.describe("Home Page", () => {
     await expect(page.getByText(/hello from trpc/i)).toBeVisible();
   });
 
-  test("should have no accessibility violations", async ({ page }) => {
+  test("should have no accessibility violations @a11y", async ({ page }) => {
     await page.goto("/");
 
     // Run accessibility scan
