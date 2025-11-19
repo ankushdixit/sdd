@@ -37,3 +37,6 @@ jobs:
 
       - name: Check type coverage
         run: npm run check:types
+
+      - name: Production build
+        run: npm run build
