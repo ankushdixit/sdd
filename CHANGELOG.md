@@ -101,6 +101,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), all tiers with CI/CD
   - Resolves: Session 12 (Security Scanning) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Accessibility Testing Infrastructure (Session 13)**
+  - Tagged all accessibility tests with @a11y marker for proper test discovery
+  - saas_t3: 1 test tagged (home.spec.ts)
+  - fullstack_nextjs: 1 test tagged (flow.spec.ts)
+  - dashboard_refine: 3 tests tagged (dashboard.spec.ts, user-management.spec.ts)
+  - npm run test:a11y now correctly finds and runs all 5 accessibility tests
+  - Tests use @axe-core/playwright to scan for WCAG 2.0/2.1 Level A & AA violations
+  - Impact: Accessibility testing workflow now functional for all Next.js stacks
+  - Affects: saas_t3, dashboard_refine, fullstack_nextjs (tier-3+, a11y option)
+  - Resolves: Session 13 (Accessibility Testing) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
+- **Lighthouse CI Configuration & Build Workflow Optimization (Session 14)**
+  - Removed overly strict "lighthouse:recommended" preset from Lighthouse configuration
+  - Now uses explicit assertions for meaningful metrics: 90% category scores + Core Web Vitals
+  - Increased LCP threshold for dashboard_refine to 3500ms (accounts for Refine framework overhead)
+  - Removed duplicate build job from build.yml workflow in all Next.js stacks
+  - Simplified build.yml to only bundle-analysis job (builds independently with ANALYZE=true)
+  - Added Prisma client generation step to quality-check.yml for saas_t3 and fullstack_nextjs
+  - Production build now solely in quality-check.yml as proper quality gate
+  - Impact: Cleaner CI/CD workflows, no redundant builds, Lighthouse focuses on practical metrics
+  - Affects: saas_t3, dashboard_refine, fullstack_nextjs (tier-4-production, a11y option)
+  - Resolves: Session 14 (Lighthouse CI) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`

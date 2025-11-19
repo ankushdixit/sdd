@@ -38,5 +38,8 @@ jobs:
       - name: Check type coverage
         run: npm run check:types
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Production build
         run: npm run build

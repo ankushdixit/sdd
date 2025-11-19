@@ -41,7 +41,7 @@ test.describe("User Management", () => {
     await expect(table).toBeVisible({ timeout: 10000 });
   });
 
-  test("should have accessible table structure", async ({ page }) => {
+  test("should have accessible table structure @a11y", async ({ page }) => {
     await page.goto("/users");
 
     // Wait for table
@@ -76,7 +76,7 @@ test.describe("User Management", () => {
     await expect(page).toHaveURL("/");
   });
 
-  test("should pass full page accessibility audit", async ({ page }) => {
+  test("should pass full page accessibility audit @a11y", async ({ page }) => {
     await page.goto("/users");
 
     // Wait for page to fully load
