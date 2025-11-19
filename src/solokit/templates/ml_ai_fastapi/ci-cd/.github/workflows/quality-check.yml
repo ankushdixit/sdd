@@ -51,7 +51,7 @@ jobs:
       - name: Check complexity with Radon
         run: |
           pip install radon
-          radon cc src/ -a -nb
+          radon cc src/ -a -nb --max B
 
       - name: Check for dead code with Vulture
         run: |
