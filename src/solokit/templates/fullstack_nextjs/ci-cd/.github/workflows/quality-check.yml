@@ -38,6 +38,9 @@ jobs:
       - name: Check type coverage
         run: npm run check:types
 
+      - name: Check for unused exports
+        run: npm run check:unused
+
       - name: Generate Prisma Client
         run: npx prisma generate
 
