@@ -33,6 +33,18 @@ export default [
         { argsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
+      // Complexity rules (tier-3+)
+      "complexity": ["error", { "max": 10 }],
+      "max-depth": ["error", { "max": 4 }],
+      "max-nested-callbacks": ["error", { "max": 4 }],
+      "max-lines-per-function": [
+        "warn",
+        {
+          "max": 100,
+          "skipBlankLines": true,
+          "skipComments": true,
+        },
+      ],
     },
   },
   {
@@ -64,6 +76,9 @@ export default [
       "testing-library/no-await-sync-queries": "error",
       "testing-library/no-debugging-utils": "warn",
       "testing-library/prefer-screen-queries": "error",
+      // Disable complexity rules for test files
+      "max-nested-callbacks": "off",
+      "max-lines-per-function": "off",
     },
   },
   {
