@@ -152,6 +152,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), tier-3+
   - Resolves: Session 16 (Dead Code Detection) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Template Registry Documentation Update (Session 18)**
+  - Updated template-registry.json to accurately reflect all implemented quality checks
+  - Tier-3 comprehensive now documents all tools: ts-prune, jscpd, vulture, pylint, Radon, cosmic-ray
+  - Tier-4 production now includes: Bundle analysis, Lighthouse CI, structured logging
+  - Added stack_specific sections to clarify JavaScript vs Python tooling differences
+  - Updated tier-3 to specify "E2E tests (Playwright for JS stacks)" - Python stack uses integration tests
+  - Updated tier-4 to document actual features: Bundle analysis (@next/bundle-analyzer), Lighthouse CI (90% scores)
+  - Changed tier-4 description from "Operations + Deployment" to "Operations + Monitoring + Performance"
+  - Updated metadata last_updated date to 2025-11-19
+  - Impact: Documentation now matches implementation, users know exactly what tools are used at each tier
+  - Affects: template-registry.json (user-facing documentation)
+  - Resolves: Session 18 (Update Template Registry Documentation) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`
