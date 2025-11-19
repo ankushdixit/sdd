@@ -70,6 +70,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Affects: ml_ai_fastapi (all tiers), saas_t3/dashboard_refine/fullstack_nextjs (tier-3/tier-4)
   - Resolves: Session 9 (Mutation Testing) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
 
+- **Production Build Quality Gate (Session 10)**
+  - Added explicit production build step to quality-check.yml for all 3 Next.js stacks
+  - Production build now runs as final quality gate before PR merge
+  - Updated test script to handle build steps context-aware (skip in setup jobs, run in quality jobs)
+  - Enhanced npm command parsing to handle all npm commands (not just npm run)
+  - Impact: Build failures now caught during quality checks, preventing broken production builds
+  - Affects: saas_t3, dashboard_refine, fullstack_nextjs (all tiers with CI/CD option)
+  - Resolves: Session 10 (Production Build) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
+- **Bundle Analysis Integration (Session 11)**
+  - Integrated @next/bundle-analyzer in next.config.ts for all tier-4 Next.js stacks
+  - Bundle analyzer enabled via ANALYZE=true environment variable
+  - Bundle analysis job added to build.yml workflow (uploads artifacts for 30 days)
+  - Updated test script to parse security.yml and build.yml workflows
+  - Impact: All tier-4 production templates now have bundle size monitoring in CI/CD
+  - Affects: saas_t3/tier-4-production, dashboard_refine/tier-4-production, fullstack_nextjs/tier-4-production
+  - Resolves: Session 11 (Bundle Analysis) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
+- **Security Scanning Enforcement (Session 12)**
+  - Removed continue-on-error flags from all security checks across all 4 stacks
+  - JavaScript stacks: npm audit and dependency-review-action now fail CI on vulnerabilities
+  - Python stack: Bandit, pip-audit, and Semgrep now fail CI on security issues
+  - Fixed .bandit configuration syntax from INI/Python hybrid to proper YAML format
+  - Added .eslintignore files to all JavaScript stacks to exclude generated report files
+  - Updated .prettierignore to include report/ directory in all JavaScript stacks
+  - Removed duplicate quality checks (type check, lint) from build.yml in all Next.js stacks
+  - Added security.yml workflow to test script parsing
+  - Impact: Security vulnerabilities now block CI/CD pipeline instead of being warnings
+  - Affects: All 4 stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi), all tiers with CI/CD
+  - Resolves: Session 12 (Security Scanning) from TEMPLATE_CONSISTENCY_AUDIT_PLAN.md
+
 ### Fixed (from previous sessions)
 - **Template Type Check Failures Across All Stacks**
   - Fixed dashboard_refine: Refine v5 Pagination API changed from `current` to `currentPage`

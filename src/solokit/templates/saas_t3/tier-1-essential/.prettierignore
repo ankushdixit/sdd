@@ -37,6 +37,7 @@ next-env.d.ts
 # stryker
 .stryker-tmp
 reports
+report
 
 # playwright
 test-results

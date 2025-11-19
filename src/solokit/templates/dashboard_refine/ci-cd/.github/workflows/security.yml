@@ -27,12 +27,10 @@ jobs:
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
-        continue-on-error: true
 
       - name: Run dependency review
         uses: actions/dependency-review-action@v4
         if: github.event_name == 'pull_request'
-        continue-on-error: true
 
   codeql:
     # Skip on PRs due to permission requirements

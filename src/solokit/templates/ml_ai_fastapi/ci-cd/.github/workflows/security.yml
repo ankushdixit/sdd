@@ -30,7 +30,6 @@ jobs:
 
       - name: Run Bandit security linter
         run: bandit -r src/ -c .bandit -f json -o bandit-report.json
-        continue-on-error: true
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
@@ -46,11 +45,9 @@ jobs:
 
       - name: Run pip-audit for known vulnerabilities
         run: pip-audit --require-hashes --disable-pip -r requirements.txt
-        continue-on-error: true
 
       - name: Run Semgrep SAST
         run: semgrep scan --config=auto --json --output=semgrep-report.json src/
-        continue-on-error: true
 
       - name: Upload Semgrep report
         uses: actions/upload-artifact@v4

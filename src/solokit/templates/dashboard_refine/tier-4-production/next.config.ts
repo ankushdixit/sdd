@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Bundle analyzer (only runs when ANALYZE=true)
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
@@ -44,8 +49,11 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Wrap config with bundle analyzer, then Sentry
+const configWithAnalyzer = withBundleAnalyzer(nextConfig);
+
 // Injected content via Sentry wizard below
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(configWithAnalyzer, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
