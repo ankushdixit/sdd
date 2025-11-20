@@ -1,5 +1,5 @@
 /**
- * @jest-environment @stryker-mutator/jest-runner/jest-env/node
+ * @jest-environment node
  */
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/example/route";

@@ -39,6 +39,7 @@ jobs:
         run: pyright src/ tests/
 
       - name: Check for code duplication
+        if: hashFiles('.pylintrc') != ''
         run: |
           pip install pylint
           pylint --rcfile=.pylintrc src/

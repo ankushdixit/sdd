@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Tier-Aware CI/CD Workflows for ml_ai_fastapi**
+  - Made CI/CD workflows respect tier-based tool availability to prevent false failures
+  - Added conditional execution for pylint duplicate code check (tier-3+ only) using `if: hashFiles('.pylintrc') != ''`
+  - Added conditional execution for cosmic-ray mutation tests (tier-3+ only) via config detection step
+  - Added conditional execution for Bandit security linting (tier-2+ only) via config detection step
+  - Updated test script to evaluate GitHub Actions `hashFiles()` expressions and skip steps with failing conditions
+  - Updated test script to skip conditional check steps (e.g., "Check if cosmic-ray config exists")
+  - Added `--stack` option to test script for running all phase-4 tests for a specific stack (48 tests per stack)
+  - Impact: Prevents tier-1 and tier-2 tests from failing due to missing tier-3 quality tools
+  - Affects: ml_ai_fastapi (all tiers with ci_cd option)
+  - Fixed 24 out of 48 ml_ai_fastapi phase-4 test failures
+
 ### Added
 - **Code Duplication Detection for Python Stack (Session 4)**
   - Added pylint 3.3.3 with duplicate-code checking to ml_ai_fastapi tier-3 dependencies

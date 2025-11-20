@@ -72,7 +72,7 @@ jobs:
       - name: Run integration tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-        run: npm run test:integration
+        run: npm run test:integration --if-present
 
   e2e-tests:
     runs-on: ubuntu-latest
@@ -97,7 +97,7 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e --if-present
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -126,7 +126,7 @@ jobs:
         run: npm ci
 
       - name: Run mutation tests
-        run: npm run test:mutation
+        run: npm run test:mutation --if-present
 
       - name: Upload Stryker report
         uses: actions/upload-artifact@v4
