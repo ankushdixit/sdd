@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Phase 4 Test Failures for Next.js Stacks**
+  - Fixed fullstack_nextjs mutation test failures by creating tier-specific Jest environment configurations
+  - Added tier-3 test file overrides using `@stryker-mutator/jest-runner/jest-env/node` for API route tests
+  - Kept tier-1/tier-2 test files with standard `@jest-environment node` for compatibility
+  - Fixed Lighthouse CI workflow placement: moved from a11y option to tier-4-production (where script exists)
+  - Created dedicated lighthouse.yml workflows in tier-4-production for all Next.js stacks
+  - Added PORT environment variable support to Playwright configs for parallel test execution
+  - Updated test script to provide DATABASE_URL environment variable for Next.js dev servers
+  - Optimized test timeouts: mutation tests (600s), regular tests (300s), default (120s)
+  - Impact: All 192 phase-4 tests now passing across all stacks (saas_t3, dashboard_refine, fullstack_nextjs, ml_ai_fastapi)
+  - Affects: fullstack_nextjs, saas_t3, dashboard_refine (all tiers with ci_cd option)
+  - Files modified:
+    - Template files: 14 files (playwright configs, test files, workflow files)
+    - Test infrastructure: test_all_templates.py (environment and timeout configuration)
+
 - **Tier-Aware CI/CD Workflows for ml_ai_fastapi**
   - Made CI/CD workflows respect tier-based tool availability to prevent false failures
   - Added conditional execution for pylint duplicate code check (tier-3+ only) using `if: hashFiles('.pylintrc') != ''`
