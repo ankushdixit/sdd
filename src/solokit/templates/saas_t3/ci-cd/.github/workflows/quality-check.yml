@@ -33,13 +33,13 @@ jobs:
         run: npm run format:check
 
       - name: Check for duplicated code
-        run: npm run check:duplication
+        run: npm run check:duplication --if-present
 
       - name: Check type coverage
-        run: npm run check:types
+        run: npm run check:types --if-present
 
       - name: Check for unused exports
-        run: npm run check:unused
+        run: npm run check:unused --if-present
 
       - name: Generate Prisma Client
         run: npx prisma generate

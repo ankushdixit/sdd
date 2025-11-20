@@ -1,5 +1,5 @@
 /**
- * @jest-environment @stryker-mutator/jest-runner/jest-env/node
+ * @jest-environment node
  */
 /**
  * API Route Tests for /api/example

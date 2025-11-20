@@ -76,24 +76,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check if cosmic-ray config exists
+        id: check-cosmic-ray
+        run: |
+          if grep -q '\[cosmic-ray\]' pyproject.toml; then
+            echo "has_config=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_config=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up Python 3.11
+        if: steps.check-cosmic-ray.outputs.has_config == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
+        if: steps.check-cosmic-ray.outputs.has_config == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install cosmic-ray
 
       - name: Run mutation tests
+        if: steps.check-cosmic-ray.outputs.has_config == 'true'
         run: |
           cosmic-ray init pyproject.toml cosmic-ray-session.sqlite
           cosmic-ray --verbosity=INFO exec pyproject.toml cosmic-ray-session.sqlite || true
           cr-report cosmic-ray-session.sqlite
 
       - name: Show mutation results
-        if: always()
+        if: always() && steps.check-cosmic-ray.outputs.has_config == 'true'
         run: cr-report cosmic-ray-session.sqlite || echo "No mutation results available"

@@ -9,9 +9,9 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const config: Config = {
   coverageProvider: "v8",
-  // Use Stryker's Jest environment wrapper for mutation testing compatibility
-  // This is compatible with normal Jest runs and enables Stryker's coverage analysis
-  testEnvironment: "@stryker-mutator/jest-runner/jest-env/jsdom",
+  // Use standard jsdom environment for tier-1 and tier-2
+  // Stryker's test environment is available starting from tier-3
+  testEnvironment: "jest-environment-jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
