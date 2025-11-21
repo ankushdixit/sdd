@@ -5,6 +5,7 @@ from work item specification markdown files.
 """
 
 import pytest
+
 from solokit.core.exceptions import FileNotFoundError, ValidationError
 from solokit.work_items import spec_parser
 

@@ -203,9 +203,9 @@ class TestBasicGraphGeneration:
         # Assert
         assert result.returncode == 0, f"Graph generation failed: {result.stderr}"
         assert len(result.stdout) > 0, "Graph output is empty"
-        assert (
-            "Level" in result.stdout or "work" in result.stdout.lower()
-        ), "Graph should show hierarchical structure"
+        assert "Level" in result.stdout or "work" in result.stdout.lower(), (
+            "Graph should show hierarchical structure"
+        )
 
     def test_graph_excludes_completed_items_by_default(self, solokit_project_with_dependencies):
         """Test that completed items are excluded from default graph view."""
@@ -411,9 +411,9 @@ class TestIncludeCompleted:
         )
 
         # Assert
-        assert (
-            result_with_completed.returncode == 0
-        ), f"Include completed flag failed: {result_with_completed.stderr}"
+        assert result_with_completed.returncode == 0, (
+            f"Include completed flag failed: {result_with_completed.stderr}"
+        )
 
 
 # ============================================================================
@@ -436,6 +436,6 @@ class TestDOTFormat:
 
         # Assert
         assert result.returncode == 0, f"DOT format generation failed: {result.stderr}"
-        assert (
-            "digraph" in result.stdout or len(result.stdout) > 0
-        ), "DOT format should contain graph definition"
+        assert "digraph" in result.stdout or len(result.stdout) > 0, (
+            "DOT format should contain graph definition"
+        )

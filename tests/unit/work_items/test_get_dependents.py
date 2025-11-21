@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from solokit.work_items.get_dependents import get_dependents
 
 

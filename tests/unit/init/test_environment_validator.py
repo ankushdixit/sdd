@@ -15,6 +15,7 @@ Target: 90%+ coverage
 from unittest.mock import Mock, patch
 
 import pytest
+
 from solokit.core.exceptions import ErrorCode, ValidationError
 from solokit.init.environment_validator import (
     attempt_node_install_with_nvm,

@@ -4,6 +4,7 @@ Tests for the ConsoleReporter class which generates human-readable console repor
 """
 
 import pytest
+
 from solokit.quality.reporters.console import ConsoleReporter
 
 

@@ -4,6 +4,7 @@ Tests for the ResultAggregator class which combines results from multiple checke
 """
 
 import pytest
+
 from solokit.quality.checkers.base import CheckResult
 from solokit.quality.results import ResultAggregator
 

@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from solokit.core.config_validator import (
     _format_validation_error,
     load_and_validate_config,

@@ -6,6 +6,7 @@ Tests for the LintingChecker class which runs linters like ruff, flake8, eslint.
 from unittest.mock import Mock
 
 import pytest
+
 from solokit.core.command_runner import CommandResult, CommandRunner
 from solokit.quality.checkers.linting import LintingChecker
 

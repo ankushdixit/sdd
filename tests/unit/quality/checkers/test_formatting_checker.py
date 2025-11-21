@@ -6,6 +6,7 @@ Tests for the FormattingChecker class which runs formatters like black, prettier
 from unittest.mock import Mock
 
 import pytest
+
 from solokit.core.command_runner import CommandResult, CommandRunner
 from solokit.quality.checkers.formatting import FormattingChecker
 

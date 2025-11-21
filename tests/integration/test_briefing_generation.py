@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from solokit.session.briefing import (
     check_command_exists,
     generate_integration_test_briefing,

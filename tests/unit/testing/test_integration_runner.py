@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from solokit.core.exceptions import (
     EnvironmentSetupError,
     IntegrationExecutionError,

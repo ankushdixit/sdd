@@ -12,6 +12,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+
 from solokit.session.complete import main as session_complete_main
 from solokit.work_items.manager import WorkItemManager
 from solokit.work_items.repository import WorkItemRepository

@@ -9,6 +9,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+
 from solokit.session.validate import SessionValidator
 
 
@@ -124,9 +125,9 @@ class TestRequiredFlagHandling:
         # Assert
         assert not result["passed"], "Quality gates should fail when required tests fail"
         assert "tests" in result["gates"]
-        assert not result["gates"]["tests"][
-            "passed"
-        ], "Test gate should fail when required and tests fail"
+        assert not result["gates"]["tests"]["passed"], (
+            "Test gate should fail when required and tests fail"
+        )
 
 
 class TestDisabledGateHandling:
@@ -209,19 +210,19 @@ class TestMixedRequiredGates:
         # Assert
         # Optional gates (tests, formatting) should pass even when they "fail"
         if "tests" in result["gates"]:
-            assert result["gates"]["tests"][
-                "passed"
-            ], "Optional test gate should pass even when execution fails"
+            assert result["gates"]["tests"]["passed"], (
+                "Optional test gate should pass even when execution fails"
+            )
         if "formatting" in result["gates"]:
-            assert result["gates"]["formatting"][
-                "passed"
-            ], "Optional formatting gate should pass even when execution fails"
+            assert result["gates"]["formatting"]["passed"], (
+                "Optional formatting gate should pass even when execution fails"
+            )
 
         # Required gate (linting) should fail
         assert "linting" in result["gates"]
-        assert not result["gates"]["linting"][
-            "passed"
-        ], "Required linting gate should fail when linting fails"
+        assert not result["gates"]["linting"]["passed"], (
+            "Required linting gate should fail when linting fails"
+        )
 
         # Overall validation should fail because a required gate failed
         assert not result["passed"], "Overall validation should fail when any required gate fails"

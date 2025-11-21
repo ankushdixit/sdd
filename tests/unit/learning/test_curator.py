@@ -12,6 +12,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+
 from solokit.core.exceptions import FileNotFoundError as SolokitFileNotFoundError
 from solokit.learning.curator import LearningsCurator, main
 from solokit.learning.validator import LEARNING_SCHEMA

@@ -548,9 +548,9 @@ class TestSessionValidation:
 
         # Assert - May pass or fail, but should execute
         output = result.stdout + result.stderr
-        assert (
-            "validation" in output.lower() or "quality" in output.lower()
-        ), "Validation should provide output"
+        assert "validation" in output.lower() or "quality" in output.lower(), (
+            "Validation should provide output"
+        )
 
     def test_validate_checks_git_status(self, temp_solokit_project):
         """Test that validation includes git status check."""

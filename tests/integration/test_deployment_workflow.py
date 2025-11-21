@@ -7,6 +7,7 @@ This module tests the integration of deployment session workflow including:
 """
 
 import pytest
+
 from solokit.session.briefing import generate_deployment_briefing
 from solokit.session.complete import generate_deployment_summary
 

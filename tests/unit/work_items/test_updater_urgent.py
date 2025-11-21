@@ -7,6 +7,7 @@ including auto-clear on completion and manual clearing.
 import json
 
 import pytest
+
 from solokit.work_items.repository import WorkItemRepository
 from solokit.work_items.updater import WorkItemUpdater
 from solokit.work_items.validator import WorkItemValidator

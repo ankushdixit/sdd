@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from solokit.core.exceptions import FileNotFoundError, SpecValidationError
 from solokit.work_items.manager import WorkItemManager
 

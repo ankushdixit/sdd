@@ -335,9 +335,9 @@ class TestValidationReporting:
         assert len(output) > 0, "Validation should provide output"
         # Should have some structure or indicators
         has_indicators = any(char in output for char in ["✓", "✗", "[", "]", "-", "*"])
-        assert (
-            has_indicators or len(output.split("\n")) > 1
-        ), "Validation should have structured output"
+        assert has_indicators or len(output.split("\n")) > 1, (
+            "Validation should have structured output"
+        )
 
     def test_validation_exit_codes_consistent(self, solokit_project_for_validation):
         """Test that validation exit codes are consistent."""
