@@ -15,7 +15,6 @@ import json
 import re
 
 import pytest
-
 from solokit.core.logging_config import setup_logging
 from solokit.learning.archiver import LearningArchiver
 from solokit.session.briefing.formatter import BriefingFormatter

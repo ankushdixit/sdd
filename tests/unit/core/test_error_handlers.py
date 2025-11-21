@@ -4,7 +4,6 @@ import subprocess
 import time
 
 import pytest
-
 from solokit.core.error_handlers import (
     ErrorContext,
     convert_file_errors,
@@ -379,11 +378,13 @@ class TestSafeExecute:
 
     def test_failed_execution_logs_error(self, caplog):
         """Test failed execution logs error"""
+        import logging
 
         def failing_func():
             raise ValueError("Error")
 
-        safe_execute(failing_func, default=None, log_errors=True)
+        with caplog.at_level(logging.WARNING, logger="solokit.core.error_handlers"):
+            safe_execute(failing_func, default=None, log_errors=True)
         assert "Optional operation failed" in caplog.text
 
     def test_failed_execution_no_log(self, caplog):

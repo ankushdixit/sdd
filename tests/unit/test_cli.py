@@ -4,7 +4,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from solokit.cli import (
     COMMANDS,
     main,

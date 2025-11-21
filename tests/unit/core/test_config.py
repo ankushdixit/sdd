@@ -3,7 +3,6 @@
 import json
 
 import pytest
-
 from solokit.core.config import (
     ConfigManager,
     CurationConfig,

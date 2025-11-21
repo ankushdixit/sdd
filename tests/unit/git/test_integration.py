@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from solokit.core.command_runner import CommandResult
 from solokit.core.config import ConfigManager, GitWorkflowConfig
 from solokit.core.exceptions import (

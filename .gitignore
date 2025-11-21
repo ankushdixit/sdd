@@ -68,3 +68,6 @@ marketing-copy/
 
 # Analysis and testing documentation (generated artifacts)
 analysis-docs/
+
+# Local scripts with connection details (GCP, etc.)
+scripts/

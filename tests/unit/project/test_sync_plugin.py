@@ -7,7 +7,6 @@ import json
 from unittest.mock import patch
 
 import pytest
-
 from solokit.core.exceptions import (
     FileNotFoundError as SolokitFileNotFoundError,
 )

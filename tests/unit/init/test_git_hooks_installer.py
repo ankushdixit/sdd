@@ -13,7 +13,6 @@ import stat
 from unittest.mock import Mock, patch
 
 import pytest
-
 from solokit.core.exceptions import NotAGitRepoError, TemplateNotFoundError
 from solokit.init.git_hooks_installer import install_git_hooks
 

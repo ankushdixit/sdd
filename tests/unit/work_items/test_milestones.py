@@ -7,7 +7,6 @@ creation and progress tracking.
 import json
 
 import pytest
-
 from solokit.work_items.milestones import MilestoneManager
 from solokit.work_items.repository import WorkItemRepository
 

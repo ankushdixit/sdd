@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from solokit.core.command_runner import (
     CommandResult,
     CommandRunner,

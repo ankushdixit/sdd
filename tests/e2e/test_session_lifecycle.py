@@ -13,7 +13,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from solokit.core.exceptions import SpecValidationError
 from solokit.quality.gates import QualityGates
 from solokit.session.briefing import generate_briefing, load_work_item_spec
@@ -484,9 +483,9 @@ Verify no deprecated fields.
             "test_paths",
         ]
         for field in deprecated_fields:
-            assert field not in work_item, (
-                f"Deprecated field '{field}' should not be in work_items.json"
-            )
+            assert (
+                field not in work_item
+            ), f"Deprecated field '{field}' should not be in work_items.json"
 
         # Verify content comes from spec file
         loaded_spec = load_work_item_spec(work_item_id)

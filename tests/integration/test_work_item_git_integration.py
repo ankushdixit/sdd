@@ -9,7 +9,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from solokit.session.briefing import (
     determine_git_branch_final_status,
     finalize_previous_work_item_git_status,

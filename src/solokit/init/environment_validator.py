@@ -7,6 +7,7 @@ Validates and optionally auto-updates environment (Python, Node.js) for template
 from __future__ import annotations
 
 import logging
+import re
 import shutil
 from pathlib import Path
 from typing import Literal
@@ -25,7 +26,7 @@ def parse_version(version_str: str) -> tuple[int, int, int]:
     Parse version string into tuple of (major, minor, patch).
 
     Args:
-        version_str: Version string like "18.0.0" or "v18.0.0" or "3.11.7"
+        version_str: Version string like "18.0.0" or "v18.0.0" or "3.11.7" or "3.11.0rc1"
 
     Returns:
         Tuple of (major, minor, patch) as integers
@@ -36,15 +37,16 @@ def parse_version(version_str: str) -> tuple[int, int, int]:
     # Remove 'v' prefix if present
     clean_version = version_str.strip().lstrip("v")
 
-    # Split by '.' and take first 3 parts
-    parts = clean_version.split(".")
-    if len(parts) < 2:
+    # Remove pre-release suffixes (rc, alpha, beta, dev, etc.)
+    # Match version numbers before any non-numeric suffix
+    version_match = re.match(r"(\d+)\.(\d+)(?:\.(\d+))?", clean_version)
+    if not version_match:
         raise ValueError(f"Invalid version format: {version_str}")
 
     try:
-        major = int(parts[0])
-        minor = int(parts[1])
-        patch = int(parts[2]) if len(parts) > 2 else 0
+        major = int(version_match.group(1))
+        minor = int(version_match.group(2))
+        patch = int(version_match.group(3)) if version_match.group(3) else 0
         return (major, minor, patch)
     except (ValueError, IndexError) as e:
         raise ValueError(f"Invalid version format: {version_str}") from e

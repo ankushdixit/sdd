@@ -3,7 +3,6 @@
 import json
 
 import pytest
-
 from solokit.core.exceptions import ErrorCode, ValidationError
 from solokit.core.types import GitStatus, Priority, WorkItemStatus, WorkItemType
 

@@ -5,7 +5,6 @@ prioritization and next item selection, including urgent item prioritization.
 """
 
 import pytest
-
 from solokit.work_items.repository import WorkItemRepository
 from solokit.work_items.scheduler import WorkItemScheduler
 

@@ -6,7 +6,6 @@ Tests the lightweight work item metadata retrieval utility.
 import json
 
 import pytest
-
 from solokit.work_items.get_metadata import get_work_item_metadata
 
 
