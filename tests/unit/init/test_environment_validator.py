@@ -49,6 +49,14 @@ class TestParseVersion:
         """Test parsing version with missing patch number."""
         assert parse_version("18.0") == (18, 0, 0)
 
+    def test_parse_version_with_prerelease_suffix(self):
+        """Test parsing version with pre-release suffixes (rc, alpha, beta)."""
+        assert parse_version("3.11.0rc1") == (3, 11, 0)
+        assert parse_version("3.11.0rc2") == (3, 11, 0)
+        assert parse_version("3.12.0a1") == (3, 12, 0)
+        assert parse_version("18.0.0-beta.1") == (18, 0, 0)
+        assert parse_version("20.1.0dev") == (20, 1, 0)
+
     def test_parse_invalid_version_too_few_parts(self):
         """Test parsing invalid version with too few parts."""
         with pytest.raises(ValueError, match="Invalid version format"):

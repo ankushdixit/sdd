@@ -66,5 +66,10 @@ landing/
 # Marketing and promotion materials
 marketing-copy/
 
-# Analysis and testing documentation (generated artifacts)
-analysis-docs/
+# Analysis and testing documentation (only ignore generated results, not scripts)
+analysis-docs/test_results/
+analysis-docs/__pycache__/
+analysis-docs/.DS_Store
+
+# Local scripts with connection details (GCP, etc.)
+scripts/

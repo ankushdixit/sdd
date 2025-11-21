@@ -68,6 +68,8 @@ class TestImportHandling:
 
     def test_validate_config_handles_missing_jsonschema_library(self, tmp_path, caplog):
         """Test that validate_config warns when jsonschema is not installed."""
+        import logging
+
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -76,14 +78,15 @@ class TestImportHandling:
         schema_path.write_text(json.dumps({"type": "object"}))
 
         # Act
-        with patch.dict("sys.modules", {"jsonschema": None}):
-            # Force reload to trigger ImportError path
-            import importlib
+        with caplog.at_level(logging.WARNING, logger="solokit.core.config_validator"):
+            with patch.dict("sys.modules", {"jsonschema": None}):
+                # Force reload to trigger ImportError path
+                import importlib
 
-            import solokit.core.config_validator as cv
+                import solokit.core.config_validator as cv
 
-            importlib.reload(cv)
-            result = cv.validate_config(config_path, schema_path)
+                importlib.reload(cv)
+                result = cv.validate_config(config_path, schema_path)
 
         # Assert
         assert result == config  # Should return config (validation skipped)
@@ -145,6 +148,8 @@ class TestValidateConfig:
 
     def test_validate_config_warns_on_missing_schema_file(self, tmp_path, caplog):
         """Test that validate_config logs warning when schema file doesn't exist but returns config."""
+        import logging
+
         # Arrange
         config = {"test_field": "value"}
         config_path = tmp_path / "config.json"
@@ -152,7 +157,8 @@ class TestValidateConfig:
         schema_path = tmp_path / "nonexistent_schema.json"
 
         # Act
-        result = validate_config(config_path, schema_path)
+        with caplog.at_level(logging.WARNING, logger="solokit.core.config_validator"):
+            result = validate_config(config_path, schema_path)
 
         # Assert
         assert result == config  # Should return config (validation skipped)
